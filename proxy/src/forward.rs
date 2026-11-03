@@ -43,6 +43,7 @@ pub(crate) fn real_module() -> usize {
         crate::rendements_empire::on_gamecore_loaded(h);
         crate::tours::on_gamecore_loaded(h);
         crate::wmd::on_gamecore_loaded(h);
+        crate::mods_ui::on_gamecore_loaded(h);
         crate::ui::on_gamecore_loaded();
         crate::citoyens::on_gamecore_loaded(h);
         h

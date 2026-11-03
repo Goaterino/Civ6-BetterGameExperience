@@ -159,6 +159,50 @@ local PROXY_REGLAGES = {
 		},
 		choix = PROXY_ON_OFF },
 
+	{ titre = { "Mods d'interface intégrés", "Built-in interface mods" } },
+	{ cle = "ui_charges", defaut = "off",
+		nom = { "Charges des bâtisseurs sur leur drapeau", "Builder charges on their flag" },
+		aide = {
+			"D'après Better Builder Charges Tracking (wltk). Le drapeau d'une unité qui a des charges (bâtisseur, ingénieur militaire, légion romaine…) les montre à la place des promotions. Remplace le mod s'il est actif.",
+			"Based on Better Builder Charges Tracking (wltk). The flag of a unit with charges (builder, military engineer, Roman legion…) shows them instead of promotions. Replaces the mod if it is active.",
+		},
+		choix = PROXY_ON_OFF },
+	{ cle = "ui_routes", defaut = "off",
+		nom = { "Tours restants des routes commerciales", "Trade route turns remaining" },
+		aide = {
+			"Le drapeau de chacun de vos négociants en route montre le nombre de tours avant la fin de sa route commerciale. Le négociant la termine ensuite en rentrant à sa ville d'origine. Affichage seulement.",
+			"The flag of each of your traders on a route shows the number of turns until its trade route ends. The trader then finishes it on returning to its origin city. Display only.",
+		},
+		choix = PROXY_ON_OFF },
+	{ cle = "ui_notifications", defaut = "off",
+		nom = { "Bouton d'effacement des notifications", "Clear notifications button" },
+		aide = {
+			"D'après NotificationClear (336tarot). Un bouton du panneau des notifications ferme d'un clic celles qu'on peut fermer soi-même. Remplace le mod s'il est actif.",
+			"Based on NotificationClear (336tarot). A button in the notification panel dismisses in one click those you can dismiss yourself. Replaces the mod if it is active.",
+		},
+		choix = PROXY_ON_OFF },
+	{ cle = "ui_bandeau", defaut = "off",
+		nom = { "Bandeau du haut étendu", "Extended top panel" },
+		aide = {
+			"D'après TopPanel Extension Pro (号码菌 / Azukii). Nourriture, production, population et ressources de luxe dans le bandeau, avec le détail par ville ; ressources des coéquipiers. Remplace le mod s'il est actif. Sans le mod, le bandeau de Better Spectator Mod est gardé.",
+			"Based on TopPanel Extension Pro (号码菌 / Azukii). Food, production, population and luxury resources in the top panel, with per-city details; teammates' resources. Replaces the mod if it is active. Without the mod, Better Spectator Mod's top panel is kept.",
+		},
+		choix = PROXY_ON_OFF },
+	{ cle = "ui_politiques", defaut = "off",
+		nom = { "Effet des cartes de politique", "Policy card effects" },
+		aide = {
+			"D'après Extended Policy Cards (Aristos). Chaque carte montre son gain chiffré pour votre empire, calculé par Real Modifier Analysis (Infixo), corrigé (Raj, Médina, Monachisme, Prestige civil, cartes d'entretien, nourriture des cartes de personnages illustres). Ne demande plus Better Report Screen. Remplace le mod s'il est actif.",
+			"Based on Extended Policy Cards (Aristos). Each card shows its numeric gain for your empire, computed by Real Modifier Analysis (Infixo), fixed (Raj, Medina Quarter, Monasticism, Civil Prestige, maintenance cards, food on great person cards). No longer needs Better Report Screen. Replaces the mod if it is active.",
+		},
+		choix = PROXY_ON_OFF },
+	{ cle = "ui_rapports", defaut = "off",
+		nom = { "Écran des rapports amélioré", "Better report screen" },
+		aide = {
+			"D'après Better Report Screen (Infixo). Écran des rapports refait, avec les onglets Accords, Unités, Politiques, Cités-États et Villes, et l'effet de chaque politique et cité-État, corrigé comme les cartes. Remplace le mod s'il est actif.",
+			"Based on Better Report Screen (Infixo). Reworked report screen, with Deals, Units, Policies, City-States and Cities tabs, and the effect of each policy and city-state, fixed like the cards. Replaces the mod if it is active.",
+		},
+		choix = PROXY_ON_OFF },
+
 	{ titre = { "Diagnostic", "Diagnostics" } },
 	{ cle = "ui_journal", defaut = "off",
 		nom = { "Journal des scripts et XML chargés", "Log loaded scripts and XML" },
@@ -198,6 +242,29 @@ local PROXY_TEXTES = {
 	non_enregistres = { "Réglages non enregistrés : ", "Settings not saved: " },
 	valeur_du_fichier = { " (valeur du fichier)", " (value from file)" },
 };
+
+-- Auteurs des mods repris dans le proxy (mods_ui/README.md) : affichés en bas de l'onglet, jamais
+-- grisés. { mod, Workshop, auteurs }.
+local PROXY_CREDITS = {
+	{ "Better Report Screen, Real Modifier Analysis, ReportsList Loader", "1312585482",
+		{ "Infixo ; onglets Unités et Accords d'origine : Greg Miller ; remerciements : nightfearer, Tyolan, copysoul, RohBang, Gorlod, Zergus, Rac, Aristos",
+		  "Infixo; original Units and Deals tabs: Greg Miller; thanks: nightfearer, Tyolan, copysoul, RohBang, Gorlod, Zergus, Rac, Aristos" } },
+	{ "Extended Policy Cards", "2266952591", { "Aristos", "Aristos" } },
+	{ "TopPanel Extension Pro", "2997927787", { "号码菌 (Azukii) ; remerciements : JNNR", "号码菌 (Azukii); thanks: JNNR" } },
+	{ "NotificationClear", "3063966792", { "336tarot", "336tarot" } },
+	{ "Better Builder Charges Tracking", "2409116842", { "wltk ; remerciements : DeepLogic, 小小雨10101", "wltk; thanks: DeepLogic, 小小雨10101" } },
+};
+
+local function Proxy_CreditsText()
+	local lines = { Proxy_T({
+		"Les mods d'interface intégrés reprennent le travail de leurs auteurs, que BetterGameDLLs remercie :",
+		"The built-in interface mods build on their authors' work, with BetterGameDLLs' thanks:",
+	}) };
+	for _, c in ipairs(PROXY_CREDITS) do
+		table.insert(lines, "[ICON_Bullet] " .. c[1] .. " (Workshop " .. c[2] .. ") : " .. Proxy_T(c[3]) .. ".");
+	end
+	return table.concat(lines, "[NEWLINE]");
+end
 
 local m_proxySaved = {};     -- valeurs du fichier
 local m_proxyPending = {};   -- choix pas encore confirmés
@@ -312,6 +379,15 @@ local function Proxy_Build()
 			inst.PullDown:GetButton():SetToolTipString(Proxy_T(r.aide));
 			m_proxyPullDowns[r.cle] = inst.PullDown;
 		end
+	end
+	-- Crédits, à la fin : le label du panneau (options_proxy_panel.xml) passe après les réglages.
+	if Controls.ProxyCredits ~= nil then
+		local inst = {};
+		ContextPtr:BuildInstanceForControl("KeyBindingCategory", inst, Controls.ProxyOptionsStack);
+		inst.CategoryName:SetText(Proxy_T({ "Crédits", "Credits" }));
+		Controls.ProxyCredits:ChangeParent(Controls.ProxyOptionsStack);
+		Controls.ProxyCredits:SetText(Proxy_CreditsText());
+		Controls.ProxyCredits:SetHide(false);
 	end
 end
 

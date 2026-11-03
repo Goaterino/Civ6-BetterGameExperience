@@ -1,0 +1,5 @@
+		  <!-- BetterGameDLLs (src/mods/politiques.xml) : cadre de l'effet de la carte, d'Extended Policy Cards (Aristos) -->
+		  <Grid				ID="EffectContainer"			Anchor="C,B"										Size="140,auto"				Color="0,0,0,100" AutoSizePadding="0,5" Style="DropShadow4" Hidden="1">
+            <Label		ID="Effect"							Anchor="C,B"	Offset="0,8"			TruncateWidth="120"		ToolTip=""		Align="Center" Style="FontNormal12" FontStyle="Stroke" String="" ColorSet="BodyTextCool"/>
+            <Image														Anchor="C,T"	Offset="0,2"			Size="parent,2"				Texture="Controls_Div6" Color="255,255,255,20" StretchMode="Fill"/>
+          </Grid>

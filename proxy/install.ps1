@@ -51,6 +51,21 @@ param(
     # autocratie, république marchande). Voir src/tours.rs.
     [ValidateSet("on", "off")]
     [string]$ToursProduction = "on",
+    # Mods d'interface repris dans le proxy, prioritaires sur le mod s'il est actif (voir
+    # mods_ui/README.md) : charges des bâtisseurs et tours des routes commerciales sur les drapeaux,
+    # effacement des notifications, bandeau étendu, effet des cartes de politique, écran des rapports.
+    [ValidateSet("on", "off")]
+    [string]$UiCharges = "off",
+    [ValidateSet("on", "off")]
+    [string]$UiRoutes = "off",
+    [ValidateSet("on", "off")]
+    [string]$UiNotifications = "off",
+    [ValidateSet("on", "off")]
+    [string]$UiBandeau = "off",
+    [ValidateSet("on", "off")]
+    [string]$UiPolitiques = "off",
+    [ValidateSet("on", "off")]
+    [string]$UiRapports = "off",
     [switch]$Uninstall,
     [string]$GameDir = "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI"
 )
@@ -96,6 +111,6 @@ if (-not (Test-Ours $dll)) {
     Rename-Item $dll (Split-Path $orig -Leaf)
 }
 Copy-Item $built $dll -Force
-Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_epingles=$UiEpingles", "ui_merveilles=$UiMerveilles", "ui_rendements=$UiRendements", "tours_production=$ToursProduction"
-Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_epingles $UiEpingles, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction) ; original conservé sous GameCore_XP2_FinalRelease_orig.dll."
+Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_epingles=$UiEpingles", "ui_merveilles=$UiMerveilles", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports"
+Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_epingles $UiEpingles, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports) ; original conservé sous GameCore_XP2_FinalRelease_orig.dll."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

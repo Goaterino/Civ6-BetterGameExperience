@@ -30,6 +30,9 @@
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
 //!
+//! Les mods d'interface repris (`mods_ui`) passent par les mêmes accroches : leur remplacement du
+//! texte entier avant les correctifs de ce module, leurs blocs après, une seule compilation.
+//!
 //! Dès que l'accroche Lua est posée, trois défauts du jeu sont aussi corrigés (`FIXES`) : le bouton
 //! d'attaque d'une ville non sélectionnée demandait deux clics (`patch_city_panel`), un clic sur le
 //! drapeau d'une unité ne tirait pas en visée d'une ville ou d'un quartier (`patch_unit_flags`), et
@@ -96,6 +99,7 @@ fn active() -> bool {
         || OPTI.load(Ordering::Relaxed)
         || MERVEILLES.load(Ordering::Relaxed)
         || crate::rendements_empire::enabled()
+        || crate::mods_ui::any()
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -415,8 +419,88 @@ pub fn patch_xml(src: &[u8]) -> Result<Vec<u8>, String> {
 // ---------------------------------------------------------------------------------------------
 // Accroches.
 
-type LoadBuffer = unsafe extern "C" fn(*mut c_void, *const u8, usize, *const c_char) -> i32;
+pub(crate) type LoadBuffer = unsafe extern "C" fn(*mut c_void, *const u8, usize, *const c_char) -> i32;
 
+/// Le vrai `luaL_loadbuffer`, une fois l'accroche posée : `mods_ui` y compile ses fichiers embarqués.
+pub(crate) unsafe fn real_loadbuffer() -> Option<LoadBuffer> {
+    let p = REAL_LOADBUFFER.load(Ordering::Relaxed);
+    (p != 0).then(|| std::mem::transmute(p))
+}
+
+/// Correctifs de `ui` (sans les reprises de mods) : le texte modifié, ou None. Ce qui est fait va
+/// dans `what`, ce qui ne l'est pas va au journal.
+unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
+    let ctx = script_name(chunk);
+    let opti = OPTI.load(Ordering::Relaxed) && OPTIMIZED.contains(&ctx.as_str());
+    let mesure = MESURE.load(Ordering::Relaxed) && measured(chunk).is_some();
+    if opti || mesure {
+        if mesure {
+            publish_clock(l);
+        }
+        what.push(
+            match (opti, mesure) {
+                (true, true) => "épingles allégées et mesurées",
+                (true, false) => "épingles allégées",
+                _ => "mesure des épingles ajoutée",
+            }
+            .into(),
+        );
+        return Some(patch_epingles(src, &ctx, opti, mesure));
+    }
+    if MERVEILLES.load(Ordering::Relaxed) && ctx == "productionhelper.lua" {
+        what.push("rattrapage des merveilles ajouté".into());
+        return Some(patch_merveilles(src));
+    }
+    if crate::rendements_empire::enabled() && is_file(chunk, "TopPanel.lua") {
+        return match patch_top_panel(src) {
+            Ok(text) => {
+                what.push("rendements redessinés après gouverneur ou personnage illustre".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    for (file, patch, done) in FIXES {
+        if !is_file(chunk, file) {
+            continue;
+        }
+        return match patch(src) {
+            Ok(text) => {
+                what.push(done.into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if !is_file(chunk, "CityBannerManager.lua") {
+        return None;
+    }
+    let boutons = BOUTONS.load(Ordering::Relaxed) && XML_PATCHED.load(Ordering::Relaxed);
+    if BOUTONS.load(Ordering::Relaxed) && !boutons {
+        log("ui : calques absents de CityBannerInstances.xml, boutons laissés dans les bannières");
+    }
+    let (new, notes) = patch_lua(src, boutons, RECENTRAGE.load(Ordering::Relaxed));
+    for n in &notes {
+        log(&format!("ui : {chunk} : {n}"));
+    }
+    if new.is_some() {
+        what.push(format!(
+            "modifié (boutons {}, recentrage {})",
+            if boutons { "au-dessus" } else { "inchangés" },
+            if RECENTRAGE.load(Ordering::Relaxed) { "gardé" } else { "retiré" }
+        ));
+    }
+    new
+}
+
+/// Trois étapes : le texte entier remplacé par une reprise de mod (`mods_ui::remplacer`), les
+/// correctifs de `ui`, puis les blocs des reprises (`mods_ui::ajouter`). Une seule compilation.
 unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize, name: *const c_char) -> i32 {
     let real: LoadBuffer = std::mem::transmute(REAL_LOADBUFFER.load(Ordering::Relaxed));
     if name.is_null() || buf.is_null() {
@@ -426,91 +510,43 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
     if JOURNAL.load(Ordering::Relaxed) {
         log(&format!("ui : script {chunk} ({size} octets)"));
     }
-    let ctx = script_name(&chunk);
-    let opti = OPTI.load(Ordering::Relaxed) && OPTIMIZED.contains(&ctx.as_str());
-    let mesure = MESURE.load(Ordering::Relaxed) && measured(&chunk).is_some();
-    if opti || mesure {
-        if mesure {
-            publish_clock(l);
+    let src = std::slice::from_raw_parts(buf, size);
+    let entree_bandeau = crate::mods_ui::prendre_entree_bandeau();
+    let mut what: Vec<String> = Vec::new();
+    let mut mods = false;
+    let mut text: Option<Vec<u8>> = None;
+    match crate::mods_ui::remplacer(&chunk, src) {
+        Some(Ok((t, w))) => {
+            text = Some(t);
+            what.push(w);
+            mods = true;
         }
-        let text = patch_epingles(std::slice::from_raw_parts(buf, size), &ctx, opti, mesure);
-        let r = real(l, text.as_ptr(), text.len(), name);
-        let what = match (opti, mesure) {
-            (true, true) => "épingles allégées et mesurées",
-            (true, false) => "épingles allégées",
-            _ => "mesure des épingles ajoutée",
-        };
-        log(&format!("ui : {chunk} : {what}, compilation {}", if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }));
-        return r;
+        Some(Err(e)) => log(&format!("ui : {chunk} : reprise de mod impossible : {e}")),
+        None => {}
     }
-    if MERVEILLES.load(Ordering::Relaxed) && ctx == "productionhelper.lua" {
-        let text = patch_merveilles(std::slice::from_raw_parts(buf, size));
-        let r = real(l, text.as_ptr(), text.len(), name);
-        log(&format!(
-            "ui : {chunk} : rattrapage des merveilles ajouté, compilation {}",
-            if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }
-        ));
-        return r;
+    if let Some(t) = patch_ui(l, &chunk, text.as_deref().unwrap_or(src), &mut what) {
+        text = Some(t);
     }
-    if crate::rendements_empire::enabled() && is_file(&chunk, "TopPanel.lua") {
-        return match patch_top_panel(std::slice::from_raw_parts(buf, size)) {
-            Ok(text) => {
-                let r = real(l, text.as_ptr(), text.len(), name);
-                log(&format!(
-                    "ui : {chunk} : rendements redessinés après gouverneur ou personnage illustre, compilation {}",
-                    if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }
-                ));
-                r
-            }
-            Err(e) => {
-                log(&format!("ui : {chunk} laissé tel quel : {e}"));
-                real(l, buf, size, name)
-            }
-        };
-    }
-    for (file, patch, what) in FIXES {
-        if !is_file(&chunk, file) {
-            continue;
+    match crate::mods_ui::ajouter(&chunk, text.as_deref().unwrap_or(src), entree_bandeau) {
+        Some(Ok((t, w))) => {
+            text = Some(t);
+            what.push(w);
+            mods = true;
         }
-        return match patch(std::slice::from_raw_parts(buf, size)) {
-            Ok(text) => {
-                let r = real(l, text.as_ptr(), text.len(), name);
-                log(&format!(
-                    "ui : {chunk} : {what}, compilation {}",
-                    if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }
-                ));
-                r
-            }
-            Err(e) => {
-                log(&format!("ui : {chunk} laissé tel quel : {e}"));
-                real(l, buf, size, name)
-            }
-        };
+        Some(Err(e)) => log(&format!("ui : {chunk} : reprise de mod laissée de côté : {e}")),
+        None => {}
     }
-    if !is_file(&chunk, "CityBannerManager.lua") {
-        return real(l, buf, size, name);
+    let Some(text) = text else { return real(l, buf, size, name) };
+    if mods {
+        crate::mods_ui::publier(l);
     }
-    let boutons = BOUTONS.load(Ordering::Relaxed) && XML_PATCHED.load(Ordering::Relaxed);
-    if BOUTONS.load(Ordering::Relaxed) && !boutons {
-        log("ui : calques absents de CityBannerInstances.xml, boutons laissés dans les bannières");
-    }
-    let (new, notes) = patch_lua(std::slice::from_raw_parts(buf, size), boutons, RECENTRAGE.load(Ordering::Relaxed));
-    for n in &notes {
-        log(&format!("ui : {chunk} : {n}"));
-    }
-    match new {
-        Some(text) => {
-            let r = real(l, text.as_ptr(), text.len(), name);
-            log(&format!(
-                "ui : {chunk} modifié (boutons {}, recentrage {}), compilation {}",
-                if boutons { "au-dessus" } else { "inchangés" },
-                if RECENTRAGE.load(Ordering::Relaxed) { "gardé" } else { "retiré" },
-                if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }
-            ));
-            r
-        }
-        None => real(l, buf, size, name),
-    }
+    let r = real(l, text.as_ptr(), text.len(), name);
+    log(&format!(
+        "ui : {chunk} : {}, compilation {}",
+        what.join(" ; "),
+        if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }
+    ));
+    r
 }
 
 unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
@@ -523,6 +559,15 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
     let name = String::from_utf16_lossy(std::slice::from_raw_parts(path, n));
     if JOURNAL.load(Ordering::Relaxed) {
         log(&format!("ui : XML {name}"));
+    }
+    crate::mods_ui::xml_lu(&name);
+    if let Some(res) = crate::mods_ui::xml(&name, (*buf).text().unwrap_or(&[])) {
+        match res {
+            Ok((text, what)) if replace_buffer(&mut *buf, &text) => log(&format!("ui : {name} : {what}")),
+            Ok(_) => log(&format!("ui : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("ui : {name} laissé tel quel : {e}")),
+        }
+        return r;
     }
     if !BOUTONS.load(Ordering::Relaxed) || !is_file(&name, "CityBannerInstances.xml") {
         return r;
@@ -548,7 +593,7 @@ pub unsafe fn on_gamecore_loaded() {
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
 
     // XML d'abord : le bloc Lua dépend des calques.
-    if BOUTONS.load(Ordering::Relaxed) || JOURNAL.load(Ordering::Relaxed) {
+    if BOUTONS.load(Ordering::Relaxed) || JOURNAL.load(Ordering::Relaxed) || crate::mods_ui::xml_needed() {
         // Si le proxy de démarrage est installé, la lecture est déjà détournée : on s'enchaîne.
         match exe::hook_read_xml(exe, hook_read_xml as *const () as usize) {
             Ok(h) => {
@@ -583,6 +628,9 @@ pub unsafe fn on_gamecore_loaded() {
         if MERVEILLES.load(Ordering::Relaxed) { "on" } else { "off" },
         if crate::rendements_empire::enabled() { "on" } else { "off" },
     ));
+    if crate::mods_ui::any() {
+        log(&format!("ui : mods repris : {}", crate::mods_ui::journal_reglages()));
+    }
 }
 
 /// Le proxy est déchargé alors que l'exe reste en mémoire : on rend l'import et la lecture XML.

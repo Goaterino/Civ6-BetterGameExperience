@@ -7,4 +7,6 @@
 							</Stack>
 							<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
 						</ScrollPanel>
+						<!-- Crédits des mods repris : déplacé à la fin de ProxyOptionsStack par options_proxy.lua -->
+						<Label ID="ProxyCredits" Anchor="L,T" Style="ShellOptionText" WrapWidth="720" String="" Hidden="1"/>
 					</Container>

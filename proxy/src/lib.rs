@@ -9,7 +9,9 @@
 //! `ameliorations=off|count|verify|fast|quiet` et `rendements=off|count|verify|fast|quiet` (off par
 //! défaut), `wmd_accel=<facteur>|off` (20 par défaut, voir `wmd`), `ui_boutons`, `ui_recentrage` et
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles` (voir `ui`), `ui_rendements=on|off`
-//! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`). Journal :
+//! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
+//! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (off
+//! par défaut, voir `mods_ui`). Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
 
 #![allow(non_snake_case)] // le nom de la DLL produite, GameCore_XP2_FinalRelease, est imposé.
@@ -19,6 +21,7 @@ mod coalesce;
 mod exe;
 mod forward;
 mod improvements;
+mod mods_ui;
 mod patch;
 mod rendements;
 mod rendements_empire;
@@ -150,6 +153,24 @@ pub(crate) fn read_config() {
         }
         if let Some(v) = line.trim().strip_prefix("ui_rendements=") {
             rendements_empire::set_enabled(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_charges=") {
+            mods_ui::set_charges(v.trim() == "on");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_routes=") {
+            mods_ui::set_routes(v.trim() == "on");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_notifications=") {
+            mods_ui::set_notifications(v.trim() == "on");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_bandeau=") {
+            mods_ui::set_bandeau(v.trim() == "on");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_politiques=") {
+            mods_ui::set_politiques(v.trim() == "on");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_rapports=") {
+            mods_ui::set_rapports(v.trim() == "on");
         }
     }
 }

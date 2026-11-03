@@ -64,7 +64,8 @@ Le mode se règle dans `rollover_proxy.cfg`, à côté de la DLL, par une ligne 
 | `off` | aucun détour |
 
 Les autres réglages (`portee`, `ameliorations`, `rendements`, `wmd_accel`, `ui_*`,
-`tours_production`) sont décrits plus bas, avec leur détour. Ils se changent aussi en jeu, dans
+`tours_production`) sont décrits plus bas, avec leur détour, et ceux des mods d'interface repris dans
+[Mods d'interface repris](#mods-dinterface-repris). Ils se changent aussi en jeu, dans
 l'onglet **BetterGameDLLs** de l'écran d'options, qu'ajoute le proxy de démarrage
 ([startup_proxy](../startup_proxy/README.md)). **Tout nouveau réglage doit y figurer** : le test
 `cles_communes_avec_le_proxy` (startup_proxy) le vérifie.
@@ -482,6 +483,80 @@ réglage `ui_rendements=on|off` (`-UiRendements`), on par défaut. Analyse et tr
   `ui : …TopPanel.lua : rendements redessinés …`.
 - **Tests.** `cargo test` (enregistrement d'événement, patch du vrai `TopPanel.lua`) ;
   `check_hooks.py` vérifie la pose et la restauration des quatre détours.
+
+## Mods d'interface repris
+
+[src/mods_ui.rs](src/mods_ui.rs) et [src/mods](src/mods). Analyse, choix et diagnostic de RMA :
+[mods_ui/README.md](../mods_ui/README.md). Cinq mods du Workshop, repris avec leurs défauts corrigés,
+plus les tours des routes commerciales.
+
+| réglage | défaut | effet |
+|---|---|---|
+| `ui_charges=on\|off` (`-UiCharges`) | off | charges restantes sur le drapeau des unités qui en ont (Better Builder Charges Tracking, wltk) |
+| `ui_routes=on\|off` (`-UiRoutes`) | off | tours avant la fin de la route sur le drapeau des négociants du joueur |
+| `ui_notifications=on\|off` (`-UiNotifications`) | off | bouton « tout effacer » des notifications (NotificationClear, 336tarot) |
+| `ui_bandeau=on\|off` (`-UiBandeau`) | off | nourriture, production, population et luxes dans le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) |
+| `ui_politiques=on\|off` (`-UiPolitiques`) | off | effet chiffré des cartes de politique (Extended Policy Cards, Aristos), avec RMA corrigé |
+| `ui_rapports=on\|off` (`-UiRapports`) | off | écran des rapports de Better Report Screen (Infixo), avec RMA corrigé |
+
+- **Le proxy prime.** Réglage actif, les fichiers du mod sont neutralisés quand l'exe les compile ou
+  les lit, reconnus par leur nom et une marque de leur contenu. Réglage inactif, le mod reste tel quel.
+- **Trois étapes par script.** L'accroche `luaL_loadbuffer` de `ui` remplace d'abord le texte entier
+  (`mods_ui::remplacer`), applique ensuite ses correctifs, puis ajoute les blocs des reprises
+  (`mods_ui::ajouter`). La compilation n'a lieu qu'une fois. Les XML passent par `mods_ui::xml`.
+- **Fichiers embarqués.** Le proxy pose deux fonctions natives dans chaque contexte dont il change un
+  script :
+  - `Civ6Proxy_Charger(nom)` compile un fichier embarqué : les pages de BRS, RMA,
+    [commun.lua](src/mods/commun.lua) et les textes ;
+  - `Civ6Proxy_FinRoute` rend le tour de fin d'une route (voir plus bas).
+- **RMA dans chaque contexte qui s'en sert**, l'écran du gouvernement et celui des rapports. Il est
+  chargé dans un environnement à lui (`setfenv`), pour que ses globales n'écrasent pas celles du
+  contexte hôte.
+- **Textes des mods** : [gen_textes.py](gen_textes.py) les lit dans les XML des mods et écrit
+  `src/mods/textes.lua` et `textes.tsv`. Côté Lua, nos copies appellent `BGD_Lookup`. Côté XML,
+  `mods_ui::traduire_xml` remplace les `"LOC_…"`, dans la langue rendue par
+  `Localization::GetCurrentLanguage`.
+
+  ```bash
+  .venv/Scripts/python.exe -I proxy/gen_textes.py "C:/Program Files (x86)/Steam/steamapps/workshop/content/289070" proxy/src/mods
+  ```
+
+- **Le bandeau** est ajouté au script du contexte TopPanel, quel qu'il soit. C'est le premier compilé
+  après la lecture de `TopPanel.xml` : toute la chaîne est alors chargée.
+- **La fin d'une route commerciale** n'est pas exposée en Lua. `Civ6Proxy_FinRoute` la lit dans
+  GameCore :
+  - `18038f6c0` rend le gestionnaire de commerce ;
+  - `180386480(gestionnaire + 0xc0, &origine, &destination)` rend la fiche de la route : le
+    négociant en `+0x8` / `+0xc`, le tour de départ en `+0x4` ;
+  - `18038f720(gestionnaire, départ)` rend la fin de la durée minimale.
+
+  La route finit au premier retour du négociant chez lui après cette fin. Le bloc compte le trajet
+  avec `TradeManager:GetTradeRoutePath`, à une case par tour.
+
+  Les octets de ces trois fonctions sont vérifiés au chargement. La lecture se fait depuis le thread
+  de l'interface, sans rien écrire.
+- **Journal :**
+  - `ui : mods repris : charges on, …`, avec les autres accroches ;
+  - `ui : <script> : <ce qui est fait>, compilation réussie`, par exemple
+    `TopPanel Extension Pro neutralisé ; bandeau de TopPanel Extension Pro` ;
+  - `ui : <xml> : écran de Better Report Screen du proxy (fr_FR)` ;
+  - `mods : fonctions natives posées` et
+    `mods : fin des routes commerciales lue dans GameCore`.
+- **Tests :**
+  - `cargo test` : patchs des vrais fichiers du jeu, neutralisation des fichiers des mods, traduction
+    du XML, octets des fonctions de commerce ;
+  - `lua proxy/tests/test_mods_rma.lua` : corrections de RMA ;
+  - `lua proxy/tests/test_mods_drapeaux.lua` : charges et routes ;
+  - `lua proxy/tests/check_havok.lua <fichiers>` : syntaxe des scripts HavokScript.
+- **Crédits** : section en bas de l'onglet BetterGameDLLs (`PROXY_CREDITS` de
+  `startup_proxy/src/options_proxy.lua`) :
+  - Better Report Screen, Real Modifier Analysis et ReportsList Loader : Infixo ; onglets Unités et
+    Accords d'origine : Greg Miller ; remerciements : nightfearer, Tyolan, copysoul, RohBang, Gorlod,
+    Zergus, Rac, Aristos ;
+  - Extended Policy Cards : Aristos ;
+  - TopPanel Extension Pro : 号码菌 (Azukii) ; remerciements : JNNR ;
+  - NotificationClear : 336tarot ;
+  - Better Builder Charges Tracking : wltk ; remerciements : DeepLogic, 小小雨10101.
 
 ## Limites du prototype
 
