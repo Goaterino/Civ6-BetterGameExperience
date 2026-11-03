@@ -24,6 +24,10 @@ détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Sépar�
   proxy, corrigés (RMA) et prioritaires sur le mod ; tours restants des routes commerciales ;
 - [pantheon](pantheon/README.md) : joueur désigné pour le panthéon, égalités et restriction d'un tour
   (analyse statique) ;
+- [congres](analyses/congres/README.md) : congrès mondial en multijoueur, triplets divergents, tours passés et
+  votes ignorés (analyse préliminaire statique) ;
+- [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
+  succès avec fuite comptés comme des succès (analyse statique) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
