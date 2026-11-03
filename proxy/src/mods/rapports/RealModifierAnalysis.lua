@@ -263,10 +263,10 @@ function YieldTableGetInfo(pYields:table)
 	for	_,yield in ipairs(YieldTypesOrder) do
 		if pYields[yield] ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..GetYieldString("YIELD_"..yield, pYields[yield]); end
 	end
-	-- BGD : points de personnages illustres, « +x[ICON_GreatEngineer] »
+	-- BGD : points de personnages illustres, « [ICON_GreatEngineer]+x », comme les rendements
 	for _,pg in ipairs(BGD_ClesPG) do
 		local fPoints:number = pYields[pg.Cle] or 0;
-		if fPoints ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..toPlusMinusString(fPoints)..pg.Icone; end
+		if fPoints ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..pg.Icone..toPlusMinusString(fPoints); end
 	end
 	return sYieldInfo;
 end

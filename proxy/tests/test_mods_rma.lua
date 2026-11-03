@@ -171,7 +171,7 @@ env.YieldTableAdd(total, pg);
 env.YieldTableAdd(total, pg);
 total.PG_ENGINEER = total.PG_ENGINEER + 4;
 env.Locale = { ToNumber = function(v) return string.format("%+g", v); end };
-Check(env.YieldTableGetInfo(total):find("+8[ICON_GreatEngineer]", 1, true) ~= nil, "texte des points : " .. env.YieldTableGetInfo(total));
+Check(env.YieldTableGetInfo(total):find("[ICON_GreatEngineer]+8", 1, true) ~= nil, "texte des points : " .. env.YieldTableGetInfo(total));
 
 if failures == 0 then print("ok : corrections de RMA"); end
 os.exit(failures == 0 and 0 or 1);
