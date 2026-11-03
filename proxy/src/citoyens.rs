@@ -23,8 +23,8 @@
 //! diffère de celui de l'originale, recalculée sur une copie, on le journalise (30 premières fois).
 
 use crate::patch::{self, Site};
-use crate::{log, win};
-use std::sync::atomic::{AtomicU32, AtomicU8, AtomicUsize, Ordering};
+use crate::{log, pol};
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
 const SELECT: Site = Site {
     name: "choix des cases travaillées",
@@ -37,10 +37,6 @@ const SELECT: Site = Site {
 
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static HOOKED_BASE: AtomicUsize = AtomicUsize::new(0);
-/// Export `BgdPolActifs` du proxy de démarrage : 0 pas encore cherché, 1 absent, sinon son adresse.
-static POL_EXPORT: AtomicUsize = AtomicUsize::new(0);
-/// Dernier état journalisé : 2 inconnu, puis 0 ou 1.
-static LAST_POL: AtomicU8 = AtomicU8::new(2);
 static DIFFS: AtomicU32 = AtomicU32::new(0);
 const MAX_DIFF_LOGS: u32 = 30;
 
@@ -124,31 +120,6 @@ pub fn choisir(cands: &[(i32, i32, i32)], k_max: usize, seuil: i32) -> Option<Ve
     Some(sel)
 }
 
-/// L'état du proxy de démarrage (`BgdPolActifs`). Absent : correctifs POL coupés.
-fn pol_actifs() -> bool {
-    let mut p = POL_EXPORT.load(Ordering::Relaxed);
-    if p == 0 {
-        p = unsafe {
-            let m = win::GetModuleHandleW(win::wide("DatabaseDLL_FinalRelease.dll").as_ptr());
-            let f = if m.is_null() { std::ptr::null_mut() } else { win::GetProcAddress(m, b"BgdPolActifs\0".as_ptr()) };
-            if f.is_null() { 1 } else { f as usize }
-        };
-        if p == 1 {
-            log("citoyens : proxy de démarrage absent, correctifs POL coupés");
-        }
-        POL_EXPORT.store(p, Ordering::Relaxed);
-    }
-    if p == 1 {
-        return false;
-    }
-    let f: extern "system" fn() -> u32 = unsafe { std::mem::transmute(p) };
-    let on = f() != 0;
-    if LAST_POL.swap(on as u8, Ordering::Relaxed) != on as u8 {
-        log(&format!("citoyens : correctifs POL {}", if on { "actifs" } else { "coupés" }));
-    }
-    on
-}
-
 /// (nourriture plafonnée atteinte, favori, autre) d'un choix, pour le journal.
 fn bilan(cands: &[Candidat], sel: impl Iterator<Item = usize>, seuil: i32) -> String {
     let (mut f, mut fa, mut o, mut cases) = (0i64, 0i64, 0i64, Vec::new());
@@ -166,7 +137,7 @@ fn bilan(cands: &[Candidat], sel: impl Iterator<Item = usize>, seuil: i32) -> St
 
 unsafe extern "system" fn hook(begin: *mut Candidat, end: *mut Candidat, k: u32, seuil: i32, e: usize) -> *mut Candidat {
     let original: Select = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
-    if k == 0 || begin.is_null() || end <= begin || !pol_actifs() {
+    if k == 0 || begin.is_null() || end <= begin || !pol::actifs() {
         return original(begin, end, k, seuil, e);
     }
     let n = end.offset_from(begin) as usize;

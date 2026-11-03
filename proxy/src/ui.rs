@@ -51,6 +51,8 @@ const MESURE_BLOCK: &str = include_str!("ui_epingles.lua");
 const OPTI_BLOCK: &str = include_str!("ui_epingles_opti.lua");
 const MERVEILLES_BLOCK: &str = include_str!("ui_merveilles.lua");
 const RENDEMENTS_BLOCK: &str = include_str!("ui_rendements.lua");
+const CONGRES_BLOCK: &str = include_str!("ui_congres.lua");
+const CIBLES_BLOCK: &str = include_str!("ui_congres_cibles.lua");
 
 static BOUTONS: AtomicBool = AtomicBool::new(true);
 static RECENTRAGE: AtomicBool = AtomicBool::new(false);
@@ -100,6 +102,7 @@ fn active() -> bool {
         || MERVEILLES.load(Ordering::Relaxed)
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
+        || crate::spectateurs::poses()
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -332,6 +335,45 @@ unsafe fn publish_clock(l: *mut c_void) {
     }
 }
 
+/// `Civ6RolloverProxy_Pol()` → 1 si les scripts du congrès doivent écarter les spectateurs, sinon 0
+/// (`spectateurs::lua_actif`). Relu à chaque appel : l'état POL n'est fixé qu'au chargement.
+const POL_NAME: &[u8] = b"Civ6RolloverProxy_Pol\0";
+static POL_LOGGED: AtomicBool = AtomicBool::new(false);
+
+unsafe extern "C-unwind" fn lua_pol(l: *mut c_void) -> i32 {
+    if let Some(h) = hks() {
+        (h.push_number)(l, if crate::spectateurs::lua_actif() { 1.0 } else { 0.0 });
+        return 1;
+    }
+    0
+}
+
+unsafe extern "C-unwind" fn install_pol(l: *mut c_void) -> i32 {
+    if let Some(h) = hks() {
+        (h.push_closure)(l, lua_pol, 0, POL_NAME.as_ptr() as *const c_char, 0);
+        (h.set_field)(l, LUA_GLOBALSINDEX, POL_NAME.as_ptr() as *const c_char);
+    }
+    0
+}
+
+/// Pose `Civ6RolloverProxy_Pol` dans la table globale de l'état qui compile le script. Absente, les
+/// blocs du congrès ne font rien.
+unsafe fn publish_pol(l: *mut c_void) {
+    let r = match hks() {
+        Some(h) => {
+            let r = (h.cpcall)(l, install_pol, std::ptr::null_mut());
+            if r != 0 {
+                (h.set_top)(l, -2);
+            }
+            r
+        }
+        None => -1,
+    };
+    if r != 0 || !POL_LOGGED.swap(true, Ordering::Relaxed) {
+        log(&if r == 0 { "ui : Civ6RolloverProxy_Pol posée".to_string() } else { format!("ui : Civ6RolloverProxy_Pol non posée ({r}), congrès inchangé") });
+    }
+}
+
 /// Le script suivi du bloc d'optimisation (`opti`), puis du bloc de mesure (`mesure`), chacun
 /// précédé de son contexte (`EpinglesOpti_Ctx`, `MesureEpingles_Ctx`). La mesure vient en dernier :
 /// elle enveloppe les fonctions déjà optimisées. Octets laissés tels quels : les fichiers du jeu ne
@@ -370,6 +412,61 @@ pub fn patch_top_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(RENDEMENTS_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// WorldCongressPopup.lua suivi de `ui_congres.lua` : la fenêtre du congrès en lecture seule pour
+/// un spectateur. Le bloc lit les locales du fichier : on vérifie qu'elles y sont.
+pub fn patch_congres(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_congres.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    for pat in [
+        "local m_IsInSession",
+        "local m_CurrentPhase",
+        "local PHASE_STEP_MAX",
+        "local WORLD_CONGRESS_STAGE_1",
+        "local m_kResolutionVotes",
+        "function SetPhase(",
+        "function OnLocalPlayerTurnEnd(",
+        "function OnResumeCongress(",
+    ] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(CONGRES_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// WorldCongress.lua (script de gameplay) précédé de `ui_congres_cibles.lua` : les cibles
+/// « joueur » des résolutions tirées de `BGD_MajorsCibles()`, sans les spectateurs.
+pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
+    const APPEL: &str = "PlayerManager.GetAliveMajors()";
+    let text = String::from_utf8_lossy(src);
+    if text.contains("BGD_MajorsCibles") {
+        return Err("déjà corrigé".into());
+    }
+    let n = text.matches(APPEL).count();
+    if n == 0 {
+        return Err(format!("{APPEL} introuvable"));
+    }
+    // Octets hors appel laissés tels quels : les fichiers du jeu ne sont pas tous en UTF-8.
+    let mut out = CIBLES_BLOCK.as_bytes().to_vec();
+    out.extend_from_slice(b"\r\n");
+    let mut i = 0;
+    while i < src.len() {
+        if src[i..].starts_with(APPEL.as_bytes()) {
+            out.extend_from_slice(b"BGD_MajorsCibles()");
+            i += APPEL.len();
+        } else {
+            out.push(src[i]);
+            i += 1;
+        }
+    }
     Ok(out)
 }
 
@@ -450,6 +547,28 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     if MERVEILLES.load(Ordering::Relaxed) && ctx == "productionhelper.lua" {
         what.push("rattrapage des merveilles ajouté".into());
         return Some(patch_merveilles(src));
+    }
+    let congres: [(&str, Fix, &str); 2] = [
+        ("WorldCongressPopup.lua", patch_congres, "fenêtre du congrès en lecture seule pour les spectateurs"),
+        ("WorldCongress.lua", patch_congres_cibles, "spectateurs retirés des cibles des résolutions"),
+    ];
+    if crate::spectateurs::poses() {
+        for (file, patch, done) in congres {
+            if !is_file(chunk, file) {
+                continue;
+            }
+            publish_pol(l);
+            return match patch(src) {
+                Ok(text) => {
+                    what.push(done.into());
+                    Some(text)
+                }
+                Err(e) => {
+                    log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                    None
+                }
+            };
+        }
     }
     if crate::rendements_empire::enabled() && is_file(chunk, "TopPanel.lua") {
         return match patch_top_panel(src) {
@@ -809,6 +928,32 @@ mod tests {
         assert!(patch_top_panel(b"function RefreshYields() end").is_err());
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Replacements\TopPanel.lua", "TopPanel.lua"));
         assert!(!is_file("ui/topPanel_spectator.lua", "TopPanel.lua"));
+    }
+
+    #[test]
+    fn congres_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua")) else { return };
+        let new = patch_congres(&src).unwrap();
+        assert!(new.starts_with(&src) && new.ends_with(CONGRES_BLOCK.as_bytes()));
+        assert!(patch_congres(&new).is_err(), "pas deux fois");
+        assert!(patch_congres(b"function SetPhase() end").is_err());
+        assert!(is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongressPopup.lua"));
+        assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongress.lua"));
+    }
+
+    #[test]
+    fn cibles_du_congres_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\Scripts\WorldCongress.lua")) else { return };
+        let new = patch_congres_cibles(&src).unwrap();
+        let text = String::from_utf8_lossy(&new);
+        assert!(text.starts_with(CIBLES_BLOCK));
+        // Les cinq validateurs à cible joueur ; le reste vient du bloc lui-même.
+        let corps = &text[CIBLES_BLOCK.len()..];
+        assert_eq!(corps.matches("BGD_MajorsCibles()").count(), 5);
+        assert_eq!(corps.matches("PlayerManager.GetAliveMajors()").count(), 0);
+        assert_eq!(new.len() + 5 * "PlayerManager.GetAliveMajors()".len(), src.len() + CIBLES_BLOCK.len() + 2 + 5 * "BGD_MajorsCibles()".len());
+        assert!(patch_congres_cibles(&new).is_err(), "pas deux fois");
+        assert!(patch_congres_cibles(b"local x = 1").is_err());
     }
 
     #[test]

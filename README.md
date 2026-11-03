@@ -24,6 +24,8 @@ détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Sépar�
   proxy, corrigés (RMA) et prioritaires sur le mod ; tours restants des routes commerciales ;
 - [pantheon](pantheon/README.md) : joueur désigné pour le panthéon, égalités et restriction d'un tour
   (analyse statique) ;
+- [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
+  qu'ils peuvent toujours consulter (correctif POL) ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
   [docs/netcode](docs/netcode/README.md) ;
 - [docs/gamecore_xp2](docs/gamecore_xp2/README.md) : carte des fichiers source de GameCore_XP2.

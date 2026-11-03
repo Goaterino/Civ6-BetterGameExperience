@@ -69,6 +69,11 @@ SITES = (  # nom, RVA, prologue d'origine
     ("retrait de gouverneur", 0x2DF800, "48895c2408488974241048897c2418"),
     ("établissement de gouverneur", 0x259B10, "4c8bdc4989732055498dabb8feffff"),
     ("personnage illustre", 0x655560, "4c8944241848894c2408555356574154"),
+    ("touristes", 0x27CE10, "4053574883ec28488b0552dc9000"),
+    ("demande de touristes", 0x27E960, "4057415641574883ec20488bfa4533ff"),
+    ("vote sur une résolution", 0x3C0BA0, "48895c241048896c24184889742420"),
+    ("vote sur une proposition", 0x3C0D40, "40555641574883ec304863ea458bf9"),
+    ("dépouillement", 0x3C5F50, "48894c240855535657415441554156"),
 )
 for name, rva, _ in SITES:
     patch = ctypes.string_at(base + rva, 14)

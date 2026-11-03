@@ -44,6 +44,8 @@ pub(crate) fn real_module() -> usize {
         crate::tours::on_gamecore_loaded(h);
         crate::wmd::on_gamecore_loaded(h);
         crate::mods_ui::on_gamecore_loaded(h);
+        // Avant `ui` : l'accroche Lua n'est posée que si une fonctionnalité en a besoin.
+        crate::spectateurs::on_gamecore_loaded(h);
         crate::ui::on_gamecore_loaded();
         crate::citoyens::on_gamecore_loaded(h);
         h
@@ -78,6 +80,7 @@ macro_rules! forward {
                 crate::improvements::reset();
                 crate::wmd::reset();
                 crate::citoyens::reset();
+                crate::spectateurs::reset();
                 crate::rendements_empire::reset();
             }
             let p = resolve(&CACHE, concat!($name, "\0").as_bytes());

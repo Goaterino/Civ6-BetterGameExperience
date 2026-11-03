@@ -436,10 +436,40 @@ Analyse : [production_turns/README.md](../production_turns/README.md).
   `RolloverProxyStatus` ; avec `actif=off`, il n'est pas posé, et le proxy de démarrage ne
   s'annonce pas dans le salon.
 - **Le journal.** `citoyens : détour posé en 0x18010f050, BetterGameDLLs 0.2.0`,
-  `citoyens : correctifs POL actifs|coupés`, et les 30 premiers écarts de chaque partie avec le
-  choix de l'originale (`citoyens : choix corrigé …`).
+  `pol : correctifs POL actifs|coupés` (état lu par [src/pol.rs](src/pol.rs), commun aux
+  correctifs POL), et les 30 premiers écarts de chaque partie avec le choix de l'originale
+  (`citoyens : choix corrigé …`).
 - **Tests.** `cargo test` compare le choix à une recherche exhaustive (20 000 tirages) ;
   `check_hooks.py` vérifie la pose et la restauration du détour.
+
+## Spectateurs hors du tourisme et du vote du congrès (correctif POL)
+
+[src/spectateurs.rs](src/spectateurs.rs), [src/ui_congres.lua](src/ui_congres.lua),
+[src/ui_congres_cibles.lua](src/ui_congres_cibles.lua). Analyse :
+[spectateurs/README.md](../spectateurs/README.md). Un spectateur de Better Spectator Mod est un majeur
+humain vivant dont le leader est `LEADER_SPECTATOR`.
+
+- **Tourisme.** `18027ce10` (touristes que A prend à P) et `18027e960` (demande totale sur P)
+  divisent par le nombre de majeurs ayant vécu, spectateurs compris : réécrites à l'identique, ce
+  nombre compté sans eux. Le prologue de `18027ce10` lit `GlobalParameters` relativement à RIP : le
+  trampoline le refait en `movabs`.
+- **Vote.** `1803c0ba0` et `1803c0d40` refusent le vote d'un spectateur. Au dépouillement
+  (`1803c5f50`), sa voix d'office pour le choix A est retirée.
+- **Scripts.** `WorldCongress.lua` (gameplay) : les cinq résolutions à cible joueur ne proposent plus
+  les spectateurs. `WorldCongressPopup.lua` : pour un spectateur, fenêtre en lecture seule pendant
+  toute la session, tour du congrès soumis d'office (la session ne l'attend plus), fin de tour qui
+  ne ferme plus la fenêtre, bouton « Fermer ». Les deux blocs lisent `Civ6RolloverProxy_Pol()`,
+  posée par le proxy dans l'état Lua qui les compile.
+- **Correctif POL, sans réglage.** Même règle que le précédent (`BgdPolActifs`). Sans lui, le jeu
+  d'origine partout, scripts compris.
+- **Le journal.** `spectateurs : détours posés (tourisme, votes, dépouillement)`,
+  `spectateurs : tourisme divisé par N' majeurs au lieu de N`, les 20 premiers votes refusés et
+  dépouillements corrigés de chaque partie, et `ui : WorldCongressPopup.lua : fenêtre du congrès en
+  lecture seule pour les spectateurs`, `ui : WorldCongress.lua : spectateurs retirés des cibles des
+  résolutions`.
+- **Tests.** `cargo test` compare la formule réécrite à celle de l'assembleur (100 000 tirages) et
+  patche les vrais scripts ; `lua proxy/tests/test_congres.lua` exécute les deux blocs sur les vrais
+  fichiers avec des bouchons ; `check_hooks.py` vérifie la pose et la restauration des cinq détours.
 
 ## Merveille retirée de la file après deux échanges
 

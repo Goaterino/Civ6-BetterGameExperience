@@ -80,7 +80,7 @@ dans le salon.
 
 **Le journal**, `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log` :
 - `citoyens : détour posé en 0x18010f050, BetterGameDLLs 0.2.0` ;
-- `citoyens : correctifs POL actifs` ou `coupés`, à chaque changement ;
+- `pol : correctifs POL actifs` ou `coupés`, à chaque changement ;
 - `citoyens : choix corrigé (n), K citoyens. Jeu : … BGD : …` : les 30 premiers écarts de chaque
   partie avec le choix de l'originale, recalculé sur une copie. Chaque emplacement y est écrit
   `(x,y) nourriture/favori/autre`.
