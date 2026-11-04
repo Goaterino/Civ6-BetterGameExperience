@@ -8,7 +8,8 @@ rejoindre le salon. Sortie dans <dossier>, par défaut analyses/lobby/runs/<date
 - configs/<n>_<type>.txt : texte complet de chaque NetGameConfig / NetPlayerInfo reçu, que le jeu
   coupe à 32 Ko dans net_message_debug.log. À décoder avec parse_netconfig.py.
 
-Entrée : photo des 16 premiers emplacements de la config locale. Ctrl+C pour arrêter.
+Entrée : photo des 16 premiers emplacements de la config locale. « fin » + Entrée, ou Ctrl+C,
+pour arrêter.
 """
 
 import datetime
@@ -74,7 +75,10 @@ def main():
     print(f"Attaché à {proc.name} (pid {proc.pid}). Journal : {log_path}", flush=True)
 
     def clavier():
-        for _ in sys.stdin:
+        for ligne in sys.stdin:
+            if ligne.strip().lower() == "fin":
+                done.append("fin demandée")
+                return
             try:
                 script.exports_sync.emplacements(16)
             except Exception as e:  # session détachée
@@ -84,7 +88,11 @@ def main():
     try:
         while not done:
             time.sleep(0.5)
-        print(f"Détaché : {done[0]}", flush=True)
+        print(f"Arrêt : {done[0]}", flush=True)
+        try:
+            session.detach()
+        except frida.InvalidOperationError:
+            pass
     except KeyboardInterrupt:
         session.detach()
     log.close()

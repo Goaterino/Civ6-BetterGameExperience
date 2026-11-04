@@ -386,6 +386,16 @@ sont dans `~/Tools/ghidra-projects/lobby_dump/` (non versionné).
 
 ## Protocole de test
 
+**Kit pour les joueurs.** `kit/faire_kit.ps1` écrit `Bureau\kit-test-salon.zip` : le hook,
+`kit/test_salon.ps1` et la fiche joueur `kit/FICHE.md`. `test_salon.ps1 -Nom <pseudo>` fait trois
+choses :
+1. il crée un environnement Python à part, dans `%LOCALAPPDATA%\Civ6LobbyTest`, avec frida 17.25.2 ;
+2. il attend le jeu et lance le hook ;
+3. à `fin`, une fois le jeu fermé, il zippe sur le Bureau le journal du hook, les configs et les
+   journaux du jeu.
+
+`-Verifier` contrôle seulement l'installation.
+
 **Matériel :**
 - 3 machines au moins : l'hôte H et les clients A et B, avec un C pour les tests d'arrivée ;
 - Civ6 en **DX12**, mêmes mods (MPH, BSM, BBG) ;
