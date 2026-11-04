@@ -208,6 +208,56 @@ pris aussi), parce que c'est le contexte qui porte `HostGame`, `CheckPreset` et 
 premier par `LuaEvents`. L'état du salon (D2) se lit dans le bloc de `stagingroom.lua`, qui suit déjà
 les emplacements pour le verdict POL.
 
+## Le lien de salon Steam : l'API Steamworks, sans désassemblage
+
+Rien à désassembler : notre DLL tourne **dans le processus du jeu**, et `steam_api64.dll`, que l'exe
+importe, expose l'**API plate** (*flat API*) de Steamworks en C. Le jeu a déjà fait son
+`SteamAPI_Init` ; il suffit d'un `GetProcAddress`. Les fonctions plates prennent le `CSteamID` en
+`uint64`, donc aucun ABI C++ à imiter, aucun en-tête du SDK à embarquer.
+
+**Obtenir les interfaces**, sans dépendre du numéro de version du SDK :
+
+```
+SteamAPI_GetHSteamUser()                                        → HSteamUser
+SteamInternal_FindOrCreateUserInterface(h, "SteamUser023")      → ISteamUser*
+SteamInternal_FindOrCreateUserInterface(h, "SteamFriends017")   → ISteamFriends*
+```
+
+Les deux exports sont stables ; seule la **chaîne de version** bouge d'un SDK à l'autre. On essaie
+donc les quelques versions voisines et on garde la première qui rend un pointeur non nul, en
+journalisant laquelle : une mise à jour du jeu ne casse rien.
+
+**`steamId64` : réglé.** `SteamAPI_ISteamUser_GetSteamID(user)`.
+
+**`lobbyId` : c'est la moitié difficile.** L'API Steamworks n'a **aucun** appel « dans quel salon
+suis-je ? » : par construction, c'est au jeu de le retenir, depuis `LobbyCreated_t` / `LobbyEnter_t`.
+Deux voies, par ordre de préférence :
+
+1. `SteamAPI_ISteamFriends_GetFriendGamePlayed(friends, <notre propre SteamID>, &info)` →
+   `info.m_steamIDLobby`. La [doc d'ISteamFriends](https://partner.steamgames.com/doc/api/ISteamFriends)
+   ne la décrit que pour un ami (« rend true si l'utilisateur est un ami **et** est en jeu ») :
+   l'appel sur soi-même n'est pas documenté. C'est pourtant la voie la plus simple, et vingt lignes
+   suffisent à trancher. **À tester d'abord.**
+2. S'abonner à `LobbyCreated_t` (le salon que l'hôte vient de créer) ou `LobbyEnter_t` par
+   `SteamAPI_RegisterCallback`, export de la même DLL : c'est ce que fait le modèle `CCallback` du
+   SDK. On ne détourne rien dans l'exe, on s'inscrit à la distribution des rappels — au prix d'une
+   dépendance à la forme de la table virtuelle de `CCallbackBase`, publique dans le SDK mais
+   interne.
+
+**Et une voie qui dispense le proxy entièrement** : `GetPlayerSummaries` de la Web API rendrait un
+champ `lobbysteamid` (l'identifiant du salon où le joueur est hébergé). Valve ne le documente pas —
+[sa page de référence](https://wiki.teamfortress.com/wiki/WebAPI/GetPlayerSummaries) n'en parle pas,
+seuls des services tiers s'en servent — et il dépend de la visibilité du profil. Si ça marche, CivUp
+peut remplir le lien **sans une ligne de code côté jeu**, à deux conditions : connaître le
+`steamId64` de l'hôte (leur modèle lie des comptes Discord, pas Steam) et accepter l'exigence de
+profil public. Un `curl` tranche. À noter que `ILobbyMatchmakingService.GetLobbyData`, l'interface
+officielle, **réclame une clé d'éditeur** : elle est hors de portée.
+
+Le format `steam://joinlobby/<appid>/<lobbyId>/<steamId64>` n'est pas documenté non plus par Valve
+(le [protocole steam://](https://developer.valvesoftware.com/wiki/Steam_browser_protocol) ne le liste
+pas), mais c'est exactement ce que CivUp valide et ce que les joueurs collent aujourd'hui : il
+marche.
+
 ## Gardes
 
 Un gestionnaire de protocole est invocable par n'importe quelle page ; un jeton d'appairage ouvre un
@@ -235,11 +285,9 @@ canal sortant. D'où :
 
 ## À vérifier avant d'écrire du code
 
-1. **Le lien Steam du salon, depuis le jeu** : `lobbyId` et `steamId64`. L'exe importe
-   `steam_api64.dll`, et le proxy sait déjà détourner une entrée de la table d'imports de l'exe
-   (c'est la technique de `luaL_loadbuffer`) : regarder `ISteamMatchmaking` (création du salon,
-   rappel `LobbyCreated`) et `ISteamUser::GetSteamID`, et vérifier qu'aucune des 85 fonctions de la
-   table `Network` ne le donne déjà. **C'est le verrou du palier 0.**
+1. **`GetFriendGamePlayed` sur soi-même** rend-il `m_steamIDLobby` ? C'est le verrou du palier 0, et
+   le seul point encore ouvert de la section ci-dessus. Replis : l'abonnement à `LobbyCreated_t`, ou
+   le `lobbysteamid` de la Web API côté CivUp.
 2. **`openExternalLink` avec un schéma maison** : mesurer `steam://` puis `civ6bgd://` dans le client
    Discord, et constater le repli presse-papiers de CivUp. Décide si le palier d'appairage par lien
    existe dans l'activité ou seulement hors d'elle.
@@ -258,7 +306,7 @@ canal sortant. D'où :
 
 | palier | contenu | dépend de |
 |---|---|---|
-| 0 | **D2, le lien Steam** : trouver `lobbyId`/`steamId64` dans le jeu, appairage par code, `POST` du lien. Rien n'est écrit dans la config, rien ne touche la simulation | une route d'écriture chez CivUp |
+| 0 | **D2, le lien Steam** : `lobbyId`/`steamId64` par l'API plate de Steamworks (aucun désassemblage), appairage par code, `POST` du lien. Rien n'est écrit dans la config, rien ne touche la simulation | une route d'écriture chez CivUp |
 | 1 | **D1, la recette** : `--uri`, enregistrement `HKCU`, natives `Civ6Proxy_Recette()` / `Civ6Proxy_RecetteFinie(etat)`, bloc `hostgame.lua`, popup, tests Rust (URL, origine, expiration, taille) et Lua (à la manière de [test_salon.lua](../../startup_proxy/tests/test_salon.lua)) | le contrat (chefs, cartes, route de recette) |
 | 2 | **D2 complet** : état du salon en direct dans l'activité (emplacements, verdict POL, lancement) | une route d'écriture |
 | 3 | **Micro-serveur local**, pour un tableau de bord dans un navigateur sur la même machine. Inutile à l'activité Discord | rien |
