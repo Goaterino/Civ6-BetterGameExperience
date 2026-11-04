@@ -368,8 +368,24 @@ BetterGameDLLs, peut s'en charger. Il recevrait le résultat du civdraft par un 
 .venv/Scripts/python.exe -I analyses/lobby/gen_noms_cles.py analyses/lobby/runs/<dossier>/net_message_debug.log
 ```
 
-Le hook n'a pas encore tourné en jeu : il est vérifié pour la syntaxe et pour les octets de chaque
-site (exe du 2026-08-21). Il ne demande pas le proxy de GameCore, et peut tourner en même temps que
+**Essai à vide du 2026-11-04** (salon Internet hébergé seul, `runs/essai-solo-2/`, non versionné).
+Tous les sites s'accrochent, et la chaîne du swap est captée de bout en bout, conforme à l'analyse :
+1. `lua_request_player_id_change` 0 → 4 ;
+2. `recu_request_change` ;
+3. `hote_decision accepte=true` (l'emplacement 4, une IA, n'a pas de joueur réseau) ;
+4. `recu_change_id` ;
+5. `firewire_change_id` ;
+6. `app_players_swapped` : TAKEN/nom passent de 0 à 4, COMPUTER de 4 à 0, et l'identifiant local
+   devient 4.
+
+Le `NetGameConfig` capté fait 23 780 caractères et se décode en entier. Autres constats :
+- les `BroadcastGameConfig` faits avant `HostGame` (hors session) sont bien sans effet ;
+- **à l'hébergement, l'hôte diffuse 76 `NetPlayerInfo` en une seconde**, quatre par emplacement IA
+  ou ouvert (6 à 23). C'est autant d'écritures complètes d'emplacement qui peuvent en croiser une
+  autre (L1). L'essai ne dit pas d'où elles viennent : `PlayerSetupLogic`, MPH, ou les deux.
+
+L'identifiant d'un `FNetPlayer` est en `+0x14` (`140f78900`, fonction partagée par repliement de
+code, que Ghidra nomme `HksCompilerSettings::_isHksGlobalMemoTestingMode`). Il ne demande pas le proxy de GameCore, et peut tourner en même temps que
 `netcode/hook_reconnect.py` : les sites communs (`PlayerConnected`, `PlayerLeft`) ne sont que
 journalisés.
 

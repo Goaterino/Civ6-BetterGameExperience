@@ -102,8 +102,17 @@ function dump(toStr, msg) {
         if (buf === null) buf = Memory.alloc(BUF_SIZE);
         buf.writeU8(0);
         toStr(msg, buf, BUF_SIZE);
-        const s = buf.readUtf8String();
-        return { len: s.length, data: new TextEncoder().encode(s).buffer };
+        // Copie brute jusqu'au zéro final : le texte n'est pas toujours de l'UTF-8 valide
+        // (noms de joueurs, JSON de localisation), et le décoder ferait échouer la copie.
+        const CHUNK = 65536;
+        let len = 0;
+        for (let off = 0; off < BUF_SIZE; off += CHUNK) {
+            const bytes = new Uint8Array(buf.add(off).readByteArray(Math.min(CHUNK, BUF_SIZE - off)));
+            const z = bytes.indexOf(0);
+            if (z >= 0) { len = off + z; break; }
+            len = off + bytes.length;
+        }
+        return { len, data: buf.readByteArray(len) };
     } catch (e) {
         return { len: -1, data: null, err: String(e) };
     }
@@ -167,6 +176,7 @@ function hookExe(mod) {
                 sections,
                 depuis_cloud: msg.add(0x4c0).readU8(),
                 taille_texte: d.len,
+                ...(d.err ? { erreur_texte: d.err } : {}),
                 hote: isHost(),
             }, d.data);
         },
@@ -183,7 +193,7 @@ function hookExe(mod) {
             } catch (e) { /* session absente */ }
             this.id = id;
             const d = dump(fn.strPlayerInfo, msg);
-            emit('recu_player_info', { joueur: id, emetteur, avant: id >= 0 && id < 64 ? slot(id) : null, taille_texte: d.len }, d.data);
+            emit('recu_player_info', { joueur: id, emetteur, avant: id >= 0 && id < 64 ? slot(id) : null, taille_texte: d.len, ...(d.err ? { erreur_texte: d.err } : {}) }, d.data);
         },
         onLeave() { if (this.id >= 0 && this.id < 64) emit('recu_player_info_fin', { apres: slot(this.id) }); },
     });
@@ -208,7 +218,7 @@ function hookExe(mod) {
             const p = args[1];
             this.p = p;
             try {
-                this.id = p.add(8).readS32();
+                this.id = p.add(0x14).readS32(); // FNetPlayer::GetID (140f78900)
                 this.desire = p.add(0x20).readS32();
             } catch (e) {
                 this.desire = -1;

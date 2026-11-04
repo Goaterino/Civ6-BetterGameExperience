@@ -21,6 +21,17 @@ Durée : 30 à 45 min. Il faut l'hôte et 2 ou 3 autres joueurs.
    `-Python "C:\chemin\vers\python.exe"`.
 4. Mêmes mods que l'hôte : MPH, BSM, BBG. Si possible, la même langue de jeu, sauf pour le test 5.
 5. Horloge Windows à l'heure : Paramètres > Heure > « Synchroniser maintenant ».
+6. **Lancement en DX12.** Choisir « DX12 » dans le lanceur 2K ne suffit pas si les options de
+   lancement Steam forcent l'exe, une astuce courante pour sauter le lanceur. Si Propriétés > Général
+   > Options de lancement contient `…\CivilizationVI.exe" %command%`, le jeu démarre toujours en DX11.
+   Pour le test, remplacer par :
+
+   ```
+   "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam\CivilizationVI_DX12.exe" %command%
+   ```
+
+   Adapter le début du chemin si le jeu est installé ailleurs. On peut remettre l'ancienne ligne
+   après le test.
 
 ## Pendant
 
