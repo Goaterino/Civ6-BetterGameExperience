@@ -101,6 +101,19 @@ for rva, callee in CALLS:
     assert h <= hook < h + 0x400000, f"tours {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
     print(f"tours : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
+# Départ d'un port (ports.rs) : `call 18005e770` de CanStart (TeleportToCity) redirigé vers un relais
+# `mov rdx,r14 ; jmp [rip+0]`.
+PORT_RVA, PORT_CALLEE = 0x67D315, 0x5E770
+code = ctypes.string_at(base + PORT_RVA, 5)
+assert code[0] == 0xE8, f"ports : pas de call ({code.hex()})"
+stub = base + PORT_RVA + 5 + struct.unpack("<i", code[1:])[0]
+assert stub != base + PORT_CALLEE, "ports : appel non redirigé"
+jump = ctypes.string_at(stub, 17)
+assert jump[:9] == bytes.fromhex("4c89f2ff2500000000"), f"ports : relais inattendu ({jump.hex()})"
+hook = struct.unpack("<Q", jump[9:])[0]
+assert h <= hook < h + 0x400000, f"ports : le relais ne mène pas au proxy ({hook:#x})"
+print(f"ports : call {base + PORT_RVA:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+
 # Le proxy n'exporte que les noms de l'originale, plus DllMain et les deux exports de diagnostic.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from gen_exports import exports  # noqa: E402
@@ -124,4 +137,7 @@ for rva, callee in CALLS:
     code = ctypes.string_at(base + rva, 5)
     assert base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + callee, f"tours {rva:#x} : appel non restauré"
 print("tours : appels d'origine restaurés après déchargement du proxy")
+code = ctypes.string_at(base + PORT_RVA, 5)
+assert base + PORT_RVA + 5 + struct.unpack("<i", code[1:])[0] == base + PORT_CALLEE, "ports : appel non restauré"
+print("ports : appel d'origine restauré après déchargement du proxy")
 print("OK")

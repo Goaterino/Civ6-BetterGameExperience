@@ -48,6 +48,7 @@ pub(crate) fn real_module() -> usize {
         crate::spectateurs::on_gamecore_loaded(h);
         crate::ui::on_gamecore_loaded();
         crate::citoyens::on_gamecore_loaded(h);
+        crate::ports::on_gamecore_loaded(h);
         h
     })
 }
@@ -81,6 +82,7 @@ macro_rules! forward {
                 crate::wmd::reset();
                 crate::citoyens::reset();
                 crate::spectateurs::reset();
+                crate::ports::reset();
                 crate::rendements_empire::reset();
             }
             let p = resolve(&CACHE, concat!($name, "\0").as_bytes());

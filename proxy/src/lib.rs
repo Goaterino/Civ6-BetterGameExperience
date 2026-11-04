@@ -24,6 +24,7 @@ mod improvements;
 mod mods_ui;
 mod patch;
 mod pol;
+mod ports;
 mod rendements;
 mod rendements_empire;
 mod spectateurs;
@@ -191,6 +192,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             coalesce::on_proxy_unload();
             citoyens::on_proxy_unload();
             spectateurs::on_proxy_unload();
+            ports::on_proxy_unload();
             improvements::on_proxy_unload();
             rendements::on_proxy_unload();
             rendements_empire::on_proxy_unload();
