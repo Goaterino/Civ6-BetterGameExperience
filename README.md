@@ -29,6 +29,9 @@ détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Sépar�
   votes ignorés (analyse préliminaire statique) ;
 - [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
   succès avec fuite comptés comme des succès (analyse statique) ;
+- [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
+  réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
+  hook Frida et décodeur de config (analyse statique) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
