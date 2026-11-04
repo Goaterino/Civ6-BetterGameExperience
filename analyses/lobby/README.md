@@ -208,6 +208,25 @@ effet réel une fois connue la règle de l'exe.
 - **Hypothèse non vérifiée.** La génération de la carte repart de l'instantané de l'hôte : la carte
   elle-même ne devrait pas diverger.
 
+**L2b. Preset « PPL Team » (9) : nombre de cités-États remis à 0.**
+- **Ce que fait le preset.**
+  - Ses `ConfigurationUpdates` (`Config.xml`) posent `MAP_SIZE = MAPSIZE_DUEL`.
+  - `MapSize_ValueChanged` (`gamesetuplogic.lua` l.790) règle alors le nombre de cités-États sur
+    l'intervalle de cette taille : 0 à 6, par défaut 3 (`MapSizes.xml`, idem BBM).
+  - Puis `CheckPreset` écrit en dur `CITY_STATE_COUNT = 12` (`hostgame.lua` l.1017).
+- **Pourquoi on tombe à 0.**
+  - Au rafraîchissement suivant, `Parameter_SyncConfigurationValues` (`setupparameters.lua` l.1908)
+    trouve 12 hors de l'intervalle [`MAP_MIN_MINOR_PLAYERS`, `MAP_MAX_MINOR_PLAYERS`] = [0, 6].
+  - `CityStateCount` n'a pas de `DefaultValue` (`SetupParameters.xml` l.18) : la valeur retombe au
+    minimum, **0**, et l'hôte l'écrit.
+- **Même effet sur une carte Tiny** (maximum 10) : 12 cités-États y sont impossibles. La partie du
+  2026-11-03 avait justement `MPH_PRESET=9`, `MAP_SIZE=MAPSIZE_TINY` et `CITY_STATE_COUNT=12`.
+- **Le preset 8** écrit 3, qui tient dans l'intervalle Duel. Les autres presets n'écrivent pas ce
+  nombre : ils ne font que le ramener à la valeur par défaut de leur taille de carte (12 en
+  Standard, 15 en Large), à chaque fois que la taille est réécrite.
+- **Remarque.** `DB.MakeHash` est le même hachage que les clés de config : `MAPSIZE_TINY` =
+  -601637951, la valeur du journal.
+
 **L3. Demande de swap orpheline.**
 - **Cause.** Une demande refusée (emplacement pris par un humain qui n'a rien demandé) reste dans
   `FNetPlayer+0x20`. Elle n'est effacée que par une nouvelle demande ou par l'exécution du swap
