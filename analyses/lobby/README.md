@@ -356,8 +356,8 @@ Tout passe par l'API Lua, côté hôte :
 BetterGameDLLs, peut s'en charger. Il recevrait le résultat du civdraft par un fichier ou un
 `LuaEvents`.
 
-**Par où l'ordre arrive de l'extérieur** (site de draft, bot Discord) : schéma d'URI `civ6bgd://`,
-API web ou boucle locale, format de recette, ordre d'application et gardes dans
+**Par où l'ordre arrive de l'extérieur** : branchement sur CivUp (bot de draft et activité
+Discord), appairage, format de recette, ordre d'application et gardes dans
 [hook_externe.md](hook_externe.md).
 
 **Précautions :**
