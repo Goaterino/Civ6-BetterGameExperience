@@ -19,7 +19,7 @@ et son **activité Discord**, deux Cloudflare Workers. Conception du 2026-11-04,
 | ouverture d'un lien externe | `openExternalLink` → `discordSdk.commands.openExternalLink`, **repli sur le presse-papiers** ([platform/external-links.ts](https://github.com/Rettend/civup/blob/main/apps/activity/src/client/platform/external-links.ts)) | la voie d'un `civ6bgd://`, et l'aveu que le repli manuel est nécessaire |
 | surface « web » | la même activité en onglet de navigateur, OAuth Discord (`browser-auth.ts`) | là, et là seulement, un `fetch` vers `127.0.0.1` est envisageable |
 | lien de salon Steam | `steam://joinlobby/289070/<lobbyId>/<steamId64>`, **collé à la main par l'hôte** ([steam-link.ts](https://github.com/Rettend/civup/blob/main/apps/bot/src/services/steam-link.ts)) | le gain le plus immédiat : c'est au proxy de le produire |
-| bans, picks, vote de carte, modes | `packages/game` (`GameMode` `ffa`/`1v1`…`6v6`, `MAP_SCRIPT_IDS`, `permanentAlly`, `redDeath`, `duplicateFactions`) | le contenu d'une recette |
+| résultat du draft | `packages/game` (`GameMode` `ffa`/`1v1`…`6v6`, `MAP_SCRIPT_IDS`, `permanentAlly`, `redDeath`, `duplicateFactions`) | le contenu d'une recette |
 
 Et deux contraintes de notre côté : **le Lua du jeu n'a ni socket ni accès au disque** (tout passe
 par une native du proxy, qui porte les gardes), et les deux crates sont **sans dépendance**, en
@@ -27,8 +27,8 @@ par une native du proxy, qui porte les gardes), et les deux crates sont **sans d
 
 ## Les données circulent dans les deux sens
 
-- **D1, draft → jeu** : créer et régler le salon à partir du draft terminé (bans, chefs, équipes,
-  carte). C'est l'automatisation visée par l'analyse.
+- **D1, draft → jeu** : créer et régler le salon à partir du **résultat** du draft (chefs retenus,
+  équipes, carte, options). C'est l'automatisation visée par l'analyse.
 - **D2, jeu → CivUp** : le lien `steam://joinlobby/...` du salon, puis son état (emplacements tenus,
   verdict POL, lancement). Aujourd'hui l'hôte copie ce lien à la main, à chaque match.
 
@@ -157,13 +157,14 @@ ni commande, ni Lua, ni adresse, ni clé brute de l'arbre de config.
     { "id": 0, "leader": "LEADER_TRAJAN", "civ": "CIVILIZATION_ROME", "equipe": 0, "statut": "TAKEN" },
     { "id": 1, "statut": "OPEN", "attendu": "Zoé" }
   ],
-  "bans": ["LEADER_GILGAMESH", "LEADER_GITARJA"],
   "etat": "https://activity.example.com/api/bgd/salon/cu_7f3a/etat"
 }
 ```
 
-- Les bans tombent sur les clés de draft de MPH, déjà repérées : `BAN_1..n`, `BAN_POOL_n_NAME`,
-  `DRAFT_MAP`, `MAP_NAME` ([noms_cles.tsv](noms_cles.tsv)).
+- **Les bans ne descendent pas dans le jeu.** Ils appartiennent au draft, qui se déroule entièrement
+  dans CivUp ; une fois les chefs attribués, il n'y a plus rien à interdire dans le salon. Les clés
+  `BAN_*` et `DRAFT_MAP` de MPH servent son draft par le chat, d'avant les outils dédiés : la recette
+  n'y touche pas, et le proxy ne les lit pas. Les chefs sont écrits sur les emplacements, point.
 - `equipe` sert les modes `2v2`…`6v6` (`PlayerConfigurations[id]:SetTeam`).
 - `attendu` est un nom pour l'affichage. **On n'écrit jamais l'emplacement d'un humain connecté**
   (L1 de l'analyse).
@@ -189,6 +190,17 @@ L'ordre vient des pièges relevés dans l'analyse :
 7. **une seule** diffusion à la fin : `Network.BroadcastGameConfig(true)`, puis un
    `BroadcastPlayerInfo(id)` par emplacement touché, et seulement pour des emplacements non humains ;
 8. journaliser la recette appliquée, clé par clé, et le résultat.
+
+**Qui écrit le chef d'un joueur, et quand.** Le draft étant joué d'avance, l'hôte écrit **tous** les
+emplacements juste après `HostGame`, pendant qu'ils sont encore IA ou ouverts : aucun humain n'est là
+pour contredire (L1). Quand un joueur rejoint, il reçoit la config complète de l'hôte, puis rediffuse
+son propre emplacement — avec le chef qu'il vient de recevoir, donc sans dégât. Ce qui peut encore
+déraper est la course de la conclusion 4 : une rediffusion partie d'un état antérieur. D'où une
+**vérification après chaque arrivée** : comparer le chef et l'équipe de l'emplacement à la recette,
+et ne rediffuser que s'ils ont dérivé, **au plus deux fois par emplacement**. Le ping-pong du mode
+anonyme (L5) montre ce que coûte une correction sans plafond. Faire écrire chaque joueur par sa
+propre machine serait plus propre, mais demanderait le proxy et l'appairage chez tout le monde : à
+garder pour plus tard, si la course se montre en pratique.
 
 Le bloc Lua va à la fin de `hostgame.lua` (dispatch par nom de fichier : le remplaçant de MPH est
 pris aussi), parce que c'est le contexte qui porte `HostGame`, `CheckPreset` et les
