@@ -356,6 +356,10 @@ Tout passe par l'API Lua, côté hôte :
 BetterGameDLLs, peut s'en charger. Il recevrait le résultat du civdraft par un fichier ou un
 `LuaEvents`.
 
+**Par où l'ordre arrive de l'extérieur** (site de draft, bot Discord) : schéma d'URI `civ6bgd://`,
+API web ou boucle locale, format de recette, ordre d'application et gardes dans
+[hook_externe.md](hook_externe.md).
+
 **Précautions :**
 - passer par `SetupParameters` (`SetParameterValue`) plutôt que par des `SetValue` bruts, pour que
   les `ConfigurationUpdates` (presets) s'appliquent et que la revalidation des domaines ne défasse
@@ -483,6 +487,8 @@ des trois machines doivent concorder : c'est la référence.
 
 ## Pour la suite
 
+- Brancher la création automatisée sur les outils extérieurs : [hook_externe.md](hook_externe.md)
+  (conception, pas encore implémentée).
 - Confirmer, pour une **nouvelle** partie, que l'instantané de l'hôte remplace la config des clients
   au lancement : la carte ne devrait alors jamais diverger, même avec L2. Il faut regarder la
   génération dans `140282e20` / `14016c2f0`.
