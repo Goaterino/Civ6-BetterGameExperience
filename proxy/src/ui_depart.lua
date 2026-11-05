@@ -15,6 +15,10 @@
 --    - un joueur qui se reconnecte en plein tour se déclare prêt et reçoit aussitôt le départ.
 --    Les signaux passent par le chat, en message privé, et ChatPanel.lua les cache
 --    (ui_depart_chat.lua). Le proxy lève lui-même l'attente au bout de 120 s.
+-- 3. Si l'hôte a coché « No last moves (BGD) » (BGD_FIN_SIMULTANEE), mêmes conditions : quand le
+--    minuteur de l'hôte arrive à zéro, il envoie `.bgd_fin <tour>` à chacun ; à réception, le proxy
+--    pousse le minuteur local au-delà de sa limite et l'exe termine le tour du joueur à l'image
+--    suivante, même s'il lui restait du temps. Chacun garde aussi son propre minuteur.
 -- Fonctions natives : Civ6RolloverProxy_Depart* (proxy/src/depart.rs). Tout passe par pcall.
 -- ===========================================================================
 do
@@ -26,7 +30,8 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	local D = BGD_Depart;
 
 	local CLE_OPTION = "BGD_DEPART_SIMULTANE";
-	local PRET, DEPART = ".bgd_pret ", ".bgd_depart ";
+	local CLE_FIN = "BGD_FIN_SIMULTANEE";
+	local PRET, DEPART, FIN = ".bgd_pret ", ".bgd_depart ", ".bgd_fin ";
 	local DELAI_HOTE = 60;
 
 	local function J(texte)
@@ -88,6 +93,20 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 
 	local function Actif()
 		return Reseau() and OptionCochee() and Dispo();
+	end
+
+	local function FinCochee()
+		local v = GameConfiguration.GetValue(CLE_FIN);
+		return v == true or v == 1;
+	end
+
+	-- La fin forcée passe par le minuteur de l'exe : il faut aussi son détour.
+	local function FinActif()
+		if not (Reseau() and FinCochee()) or Civ6RolloverProxy_DepartDispo == nil then
+			return false;
+		end
+		local dispo, minuteur = Civ6RolloverProxy_DepartDispo();
+		return dispo == 1 and minuteur == 1;
 	end
 
 	local function Moi()
@@ -261,7 +280,56 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	end
 
 	local function OnLocalPlayerTurnBegin()
+		if Civ6RolloverProxy_FinLever ~= nil then
+			Civ6RolloverProxy_FinLever();
+		end
 		Entrer(Game.GetCurrentGameTurn());
+	end
+
+	-- 3. Fin simultanée ---------------------------------------------------------------------------
+	-- Hôte : le minuteur n'est « armé » qu'après avoir été vu sous sa limite pendant le tour, pour
+	-- qu'une mise à jour encore écoulée du tour précédent ne termine pas le nouveau. Un nouveau
+	-- segment (congrès) remet le minuteur à zéro et le réarme.
+	D.finArme = -1;      -- tour pour lequel le minuteur de l'hôte a été vu sous sa limite
+	D.finRecue = -1;     -- dernier tour terminé à réception de la fin
+
+	local function OnTurnTimerUpdated(ecoule, limite)
+		if not Network.IsGameHost() or type(ecoule) ~= "number" or type(limite) ~= "number" or limite <= 0 then
+			return;
+		end
+		local tour = Game.GetCurrentGameTurn();
+		if ecoule < limite then
+			D.finArme = tour;
+			return;
+		end
+		if D.finArme ~= tour or not FinActif() then
+			return;
+		end
+		D.finArme = -1;
+		for _, id in ipairs(Attendus()) do
+			if id ~= Moi() then
+				Envoyer(FIN .. tour, id);
+			end
+		end
+		J("tour " .. tour .. " : minuteur de l'hôte écoulé, fin envoyée");
+	end
+
+	local function RecevoirFin(tour)
+		if tour ~= Game.GetCurrentGameTurn() or not FinActif() or Spectateur(Moi()) then
+			return;
+		end
+		local p = Players[Moi()];
+		if p == nil or not p:IsTurnActive() then
+			return;
+		end
+		D.attente = false;
+		if Civ6RolloverProxy_FinForcer() == 1 then
+			D.finRecue = tour;
+			Afficher(T("fin du tour : le minuteur de l'hôte est écoulé.", "turn over: the host's turn timer ran out."));
+			J("tour " .. tour .. " : fin reçue, tour terminé");
+		else
+			J("tour " .. tour .. " : fin reçue, minuteur introuvable");
+		end
 	end
 
 	local function OnPublishComplete()
@@ -288,9 +356,27 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		J("annonce : " .. texte);
 	end
 
+	local function AnnoncerFin()
+		if D.annonceFin or not Network.IsGameHost() or not Reseau() or not FinCochee() then
+			return;
+		end
+		D.annonceFin = true;
+		local texte;
+		if FinActif() then
+			texte = T("[COLOR_GREEN]BGD - Fin de tour simultanée active : le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.[ENDCOLOR]",
+				"[COLOR_GREEN]BGD - Simultaneous turn end enabled: the turn ends for everyone when the host's timer runs out.[ENDCOLOR]");
+		else
+			texte = T("[COLOR_RED]BGD - Fin de tour simultanée désactivée : il faut que tous les joueurs aient BetterGameDLLs, à la même version.[ENDCOLOR]",
+				"[COLOR_RED]BGD - Simultaneous turn end disabled: every player needs BetterGameDLLs, at the same version.[ENDCOLOR]");
+		end
+		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
+		J("annonce : " .. texte);
+	end
+
 	local function OnLoadScreenClose()
 		D.chargement = false;
 		Annoncer();
+		AnnoncerFin();
 		local p = Players[Moi()];
 		if p ~= nil and p:IsTurnActive() then
 			Entrer(Game.GetCurrentGameTurn());
@@ -322,6 +408,10 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			if D.tour == tour then
 				Partir("départ reçu, tour " .. tour);
 			end
+		elseif string.sub(text, 1, #FIN) == FIN then
+			local tour = tonumber(string.sub(text, #FIN + 1));
+			if tour == nil or fromPlayer ~= Network.GetGameHostPlayerID() then return; end
+			RecevoirFin(tour);
 		end
 	end
 
@@ -354,6 +444,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		Events.MultiplayerChat.Add(Protege(OnChat));
 		Events.MultiplayerPostPlayerDisconnected.Add(Protege(OnDepartJoueur));
 		Events.MultiplayerHostMigrated.Add(Protege(OnHoteMigre));
+		Events.TurnTimerUpdated.Add(Protege(OnTurnTimerUpdated));
 	end
 end);
 if not BGD_DepartOk then

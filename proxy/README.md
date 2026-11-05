@@ -515,10 +515,15 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Garde-fous.** Sans départ reçu, le proxy lève l'attente au premier ordre tenté après 120 s.
   Un joueur qui se reconnecte en plein tour reçoit le départ aussitôt ; après une migration d'hôte,
   les signaux repartent vers le nouvel hôte.
+- **Fin simultanée** (option « No last moves (BGD) », `BGD_FIN_SIMULTANEE`). Quand le minuteur de
+  l'hôte arrive à zéro, il envoie `.bgd_fin <tour>` à chacun ; à réception, le proxy ajoute 10⁶ s
+  au cumul des chronos de l'exe, qui termine le tour du joueur à l'image suivante, puis les retire
+  au début du tour suivant. Mêmes conditions que le départ, plus le minuteur détourné.
 - **Réglage** `depart_signaux=on|off` (off) : les signaux restent visibles dans le chat.
 - **Le journal.** `depart : détours posés (envoi des ordres, minuteur en exe+0x…)`, puis
   `depart : attente`, `… retenu`, `depart : parti (…)`, et les lignes du bloc Lua (`prêt pour le
-  tour N`, `tour N lancé`).
+  tour N`, `tour N lancé`, `tour N : minuteur de l'hôte écoulé, fin envoyée`, `depart : fin du tour
+  forcée (minuteur de l'hôte écoulé)`).
 - **Tests.** `cargo test` (signature unique dans les deux exe, blocs ajoutés), `check_hooks.py`
   (site de l'envoi), et le protocole sur plusieurs machines simulées :
 

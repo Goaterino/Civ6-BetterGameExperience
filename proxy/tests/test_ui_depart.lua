@@ -17,6 +17,9 @@ local function Check(name, ok)
 	if not ok then failures = failures + 1; end
 end
 
+-- Toutes les machines créées : aucune ne doit avoir journalisé d'erreur (bloc ou gestionnaire).
+local MACHINES = {};
+
 local function NewEvent()
 	local e = { handlers = {} };
 	function e.Add(f) table.insert(e.handlers, f); end
@@ -28,7 +31,7 @@ end
 -- connecté qui a le proxy (version non nulle).
 local function NewGame(opts)
 	local G = { machines = {}, host = opts.host or 0, clock = 0, sent = {}, options = opts };
-	G.config = { CPL_SYNCTURN = opts.syncturn, BGD_DEPART_SIMULTANE = opts.option };
+	G.config = { CPL_SYNCTURN = opts.syncturn, BGD_DEPART_SIMULTANE = opts.option, BGD_FIN_SIMULTANEE = opts.fin };
 	G.players = opts.players;
 
 	function G.Deliver(from, to, text)
@@ -45,7 +48,7 @@ local function NewGame(opts)
 		-- Événements du jeu seulement : un nom inconnu vaut nil, comme en partie (relevés dans l'UI du jeu).
 		local Events = {};
 		for _, k in ipairs({ "LocalPlayerTurnBegin", "GameCoreEventPublishComplete", "LoadScreenClose",
-			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated" }) do
+			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated" }) do
 			Events[k] = NewEvent();
 		end
 		local LuaEvents = setmetatable({}, { __index = function(t, k)
@@ -107,7 +110,9 @@ local function NewGame(opts)
 				SetUpdate = function(_, f) m.update = f; end,
 				ClearUpdate = function() m.update = nil; end,
 			},
-			Civ6RolloverProxy_DepartDispo = function() return opts.dispo == false and 0 or 1, 1; end,
+			Civ6RolloverProxy_DepartDispo = function() return opts.dispo == false and 0 or 1, opts.minuteur == false and 0 or 1; end,
+			Civ6RolloverProxy_FinForcer = function() m.natives.forcer = (m.natives.forcer or 0) + 1; return 1; end,
+			Civ6RolloverProxy_FinLever = function() m.natives.lever = (m.natives.lever or 0) + 1; end,
 			Civ6RolloverProxy_DepartAttendre = function(joueur, exec)
 				m.natives.attente = true;
 				m.natives.attendre = m.natives.attendre + 1;
@@ -129,6 +134,7 @@ local function NewGame(opts)
 		chunk();
 		m.env = env;
 		G.machines[id] = m;
+		table.insert(MACHINES, m);
 
 		function m.Charger()
 			m.Events.LoadScreenClose();
@@ -139,6 +145,9 @@ local function NewGame(opts)
 		end
 		function m.Publie()
 			m.Events.GameCoreEventPublishComplete();
+		end
+		function m.Minuteur(ecoule, limite)
+			m.Events.TurnTimerUpdated(ecoule, limite);
 		end
 		function m.Tic(dt)
 			if m.update then m.update(dt or 1); end
@@ -332,6 +341,83 @@ do
 	Check("puis « c'est parti »", #a.locaux == 2 and a.locaux[2]:find("parti") ~= nil);
 end
 
+-- Fin simultanée (« No last moves (BGD) ») -----------------------------------------------------
+local function FinGame(opts)
+	opts.players = opts.players or { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true },
+		[2] = { version = V, connecte = true } };
+	local G = NewGame(opts);
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.sent = {};
+	G.tour = 11;
+	for _, m in pairs(G.machines) do m.Debut(); end
+	return G, G.machines[0], G.machines[1], G.machines[2];
+end
+
+local function Envoyes(G, texte)
+	local n = 0;
+	for _, e in ipairs(G.sent) do if e.text == texte then n = n + 1; end end
+	return n;
+end
+
+do
+	-- Minuteur de l'hôte écoulé : fin envoyée à chacun, tour terminé chez eux.
+	local G, h, a, b = FinGame({ fin = true });
+	h.Minuteur(10, 60);
+	Check("fin : rien avant l'échéance", Envoyes(G, ".bgd_fin 11") == 0);
+	h.Minuteur(60, 60);
+	Check("fin : .bgd_fin 11 envoyé à A et B", Envoyes(G, ".bgd_fin 11") == 2);
+	Check("fin : tour terminé chez A et B", a.natives.forcer == 1 and b.natives.forcer == 1 and h.natives.forcer == nil);
+	Check("fin : ligne locale", a.locaux[#a.locaux]:find("minuteur de l'hôte") ~= nil);
+	h.Minuteur(61, 60);
+	Check("fin : une seule fois par échéance", Envoyes(G, ".bgd_fin 11") == 2);
+	-- Nouveau segment (congrès) : minuteur remis à zéro, réarmé.
+	h.Minuteur(2, 60); h.Minuteur(60, 60);
+	Check("fin : nouveau segment, nouvelle fin", Envoyes(G, ".bgd_fin 11") == 4);
+	-- Tour suivant : minuteur rendu à son état, puis mise à jour encore écoulée du tour 11.
+	G.sent = {};
+	G.tour = 12;
+	a.Debut();
+	Check("fin : levée au début du tour", a.natives.lever ~= nil and a.natives.lever >= 2);
+	h.Debut();
+	h.Minuteur(60, 60);
+	Check("fin : mise à jour périmée au début du tour ignorée", Envoyes(G, ".bgd_fin 12") == 0);
+end
+
+do
+	-- Option décochée, ou minuteur de l'exe non détourné : rien n'est envoyé.
+	local G, h = FinGame({ fin = false });
+	h.Minuteur(10, 60); h.Minuteur(60, 60);
+	Check("fin décochée : rien envoyé", #G.sent == 0);
+	local G2, h2 = FinGame({ fin = true, minuteur = false });
+	h2.Minuteur(10, 60); h2.Minuteur(60, 60);
+	Check("fin sans minuteur : rien envoyé", Envoyes(G2, ".bgd_fin 11") == 0);
+	local G3, h3 = FinGame({ fin = true });
+	h3.Minuteur(0, 0);
+	Check("fin sans minuteur de tour : rien envoyé", Envoyes(G3, ".bgd_fin 11") == 0);
+end
+
+do
+	-- Côté client : signal d'un non-hôte, d'un autre tour, ou tour déjà fini : ignoré.
+	local G, h, a, b = FinGame({ fin = true });
+	a.Events.MultiplayerChat(2, 1, ".bgd_fin 11", 3);
+	Check("fin d'un non-hôte ignorée", a.natives.forcer == nil);
+	a.Events.MultiplayerChat(0, 1, ".bgd_fin 10", 3);
+	Check("fin d'un autre tour ignorée", a.natives.forcer == nil);
+	a.tourActif = false;
+	a.Events.MultiplayerChat(0, 1, ".bgd_fin 11", 3);
+	Check("fin quand le tour est déjà fini : ignorée", a.natives.forcer == nil);
+end
+
+do
+	-- Les deux options : la fin lève aussi une attente restée en place chez le client.
+	local G, h, a = FinGame({ option = true, fin = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
+	h.Publie(); a.Publie();
+	Check("deux options : départ donné", not a.natives.attente);
+	h.Minuteur(5, 60); h.Minuteur(60, 60);
+	Check("deux options : fin reçue", a.natives.forcer == 1);
+end
+
 do
 	-- ChatPanel.lua suivi de ui_depart_chat.lua : signaux cachés, sauf réglage ; lignes locales.
 	local CHAT = ReadFile(dir .. "/../src/ui_depart_chat.lua");
@@ -354,6 +440,16 @@ do
 	local env2, shown2 = Panel(1);
 	env2.OnChat(1, 0, ".bgd_depart 11", 3);
 	Check("depart_signaux=on : signal affiché", #shown2 == 1);
+end
+
+do
+	local erreurs = {};
+	for _, m in ipairs(MACHINES) do
+		for _, t in ipairs(m.journal) do
+			if t:find("erreur") then table.insert(erreurs, t); end
+		end
+	end
+	Check("aucune erreur journalisée" .. (#erreurs > 0 and (" (" .. erreurs[1] .. ")") or ""), #erreurs == 0);
 end
 
 print(failures == 0 and "tout est bon" or (failures .. " échec(s)"));

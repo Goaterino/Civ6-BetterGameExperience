@@ -1,5 +1,5 @@
--- Test hors jeu de src/option_partie.lua : la ligne de l'option « No first moves (BGD) »
--- ajoutée à la table Parameters avant chaque lecture des options de partie.
+-- Test hors jeu de src/option_partie.lua : les lignes des options « No first moves (BGD) » et
+-- « No last moves (BGD) » ajoutées à la table Parameters avant chaque lecture des options de partie.
 --   lua startup_proxy/tests/test_option_partie.lua
 local function ReadFile(path)
 	local f = assert(io.open(path, "rb"));
@@ -25,7 +25,7 @@ local function NewScreen(lang, refuse)
 			local args = { ... };
 			if sql:find("^INSERT") then
 				if refuse then error("attempt to write a readonly database"); end
-				table.insert(rows, { ParameterId = args[1], Name = args[2], Description = args[3], sql = sql });
+				table.insert(rows, { ParameterId = args[1], Name = args[2], Description = args[3], SortIndex = args[4], sql = sql });
 				return {};
 			end
 			local r = {};
@@ -38,7 +38,7 @@ local function NewScreen(lang, refuse)
 	local SetupParameters = {};
 	function SetupParameters:Data_DiscoverParameters() discovered = discovered + 1; return "liste"; end
 	local env = {
-		pcall = pcall, print = function() end, tostring = tostring, type = type, string = string,
+		pcall = pcall, print = function() end, tostring = tostring, type = type, string = string, ipairs = ipairs,
 		DB = DB, SetupParameters = SetupParameters, QueryCache = { vieux = true },
 		Locale = { GetCurrentLanguage = function() return { Type = lang }; end },
 		Civ6Proxy_Journal = function(t) table.insert(journal, t); end,
@@ -51,20 +51,25 @@ do
 	local env, rows, journal, discovered = NewScreen("fr_FR");
 	local r = env.SetupParameters.Data_DiscoverParameters({});
 	Check("lecture d'origine appelée, résultat rendu", r == "liste" and discovered() == 1);
-	Check("ligne ajoutée", #rows == 1 and rows[1].ParameterId == "BGD_DEPART_SIMULTANE");
-	Check("libellé « No first moves (BGD) », aide en français", rows[1].Name == "No first moves (BGD)" and rows[1].Description:find("^Tous les joueurs") ~= nil);
+	Check("deux lignes ajoutées", #rows == 2 and rows[1].ParameterId == "BGD_DEPART_SIMULTANE"
+		and rows[2].ParameterId == "BGD_FIN_SIMULTANEE");
+	Check("libellé « No first moves (BGD) », aide en français", rows[1].Name == "No first moves (BGD)" and rows[1].Description:find("^Tous les joueurs commencent") ~= nil);
+	Check("libellé « No last moves (BGD) », aide en français", rows[2].Name == "No last moves (BGD)" and rows[2].Description:find("^Tous les joueurs finissent") ~= nil);
+	Check("« No last moves » juste sous « No first moves »", rows[1].SortIndex == 43 and rows[2].SortIndex == 44);
 	Check("réseau seulement, option de partie booléenne",
-		rows[1].sql:find("'bool', 0, 'Game', %?1, 'GameOptions', 0, 0, 0, 1") ~= nil);
+		rows[1].sql:find("'bool', 0, 'Game', %?1, 'GameOptions', 0, 0, 0, 1, %?4") ~= nil);
 	Check("cache des requêtes vidé", next(env.QueryCache) == nil);
-	Check("journal", journal[1] == "option : ligne ajoutée à Parameters");
+	Check("journal", journal[1] == "option : BGD_DEPART_SIMULTANE ajoutée à Parameters"
+		and journal[2] == "option : BGD_FIN_SIMULTANEE ajoutée à Parameters");
 	env.SetupParameters.Data_DiscoverParameters({});
-	Check("pas de doublon à la lecture suivante", #rows == 1 and discovered() == 2);
+	Check("pas de doublon à la lecture suivante", #rows == 2 and discovered() == 2);
 end
 
 do
 	local env, rows = NewScreen("en_US");
 	env.SetupParameters.Data_DiscoverParameters({});
-	Check("même libellé, aide en anglais", rows[1].Name == "No first moves (BGD)" and rows[1].Description:find("^Every player") ~= nil);
+	Check("mêmes libellés, aides en anglais", rows[1].Name == "No first moves (BGD)" and rows[1].Description:find("^Every player starts") ~= nil
+		and rows[2].Name == "No last moves (BGD)" and rows[2].Description:find("^Every player ends") ~= nil);
 end
 
 do

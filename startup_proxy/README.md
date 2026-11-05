@@ -291,9 +291,10 @@ cd startup_proxy && cargo build --release
   ```bash
   lua startup_proxy/tests/test_maj.lua
   ```
-- Le bloc de l'option de partie « No first moves (BGD) » (`option_partie.lua`, à la fin de
-  `SetupParameters.lua`) : ligne ajoutée à `Parameters` avant chaque lecture des options, sans
-  doublon, cache vidé, libellés français et anglais, écriture refusée sans casser l'écran. Voir
+- Le bloc des options de partie « No first moves (BGD) » et « No last moves (BGD) »
+  (`option_partie.lua`, à la fin de `SetupParameters.lua`) : lignes ajoutées à `Parameters` avant
+  chaque lecture des options, l'une sous l'autre, sans doublon, cache vidé, libellés français et
+  anglais, écriture refusée sans casser l'écran. Voir
   [depart_tour/README.md](../depart_tour/README.md).
 
   ```bash

@@ -199,6 +199,50 @@ unsafe fn attendre(joueur: i32, execute_script: u32) {
     log(&format!("depart : attente (joueur {joueur})"));
 }
 
+/// Fin de tour forcée par l'hôte (option « No last moves (BGD) ») : ce temps est ajouté au cumul
+/// des deux chronos. Le temps écoulé dépasse la limite, l'exe envoie lui-même le `TurnComplete` du
+/// joueur local à l'image suivante (`1400f8170`) et refuse d'annuler la fin de tour (`1401c9c10`).
+const FORCE_S: f64 = 1.0e6;
+static FORCE: AtomicBool = AtomicBool::new(false);
+
+/// Force la fin du tour local. Rend faux si le minuteur n'a pas encore été vu.
+unsafe fn fin_forcer() -> bool {
+    let this = MINUTEUR_THIS.load(Ordering::Relaxed);
+    if this == 0 || MINUTEUR_TRAMP.load(Ordering::Relaxed) == 0 {
+        return false;
+    }
+    if ATTENTE.swap(false, Ordering::Relaxed) {
+        log("depart : attente levée par la fin du tour");
+    }
+    for (_, cumul, _) in CHRONOS {
+        let p = (this + cumul) as *mut f64;
+        if *p < FORCE_S {
+            *p += FORCE_S;
+        }
+    }
+    FORCE.store(true, Ordering::Relaxed);
+    log("depart : fin du tour forcée (minuteur de l'hôte écoulé)");
+    true
+}
+
+/// Début du tour suivant : on retire ce qu'on a ajouté, sur les chronos que le jeu n'a pas remis à
+/// zéro.
+unsafe fn fin_lever() {
+    if !FORCE.swap(false, Ordering::Relaxed) {
+        return;
+    }
+    let this = MINUTEUR_THIS.load(Ordering::Relaxed);
+    if this == 0 {
+        return;
+    }
+    for (_, cumul, _) in CHRONOS {
+        let p = (this + cumul) as *mut f64;
+        if *p >= FORCE_S {
+            *p -= FORCE_S;
+        }
+    }
+}
+
 /// Lève l'attente : ordres libres, minuteur relancé de zéro (sauf partie en pause, que l'original
 /// respecte). Rend vrai si l'on attendait.
 fn partir(pourquoi: &str) -> bool {
@@ -307,6 +351,21 @@ unsafe extern "C-unwind" fn lua_signaux(l: *mut c_void) -> i32 {
     1
 }
 
+/// `Civ6RolloverProxy_FinForcer()` → 1 si la fin du tour local est forcée, 0 si le minuteur n'a
+/// pas encore été vu.
+unsafe extern "C-unwind" fn lua_fin_forcer(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_number)(l, fin_forcer() as u8 as f64);
+    1
+}
+
+/// `Civ6RolloverProxy_FinLever()` : au début du tour local, minuteur rendu à son état sans la fin
+/// forcée.
+unsafe extern "C-unwind" fn lua_fin_lever(_l: *mut c_void) -> i32 {
+    fin_lever();
+    0
+}
+
 /// `Civ6RolloverProxy_DepartJournal(texte)` : une ligne dans le journal du proxy.
 unsafe extern "C-unwind" fn lua_journal(l: *mut c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
@@ -317,13 +376,15 @@ unsafe extern "C-unwind" fn lua_journal(l: *mut c_void) -> i32 {
     0
 }
 
-const NATIVES: [(&[u8], LuaCFn); 6] = [
+const NATIVES: [(&[u8], LuaCFn); 8] = [
     (b"Civ6RolloverProxy_DepartDispo\0", lua_dispo),
     (b"Civ6RolloverProxy_DepartAttendre\0", lua_attendre),
     (b"Civ6RolloverProxy_DepartPartir\0", lua_partir),
     (b"Civ6RolloverProxy_DepartEtat\0", lua_etat),
     (b"Civ6RolloverProxy_DepartSignaux\0", lua_signaux),
     (b"Civ6RolloverProxy_DepartJournal\0", lua_journal),
+    (b"Civ6RolloverProxy_FinForcer\0", lua_fin_forcer),
+    (b"Civ6RolloverProxy_FinLever\0", lua_fin_lever),
 ];
 
 unsafe extern "C-unwind" fn installer(l: *mut c_void) -> i32 {
@@ -420,6 +481,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
 /// Nouvelle partie : aucune attente ne survit à la précédente.
 pub fn reset() {
     ATTENTE.store(false, Ordering::Relaxed);
+    FORCE.store(false, Ordering::Relaxed);
     MINUTEUR_THIS.store(0, Ordering::Relaxed);
     REJETS.store(0, Ordering::Relaxed);
     LOGS.store(0, Ordering::Relaxed);
@@ -428,6 +490,7 @@ pub fn reset() {
 /// Le proxy est déchargé alors que l'exe et l'originale restent en mémoire : on remet leurs octets.
 pub unsafe fn on_proxy_unload() {
     ATTENTE.store(false, Ordering::Relaxed);
+    fin_lever();
     let at = MINUTEUR_SITE.swap(0, Ordering::Relaxed);
     let tramp = MINUTEUR_TRAMP.load(Ordering::Relaxed);
     if at != 0 && tramp != 0 {

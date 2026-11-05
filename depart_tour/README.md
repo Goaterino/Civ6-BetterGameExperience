@@ -197,14 +197,51 @@ Le Lua injecté à la fin de `InGame.lua` (`startup_proxy/src/partie.lua`, qui v
 au cas où le voile serait ouvert. Le minuteur intelligent de MPH (`CPL_SMARTTIMER`, calculé à
 `TurnEnd`) n'en dépend pas et continue de marcher.
 
+## Fin de tour simultanée (« No last moves (BGD) »)
+
+Le départ simultané ne règle que les first moves. Pour les last moves, ce qui compte est l'instant
+où chaque machine envoie son `TurnComplete` : **chacune n'envoie que celui de son joueur local**,
+quand **son** minuteur est écoulé (`1400f8170`), et le tour ne se termine qu'une fois tous reçus.
+La machine dont le minuteur expire en dernier garde donc une fenêtre où ses ordres passent encore.
+
+Le minuteur compte en temps réel (`QueryPerformanceCounter`, pas image par image) : un PC lent ne
+le ralentit pas. Ce qui lui donne plus de temps : un départ plus tardif (réglé par le départ
+simultané), une durée différente (`TURN_TIMER_TIME` est local, et MPH l'écrit sur chaque machine
+sans la diffuser), une pause locale (branche « arrêt » de `1400f8590`), ou une remise à zéro plus
+tardive. Plutôt que recaler les horloges, **l'hôte décide de la fin** :
+
+1. Quand le minuteur de l'hôte arrive à zéro (`Events.TurnTimerUpdated(écoulé, limite)`, écoulé ≥
+   limite), il envoie `.bgd_fin <tour>` en privé à chaque humain attendu (même canal caché).
+2. À réception, si le tour local est encore actif, `Civ6RolloverProxy_FinForcer()` ajoute 10⁶ s au
+   cumul des deux chronos de l'exe. Le temps écoulé dépasse la limite : l'exe envoie lui-même le
+   `TurnComplete` à l'image suivante, par son chemin normal, et refuse d'annuler la fin de tour
+   (`1401c9c10`). Une attente du départ encore en place est levée.
+3. Au début du tour suivant (`LocalPlayerTurnBegin`), `Civ6RolloverProxy_FinLever()` retire ces
+   10⁶ s des chronos que le jeu n'a pas remis à zéro : aucun ne garde la trace de la fin forcée.
+4. Chaque machine garde son propre minuteur : la première échéance l'emporte.
+
+L'hôte part à T0, les autres à T0 + ping/2 ; sa fin arrive chez eux à T0 + durée + ping/2, pile à
+la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
+
+- **Armement.** L'hôte n'envoie la fin qu'après avoir vu son minuteur sous la limite pendant le
+  tour : une mise à jour encore écoulée du tour précédent, au début du nouveau, ne le termine pas.
+  Un nouveau segment (congrès) remet le minuteur à zéro et le réarme.
+- **Pas d'ordres retenus après la fin.** Entre la fin d'un tour et le début du suivant, la machine
+  envoie encore les réponses du joueur à la diplomatie des IA : les retenir bloquerait ces
+  sessions. Le `TurnComplete` de l'exe suffit.
+- **Conditions** : option de partie `BGD_FIN_SIMULTANEE` cochée (juste sous « No first moves
+  (BGD) », `SortIndex` 44), correctifs POL actifs (tous les humains ont BetterGameDLLs à la même
+  version), et minuteur de l'exe détourné. Sans minuteur de tour (limite 0), rien ne se passe.
+  L'hôte l'annonce au chargement, en vert ou en rouge, comme le départ.
+
 ## Implémentation
 
 | où | quoi |
 |---|---|
-| [proxy/src/depart.rs](../proxy/src/depart.rs) | détours de l'envoi (`1800366b0`) et de la pause du minuteur (signature, DX12 et DX11) ; fonctions natives `Civ6RolloverProxy_Depart*` ; réglage `depart_signaux` |
-| [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ |
+| [proxy/src/depart.rs](../proxy/src/depart.rs) | détours de l'envoi (`1800366b0`) et de la pause du minuteur (signature, DX12 et DX11) ; fonctions natives `Civ6RolloverProxy_Depart*`, `Civ6RolloverProxy_FinForcer` et `Civ6RolloverProxy_FinLever` ; réglage `depart_signaux` |
+| [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ, fin envoyée par l'hôte |
 | [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGD - …` |
-| [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
+| [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : lignes `BGD_DEPART_SIMULTANE` et `BGD_FIN_SIMULTANEE` insérées dans `Parameters` (approche n° 2) |
 
 Choix faits à l'implémentation :
 - **Début de l'attente** : à `LocalPlayerTurnBegin`, quand le tour des IA est fini. Commencer plus
@@ -235,3 +272,7 @@ Choix faits à l'implémentation :
   Lequel des deux chronos sert en partie standard (méthode `+0x40`).
 - `ContextPtr:SetUpdate` du contexte InGame est libre (aucun script du jeu ni de MPH ne s'en sert).
 - Écart réel avec un processeur faible (horodatages `TurnActive 1` de `net_message_debug.log`).
+- Fin simultanée : `Events.TurnTimerUpdated` continue chez l'hôte après sa propre fin de tour, et
+  le `TurnComplete` part bien à réception de `.bgd_fin` (journal de l'exe `Turn Timer Sending
+  TurnComplete, turnTimeLimit: …, elapsedTurnTime: …`, qui dira aussi si les durées diffèrent
+  d'une machine à l'autre). Le congrès : le minuteur repart-il de zéro au changement de segment ?
