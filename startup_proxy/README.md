@@ -83,6 +83,21 @@ de compatibilité ni avec le graphisme, contrairement aux essais avec `version.d
   `options : …Options.xml : onglet des proxys ajouté` et `…Options.lua : …, compilation réussie`,
   et `options : rollover_proxy.cfg enregistré (clé=valeur, …)` à chaque confirmation.
 
+**Limiteur d'images.** Dans l'onglet Vidéo du jeu, le limiteur ne propose que 20, 30 et 60 images/s
+(`tickInterval_options` d'`Options.lua`). Le proxy y ajoute, avant de compiler le script :
+- **les entrées** : 45, 75, 90 et 100 images/s ;
+- **les valeurs** : 21, 12, 10 et 9 ms de `TickIntervalInMS` (`AppOptions.txt`).
+
+L'exe fait `Sleep` du reste de l'intervalle, en millisecondes entières, avec un minuteur réglé à
+1 ms. Une image dure donc l'intervalle plus 0,5 à 1,5 ms. D'où, comme les valeurs du jeu (49, 32,
+16), 1000 / n − 1, arrondi. Mesuré à 75 FPS (12 ms) : médiane 13,4 ms, soit 75 images/s (moyenne
+71, à cause des accrocs que le jeu a aussi sans limite).
+Le choix prend effet tout de suite et s'enregistre dans `AppOptions.txt` comme les autres.
+
+Pas de réglage dans l'onglet BetterGameDLLs : rien ne change tant qu'on ne choisit pas l'une de ces
+entrées. Si la liste du jeu change de forme, elle reste telle quelle (journal :
+`liste du limiteur d'images introuvable`). Mesures : [rollover](../rollover/README.md).
+
 **Toute nouvelle fonctionnalité des proxys doit avoir son réglage dans cet onglet.** Le test
 `cles_communes_avec_le_proxy` échoue si une clé lue par `read_config` (proxy/src/lib.rs) manque à
 `PROXY_REGLAGES` dans `options_proxy.lua`, ou l'inverse. Le libellé, l'aide et les choix se

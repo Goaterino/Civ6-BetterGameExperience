@@ -11,6 +11,11 @@
 //!   locales (`m_tabs`). Avant de le compiler, on pose dans la table globale du contexte deux
 //!   fonctions natives : `Civ6Proxy_LireReglages()` et `Civ6Proxy_EcrireReglages(lignes)`.
 //!
+//! - **Limiteur d'images.** La liste du jeu (`tickInterval_options` d'`Options.lua` : désactivé,
+//!   20, 30, 60) gagne 45, 75, 90 et 100 images/s. L'exe applique `TickIntervalInMS` tel quel
+//!   (`Sleep` du reste de l'intervalle, en millisecondes entières, minuteur à 1 ms) : une image dure
+//!   l'intervalle plus 0,5 à 1,5 ms. Comme le jeu (49, 32, 16), on retient donc 1000 / n − 1, arrondi.
+//!
 //! Les réglages ne sont lus par le proxy de GameCore qu'à son chargement, au lancement de la
 //! première partie (`gamecore_config_read`). Avant, un changement prend effet à la prochaine
 //! partie ; après, au redémarrage du jeu, et la confirmation affiche alors le message du jeu
@@ -73,6 +78,23 @@ pub fn patch_options_lua(src: &[u8]) -> Vec<u8> {
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(LUA_BLOCK.as_bytes());
     out
+}
+
+/// Entrées ajoutées au limiteur d'images, après celle du jeu qu'elles suivent : (ancre, ajout).
+const TICK_ENTRIES: [(&str, &str); 2] = [
+    (r#"{"LOC_OPTIONS_TICK_INTERVAL_30_FPS", 32},"#, r#" {"45 FPS", 21},"#),
+    (r#"{"LOC_OPTIONS_TICK_INTERVAL_60_FPS", 16},"#, r#" {"75 FPS", 12}, {"90 FPS", 10}, {"100 FPS", 9},"#),
+];
+
+/// Options.lua avec les entrées de `TICK_ENTRIES` dans la liste du limiteur d'images, ou `None` si
+/// une ancre manque (autre version du jeu) : la liste reste alors celle du jeu.
+pub fn patch_tick_intervals(src: &[u8]) -> Option<Vec<u8>> {
+    let mut out = src.to_vec();
+    for (anchor, extra) in TICK_ENTRIES {
+        let at = out.windows(anchor.len()).position(|w| w == anchor.as_bytes())? + anchor.len();
+        out.splice(at..at, extra.bytes());
+    }
+    Some(out)
 }
 
 /// Le fichier de réglages avec les `changes` (`clé=valeur`, une par ligne) : chaque clé prend sa
@@ -321,7 +343,11 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
     let (text, what) = match script_name(&chunk).as_str() {
         "options.lua" => {
             publish_natives(l, OPTIONS_NATIVES, "options");
-            (patch_options_lua(src), "options : onglet des proxys ajouté")
+            let src = patch_tick_intervals(src).unwrap_or_else(|| {
+                log("options : liste du limiteur d'images introuvable, entrées non ajoutées");
+                src.to_vec()
+            });
+            (patch_options_lua(&src), "options : onglet des proxys et entrées du limiteur d'images ajoutés")
         }
         crate::salon::SCRIPT => (crate::salon::prepare(l, src), "salon : annonce de version ajoutée"),
         crate::salon::SCRIPT_PARTIE => (crate::salon::prepare_partie(l, src), "partie : relais du verdict ajouté"),
@@ -445,6 +471,19 @@ mod tests {
         assert_eq!(script_name("@Options.lua"), "options.lua");
         assert_ne!(script_name("C:/x/InGameTopOptionsMenu.lua"), "options.lua");
         assert!(patch_options_lua(b"x = 1").starts_with(b"x = 1\r\n-- "));
+    }
+
+    #[test]
+    fn limiteur_d_images() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Options.lua")) else { return };
+        let new = String::from_utf8_lossy(&patch_tick_intervals(&src).unwrap()).into_owned();
+        let start = new.find("local tickInterval_options").unwrap();
+        let table = &new[start..start + new[start..].find("};").unwrap()];
+        // Valeurs dans l'ordre de la liste : désactivé, 20, 30, 45, 60, 75, 90, 100 images/s.
+        let ms: Vec<u32> = table.split("\", ").skip(1).map(|s| s.split('}').next().unwrap().trim().parse().unwrap()).collect();
+        assert_eq!(ms, [0, 49, 32, 21, 16, 12, 10, 9]);
+        assert_eq!(new.len() - src.len(), TICK_ENTRIES.iter().map(|(_, e)| e.len()).sum::<usize>());
+        assert!(patch_tick_intervals(b"x = 1").is_none());
     }
 
     #[test]
