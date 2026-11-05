@@ -4,6 +4,8 @@ Plus rapide et plus léger que tracerpt -> XML (une capture CPU + E/S de 1 minut
 On ne décode que les événements noyau utiles, par leur disposition binaire x64 connue :
 images chargées, threads (et leurs noms), échantillons CPU et piles, et, pour les seuls threads de
 Civilization VI, les changements de contexte (CSwitch) et réveils (ReadyThread) avec leurs piles.
+S'y ajoutent les présentations DXGI (profil Frames de civ6.wprp), une par image, et le trafic réseau
+de tous les processus (un événement par paquet UDP ou segment TCP : pid, taille).
 
 Les horodatages sont bruts (compteur QPC) pour pouvoir apparier une pile à son échantillon.
 """
@@ -26,7 +28,15 @@ PERFINFO = guid("ce1dbfb4-137e-4da6-87b0-3f59aa102cbc")
 STACKWALK = guid("def2fe46-7bd6-4b80-bd94-f57fe20d0ce3")
 IMAGE = guid("2cb15d1d-5fc1-11d2-abe1-00a0c911f518")
 THREAD = guid("3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c")
-WANTED = {PERFINFO, STACKWALK, IMAGE, THREAD}
+DXGI = guid("ca11c036-0102-4a2d-a6ad-f03cfed5d3c9")  # Microsoft-Windows-DXGI
+NET = guid("7dd42a49-5329-4832-8dfd-43d979153a88")  # Microsoft-Windows-Kernel-Network
+WANTED = {PERFINFO, STACKWALK, IMAGE, THREAD, DXGI, NET}
+# Present_Start / Present_Stop, et leurs variantes PresentMultiplaneOverlay.
+DXGI_START, DXGI_STOP = {42, 55}, {43, 56}
+# Kernel-Network, données envoyées / reçues : UDP IPv4 (42, 43) et IPv6 (58, 59), TCP IPv4 (10, 11)
+# et IPv6 (26, 27). Le pid et la taille ouvrent la charge utile, quelle que soit la famille.
+NET_EVENTS = {42: ("udp", False), 43: ("udp", True), 58: ("udp", False), 59: ("udp", True),
+              10: ("tcp", False), 11: ("tcp", True), 26: ("tcp", False), 27: ("tcp", True)}
 
 
 class GUID(ctypes.Structure):
@@ -101,6 +111,10 @@ class Trace:
         # (qpc, tid entrant, tid sortant, raison d'attente du sortant, état du sortant, attente de l'entrant)
         self.cswitches = []
         self.readies = []       # (qpc, tid qui réveille ou None sans pile, tid réveillé)
+        # Présentations DXGI, tous processus : (qpc, pid, tid, début ?, drapeaux, intervalle de synchro)
+        # au début ; (qpc, pid, tid, False, résultat, None) à la fin.
+        self.presents = []
+        self.packets = []       # Trafic réseau, tous processus : (qpc, pid, "udp"/"tcp", reçu ?, octets)
         self.interval_100ns = None
         self.perf_freq = self.start_filetime = None
         self.first_qpc = None
@@ -133,6 +147,19 @@ def read(path, max_buffers=None):
             tr.first_qpc = ts
         length, = struct.unpack("<H", string_at(rec + 86, 2))  # EVENT_RECORD.UserDataLength
         data = string_at(ctypes.c_void_p.from_address(rec + 96).value, length) if length else b""
+        if provider == DXGI:
+            if eid in DXGI_START and len(data) >= 16:
+                _, flags, sync = struct.unpack_from("<QII", data)
+                tr.presents.append((ts, pid, tid, True, flags, sync))
+            elif eid in DXGI_STOP and len(data) >= 4:
+                tr.presents.append((ts, pid, tid, False, struct.unpack_from("<I", data)[0], None))
+            return
+        if provider == NET:
+            if eid in NET_EVENTS and len(data) >= 8:
+                proto, recv = NET_EVENTS[eid]
+                net_pid, size = struct.unpack_from("<II", data)
+                tr.packets.append((ts, net_pid, proto, recv, size))
+            return
         if provider == PERFINFO:
             if opcode == 46 and len(data) >= 12:  # SampledProfile
                 ip, stid = struct.unpack_from("<QI", data)
@@ -220,4 +247,5 @@ if __name__ == "__main__":
     tr = read(sys.argv[1], int(sys.argv[2]) if len(sys.argv) > 2 else None)
     print(f"{tr.events} événements en {time.time() - t0:.1f} s ; {len(tr.samples)} échantillons, "
           f"{len(tr.stacks)} piles, {len(tr.images)} images, {len(tr.thread_name)} noms de thread, "
+          f"{len(tr.presents)} événements Present, "
           f"intervalle {tr.interval_100ns}")
