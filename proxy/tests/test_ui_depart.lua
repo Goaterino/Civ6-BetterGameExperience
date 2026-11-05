@@ -42,7 +42,12 @@ local function NewGame(opts)
 	function G.NewMachine(id)
 		local m = { id = id, natives = { attente = false, attendre = 0, partir = 0, joueur = nil }, locaux = {}, update = nil };
 		local P = G.players[id];
-		local Events = setmetatable({}, { __index = function(t, k) local e = NewEvent(); rawset(t, k, e); return e; end });
+		-- Événements du jeu seulement : un nom inconnu vaut nil, comme en partie (relevés dans l'UI du jeu).
+		local Events = {};
+		for _, k in ipairs({ "LocalPlayerTurnBegin", "GameCoreEventPublishComplete", "LoadScreenClose",
+			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated" }) do
+			Events[k] = NewEvent();
+		end
 		local LuaEvents = setmetatable({}, { __index = function(t, k)
 			local e = NewEvent();
 			if k == "BGD_DepartTexte" then e.Add(function(texte) table.insert(m.locaux, texte); end); end
@@ -268,7 +273,7 @@ do
 	G.tour = 11;
 	h.Debut(); h.Publie();
 	G.players[1].connecte = false;
-	h.Events.MultiplayerPlayerDisconnected(1);
+	h.Events.MultiplayerPostPlayerDisconnected(1);
 	Check("déconnexion : l'hôte part", not h.natives.attente);
 end
 

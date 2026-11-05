@@ -51,6 +51,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		if Presente() then
 			return;
 		end
+		local avant = DB.ConfigurationChanges and DB.ConfigurationChanges();
 		DB.ConfigurationQuery("INSERT INTO Parameters (ParameterId, Name, Description, Domain, DefaultValue, "
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
@@ -62,7 +63,13 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		end
 		if ok or not journalise then
 			journalise = true;
-			J(ok and "ligne ajoutée à Parameters" or "écriture refusée par DB.ConfigurationQuery, option absente");
+			local diag = "";
+			if avant ~= nil then
+				-- Diagnostic du bouton Prêt grisé au chargement d'une partie (salon.lua).
+				diag = " (base " .. tostring(avant) .. " -> " .. tostring(DB.ConfigurationChanges()) .. ", état "
+					.. tostring(GameConfiguration and GameConfiguration.GetGameState and GameConfiguration.GetGameState()) .. ")";
+			end
+			J((ok and "ligne ajoutée à Parameters" or "écriture refusée par DB.ConfigurationQuery, option absente") .. diag);
 		end
 	end
 

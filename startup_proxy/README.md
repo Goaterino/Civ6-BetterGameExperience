@@ -159,6 +159,16 @@ ne s'activent que si tous les humains ont BetterGameDLLs à la même version. Le
   `partie : verdict relayé : …`, `salon : annonce …, verdict …`,
   `salon : message : …`, `salon : lancement : correctifs POL actifs|désactivés` (la conclusion de
   chaque machine), et toute erreur du bloc, qui n'est jamais propagée au salon.
+- **Correctif : cités-États d'une partie chargée.** Le salon de MPH affiche tout emplacement sous
+  le maximum de joueurs de la carte (plafonné à 50, contre 12 dans le jeu de base), et ce maximum
+  n'est pas recalculé au chargement d'une partie. Les cités-États reçoivent alors un menu de
+  dirigeant. Leur dirigeant (`LEADER_MINOR_CIV_*`) n'est pas dans la liste et ne peut plus être
+  changé : erreur `MissingDomainValue`, « Opt. joueur invalides. », et Prêt grisé pour tous
+  jusqu'à ce qu'un changement d'option reconstruise la liste. Le bloc enveloppe
+  `GetPlayerParameterError` et ignore cette erreur-là pour tout joueur qui n'est pas une
+  civilisation majeure (`salon : joueur N (pas une civilisation majeure) : dirigeant hors liste
+  ignoré`). Un diagnostic note dans le journal chaque apparition et levée d'une erreur de
+  paramètre (`salon : diag : …`, avec le joueur, son dirigeant, la liste et l'état de la partie).
 
 **Les correctifs POL** à ce jour : le choix des cases travaillées
 ([citoyens/README.md](../citoyens/README.md)).

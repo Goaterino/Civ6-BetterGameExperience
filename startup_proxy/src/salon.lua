@@ -300,6 +300,101 @@ local function BGD_Ouverture()
 	BGD_Publier();
 end
 
+-- Correctif : au chargement d'une partie, le salon de MPH affiche tout emplacement sous le maximum
+-- de joueurs de la carte (plafonné à 50, contre 12 dans le jeu de base). Ce maximum n'est pas
+-- recalculé pour une partie chargée : les cités-États reçoivent alors un menu de dirigeant, leur
+-- dirigeant (LEADER_MINOR_CIV_*) n'est pas dans la liste des dirigeants et ne peut plus être
+-- changé : MissingDomainValue, « Opt. joueur invalides. », Prêt grisé pour tous jusqu'à la
+-- prochaine reconstruction de la liste. Seuls les civilisations majeures ont un dirigeant à choisir :
+-- cette erreur-là est ignorée pour les autres.
+local BGD_ErreurIgnoree = {};
+local function BGD_PasMajeur(id)
+	local pc = PlayerConfigurations[id];
+	if pc == nil or pc.GetCivilizationLevelTypeID == nil or CivilizationLevelTypes == nil then
+		return false;
+	end
+	local niveau = pc:GetCivilizationLevelTypeID();
+	return niveau ~= nil and niveau ~= 0 and niveau ~= CivilizationLevelTypes.CIVILIZATION_LEVEL_FULL_CIV;
+end
+if type(GetPlayerParameterError) == "function" then
+	local BGD_GetPlayerParameterError = GetPlayerParameterError;
+	GetPlayerParameterError = function(id, ...)
+		local err = BGD_GetPlayerParameterError(id, ...);
+		local ok, ignorer = pcall(function()
+			return type(err) == "table" and err.Id == "MissingDomainValue" and BGD_PasMajeur(id);
+		end);
+		if ok and ignorer then
+			if not BGD_ErreurIgnoree[id] then
+				BGD_ErreurIgnoree[id] = true;
+				BGD_Journal("joueur " .. tostring(id) .. " (pas une civilisation majeure) : dirigeant hors liste ignoré");
+			end
+			return nil;
+		end
+		return err;
+	end
+end
+
+-- Diagnostic : erreur d'un paramètre de joueur qui grise le bouton Prêt (« Opt. joueur
+-- invalides. », vu au chargement d'une partie, levé en changeant une option de partie). Journalisé
+-- à chaque changement d'état, par joueur, avec ce qu'il faut pour en trouver la cause.
+local BGD_ErreurVue = {};
+local function BGD_DecrireErreur(id, err)
+	local t = { "joueur " .. tostring(id) .. " : erreur " .. tostring(err.Id) .. "/" .. tostring(err.Reason) };
+	local pc = PlayerConfigurations[id];
+	local dirigeant;
+	if pc ~= nil then
+		dirigeant = pc:GetLeaderTypeName();
+		table.insert(t, "statut " .. tostring(pc:GetSlotStatus()) .. ", humain " .. tostring(pc:IsHuman())
+			.. ", participant " .. tostring(pc:IsParticipant()) .. ", dirigeant " .. tostring(dirigeant));
+	end
+	table.insert(t, "état " .. tostring(GameConfiguration.GetGameState())
+		.. ", base " .. tostring(DB.ConfigurationChanges and DB.ConfigurationChanges()));
+	local pp = GetPlayerParameters and GetPlayerParameters(id);
+	local p = pp and pp.Parameters and pp.Parameters["PlayerLeader"];
+	if p == nil then
+		table.insert(t, "PlayerLeader absent");
+	else
+		local n, trouve = 0, false;
+		for _, v in ipairs(p.Values or {}) do
+			n = n + 1;
+			if v.Value == dirigeant then
+				trouve = true;
+			end
+		end
+		table.insert(t, "domaine " .. tostring(p.Domain) .. ", " .. n .. " valeurs, dirigeant "
+			.. (trouve and "présent" or "absent") .. ", valeur " .. tostring(p.Value and p.Value.Value));
+	end
+	return table.concat(t, " ; ");
+end
+local function BGD_DiagErreurs()
+	if GetPlayerParameterError == nil then
+		return;
+	end
+	local jeu = GetGameParametersError and GetGameParametersError();
+	local cle = jeu and tostring(type(jeu) == "table" and (tostring(jeu.Id) .. "/" .. tostring(jeu.Reason)) or jeu);
+	if cle ~= BGD_ErreurVue.jeu then
+		BGD_ErreurVue.jeu = cle;
+		BGD_Journal("diag : options de partie : " .. (cle and ("erreur " .. cle) or "erreur levée"));
+	end
+	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+		local err = GetPlayerParameterError(id);
+		cle = err and (tostring(err.Id) .. "/" .. tostring(err.Reason));
+		if cle ~= BGD_ErreurVue[id] then
+			BGD_ErreurVue[id] = cle;
+			BGD_Journal("diag : " .. (err and BGD_DecrireErreur(id, err) or ("joueur " .. tostring(id) .. " : erreur levée")));
+		end
+	end
+end
+if type(UpdateReadyButton) == "function" then
+	local BGD_UpdateReadyButton = UpdateReadyButton;
+	local diag = BGD_Protege(BGD_DiagErreurs);
+	UpdateReadyButton = function(...)
+		local r = BGD_UpdateReadyButton(...);
+		diag();
+		return r;
+	end
+end
+
 if Civ6Proxy_FixerPol == nil or Civ6Proxy_Version == nil then
 	BGD_Journal("fonctions natives absentes : pas d'annonce");
 else

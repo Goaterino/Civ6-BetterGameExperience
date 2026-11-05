@@ -399,6 +399,74 @@ do
 	end
 end
 
+-- 17. Diagnostic du bouton Prêt : une ligne à l'apparition de l'erreur d'un joueur, rien tant
+-- qu'elle dure, une ligne quand elle est levée ; le bouton d'origine est toujours appelé.
+do
+	local log, appels, erreur = {}, 0, nil;
+	local leader = { Domain = "Players:Expansion2_Players", Values = { { Value = "LEADER_A" } } };
+	local env = setmetatable({
+		UpdateReadyButton = function() appels = appels + 1; end,
+		GetPlayerParameterError = function(id) if id == 1 then return erreur; end end,
+		GetGameParametersError = function() return nil; end,
+		GetPlayerParameters = function(id) return { Parameters = { PlayerLeader = leader } }; end,
+		PlayerConfigurations = { [0] = {}, [1] = {
+			GetLeaderTypeName = function() return "LEADER_B"; end,
+			GetSlotStatus = function() return 1; end,
+			IsHuman = function() return true; end,
+			IsParticipant = function() return true; end,
+		} },
+		GameConfiguration = {
+			GetMultiplayerPlayerIDs = function() return { 0, 1 }; end,
+			GetGameState = function() return 7; end,
+		},
+		DB = { ConfigurationChanges = function() return 12; end },
+		Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end, Lookup = function(s) return s; end },
+		Civ6Proxy_Journal = function(t) table.insert(log, t); end,
+	}, { __index = _G });
+	assert(load(BLOCK, "=salon.lua", "t", env))();
+	local n = #log;
+	env.UpdateReadyButton();
+	check(appels == 1 and #log == n, "diag : rien sans erreur");
+	erreur = { Id = "MissingDomainValue" };
+	env.UpdateReadyButton();
+	env.UpdateReadyButton();
+	local l = log[n + 1] or "";
+	check(#log == n + 1 and l:find("joueur 1 : erreur MissingDomainValue/nil", 1, true)
+		and l:find("dirigeant LEADER_B", 1, true) and l:find("1 valeurs, dirigeant absent", 1, true)
+		and l:find("base 12", 1, true), "diag : erreur décrite une fois (" .. l .. ")");
+	erreur = nil;
+	env.UpdateReadyButton();
+	check(#log == n + 2 and log[n + 2]:find("joueur 1 : erreur levée", 1, true) and appels == 4, "diag : erreur levée");
+end
+
+-- 18. Cité-État d'une partie chargée : son dirigeant hors liste ne bloque plus Prêt ; une
+-- civilisation majeure dans le même cas, ou une autre erreur de cité-État, si.
+do
+	local FULL, MINOR = 101, 202;
+	local log = {};
+	local erreurs = {
+		[1] = { Id = "MissingDomainValue" },
+		[8] = { Id = "MissingDomainValue" },
+		[9] = { Id = "InvalidDomainValue", Reason = "LOC_X" },
+	};
+	local function Pc(niveau) return { GetCivilizationLevelTypeID = function() return niveau; end }; end
+	local env = setmetatable({
+		GetPlayerParameterError = function(id) return erreurs[id]; end,
+		CivilizationLevelTypes = { CIVILIZATION_LEVEL_FULL_CIV = FULL },
+		PlayerConfigurations = { [1] = Pc(FULL), [8] = Pc(MINOR), [9] = Pc(MINOR) },
+		GameConfiguration = { GetMultiplayerPlayerIDs = function() return {}; end },
+		Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end, Lookup = function(s) return s; end },
+		Civ6Proxy_Journal = function(t) table.insert(log, t); end,
+	}, { __index = _G });
+	assert(load(BLOCK, "=salon.lua", "t", env))();
+	local n = #log;
+	check(env.GetPlayerParameterError(8) == nil, "cité-État : dirigeant hors liste ignoré");
+	env.GetPlayerParameterError(8);
+	check(#log == n + 1 and log[n + 1]:find("joueur 8", 1, true), "cité-État : journalisé une fois");
+	check(env.GetPlayerParameterError(1) == erreurs[1], "civilisation majeure : erreur gardée");
+	check(env.GetPlayerParameterError(9) == erreurs[9], "cité-État, autre erreur : gardée");
+end
+
 if failures > 0 then
 	print(failures .. " échec(s)");
 	os.exit(1);

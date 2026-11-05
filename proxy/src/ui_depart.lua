@@ -352,7 +352,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		Events.GameCoreEventPublishComplete.Add(Protege(OnPublishComplete));
 		Events.LoadScreenClose.Add(Protege(OnLoadScreenClose));
 		Events.MultiplayerChat.Add(Protege(OnChat));
-		Events.MultiplayerPlayerDisconnected.Add(Protege(OnDepartJoueur));
+		Events.MultiplayerPostPlayerDisconnected.Add(Protege(OnDepartJoueur));
 		Events.MultiplayerHostMigrated.Add(Protege(OnHoteMigre));
 	end
 end);
