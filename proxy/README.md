@@ -489,6 +489,38 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   0x18067d315)`, puis les 20 premiers départs acceptés de chaque partie.
 - **Tests.** `check_hooks.py` vérifie la redirection et sa restauration.
 
+## Départ de tour simultané (option de partie « No first moves (BGD) »)
+
+[src/depart.rs](src/depart.rs), [src/ui_depart.lua](src/ui_depart.lua),
+[src/ui_depart_chat.lua](src/ui_depart_chat.lua). Conception et reverse :
+[depart_tour/README.md](../depart_tour/README.md).
+
+- **Deux détours, posés à chaque partie.** L'envoi des messages de GameCore (`1800366b0`) : pendant
+  l'attente, les ordres du joueur ne partent pas. La pause du minuteur de l'exe (`1400f8590` en
+  DX12, retrouvée par signature dans les deux exe) : pendant l'attente, ses deux chronos restent à
+  zéro ; au départ, ils repartent de zéro. Ni l'un ni l'autre ne touche la simulation.
+- **Le protocole, en Lua** (`ui_depart.lua`, à la fin de `InGame.lua`) : prêt (`.bgd_pret <tour>`
+  à l'hôte) quand l'interface a rattrapé le début du tour, départ (`.bgd_depart <tour>`) quand
+  tous les humains équipés et connectés sont prêts, ou après 60 s. Signaux en messages privés,
+  cachés par `ui_depart_chat.lua` (à la fin de `ChatPanel.lua`). Actif seulement si l'hôte a coché
+  l'option (`BGD_DEPART_SIMULTANE`, ajoutée au salon par le proxy de démarrage) et que les
+  correctifs POL sont actifs.
+- **Synchro de tour de MPH coupée.** Le même bloc met `CPL_SYNCTURN` à faux sur chaque machine,
+  option cochée ou non : elle ne synchronise rien.
+- **Garde-fous.** Sans départ reçu, le proxy lève l'attente au premier ordre tenté après 120 s.
+  Un joueur qui se reconnecte en plein tour reçoit le départ aussitôt ; après une migration d'hôte,
+  les signaux repartent vers le nouvel hôte.
+- **Réglage** `depart_signaux=on|off` (off) : les signaux restent visibles dans le chat.
+- **Le journal.** `depart : détours posés (envoi des ordres, minuteur en exe+0x…)`, puis
+  `depart : attente`, `… retenu`, `depart : parti (…)`, et les lignes du bloc Lua (`prêt pour le
+  tour N`, `tour N lancé`).
+- **Tests.** `cargo test` (signature unique dans les deux exe, blocs ajoutés), `check_hooks.py`
+  (site de l'envoi), et le protocole sur plusieurs machines simulées :
+
+  ```bash
+  lua proxy/tests/test_ui_depart.lua
+  ```
+
 ## Merveille retirée de la file après deux échanges
 
 Analyse et trace : [wonder_queue/README.md](../wonder_queue/README.md). Quand une merveille déjà

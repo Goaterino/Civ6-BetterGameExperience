@@ -113,6 +113,7 @@ fn active() -> bool {
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
         || crate::spectateurs::poses()
+        || crate::depart::interface_requise()
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -603,6 +604,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     if DIAG_ACCORDS.load(Ordering::Relaxed) && is_file(chunk, "DiplomacyDealView.lua") {
         what.push("diagnostic des accords ajouté".into());
         return Some(patch_diag_accords(src));
+    }
+    if let Some((text, done)) = crate::depart::patch_lua(l, chunk, src) {
+        what.push(done.into());
+        return Some(text);
     }
     for (file, patch, done) in FIXES {
         if !is_file(chunk, file) {

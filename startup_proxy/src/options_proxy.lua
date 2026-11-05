@@ -228,6 +228,13 @@ local PROXY_REGLAGES = {
 			"Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.",
 		},
 		choix = PROXY_ON_OFF },
+	{ cle = "depart_signaux", defaut = "off",
+		nom = { "Afficher les signaux du départ simultané", "Show simultaneous turn start signals" },
+		aide = {
+			"Avec l'option de partie « No first moves (BGD) », les machines s'échangent des messages de chat cachés (.bgd_pret, .bgd_depart). Activé, ils restent visibles dans votre chat, pour suivre le départ de chaque tour. Affichage seulement, sur cette machine.",
+			"With the \"No first moves (BGD)\" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart). When on, they stay visible in your chat, to follow each turn start. Display only, on this machine.",
+		},
+		choix = PROXY_ON_OFF },
 };
 
 local PROXY_TEXTES = {

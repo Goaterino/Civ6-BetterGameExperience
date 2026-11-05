@@ -11,13 +11,14 @@
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (off
-//! par défaut, voir `mods_ui`). Journal :
+//! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`). Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
 
 #![allow(non_snake_case)] // le nom de la DLL produite, GameCore_XP2_FinalRelease, est imposé.
 
 mod citoyens;
 mod coalesce;
+mod depart;
 mod exe;
 mod forward;
 mod improvements;
@@ -178,6 +179,9 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_rapports=") {
             mods_ui::set_rapports(v.trim() == "on");
         }
+        if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
+            depart::set_signaux(v.trim() == "on");
+        }
     }
 }
 
@@ -196,6 +200,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             citoyens::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();
+            depart::on_proxy_unload();
             improvements::on_proxy_unload();
             rendements::on_proxy_unload();
             rendements_empire::on_proxy_unload();

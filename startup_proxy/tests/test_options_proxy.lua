@@ -154,7 +154,7 @@ do
 		if not stacks[b.parent] then rows = -100; end
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; else titles = titles + 1; end
 	end
-	Check("22 réglages et 7 titres (crédits compris), dans le panneau", rows == 22 and titles == 7);
+	Check("23 réglages et 7 titres (crédits compris), dans le panneau", rows == 23 and titles == 7);
 
 	-- Options avancées : performances et diagnostic, cachées par défaut derrière un bouton.
 	local function StackOf(name)

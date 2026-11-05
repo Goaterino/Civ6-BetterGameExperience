@@ -38,6 +38,8 @@ détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Sépar�
   pour une unité navale (correctif POL) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
+- [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),
+  option de partie « No first moves (BGD) », synchro de tour de MPH coupée (pas encore essayé en partie) ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
   [docs/netcode](docs/netcode/README.md) ;
 - [docs/gamecore_xp2](docs/gamecore_xp2/README.md) : carte des fichiers source de GameCore_XP2.

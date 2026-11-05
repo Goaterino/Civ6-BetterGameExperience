@@ -74,6 +74,7 @@ SITES = (  # nom, RVA, prologue d'origine
     ("vote sur une résolution", 0x3C0BA0, "48895c241048896c24184889742420"),
     ("vote sur une proposition", 0x3C0D40, "40555641574883ec304863ea458bf9"),
     ("dépouillement", 0x3C5F50, "48894c240855535657415441554156"),
+    ("envoi des messages (départ simultané)", 0x366B0, "4055535741564157488dac2450faffff"),
 )
 for name, rva, _ in SITES:
     patch = ctypes.string_at(base + rva, 14)

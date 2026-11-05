@@ -28,6 +28,9 @@ pub const CHARGEMENT_BLOCK: &str = include_str!("chargement.lua");
 pub const SCRIPT_CHARGEMENT: &str = "loadscreen.lua";
 pub const PARTIE_BLOCK: &str = include_str!("partie.lua");
 pub const SCRIPT_PARTIE: &str = "ingame.lua";
+/// Option de partie « No first moves (BGD) » (départ de tour simultané, depart_tour/README.md).
+pub const OPTION_BLOCK: &str = include_str!("option_partie.lua");
+pub const SCRIPT_OPTION: &str = "setupparameters.lua";
 
 /// Correctifs POL actifs pour la partie en cours (voir l'en-tête). Désactivés tant que l'interface
 /// n'a rien dit.
@@ -152,6 +155,7 @@ pub const NATIVES: Natives = &[
 
 const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
 const PARTIE_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_pol_state, b"Civ6Proxy_PolActifs\0")];
+const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0")];
 
 /// Appelée par l'accroche sur StagingRoom.lua : pose les natives, puis rend le texte à compiler.
 pub unsafe fn prepare(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
@@ -185,6 +189,20 @@ pub fn patch_in_game_lua(src: &[u8]) -> Vec<u8> {
 pub unsafe fn prepare_partie(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
     publish_natives(l, PARTIE_NATIVES, "partie");
     patch_in_game_lua(src)
+}
+
+/// SetupParameters.lua suivi de `option_partie.lua`.
+pub fn patch_setup_parameters_lua(src: &[u8]) -> Vec<u8> {
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(OPTION_BLOCK.as_bytes());
+    out
+}
+
+/// Appelée par l'accroche sur SetupParameters.lua, inclus par chaque écran de réglage de partie.
+pub unsafe fn prepare_option(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
+    publish_natives(l, OPTION_NATIVES, "option");
+    patch_setup_parameters_lua(src)
 }
 
 #[cfg(test)]
@@ -223,6 +241,11 @@ mod tests {
         for &(_, name) in PARTIE_NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(PARTIE_BLOCK.contains(name), "{name} posée mais pas utilisée");
+        }
+        assert!(patch_setup_parameters_lua(b"x = 1").starts_with(b"x = 1\r\n-- "));
+        for &(_, name) in OPTION_NATIVES {
+            let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
+            assert!(OPTION_BLOCK.contains(name), "{name} posée mais pas utilisée");
         }
         for &(_, name) in CHARGEMENT_NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
