@@ -98,6 +98,31 @@ Pas de réglage dans l'onglet BetterGameDLLs : rien ne change tant qu'on ne choi
 entrées. Si la liste du jeu change de forme, elle reste telle quelle (journal :
 `liste du limiteur d'images introuvable`). Mesures : [rollover](../rollover/README.md).
 
+## Le profil des zones de l'exe (`profil_zones`)
+
+Réglage de diagnostic, désactivé par défaut (onglet BetterGameDLLs, section Diagnostic, ou
+`proxy/install.ps1 -ProfilZones on`). Il prend effet au lancement suivant du jeu. Il n'existe que
+dans les builds locaux : la release est compilée sans la feature `diag`
+(voir [release/README.md](../release/README.md#diagnostic)). Code :
+[src/zones.rs](src/zones.rs).
+
+- **Ce que l'exe chronomètre.** Environ 1 170 zones nommées : image, interface, contextes Lua,
+  événements de GameCore… Chaque zone est un objet de portée, ouvert par `140998450` (DX12) et fermé
+  par `140998480` (`14098a7b0` en DX11). La fermeture n'écrit dans `Profile.csv` que les zones plus
+  longues que leur seuil, et 500 fois au plus par zone.
+- **Ce que fait le proxy.** Il détourne la fermeture dès DllMain, avant que l'exe exécute son code. Il
+  la retrouve par une signature de 24 octets, identique dans les deux exes. Chaque zone est notée dans
+  un tampon circulaire de 65 536 entrées : thread, nom (47 octets au plus), début et fin en QPC.
+- **Le fichier.** Un thread d'écriture vide le tampon toutes les 100 ms dans
+  `%LOCALAPPDATA%\Civ6RolloverProxy\zones\zones-<pid>-<horodatage>.bin`, environ 1 Mo par seconde.
+  Le format est décrit en tête de `zones.rs`. Les zones perdues parce que le tampon a débordé sont
+  comptées dans le fichier.
+- **L'analyse.** `rollover/capture.ps1` copie le fichier de la session dans la capture, et
+  `rollover/analyze.py` (avec [rollover/zones.py](../rollover/zones.py)) en tire le temps propre de
+  chaque zone. Les zones et la trace WPR partagent la même horloge, QPC : `analyze.py` attribue
+  aussi les échantillons CPU à la zone ouverte sur leur thread à cet instant.
+- **Le journal.** `zones : détour posé en exe+0x…`, puis `zones : écriture dans …`.
+
 **Toute nouvelle fonctionnalité des proxys doit avoir son réglage dans cet onglet.** Le test
 `cles_communes_avec_le_proxy` échoue si une clé lue par `read_config` (proxy/src/lib.rs) manque à
 `PROXY_REGLAGES` dans `options_proxy.lua`, ou l'inverse. Le libellé, l'aide et les choix se

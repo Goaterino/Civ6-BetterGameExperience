@@ -13,6 +13,12 @@ name = "GameCore_XP2_FinalRelease"
 crate-type = ["cdylib"]
 path = "src/lib.rs"
 
+# Outils de diagnostic (voir release/README.md, « Diagnostic ») : compilés par défaut, pour les
+# builds locaux ; la release les retire (cargo build --release --no-default-features).
+[features]
+default = ["diag"]
+diag = []
+
 [profile.release]
 opt-level = 3
 # Pas de déroulement de pile à travers le code du jeu.

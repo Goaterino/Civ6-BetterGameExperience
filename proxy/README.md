@@ -313,6 +313,10 @@ touche pas au passage de tour. Contexte et mesures : [nuke/README.md](../nuke/RE
 modifie l'interface au moment où l'exe lit ses fichiers, sans mod ni rien à partager avec les autres
 joueurs.
 
+`ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` sont des outils de diagnostic. Ils n'existent
+que dans les builds locaux : la release est compilée sans la feature `diag`
+(voir [release/README.md](../release/README.md#diagnostic)).
+
 | réglage | défaut | effet |
 |---|---|---|
 | `ui_boutons=on\|off` (`-UiBoutons`) | on | boutons d'attaque (ville, campement) et de frappe nucléaire (silo) au-dessus des drapeaux d'unités ; `ConsumeMouse` sur les boutons nucléaires |

@@ -61,8 +61,9 @@ local function NewControl()
 end
 
 -- `loaded` : le proxy de GameCore a déjà lu le fichier (une partie a été lancée) ; `lang` : langue
--- du jeu (fr_FR par défaut).
-local function NewScreen(cfgText, installed, loaded, lang)
+-- du jeu (fr_FR par défaut) ; `diag` : proxy compilé avec la feature `diag` (builds locaux), qui
+-- montre les réglages de diagnostic. Sans, l'onglet est celui de la release.
+local function NewScreen(cfgText, installed, loaded, lang, diag)
 	local m = { written = {}, popupTexts = {}, built = {}, loaded = loaded };
 	local env = setmetatable({}, { __index = function(_, k) if _G[k] ~= nil then return _G[k]; end return Any; end });
 	env.include = function() end;
@@ -108,7 +109,9 @@ local function NewScreen(cfgText, installed, loaded, lang)
 		return 1, m.loaded;
 	end;
 	-- IsInGame, Options, UserConfiguration… : Any.
-	local f = assert(load(OPTIONS .. "\r\n" .. BLOCK, "Options.lua", "t", env));
+	-- Comme `lua_block` (src/options.rs).
+	local block = diag and BLOCK:gsub("local PROXY_DIAG = false;", "local PROXY_DIAG = true;", 1) or BLOCK;
+	local f = assert(load(OPTIONS .. "\r\n" .. block, "Options.lua", "t", env));
 	f();
 	m.env = env;
 	-- La ligne de réglage d'une clé : sa liste et son libellé.
@@ -145,7 +148,7 @@ end
 
 do
 	-- Une partie a déjà été lancée : le proxy de GameCore a lu le fichier.
-	local m = NewScreen("mode=coalesce\r\nui_boutons=on\r\nwmd_accel=7\r\n", 1, 1);
+	local m = NewScreen("mode=coalesce\r\nui_boutons=on\r\nwmd_accel=7\r\n", 1, 1, nil, true);
 	local C = m.env.Controls;
 	Check("onglet visible", C.ProxyTab.hidden == false and C.ProxyTab.callbacks.LClick ~= nil);
 	local rows, titles = 0, 0;
@@ -154,7 +157,7 @@ do
 		if not stacks[b.parent] then rows = -100; end
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; else titles = titles + 1; end
 	end
-	Check("23 réglages et 7 titres (crédits compris), dans le panneau", rows == 23 and titles == 7);
+	Check("24 réglages et 7 titres (crédits compris), dans le panneau", rows == 24 and titles == 7);
 
 	-- Options avancées : performances et diagnostic, cachées par défaut derrière un bouton.
 	local function StackOf(name)
@@ -217,6 +220,21 @@ do
 end
 
 do
+	-- Onglet de la release (sans la feature `diag`) : ni les réglages de diagnostic ni leur effet,
+	-- mais le départ simultané garde son réglage d'affichage des signaux.
+	local m = NewScreen("ui_diag_accords=on\r\n", 1, 1);
+	local rows = 0;
+	for _, b in ipairs(m.built) do
+		if b.name == "PullDownParameterInstance" then rows = rows + 1; end
+	end
+	Check("release : 20 réglages", rows == 20);
+	Check("release : réglages de diagnostic absents", m.Row("Journal des scripts et XML chargés") == nil
+		and m.Row("Mesure du coût des épingles") == nil and m.Row("Diagnostic des accords entre joueurs") == nil
+		and m.Row("Profil des zones de l'exe") == nil);
+	Check("release : signaux du départ simultané gardés", m.Row("Afficher les signaux du départ simultané") ~= nil);
+end
+
+do
 	local m = NewScreen("", 0, 0);
 	Check("état : proxy non installé", (m.env.Controls.ProxyStatus.text or ""):find("non installé") ~= nil);
 end
@@ -234,6 +252,16 @@ do
 	m.loaded = 1;
 	m.show();
 	Check("réouverture : avertissement de redémarrage", (C.ProxyWarning.text or ""):find("redémarrage du jeu") ~= nil);
+end
+
+do
+	-- Réglage lu par le proxy de démarrage au lancement du jeu : redémarrage demandé même sans partie lancée.
+	local m = NewScreen("ui_boutons=on\r\n", 1, 0, nil, true);
+	local C = m.env.Controls;
+	m.Choose(m.Row("Profil des zones de l'exe"), "Activé");
+	C.ConfirmButton.callbacks.LClick();
+	Check("profil_zones=on écrit", m.written[1] == "profil_zones=on");
+	Check("profil_zones : redémarrage demandé sans partie lancée", m.env._PromptRestartApp == true);
 end
 
 do

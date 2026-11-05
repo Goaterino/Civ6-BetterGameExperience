@@ -82,10 +82,12 @@ pub fn set_recentrage(on: bool) {
     RECENTRAGE.store(on, Ordering::Relaxed);
 }
 
+#[cfg(feature = "diag")]
 pub fn set_journal(on: bool) {
     JOURNAL.store(on, Ordering::Relaxed);
 }
 
+#[cfg(feature = "diag")]
 pub fn set_mesure_epingles(on: bool) {
     MESURE.store(on, Ordering::Relaxed);
 }
@@ -98,6 +100,7 @@ pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
 
+#[cfg(feature = "diag")]
 pub fn set_diag_accords(on: bool) {
     DIAG_ACCORDS.store(on, Ordering::Relaxed);
 }

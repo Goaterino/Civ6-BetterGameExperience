@@ -28,6 +28,24 @@ proposer les mises à jour au menu principal. Une compilation locale n'en a pas,
 `version` (le tag) et `lobby_version` sont distincts : une release qui ne touche ni la simulation ni
 l'échange du salon garde la même `lobby_version` et reste compatible en multijoueur avec la précédente.
 
+## Diagnostic
+
+Les outils d'analyse ne partent pas en release. Ils sont derrière la feature Cargo `diag` des deux
+proxys, activée par défaut : un `cargo build --release` local les contient, le workflow compile avec
+`--no-default-features`. Sans elle :
+- le proxy de démarrage ne pose pas le détour du profil des zones (`profil_zones`, `src/zones.rs`) ;
+- le proxy de GameCore ne lit pas `ui_journal`, `ui_mesure_epingles` ni `ui_diag_accords`, qui
+  restent sur off même s'ils sont dans `rollover_proxy.cfg` ;
+- l'onglet BetterGameDLLs ne montre pas ces quatre réglages (`diag = true` dans
+  `startup_proxy/src/options_proxy.lua`).
+
+`depart_signaux` (signaux du départ simultané) reste en release. Les scripts de `rollover/`,
+`netcode/`… ne sont jamais dans une release. Un réglage d'analyse ajouté plus tard prend aussi
+`#[cfg(feature = "diag")]` et `diag = true`. Le workflow lance les tests avec et sans la feature.
+
+Une mise à jour par l'updater remplace un build local par celui de la release, sans diagnostic : il
+faut recompiler et réinstaller pour les retrouver.
+
 ## Publier une release
 
 1. Vérifier que tout est commité et poussé : la release ne compile que le contenu du tag.

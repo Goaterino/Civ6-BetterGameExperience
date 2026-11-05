@@ -71,12 +71,25 @@ pub fn patch_options_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out.into_bytes())
 }
 
+/// Ligne du bloc qui dit s'il montre les réglages de diagnostic (`diag = true`) : réécrite en
+/// `true` quand le proxy est compilé avec la feature `diag` (builds locaux, pas la release).
+const DIAG_LINE: &str = "local PROXY_DIAG = false;";
+
+/// Le bloc de l'onglet, réglages de diagnostic compris avec la feature `diag`.
+fn lua_block() -> std::borrow::Cow<'static, str> {
+    if cfg!(feature = "diag") {
+        LUA_BLOCK.replacen(DIAG_LINE, "local PROXY_DIAG = true;", 1).into()
+    } else {
+        LUA_BLOCK.into()
+    }
+}
+
 /// Options.lua suivi du bloc de l'onglet. Octets laissés tels quels : les fichiers du jeu ne sont
 /// pas tous en UTF-8.
 pub fn patch_options_lua(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(LUA_BLOCK.as_bytes());
+    out.extend_from_slice(lua_block().as_bytes());
     out
 }
 
@@ -474,6 +487,12 @@ mod tests {
     }
 
     #[test]
+    fn reglages_de_diagnostic() {
+        assert_eq!(LUA_BLOCK.matches(DIAG_LINE).count(), 1);
+        assert_eq!(lua_block().contains("local PROXY_DIAG = true;"), cfg!(feature = "diag"));
+    }
+
+    #[test]
     fn limiteur_d_images() {
         let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Options.lua")) else { return };
         let new = String::from_utf8_lossy(&patch_tick_intervals(&src).unwrap()).into_owned();
@@ -507,6 +526,7 @@ mod tests {
         // Clés lues par le proxy de GameCore, et par celui-ci (verif_maj).
         let mut lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib.rs")).unwrap();
         lib += include_str!("maj.rs");
+        lib += include_str!("zones.rs");
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();
         let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
         assert!(read.len() >= 12, "{read:?}");

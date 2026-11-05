@@ -25,6 +25,8 @@ mod win;
 mod options;
 mod maj;
 mod salon;
+#[cfg(feature = "diag")]
+mod zones;
 #[path = "../../proxy/src/version.rs"]
 mod version;
 
@@ -82,6 +84,8 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         let name = exe.rsplit(['/', '\\']).next().unwrap_or("").to_ascii_lowercase();
         if name.starts_with("civilizationvi") {
             options::install();
+            #[cfg(feature = "diag")]
+            zones::install();
         }
     }
     1

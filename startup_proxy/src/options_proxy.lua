@@ -5,9 +5,10 @@
 --   Civ6Proxy_LireReglages()          -> texte, installé (1|0), déjà lu (1|0) ; ou nil, erreur
 --   Civ6Proxy_EcrireReglages(lignes)  -> 1, déjà lu (1|0) ; ou nil, erreur  (lignes « clé=valeur »)
 -- « Déjà lu » : le proxy de GameCore est chargé et a lu le fichier, ce qu'il ne fait qu'à son
--- chargement, au lancement de la première partie. Alors seulement un changement attend le
--- redémarrage du jeu : la confirmation lève _PromptRestartApp, et le jeu affiche son propre message
--- « redémarrage nécessaire ». Sinon, la prochaine partie lira le nouveau fichier.
+-- chargement, au lancement de la première partie. Alors un changement attend le redémarrage du
+-- jeu : la confirmation lève _PromptRestartApp, et le jeu affiche son propre message « redémarrage
+-- nécessaire ». Sinon, la prochaine partie lira le nouveau fichier. Les réglages `demarrage`, lus
+-- par le proxy de démarrage au lancement du jeu, demandent toujours le redémarrage.
 -- Textes en français si le jeu l'est, en anglais pour toutes les autres langues.
 -- m_tabs, OnSelectTab, OnConfirm, OnShow, PopulateComboBox et _PromptRestartApp sont ceux
 -- d'Options.lua.
@@ -41,10 +42,12 @@ local PROXY_CACHE = {
 -- Une entrée par réglage lu par le proxy de GameCore (read_config, proxy/src/lib.rs) ou par celui-ci
 -- (verif_maj, src/maj.rs) : un test (cargo test, startup_proxy) vérifie que les listes concordent.
 -- `defaut` est la valeur que prend le proxy quand la clé manque au fichier. `libre` : jamais grisé
--- par l'interrupteur général, qui ne concerne que le proxy de GameCore.
+-- par l'interrupteur général, qui ne concerne que le proxy de GameCore. `demarrage` : lu par le
+-- proxy de démarrage au lancement du jeu, son changement demande donc toujours le redémarrage.
 -- `avance` (sur un titre) : la section et ses réglages sont des options avancées, cachées par défaut
 -- derrière le bouton « Afficher les options avancées », comme les options vidéo avancées du jeu.
--- Restent visibles le confort et l'interface.
+-- Restent visibles le confort et l'interface. `diag` : outil d'analyse, seulement dans les builds
+-- locaux (feature `diag` des proxys) ; la release ne le compile pas et l'onglet ne le montre pas.
 local PROXY_REGLAGES = {
 	{ titre = { "Général", "General" } },
 	-- Interrupteur général : off, les autres réglages sont grisés (et gardés dans le fichier).
@@ -55,7 +58,7 @@ local PROXY_REGLAGES = {
 			"Turns off all GameCore proxy changes at once, without uninstalling it: the game behaves as without the proxy. The other settings are kept, and this tab stays available to turn it back on.",
 		},
 		choix = PROXY_ON_OFF },
-	{ cle = "verif_maj", defaut = "on", libre = true,
+	{ cle = "verif_maj", defaut = "on", libre = true, demarrage = true,
 		nom = { "Recherche des mises à jour", "Check for updates" },
 		aide = {
 			"Au lancement du jeu, cherche sur GitHub une nouvelle version de BetterGameDLLs, et la propose au menu principal. Prend effet au prochain lancement du jeu.",
@@ -207,21 +210,21 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 
 	{ titre = { "Diagnostic", "Diagnostics" }, avance = true },
-	{ cle = "ui_journal", defaut = "off",
+	{ cle = "ui_journal", defaut = "off", diag = true,
 		nom = { "Journal des scripts et XML chargés", "Log loaded scripts and XML" },
 		aide = {
 			"Note chaque fichier d'interface lu dans le journal du proxy.",
 			"Writes each interface file read to the proxy log.",
 		},
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_mesure_epingles", defaut = "off",
+	{ cle = "ui_mesure_epingles", defaut = "off", diag = true,
 		nom = { "Mesure du coût des épingles", "Measure map pin cost" },
 		aide = {
 			"Écrit dans Lua.log la durée des reconstructions d'épingles et du bandeau des dirigeants.",
 			"Writes to Lua.log how long map pin and leader ribbon rebuilds take.",
 		},
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_diag_accords", defaut = "off",
+	{ cle = "ui_diag_accords", defaut = "off", diag = true,
 		nom = { "Diagnostic des accords entre joueurs", "Diagnose deals between players" },
 		aide = {
 			"Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.",
@@ -235,7 +238,22 @@ local PROXY_REGLAGES = {
 			"With the \"No first moves (BGD)\" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart). When on, they stay visible in your chat, to follow each turn start. Display only, on this machine.",
 		},
 		choix = PROXY_ON_OFF },
+	{ cle = "profil_zones", defaut = "off", libre = true, demarrage = true, diag = true,
+		nom = { "Profil des zones de l'exe", "Profile the game's timed zones" },
+		aide = {
+			"Note la durée de chaque zone chronométrée par le jeu (image, interface, scripts, événements) dans %LOCALAPPDATA%\\Civ6RolloverProxy\\zones, pour l'analyse des performances. Environ 1 Mo par seconde de jeu. Prend effet au prochain lancement du jeu.",
+			"Records the duration of every zone the game times (frame, interface, scripts, events) to %LOCALAPPDATA%\\Civ6RolloverProxy\\zones, for performance analysis. About 1 MB per second of play. Takes effect the next time the game starts.",
+		},
+		choix = PROXY_ON_OFF },
 };
+
+-- Réécrite en `true` par le proxy de démarrage compilé avec la feature `diag` (src/options.rs).
+local PROXY_DIAG = false;
+if not PROXY_DIAG then
+	for i = #PROXY_REGLAGES, 1, -1 do
+		if PROXY_REGLAGES[i].diag then table.remove(PROXY_REGLAGES, i); end
+	end
+end
 
 local PROXY_TEXTES = {
 	avertissement_partie = {
@@ -378,11 +396,15 @@ local function Proxy_Refresh()
 end
 
 -- Enregistre les choix en attente ; vrai s'ils sont écrits et qu'ils attendent le redémarrage du
--- jeu (le proxy de GameCore a déjà lu le fichier).
+-- jeu : le proxy de GameCore a déjà lu le fichier, ou l'un d'eux n'est lu qu'au lancement du jeu.
 local function Proxy_Save()
 	local lines = {};
+	local demarrage = false;
 	for k, v in pairs(m_proxyPending) do
 		table.insert(lines, k .. "=" .. v);
+		for _, r in ipairs(PROXY_REGLAGES) do
+			if r.cle == k and r.demarrage then demarrage = true; end
+		end
 	end
 	if #lines == 0 then return false; end
 	if Civ6Proxy_EcrireReglages == nil then
@@ -398,7 +420,7 @@ local function Proxy_Save()
 		m_proxySaved[k] = v;
 	end
 	m_proxyPending = {};
-	return loaded == 1;
+	return loaded == 1 or demarrage;
 end
 
 local function Proxy_Build()

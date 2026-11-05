@@ -11,7 +11,9 @@
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (off
-//! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`). Journal :
+//! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`). Les réglages de
+//! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
+//! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
 
 #![allow(non_snake_case)] // le nom de la DLL produite, GameCore_XP2_FinalRelease, est imposé.
@@ -143,9 +145,11 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_recentrage=") {
             ui::set_recentrage(v.trim() == "on");
         }
+        #[cfg(feature = "diag")]
         if let Some(v) = line.trim().strip_prefix("ui_journal=") {
             ui::set_journal(v.trim() == "on");
         }
+        #[cfg(feature = "diag")]
         if let Some(v) = line.trim().strip_prefix("ui_mesure_epingles=") {
             ui::set_mesure_epingles(v.trim() == "on");
         }
@@ -155,6 +159,7 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
             ui::set_merveilles(v.trim() != "off");
         }
+        #[cfg(feature = "diag")]
         if let Some(v) = line.trim().strip_prefix("ui_diag_accords=") {
             ui::set_diag_accords(v.trim() == "on");
         }

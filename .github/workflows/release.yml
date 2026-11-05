@@ -35,18 +35,21 @@ jobs:
           rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
           rustup default stable-x86_64-pc-windows-gnu
 
+      # Avec et sans les outils de diagnostic (feature `diag`, par défaut), que la release omet.
       - name: Tests
         run: |
-          (cd proxy && cargo test --release)
-          (cd startup_proxy && cargo test --release)
+          (cd proxy && cargo test --release && cargo test --release --no-default-features)
+          (cd startup_proxy && cargo test --release && cargo test --release --no-default-features)
 
       # Sur un tag, la version de la release est gravée dans les DLL (proxy/src/version.rs, RELEASE) :
-      # le proxy de démarrage s'en sert pour la notification de mise à jour.
+      # le proxy de démarrage s'en sert pour la notification de mise à jour. Sans la feature `diag` :
+      # ni profil des zones, ni journal des scripts, ni mesure des épingles, ni diagnostic des accords
+      # (release/README.md, « Diagnostic »).
       - name: Compilation
         run: |
           if [ "$GITHUB_REF_TYPE" = tag ]; then export BGD_RELEASE="$VERSION"; fi
-          (cd proxy && cargo build --release)
-          (cd startup_proxy && cargo build --release)
+          (cd proxy && cargo build --release --no-default-features)
+          (cd startup_proxy && cargo build --release --no-default-features)
           (cd updater && cargo build --release)
           mkdir dist
           cp proxy/target/release/GameCore_XP2_FinalRelease.dll startup_proxy/target/release/DatabaseDLL_FinalRelease.dll dist/
