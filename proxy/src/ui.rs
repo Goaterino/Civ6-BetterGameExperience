@@ -26,6 +26,9 @@
 //! - `ui_merveilles=on|off` (on) : ajoute `ui_merveilles.lua` à ProductionHelper.lua. Une merveille
 //!   retirée de la file par un échange (wonder_queue/README.md) est remise en tête par des commandes
 //!   du jeu, rejouées à l'identique par tous les joueurs, proxy ou non ;
+//! - `ui_diag_accords=on|off` (off) : ajoute `ui_diag_accords.lua` à DiplomacyDealView.lua. Écrit
+//!   dans Lua.log les événements d'accord et de session, et l'état de l'écran d'accord (diagnostic
+//!   des accords croisés, docs/netcode/README.md) ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -53,6 +56,7 @@ const MERVEILLES_BLOCK: &str = include_str!("ui_merveilles.lua");
 const RENDEMENTS_BLOCK: &str = include_str!("ui_rendements.lua");
 const CONGRES_BLOCK: &str = include_str!("ui_congres.lua");
 const CIBLES_BLOCK: &str = include_str!("ui_congres_cibles.lua");
+const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 
 static BOUTONS: AtomicBool = AtomicBool::new(true);
 static RECENTRAGE: AtomicBool = AtomicBool::new(false);
@@ -60,6 +64,7 @@ static JOURNAL: AtomicBool = AtomicBool::new(false);
 static MESURE: AtomicBool = AtomicBool::new(false);
 static OPTI: AtomicBool = AtomicBool::new(true);
 static MERVEILLES: AtomicBool = AtomicBool::new(true);
+static DIAG_ACCORDS: AtomicBool = AtomicBool::new(false);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -93,6 +98,10 @@ pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
 
+pub fn set_diag_accords(on: bool) {
+    DIAG_ACCORDS.store(on, Ordering::Relaxed);
+}
+
 fn active() -> bool {
     BOUTONS.load(Ordering::Relaxed)
         || !RECENTRAGE.load(Ordering::Relaxed)
@@ -100,6 +109,7 @@ fn active() -> bool {
         || MESURE.load(Ordering::Relaxed)
         || OPTI.load(Ordering::Relaxed)
         || MERVEILLES.load(Ordering::Relaxed)
+        || DIAG_ACCORDS.load(Ordering::Relaxed)
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
         || crate::spectateurs::poses()
@@ -391,6 +401,14 @@ pub fn patch_epingles(src: &[u8], ctx: &str, opti: bool, mesure: bool) -> Vec<u8
     out
 }
 
+/// DiplomacyDealView.lua suivi de `ui_diag_accords.lua`, qui ne fait qu'écrire dans Lua.log.
+pub fn patch_diag_accords(src: &[u8]) -> Vec<u8> {
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(DIAG_ACCORDS_BLOCK.as_bytes());
+    out
+}
+
 /// ProductionHelper.lua suivi de `ui_merveilles.lua`.
 pub fn patch_merveilles(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
@@ -581,6 +599,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 None
             }
         };
+    }
+    if DIAG_ACCORDS.load(Ordering::Relaxed) && is_file(chunk, "DiplomacyDealView.lua") {
+        what.push("diagnostic des accords ajouté".into());
+        return Some(patch_diag_accords(src));
     }
     for (file, patch, done) in FIXES {
         if !is_file(chunk, file) {
@@ -785,6 +807,15 @@ mod tests {
         assert!(is_file(r"..\..\DLC\citybannermanager.lua", "CityBannerManager.lua"));
         assert!(!is_file("C:/x/CityBannerManager_Expansion2.lua", "CityBannerManager.lua"));
         assert!(!is_file("C:/x/MyCityBannerManager.lua", "CityBannerManager.lua"));
+    }
+
+    #[test]
+    fn diagnostic_des_accords_ajoute_a_l_ecran_d_accord() {
+        let out = String::from_utf8(patch_diag_accords(b"Initialize();")).unwrap();
+        assert!(out.starts_with("Initialize();\r\n-- ====="));
+        assert!(out.ends_with(DIAG_ACCORDS_BLOCK));
+        assert!(is_file(r"C:\x\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua", "DiplomacyDealView.lua"));
+        assert!(!is_file(r"C:\x\ui\Replacements\diplomacydealview_MPH.lua", "DiplomacyDealView.lua"));
     }
 
     #[test]

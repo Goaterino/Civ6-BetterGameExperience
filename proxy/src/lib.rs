@@ -8,7 +8,7 @@
 //! (coalesce par défaut), `portee=cascade|message` (cascade par défaut),
 //! `ameliorations=off|count|verify|fast|quiet` et `rendements=off|count|verify|fast|quiet` (off par
 //! défaut), `wmd_accel=<facteur>|off` (20 par défaut, voir `wmd`), `ui_boutons`, `ui_recentrage` et
-//! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles` (voir `ui`), `ui_rendements=on|off`
+//! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (off
 //! par défaut, voir `mods_ui`). Journal :
@@ -153,6 +153,9 @@ pub(crate) fn read_config() {
         }
         if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
             ui::set_merveilles(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_diag_accords=") {
+            ui::set_diag_accords(v.trim() == "on");
         }
         if let Some(v) = line.trim().strip_prefix("ui_rendements=") {
             rendements_empire::set_enabled(v.trim() != "off");

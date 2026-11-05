@@ -221,6 +221,13 @@ local PROXY_REGLAGES = {
 			"Writes to Lua.log how long map pin and leader ribbon rebuilds take.",
 		},
 		choix = PROXY_ON_OFF },
+	{ cle = "ui_diag_accords", defaut = "off",
+		nom = { "Diagnostic des accords entre joueurs", "Diagnose deals between players" },
+		aide = {
+			"Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.",
+			"Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.",
+		},
+		choix = PROXY_ON_OFF },
 };
 
 local PROXY_TEXTES = {

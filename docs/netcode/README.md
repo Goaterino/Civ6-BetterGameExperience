@@ -503,6 +503,138 @@ non vide.
    `m_aExplicitLayers` diverge encore un tour plus tard, mais n'est pas revenu dans la boucle
    réelle : il faudra vérifier s'il se répare.
 
+## Accords croisés : deux initiateurs (partie du 2026-11-03)
+
+Partie à quatre humains, hôte le joueur 2, journaux du joueur 1 (machine locale) dans
+`rollover/captures/20261103-204357-mp`. Sauvegardes : `Saves\Multi\BGD bug deal T28` et `T29`.
+
+**Le symptôme.** Au tour 29, le joueur 1 et son allié, le joueur 2, ne peuvent accepter ni l'un ni
+l'autre la proposition de l'autre : chacun se voit initiateur de l'accord. Il a fallu que l'un des
+deux renvoie un accord complet pour débloquer la situation.
+
+**Un accord normal, dans `net_message_debug.log`** (21:27, le joueur 2 propose et le joueur 1
+accepte) :
+1. le proposant envoie deux `DiplomacyStatement MAKE_DEAL` (ouverture, puis proposition), puis
+   `DiplomacySession CLOSE` ;
+2. l'autre rouvre la session (`DiplomacySession RESTORE, FromPlayer=<proposant>`) ;
+3. il accepte : `DiplomacyDeal eActionType=1`, de lui vers le proposant, suivi d'un `MAKE_DEAL` et
+   d'un `CLOSE`.
+
+**Le tour 29** (21:30, vu du joueur 1) :
+
+| heure | message |
+|---|---|
+| 21:30:31 | reçu de 2 : `MAKE_DEAL` 2 → 1 (2 ouvre l'écran d'accord) |
+| 21:30:33 | envoyé par 1 : `MAKE_DEAL` 1 → 2 (1 ouvre aussi le sien) |
+| 21:30:34 | envoyé par 1 : `MAKE_DEAL` 1 → 2 (proposition de 1) |
+| 21:30:34 | reçu de 2 : `MAKE_DEAL` 2 → 1 (proposition de 2), puis les deux `CLOSE` |
+| 21:30:41, 43 | 1 rouvre deux fois son propre écran (une ouverture, puis `CLOSE`), sans proposer |
+| 21:30:46, 47 | 2 renvoie une proposition complète (ouverture et proposition) |
+| 21:30:51 | 1 rouvre la session de 2 et accepte (`DiplomacyDeal eActionType=1`) : débloqué |
+
+**Ce qu'on en déduit (revu le 2026-11-05, GameCore et écran d'accord).** Deux lectures
+successives se sont révélées fausses : d'abord une divergence d'ordre entre machines, puis un blocage
+par `HasPendingDeal`. Le journal suffit à écarter la seconde : en fermant l'écran avec une proposition
+en attente, l'écran envoie `SendWorkingDeal(CLOSED)` (`DiplomacyDealView.lua`, lignes 631–633), qui
+part en `DiplomacyDeal eActionType=8`. Aucun n'apparaît entre 21:30:34 et 21:30:51, donc
+`HasPendingDeal(1, 2)` était faux à 21:30:42 et 21:30:44.
+
+Ce qui bloque, c'est **la session diplomatique**, pas l'accord :
+- ouvrir l'écran d'accord ouvre une session dont on est `FromPlayer`, avec un `MAKE_DEAL`
+  d'ouverture. Proposer envoie la proposition puis ferme la session (`CLOSE`) ;
+- `OnShow` lit l'initiateur dans la session ouverte (`FindOpenSessionID` → `FromPlayer`). Si c'est
+  soi, `ms_LastIncomingDealProposalAction = PENDING`, et Accepter est caché (`cantAccept` vaut vrai
+  dès que l'action n'est ni `PROPOSED`, ni `ADJUSTED`, ni `ACCEPTED`). Seul l'écran rouvert sur la
+  session de l'autre (`RESTORE, FromPlayer=<autre>`) part de `PROPOSED` ;
+- à 21:30:34, chacun avait sa propre session ouverte quand la proposition de l'autre est arrivée.
+  Aucune session de l'autre n'a été mise en attente pour être rouverte. GameCore a pourtant rangé
+  la proposition de l'autre dans l'accord entrant (voir plus bas) ;
+- à 21:30:41 et 43, le joueur 1 rouvre l'écran depuis le dirigeant : nouvelle session à son nom,
+  `PENDING`, pas d'Accepter. C'est le « chacun se voit initiateur » ;
+- à 21:30:46–48, le joueur 2 repropose alors qu'aucune session n'est ouverte chez 1. Cette fois la
+  session de 2 attend chez 1, qui la rouvre (`RESTORE, FromPlayer=2`) et accepte.
+
+**Ce que fait GameCore** (`GameCore_XP2_FinalRelease.dll` d'origine, projet Ghidra `civ6xp2`,
+base 0x180000000). Les fonctions Lua de `DealManager` sont enregistrées en `0x1806d1490`.
+
+| rôle | adresse | ce qu'elle fait |
+|---|---|---|
+| `HasPendingDeal(a, b)` | `0x18058aae0` | cherche (a, b) dans une liste **locale**, non synchronisée, de paires (de, vers), puis l'état IA des deux joueurs |
+| `SendWorkingDeal(action, de, vers)` | `0x18058bfb0` | valide l'accord sortant (sauf `CLOSED`), **ajoute** (de, vers) à la liste, puis : `ACCEPTED`, `REJECTED`, `CLOSED` et `REJECTED_PERMANENT` (masque `0x1106`) partent en message `DiplomacyDeal`. Toute action crée aussi un `MAKE_DEAL` dans la session |
+| réception de `DiplomacyDeal` | `0x180035390` → `0x18058b920` | **retire** une fois (de, vers), copie l'accord du message dans le sortant (de, vers) et l'entrant (vers, de). Pour `ACCEPTED`, exécute l'accord (`0x18058a2e0`) après validation |
+| réception d'un `MAKE_DEAL` chez le destinataire | `0x18018b420` → `0x18058b890` | retire (de, vers), copie l'accord proposé dans le sortant (de, vers) et l'entrant (vers, de) |
+| fermeture de session | `0x18058b770` | retire la paire du dernier `MAKE_DEAL` de la session |
+
+Il en ressort :
+- **`HasPendingDeal` marque un envoi pas encore revenu**, plutôt qu'une proposition en attente de
+  réponse. Chaque envoi ajoute la paire, et son retour (l'écho du message, la fermeture de session)
+  la retire. `CLOSED` ajoute puis retire une entrée : il ne vide pas une entrée restée d'avant ;
+- **GameCore ne refuse pas un `ACCEPTED`** parce que l'accepteur a lui-même un accord en attente.
+  Ni l'envoi ni la réception ne regardent cette liste. L'acceptation exécute l'accord que porte le
+  message, après une validation de son contenu (ressources, or, villes encore disponibles) ;
+- la proposition de l'autre est donc bien dans l'accord entrant du joueur bloqué. Seul l'écran,
+  ouvert sur sa propre session, ne propose pas de l'accepter.
+
+**Correctif possible, dans l'interface seule.** À l'ouverture de l'écran sur sa propre session
+(`ms_InitiatedByPlayerID == moi`), face à un humain, si une proposition de l'autre est restée sans
+réponse :
+- partir de `PROPOSED` au lieu de `PENDING` ;
+- copier l'entrant dans le sortant (`CopyIncomingToOutgoingWorkingDeal`), comme `OnShow` le fait
+  pour la session de l'autre. Accepter réapparaît.
+
+Accepter envoie alors le `DiplomacyDeal ACCEPTED` ordinaire. GameCore l'exécute partout, même chez
+un joueur sans proxy : aucun format de message ne change, et il suffit que celui qui accepte ait le
+proxy.
+
+Reste à savoir **si une proposition de l'autre est toujours sans réponse** : l'accord entrant peut
+être ancien. La piste est d'écouter `Events.DiplomacyIncomingDeal(de, vers, action)` dans un contexte
+toujours chargé, de retenir la dernière action reçue de chaque joueur, et de l'effacer à toute
+réponse : notre `ACCEPTED`, `REJECTED` ou `CLOSED`, son `CLOSED`, ou l'exécution de l'accord. Il faut
+vérifier en partie que l'événement part bien quand la session de l'autre a été écartée, comme à
+21:30:34.
+
+**Diagnostic en partie : `ui_diag_accords=on`.** Le proxy ajoute
+[proxy/src/ui_diag_accords.lua](../../proxy/src/ui_diag_accords.lua) à la fin de
+`DiplomacyDealView.lua`. Le bloc ne fait qu'écrire, dans `Lua.log`, des lignes `BGD accords …` :
+- les événements qui touchent le joueur local : `entrant` (`DiplomacyIncomingDeal`), `declaration`
+  (`DiplomacyStatement`, avec ses champs), `session fermee`, `accord execute` ;
+- l'`ouverture` et la `fermeture` de l'écran d'accord ;
+- à chaque ligne, l'état : session ouverte et son initiateur, `HasPendingDeal` dans les deux sens,
+  nombre d'objets des accords entrant et sortant, et, écran ouvert, l'initiateur, la dernière action
+  reçue et le bouton Accepter.
+
+Test hors jeu : `lua proxy/tests/test_ui_diag_accords.lua`. Le test compile le vrai fichier suivi du
+bloc, puis joue les événements dans un écran imité.
+
+Protocole, à deux humains, depuis la sauvegarde `BGD bug deal T29` :
+1. les deux ouvrent l'écran d'accord l'un avec l'autre, préparent un accord, et cliquent sur
+   Proposer à moins d'une seconde d'écart (un décompte à voix haute suffit) ;
+2. chacun rouvre l'écran depuis le dirigeant de l'autre, et note si Accepter est là ;
+3. on garde `Lua.log` et `net_message_debug.log` de la machine qui a le proxy.
+
+Ce qu'on cherche : une ligne `entrant <autre>><soi> PROPOSED` au moment des deux propositions,
+écrite alors que `session=` montre sa propre session. Ensuite, à la réouverture, une ligne
+`ouverture` avec `initiateur=<soi> derniere=PENDING accepter=cache` et un `entrant` non vide. Si la
+ligne `entrant` manque, le correctif devra s'appuyer sur `declaration` (`DiplomacyStatement`).
+
+MPH remplace aussi cet écran (`diplomacydealview_MPH.lua`) : le correctif doit s'appliquer
+par-dessus, comme pour les autres mods d'interface repris.
+
+Le joueur 2 (l'hôte) a quitté la partie une minute plus tard (21:31:49, migration d'hôte), et la
+partie a été rechargée au tour 29. Rien n'indique de lien avec l'accord.
+
+**Autre constat de la même session : désynchros réparées à chaque tour.** Dès le tour 2 de la
+quatrième partie, l'hôte répare 1 à 12 archives par tour. Ce sont surtout les évaluations de l'IA
+du joueur 1, c'est-à-dire du joueur local, qui est humain :
+- `AI::Religious 1-…` ;
+- `AI::CityBuild 1-…`, avec `m_districtEvaluations`, `m_buildingEvaluations` et
+  `m_improvementEvaluations` ;
+- les `AI::CultureAi` (`m_greatWorkManager`) des IA 4 à 9.
+
+C'est sans doute l'interface locale qui demande des recommandations de production à l'IA et modifie
+ses caches, sur la seule machine du joueur. Le proxy avait coupé ses correctifs : l'hôte ne l'avait
+pas. À creuser à part.
+
 ## Le proxy GameCore et la synchro
 
 Pendant la partie de 18:50, le proxy était chargé chez l'hôte (`RolloverProxy.log`, horodatage
