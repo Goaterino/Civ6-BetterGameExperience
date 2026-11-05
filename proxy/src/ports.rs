@@ -6,14 +6,14 @@
 //! - `18067d290` (`CanStart`) : il lui reste des mouvements, et le district sous elle est un
 //!   `DISTRICT_CITY_CENTER` (`18005e770`) qui lui appartient ;
 //! - `18067d650` (destination) : une ville à elle, ou, pour une unité navale (`unité+0x2a0 == 0`,
-//!   `DOMAIN_SEA`), n'importe quel district à elle, donc un port ;
+//!   `DOMAIN_SEA`), n'importe quel district à elle (port, parc aquatique…) ;
 //! - `18067d900` (exécution) : place l'unité, sans regarder l'origine.
 //!
 //! Une unité navale peut donc arriver dans un port, mais pas en repartir. On redirige le seul
 //! `call 18005e770` de `18067d290` (en `18067d315`) vers un relais qui ajoute l'unité (`r14`) en
-//! second argument : le départ est aussi accepté pour une unité navale posée sur un district dont
-//! le `MilitaryDomain` est `DOMAIN_SEA` (port, cothon, chantier naval royal ; `180191a50`). Le
-//! contrôle de propriétaire qui suit l'appel reste en place, comme les règles de destination.
+//! second argument : le départ est aussi accepté pour une unité navale posée sur un district,
+//! quel qu'il soit (port, parc aquatique, canal…), la règle même de la destination. Le contrôle
+//! de propriétaire qui suit l'appel reste en place, comme les règles de destination.
 //! Investigation : analyses/teleportation/README.md.
 
 use crate::patch::{alloc_near, rel32, write_rel32, IMAGE_BASE};
@@ -23,7 +23,6 @@ use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 /// `call 18005e770` dans `18067d290`, précédé de `mov rcx,rax` et suivi de `test al,al`.
 const SITE: u64 = 0x1_8067_d315;
 const EST_CENTRE_VILLE: u64 = 0x1_8005_e770; // (objet du district sous l'unité) -> bool
-const DOMAINE_DISTRICT: u64 = 0x1_8019_1a50; // (district) -> 0 mer, 1 air, 2 terre, -1
 const AVANT: [u8; 3] = [0x48, 0x8b, 0xc8];
 const APRES: [u8; 2] = [0x84, 0xc0];
 
@@ -63,7 +62,8 @@ unsafe fn district(objet: usize) -> usize {
     chercher(objet, &cle)
 }
 
-/// Remplace `18005e770` dans `CanStart` : centre-ville, ou port pour une unité navale.
+/// Remplace `18005e770` dans `CanStart` : centre-ville, ou tout district pour une unité navale,
+/// comme à l'arrivée (`18067d650`).
 unsafe extern "system" fn depart_valide(objet: usize, unite: usize) -> bool {
     let original: unsafe extern "system" fn(usize) -> bool = std::mem::transmute(gc(EST_CENTRE_VILLE));
     if original(objet) {
@@ -72,18 +72,15 @@ unsafe extern "system" fn depart_valide(objet: usize, unite: usize) -> bool {
     if objet == 0 || unite == 0 || rd::<i32>(unite + U_DOMAINE) != DOMAIN_SEA || !pol::actifs() {
         return false;
     }
-    let d = district(objet);
-    if d == 0 {
-        return false;
-    }
-    let domaine: unsafe extern "system" fn(usize) -> i32 = std::mem::transmute(gc(DOMAINE_DISTRICT));
-    if domaine(d) != DOMAIN_SEA {
+    // Pas de condition de domaine sur le district : l'arrivée n'en pose pas, le départ suit la même
+    // règle (le parc aquatique, qui n'est pas `DOMAIN_SEA`, était refusé au départ).
+    if district(objet) == 0 {
         return false;
     }
     let k = DEPARTS.fetch_add(1, Ordering::Relaxed) + 1;
     if k <= MAX_LOGS {
         log(&format!(
-            "ports : départ accepté depuis un district naval (joueur {}, district {:#x}) ({k})",
+            "ports : départ accepté depuis un district hors centre-ville (joueur {}, district {:#x}) ({k})",
             rd::<i32>(unite + U_PROPRIETAIRE),
             rd::<u32>(objet + O_ID)
         ));
@@ -117,7 +114,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
     };
     write_rel32(at, rel);
     PATCHED_BASE.store(base, Ordering::Relaxed);
-    log("ports : départ de TELEPORT_TO_CITY accepté depuis un port (appel redirigé en 0x18067d315)");
+    log("ports : départ de TELEPORT_TO_CITY accepté depuis un district (appel redirigé en 0x18067d315)");
 }
 
 /// Le proxy est déchargé alors que l'originale reste en mémoire : on remet l'appel d'origine.

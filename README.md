@@ -34,7 +34,7 @@ détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Sépar�
   hook Frida et décodeur de config (analyse statique) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
-- [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un port
+- [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
   pour une unité navale (correctif POL) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;

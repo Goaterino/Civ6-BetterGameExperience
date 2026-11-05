@@ -472,7 +472,7 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   patche les vrais scripts ; `lua proxy/tests/test_congres.lua` exécute les deux blocs sur les vrais
   fichiers avec des bouchons ; `check_hooks.py` vérifie la pose et la restauration des cinq détours.
 
-## Téléportation au départ d'un port (correctif POL)
+## Téléportation au départ d'un district (correctif POL)
 
 [src/ports.rs](src/ports.rs). Analyse : [analyses/teleportation/README.md](../analyses/teleportation/README.md).
 
@@ -480,12 +480,13 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   centre-ville (`18005e770`), alors qu'une unité navale peut arriver dans un port (`18067d650`).
 - **Le détour.** L'appel `call 18005e770` en `18067d315` est redirigé vers un relais
   (`mov rdx,r14 ; jmp [rip+0]`) : le départ est aussi accepté pour une unité navale posée sur un
-  district `DOMAIN_SEA` (port, cothon, chantier naval royal). Le contrôle de propriétaire, les
-  destinations et l'interface ne changent pas.
+  district, quel qu'il soit (port, parc aquatique, canal…), comme à l'arrivée. Une première version
+  exigeait un district `DOMAIN_SEA` et refusait le parc aquatique (testé en jeu le 2026-11-05). Le
+  contrôle de propriétaire, les destinations et l'interface ne changent pas.
 - **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`).
 - **Garde-fou.** Le site doit être `mov rcx,rax ; call 18005e770 ; test al,al`, sinon rien n'est
   redirigé. L'appel d'origine revient au déchargement du proxy.
-- **Le journal.** `ports : départ de TELEPORT_TO_CITY accepté depuis un port (appel redirigé en
+- **Le journal.** `ports : départ de TELEPORT_TO_CITY accepté depuis un district (appel redirigé en
   0x18067d315)`, puis les 20 premiers départs acceptés de chaque partie.
 - **Tests.** `check_hooks.py` vérifie la redirection et sa restauration.
 

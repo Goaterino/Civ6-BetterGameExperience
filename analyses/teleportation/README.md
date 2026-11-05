@@ -59,10 +59,14 @@ redirigé vers un relais posé à moins de 2 Go de GameCore : `mov rdx,r14` (l'u
 `jmp [rip+0]` vers `depart_valide(objet, unité)`. Cette fonction répond :
 - comme `18005e770` si c'est un centre-ville ;
 - sinon, si les correctifs POL sont actifs, oui pour une unité navale (`unité+0x2a0 == 0`) posée sur
-  un district dont le `MilitaryDomain` est `DOMAIN_SEA` (`180191a50`) : port, cothon, chantier naval
-  royal.
+  un district, quel qu'il soit : port, parc aquatique, canal… C'est la règle de la destination
+  (`18067d650` : `FUN_180191b50(district) == unité+0x128`, sans condition de domaine).
 
-Le contrôle de propriétaire qui suit l'appel reste en place : on ne part que de ses propres ports.
+La première version exigeait en plus un district dont le `MilitaryDomain` (`180191a50`) est
+`DOMAIN_SEA`. En jeu (2026-11-05), l'amiral arrivait bien dans un parc aquatique mais ne pouvait pas
+en repartir : le parc aquatique n'est pas `DOMAIN_SEA`. La condition a été retirée.
+
+Le contrôle de propriétaire qui suit l'appel reste en place : on ne part que de ses propres districts.
 Les règles de destination et l'exécution ne changent pas, et l'interface non plus : le bouton est déjà
 visible, et `CanStartOperation` l'active.
 
@@ -72,7 +76,7 @@ visible, et `CanStartOperation` l'active.
 
 - Que l'objet de `contexte->vtable[0x30]` désigne bien le district sous l'unité quand elle est sur un
   port (l'analyse statique le laisse supposer, et le journal du proxy le dira :
-  `ports : départ accepté depuis un district naval`).
+  `ports : départ accepté depuis un district hors centre-ville`).
 - L'amiral n'a pas l'opération sans `CAN_TELEPORT_TO_CITY`. Si on veut la lui donner :
   `INSERT INTO TypeProperties (Type, Name, Value) VALUES ('UNIT_GREAT_ADMIRAL', 'CAN_TELEPORT_TO_CITY', 'true');`
   (données de mod, chargées par tous les joueurs).
