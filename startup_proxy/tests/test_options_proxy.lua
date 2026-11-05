@@ -149,11 +149,39 @@ do
 	local C = m.env.Controls;
 	Check("onglet visible", C.ProxyTab.hidden == false and C.ProxyTab.callbacks.LClick ~= nil);
 	local rows, titles = 0, 0;
+	local stacks = { [C.ProxyBasicStack] = true, [C.ProxyAdvancedStack] = true, [C.ProxyOptionsStack] = true };
 	for _, b in ipairs(m.built) do
-		if b.parent ~= C.ProxyOptionsStack then rows = -100; end
+		if not stacks[b.parent] then rows = -100; end
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; else titles = titles + 1; end
 	end
-	Check("14 réglages et 5 titres, dans le panneau", rows == 14 and titles == 5);
+	Check("21 réglages et 7 titres (crédits compris), dans le panneau", rows == 21 and titles == 7);
+
+	-- Options avancées : performances et diagnostic, cachées par défaut derrière un bouton.
+	local function StackOf(name)
+		for _, b in ipairs(m.built) do
+			if (b.inst.StringName and b.inst.StringName.text == name)
+				or (b.inst.CategoryName and b.inst.CategoryName.text == name) then return b.parent; end
+		end
+	end
+	Check("avancées : cachées par défaut", C.ProxyAdvancedStack.hidden == true
+		and C.ProxyAdvancedToggle.text == "Afficher les options avancées");
+	Check("avancées : performances et diagnostic", StackOf("Performances du passage de tour") == C.ProxyAdvancedStack
+		and StackOf("Cache des améliorations constructibles") == C.ProxyAdvancedStack
+		and StackOf("Diagnostic") == C.ProxyAdvancedStack and StackOf("Journal des scripts et XML chargés") == C.ProxyAdvancedStack);
+	Check("visibles : général, interface, correctifs, mods", StackOf("Proxys BetterGameDLLs") == C.ProxyBasicStack
+		and StackOf("Recherche des mises à jour") == C.ProxyBasicStack
+		and StackOf("Boutons d'attaque au-dessus des drapeaux d'unités") == C.ProxyBasicStack
+		and StackOf("Merveille gardée dans la file après un échange") == C.ProxyBasicStack
+		and StackOf("Écran des rapports amélioré") == C.ProxyBasicStack);
+	Check("crédits : à la fin, hors des options avancées", StackOf("Crédits") == C.ProxyOptionsStack);
+	C.ProxyAdvancedToggle.callbacks.LClick();
+	Check("bouton : montre les avancées", C.ProxyAdvancedStack.hidden == false
+		and C.ProxyAdvancedToggle.text == "Masquer les options avancées");
+	m.show();
+	Check("réouverture : état du bouton gardé", C.ProxyAdvancedStack.hidden == false);
+	C.ProxyAdvancedToggle.callbacks.LClick();
+	Check("bouton : cache à nouveau", C.ProxyAdvancedStack.hidden == true
+		and C.ProxyAdvancedToggle.text == "Afficher les options avancées");
 	Check("avertissement : redémarrage du jeu", (C.ProxyWarning.text or ""):find("redémarrage du jeu") ~= nil);
 	Check("état : proxy installé", C.ProxyStatus.text == "Proxy de GameCore installé.");
 

@@ -51,6 +51,11 @@ de compatibilité ni avec le graphisme, contrairement aux essais avec `version.d
   (`PullDownParameterInstance`, `KeyBindingCategory` pour les titres). En tête, l'interrupteur
   général `actif` : sur « Désactivé », les autres listes sont grisées, mais leurs valeurs restent
   dans le fichier.
+- **Les options avancées**, cachées par défaut comme les options vidéo avancées du jeu. Les
+  sections dont le titre porte `avance = true` (performances du passage de tour, diagnostic) vont
+  dans la pile `ProxyAdvancedStack`, qu'un bouton « Afficher les options avancées » montre ou cache.
+  Restent visibles le confort et l'interface : général, interface, correctifs, mods d'interface
+  intégrés, crédits. L'état du bouton est gardé d'une ouverture à l'autre de l'écran.
 - **Les fonctions natives**, posées dans la table globale du contexte avant sa compilation :
   `Civ6Proxy_LireReglages()` rend le texte du fichier, 1 si le proxy de GameCore est installé, et 1
   s'il a déjà lu le fichier ; `Civ6Proxy_EcrireReglages(lignes)` fusionne des lignes `clé=valeur`

@@ -42,6 +42,9 @@ local PROXY_CACHE = {
 -- (verif_maj, src/maj.rs) : un test (cargo test, startup_proxy) vérifie que les listes concordent.
 -- `defaut` est la valeur que prend le proxy quand la clé manque au fichier. `libre` : jamais grisé
 -- par l'interrupteur général, qui ne concerne que le proxy de GameCore.
+-- `avance` (sur un titre) : la section et ses réglages sont des options avancées, cachées par défaut
+-- derrière le bouton « Afficher les options avancées », comme les options vidéo avancées du jeu.
+-- Restent visibles le confort et l'interface.
 local PROXY_REGLAGES = {
 	{ titre = { "Général", "General" } },
 	-- Interrupteur général : off, les autres réglages sont grisés (et gardés dans le fichier).
@@ -60,7 +63,7 @@ local PROXY_REGLAGES = {
 		},
 		choix = PROXY_ON_OFF },
 
-	{ titre = { "Performances du passage de tour", "Turn processing performance" } },
+	{ titre = { "Performances du passage de tour", "Turn processing performance" }, avance = true },
 	{ cle = "mode", defaut = "coalesce",
 		nom = { "Regroupement des mises à jour de villes", "Batched city updates" },
 		aide = {
@@ -203,7 +206,7 @@ local PROXY_REGLAGES = {
 		},
 		choix = PROXY_ON_OFF },
 
-	{ titre = { "Diagnostic", "Diagnostics" } },
+	{ titre = { "Diagnostic", "Diagnostics" }, avance = true },
 	{ cle = "ui_journal", defaut = "off",
 		nom = { "Journal des scripts et XML chargés", "Log loaded scripts and XML" },
 		aide = {
@@ -241,6 +244,8 @@ local PROXY_TEXTES = {
 	},
 	non_enregistres = { "Réglages non enregistrés : ", "Settings not saved: " },
 	valeur_du_fichier = { " (valeur du fichier)", " (value from file)" },
+	afficher_avancees = { "Afficher les options avancées", "Show advanced options" },
+	masquer_avancees = { "Masquer les options avancées", "Hide advanced options" },
 };
 
 -- Auteurs des mods repris dans le proxy (mods_ui/README.md) : affichés en bas de l'onglet, jamais
@@ -269,6 +274,23 @@ end
 local m_proxySaved = {};     -- valeurs du fichier
 local m_proxyPending = {};   -- choix pas encore confirmés
 local m_proxyPullDowns = {};
+local m_proxyAdvancedShown = false;  -- gardé d'une ouverture à l'autre, comme dans l'onglet Vidéo
+
+-- Tailles des piles, de l'intérieur vers l'extérieur, puis du défilement.
+local function Proxy_Resize()
+	Controls.ProxyBasicStack:CalculateSize();
+	Controls.ProxyAdvancedStack:CalculateSize();
+	Controls.ProxyOptionsStack:CalculateSize();
+	Controls.ProxyOptionsScrollPanel:CalculateInternalSize();
+end
+
+local function Proxy_ShowAdvanced(shown)
+	m_proxyAdvancedShown = shown;
+	Controls.ProxyAdvancedStack:SetHide(not shown);
+	Controls.ProxyAdvancedToggle:SetSelected(shown);
+	Controls.ProxyAdvancedToggle:SetText(Proxy_T(shown and PROXY_TEXTES.masquer_avancees or PROXY_TEXTES.afficher_avancees));
+	Proxy_Resize();
+end
 
 local function Proxy_Current(r)
 	local v = m_proxyPending[r.cle];
@@ -331,8 +353,7 @@ local function Proxy_Populate()
 			end, locked and not (r.general or r.libre));
 		end
 	end
-	Controls.ProxyOptionsStack:CalculateSize();
-	Controls.ProxyOptionsScrollPanel:CalculateInternalSize();
+	Proxy_Resize();
 end
 
 local function Proxy_Refresh()
@@ -367,13 +388,16 @@ local function Proxy_Save()
 end
 
 local function Proxy_Build()
+	-- Chaque section va dans la pile visible ou dans celle des options avancées, selon son titre.
+	local stack = Controls.ProxyBasicStack;
 	for _, r in ipairs(PROXY_REGLAGES) do
 		local inst = {};
 		if r.titre ~= nil then
-			ContextPtr:BuildInstanceForControl("KeyBindingCategory", inst, Controls.ProxyOptionsStack);
+			stack = r.avance and Controls.ProxyAdvancedStack or Controls.ProxyBasicStack;
+			ContextPtr:BuildInstanceForControl("KeyBindingCategory", inst, stack);
 			inst.CategoryName:SetText(Proxy_T(r.titre));
 		else
-			ContextPtr:BuildInstanceForControl("PullDownParameterInstance", inst, Controls.ProxyOptionsStack);
+			ContextPtr:BuildInstanceForControl("PullDownParameterInstance", inst, stack);
 			inst.StringName:SetText(Proxy_T(r.nom));
 			inst.StringName:SetToolTipString(Proxy_T(r.aide));
 			inst.PullDown:GetButton():SetToolTipString(Proxy_T(r.aide));
@@ -389,10 +413,13 @@ local function Proxy_Build()
 		Controls.ProxyCredits:SetText(Proxy_CreditsText());
 		Controls.ProxyCredits:SetHide(false);
 	end
+	Controls.ProxyAdvancedToggle:RegisterCallback(Mouse.eLClick, function() Proxy_ShowAdvanced(not m_proxyAdvancedShown); end);
+	Controls.ProxyAdvancedToggle:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+	Proxy_ShowAdvanced(false);
 end
 
 -- Si le XML n'a pas été modifié (Options.xml remplacé par un mod, par exemple), rien n'est ajouté.
-if Controls.ProxyTab ~= nil and Controls.ProxyOptions ~= nil and m_tabs ~= nil then
+if Controls.ProxyTab ~= nil and Controls.ProxyOptions ~= nil and Controls.ProxyAdvancedStack ~= nil and m_tabs ~= nil then
 	-- 1 : pas de bouton « Restaurer les valeurs par défaut » sur cet onglet, comme pour les raccourcis.
 	local tab = { Controls.ProxyTab, Controls.ProxyOptions, "BetterGameDLLs", 1 };
 	table.insert(m_tabs, tab);

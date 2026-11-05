@@ -4,6 +4,13 @@
 							<Stack ID="ProxyOptionsStack" Anchor="L,T" StackGrowth="Down" Padding="5" Offset="0,25" Size="parent-24,auto">
 								<Label ID="ProxyWarning" Anchor="L,T" Style="ShellOptionText" WrapWidth="720" Color="255,200,90,255" String=""/>
 								<Label ID="ProxyStatus" Anchor="L,T" Style="ShellOptionText" WrapWidth="720" String=""/>
+								<!-- Réglages de confort et d'interface, toujours visibles -->
+								<Stack ID="ProxyBasicStack" Anchor="L,T" StackGrowth="Down" Padding="5" Size="parent,auto"></Stack>
+								<!-- Comme les options vidéo avancées du jeu : un bouton montre ou cache le reste -->
+								<Container ID="ProxyAdvancedToggleBox" Size="parent,44">
+									<GridButton ID="ProxyAdvancedToggle" Size="400,22" Style="ShellButton" Anchor="C,C" String=""/>
+								</Container>
+								<Stack ID="ProxyAdvancedStack" Anchor="L,T" StackGrowth="Down" Padding="5" Size="parent,auto" Hidden="1"></Stack>
 							</Stack>
 							<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"/>
 						</ScrollPanel>
