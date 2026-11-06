@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Textes de BetterGameDLLs en zh_Hans_CN : voir textes/README.md. -->
+<!-- Textes de BetterGameExperience en zh_Hans_CN : voir textes/README.md. -->
 <GameData>
 	<LocalizedText>
 		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="zh_Hans_CN">
@@ -51,7 +51,7 @@
 			<Text>致谢</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 代理</Text>
+			<Text>BetterGameExperience 代理</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="zh_Hans_CN">
 			<Text>一次性关闭 GameCore 代理的所有改动，但不卸载它：游戏的表现与没有代理时相同。其他设置会保留，此标签页也仍然可用，以便重新开启。</Text>
@@ -60,7 +60,7 @@
 			<Text>检查更新</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="zh_Hans_CN">
-			<Text>游戏启动时在 GitHub 上查找 BetterGameDLLs 的新版本，并在主菜单中提示。下次启动游戏时生效。</Text>
+			<Text>游戏启动时在 GitHub 上查找 BetterGameExperience 的新版本，并在主菜单中提示。下次启动游戏时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="zh_Hans_CN">
 			<Text>合并城市更新</Text>
@@ -186,7 +186,7 @@
 			<Text>显示同时开始与结束回合的信号</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="zh_Hans_CN">
-			<Text>使用游戏选项“No First/Last moves (BGD)”时，各台电脑会互发隐藏的聊天消息（.bgd_pret、.bgd_depart、.bgd_fin）。开启后，这些消息会留在你的聊天中，主机结束回合时还会显示一行，便于跟踪每回合的开始和结束。仅影响本机显示。</Text>
+			<Text>使用游戏选项“No First/Last moves (BGE)”时，各台电脑会互发隐藏的聊天消息（.bgd_pret、.bgd_depart、.bgd_fin）。开启后，这些消息会留在你的聊天中，主机结束回合时还会显示一行，便于跟踪每回合的开始和结束。仅影响本机显示。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="zh_Hans_CN">
 			<Text>游戏计时区段分析</Text>
@@ -195,10 +195,10 @@
 			<Text>将游戏计时的每个区段（帧、界面、脚本、事件）的耗时记录到 %LOCALAPPDATA%\Civ6RolloverProxy\zones，用于性能分析。每秒游戏约 1 MB。下次启动游戏时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="zh_Hans_CN">
-			<Text>这些是 BetterGameDLLs 代理的设置（rollover_proxy.cfg）。将在下一局游戏开始时生效。</Text>
+			<Text>这些是 BetterGameExperience 代理的设置（rollover_proxy.cfg）。将在下一局游戏开始时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="zh_Hans_CN">
-			<Text>这些是 BetterGameDLLs 代理的设置（rollover_proxy.cfg）。已经开始过一局游戏：只有重启游戏后才会生效。</Text>
+			<Text>这些是 BetterGameExperience 代理的设置（rollover_proxy.cfg）。已经开始过一局游戏：只有重启游戏后才会生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="zh_Hans_CN">
 			<Text>缺少启动代理的功能：无法读取或保存设置。</Text>
@@ -225,7 +225,7 @@
 			<Text>隐藏高级选项</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="zh_Hans_CN">
-			<Text>内置界面模组基于其作者的成果，BetterGameDLLs 在此致谢：</Text>
+			<Text>内置界面模组基于其作者的成果，BetterGameExperience 在此致谢：</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="zh_Hans_CN">
 			<Text>{1}（Workshop {2}）：{3}。</Text>
@@ -237,16 +237,16 @@
 			<Text>{1}；原始单位和交易标签页：{2}；鸣谢：{3}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs：新版本</Text>
+			<Text>BetterGameExperience：新版本</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs：新的预发布版本</Text>
+			<Text>BetterGameExperience：新的预发布版本</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 版本 {1} 已可用（已安装：{2}）。[NEWLINE][NEWLINE]“更新”会关闭游戏并启动安装程序。</Text>
+			<Text>BetterGameExperience 版本 {1} 已可用（已安装：{2}）。[NEWLINE][NEWLINE]“更新”会关闭游戏并启动安装程序。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 预发布版本 {1} 已可用（已安装：{2}）。[NEWLINE][NEWLINE]这是测试版本：你收到它是因为安装程序中勾选了“预发布版本”。[NEWLINE][NEWLINE]“更新”会关闭游戏并启动安装程序。</Text>
+			<Text>BetterGameExperience 预发布版本 {1} 已可用（已安装：{2}）。[NEWLINE][NEWLINE]这是测试版本：你收到它是因为安装程序中勾选了“预发布版本”。[NEWLINE][NEWLINE]“更新”会关闭游戏并启动安装程序。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="zh_Hans_CN">
 			<Text>更新</Text>
@@ -255,28 +255,28 @@
 			<Text>稍后</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_PAGE" Language="zh_Hans_CN">
-			<Text>找不到 BetterGameDLLs 安装程序：已在浏览器中打开最新版本的页面。</Text>
+			<Text>找不到 BetterGameExperience 安装程序：已在浏览器中打开最新版本的页面。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="zh_Hans_CN">
-			<Text>所有玩家在同一时刻开始和结束回合。回合开始时，每个人都要等所有人加载完毕：可以查看地图，但指令会被暂缓，回合计时器也不会走。回合结束时，当主机的计时器归零，所有人的回合都会结束，即使自己的计时器还显示有剩余时间。所有玩家都需要安装相同版本的 BetterGameDLLs。取代 MPH 的回合同步，该功能会被关闭。</Text>
+			<Text>所有玩家在同一时刻开始和结束回合。回合开始时，每个人都要等所有人加载完毕：可以查看地图，但指令会被暂缓，回合计时器也不会走。回合结束时，当主机的计时器归零，所有人的回合都会结束，即使自己的计时器还显示有剩余时间。所有玩家都需要安装相同版本的 BetterGameExperience。取代 MPH 的回合同步，该功能会被关闭。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="zh_Hans_CN">
-			<Text>所有玩家都安装了 BetterGameDLLs {1}：POL 修正已启用。</Text>
+			<Text>所有玩家都安装了 BetterGameExperience {1}：POL 修正已启用。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS" Language="zh_Hans_CN">
-			<Text>未安装 BetterGameDLLs：{1}。本局已关闭 POL 修正。</Text>
+			<Text>未安装 BetterGameExperience：{1}。本局已关闭 POL 修正。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 版本不是 {1}：{2}。本局已关闭 POL 修正。</Text>
+			<Text>BetterGameExperience 版本不是 {1}：{2}。本局已关闭 POL 修正。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="zh_Hans_CN">
-			<Text>未安装 BetterGameDLLs：{1}。BetterGameDLLs 版本不是 {2}：{3}。本局已关闭 POL 修正。</Text>
+			<Text>未安装 BetterGameExperience：{1}。BetterGameExperience 版本不是 {2}：{3}。本局已关闭 POL 修正。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="zh_Hans_CN">
-			<Text>主机没有安装 BetterGameDLLs，或版本不兼容：本局已关闭 POL 修正。</Text>
+			<Text>主机没有安装 BetterGameExperience，或版本不兼容：本局已关闭 POL 修正。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="zh_Hans_CN">
-			<Text>{1}：在 POL 修正已启用时未安装 BetterGameDLLs（或版本不同）加入。该玩家的游戏将会不同步。</Text>
+			<Text>{1}：在 POL 修正已启用时未安装 BetterGameExperience（或版本不同）加入。该玩家的游戏将会不同步。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="zh_Hans_CN">
 			<Text>No First/Last moves 已启用：所有玩家一起开始回合，主机计时器归零时所有人的回合结束。</Text>
@@ -285,7 +285,7 @@
 			<Text>No First/Last moves：同时开始回合已启用；同时结束不可用（未能挂接游戏计时器）。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="zh_Hans_CN">
-			<Text>No First/Last moves 已关闭：所有玩家都需要安装相同版本的 BetterGameDLLs。</Text>
+			<Text>No First/Last moves 已关闭：所有玩家都需要安装相同版本的 BetterGameExperience。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="zh_Hans_CN">
 			<Text>指令已暂缓：还不是所有玩家的回合都已开始。</Text>
@@ -327,10 +327,10 @@
 			<Text>请关闭 Civilization VI，然后重新运行安装程序。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="zh_Hans_CN">
-			<Text>正在卸载 BetterGameDLLs…</Text>
+			<Text>正在卸载 BetterGameExperience…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 已卸载</Text>
+			<Text>BetterGameExperience 已卸载</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="zh_Hans_CN">
 			<Text>游戏已恢复原始文件。</Text>
@@ -348,28 +348,28 @@
 			<Text>最新版本未知</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs {1} 已安装且为最新</Text>
+			<Text>BetterGameExperience {1} 已安装且为最新</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 未安装</Text>
+			<Text>BetterGameExperience 未安装</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="zh_Hans_CN">
 			<Text>安装\n下载并安装版本 {1}。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 版本 {1} 已可用</Text>
+			<Text>BetterGameExperience 版本 {1} 已可用</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="zh_Hans_CN">
 			<Text>更新\n安装版本 {1}，它不再替换任何游戏文件：Steam 不会再移除它。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 需要修复</Text>
+			<Text>BetterGameExperience 需要修复</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="zh_Hans_CN">
 			<Text>修复\n重新安装版本 {1}。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="zh_Hans_CN">
-			<Text>已安装 BetterGameDLLs 版本 {1}</Text>
+			<Text>已安装 BetterGameExperience 版本 {1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="zh_Hans_CN">
 			<Text>回到版本 {1}\n用最新的正式版本替换预发布版本。</Text>
@@ -402,13 +402,13 @@
 			<Text>预发布版本：安装测试版本</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="zh_Hans_CN">
-			<Text>正在安装 BetterGameDLLs {1}…</Text>
+			<Text>正在安装 BetterGameExperience {1}…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="zh_Hans_CN">
 			<Text>若要让它自动更新和修复，请在 Steam 中为 Civilization VI 添加此启动选项（属性 &gt; 通用 &gt; 启动选项）：\n\n{1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs {1} 已安装</Text>
+			<Text>BetterGameExperience {1} 已安装</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="zh_Hans_CN">
 			<Text>重新启动 Civilization VI\n通过 Steam 启动。</Text>
@@ -420,7 +420,7 @@
 			<Text>Civilization VI 没有关闭。请关闭它，然后重新运行安装程序。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="zh_Hans_CN">
-			<Text>BetterGameDLLs 无法更新</Text>
+			<Text>BetterGameExperience 无法更新</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="zh_Hans_CN">
 			<Text>{1}\n\n游戏将在不更新的情况下启动。</Text>
@@ -429,7 +429,7 @@
 			<Text>找不到 Civilization VI。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="zh_Hans_CN">
-			<Text>正在将 BetterGameDLLs 更新到版本 {1}…</Text>
+			<Text>正在将 BetterGameExperience 更新到版本 {1}…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="zh_Hans_CN">
 			<Text>失败（代码 {1}）</Text>
@@ -438,7 +438,7 @@
 			<Text>缺少 {1}：请在 Steam 中验证游戏文件。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="zh_Hans_CN">
-			<Text>{1} 不是 BetterGameDLLs 的文件（其他模组？）：请删除它，然后重新运行安装程序。</Text>
+			<Text>{1} 不是 BetterGameExperience 的文件（其他模组？）：请删除它，然后重新运行安装程序。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="zh_Hans_CN">
 			<Text>版本 {1} 需要更新的安装程序：请从版本页面下载。</Text>

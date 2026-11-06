@@ -181,7 +181,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
             TRAMP.store(t, Ordering::Relaxed);
             HOOKED_BASE.store(base, Ordering::Relaxed);
             crate::STATUS.fetch_or(crate::ST_POL, Ordering::Relaxed);
-            log(&format!("citoyens : détour posé en {:#x}, BetterGameDLLs {}", SELECT.address, crate::version::VERSION));
+            log(&format!("citoyens : détour posé en {:#x}, BetterGameExperience {}", SELECT.address, crate::version::VERSION));
         }
         Err(e) => log(&format!("citoyens : échec de la pose du détour : {e}")),
     }

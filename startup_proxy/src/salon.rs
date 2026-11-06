@@ -220,7 +220,7 @@ mod tests {
     fn bloc_ajoute() {
         let out = patch_staging_lua(b"Initialize();");
         assert!(out.starts_with(b"Initialize();\r\n-- "));
-        assert!(LUA_BLOCK.contains("BGD - "));
+        assert!(LUA_BLOCK.contains("BGE - "));
         for &(_, name) in NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(LUA_BLOCK.contains(name), "{name} posée mais pas utilisée par le bloc");

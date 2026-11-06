@@ -3,13 +3,13 @@ name = "bgd-updater"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Installe, met à jour, répare ou retire les proxys de BetterGameDLLs à partir des releases GitHub"
+description = "Installe, met à jour, répare ou retire les proxys de BetterGameExperience à partir des releases GitHub"
 
 # Paquet autonome, comme proxy/ : il ne vise que Windows x64.
 [workspace]
 
 [[bin]]
-name = "BetterGameDLLs"
+name = "BetterGameExperience"
 path = "src/main.rs"
 
 [dependencies]

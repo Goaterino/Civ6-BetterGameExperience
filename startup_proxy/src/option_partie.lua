@@ -29,7 +29,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 	-- Une seule option pour le départ et la fin simultanés (ui_depart.lua).
 	local OPTIONS = {
 		{
-			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGD)", ordre = 43,
+			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGE)", ordre = 43,
 			aide = "LOC_BGD_OPTION_PARTIE_AIDE",
 		},
 	};

@@ -10,7 +10,7 @@
 --   BGD_TxtAnglais(clé, …)  -> le texte anglais : les messages de chat envoyés aux autres joueurs
 --                              partent en anglais, lisible même sans BetterGameDLLs.
 --   BGD_TxtChat(texte)      -> un message de chat de BetterGameDLLs reçu en anglais
---                              (« [COLOR_…]BGD - <texte d'une clé LOC_BGD_CHAT_*>[ENDCOLOR] »),
+--                              (« [COLOR_…]BGE - <texte d'une clé LOC_BGD_CHAT_*>[ENDCOLOR] »),
 --                              traduit dans la langue du jeu ; nil si ce n'en est pas un.
 -- ===========================================================================
 if type(BGD_Txt) ~= "function" then
@@ -75,7 +75,7 @@ if type(BGD_Txt) ~= "function" then
 
 	function BGD_TxtChat(texte)
 		if type(texte) ~= "string" or BGD_TxtBase == "en" then return nil; end
-		local debut, corps, fin = string.match(texte, "^(%[COLOR_[%w_]+%]BGD %- )(.*)(%[ENDCOLOR%])$");
+		local debut, corps, fin = string.match(texte, "^(%[COLOR_[%w_]+%]BGE %- )(.*)(%[ENDCOLOR%])$");
 		if debut == nil then return nil; end
 		for _, m in ipairs(Modeles()) do
 			local captures = { string.match(corps, m.motif) };

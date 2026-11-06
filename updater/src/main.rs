@@ -36,6 +36,7 @@ const RELAUNCH: i32 = 103;
 const STEAM_RUN: &str = "steam://rungameid/289070";
 
 fn main() {
+    release::migrate_data_dir();
     lang::init();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let code = match args.first().map(String::as_str) {
@@ -253,7 +254,7 @@ fn install_release(m: &release::Manifest, game: &Path, work: &Path) -> Result<()
 /// Emplacement fixe de l'installeur : le proxy de démarrage l'y cherche pour la notification de
 /// mise à jour (startup_proxy/src/maj.rs), et l'option de lancement Steam le désigne.
 fn stable_exe() -> Option<PathBuf> {
-    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\BetterGameDLLs.exe"))
+    Some(release::data_dir()?.join("BetterGameExperience.exe"))
 }
 
 /// Copie l'installeur à son emplacement fixe, s'il n'y tourne pas déjà : la copie suit ainsi le

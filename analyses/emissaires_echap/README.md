@@ -167,7 +167,7 @@ Variante plus tolérante à la mise en forme : ajouter à la fin du fichier un b
 gestionnaire (les locales du fichier sont visibles, comme pour `ui_production.lua`) :
 
 ```lua
--- Civ6BetterGameDLLs : Échap ferme l'écran comme la croix (Better Spectator Mod l'avait perdu)
+-- Civ6-BetterGameExperience : Échap ferme l'écran comme la croix (Better Spectator Mod l'avait perdu)
 if m_kScreenSlideAnim ~= nil then
 	ContextPtr:SetInputHandler(function(input)
 		return m_kScreenSlideAnim.OnInputHandler(input, OnClose);

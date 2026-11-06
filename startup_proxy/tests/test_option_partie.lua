@@ -1,4 +1,4 @@
--- Test hors jeu de src/option_partie.lua : la ligne de l'option « No First/Last moves (BGD) »
+-- Test hors jeu de src/option_partie.lua : la ligne de l'option « No First/Last moves (BGE) »
 -- ajoutée à la table Parameters avant chaque lecture des options de partie.
 --   lua startup_proxy/tests/test_option_partie.lua
 local function ReadFile(path)
@@ -52,7 +52,7 @@ do
 	local r = env.SetupParameters.Data_DiscoverParameters({});
 	Check("lecture d'origine appelée, résultat rendu", r == "liste" and discovered() == 1);
 	Check("une ligne ajoutée", #rows == 1 and rows[1].ParameterId == "BGD_DEPART_SIMULTANE");
-	Check("libellé « No First/Last moves (BGD) », aide en français", rows[1].Name == "No First/Last moves (BGD)"
+	Check("libellé « No First/Last moves (BGE) », aide en français", rows[1].Name == "No First/Last moves (BGE)"
 		and rows[1].Description:find("^Tous les joueurs commencent et finissent") ~= nil);
 	Check("position 43 dans les options", rows[1].SortIndex == 43);
 	Check("réseau seulement, option de partie booléenne",
@@ -66,7 +66,7 @@ end
 do
 	local env, rows = NewScreen("en_US");
 	env.SetupParameters.Data_DiscoverParameters({});
-	Check("même libellé, aide en anglais", rows[1].Name == "No First/Last moves (BGD)" and rows[1].Description:find("^Every player starts and ends") ~= nil);
+	Check("même libellé, aide en anglais", rows[1].Name == "No First/Last moves (BGE)" and rows[1].Description:find("^Every player starts and ends") ~= nil);
 end
 
 do

@@ -2,20 +2,20 @@
 
 [English](../CHANGELOG.md) · outros idiomas: veja o [registro em inglês](../CHANGELOG.md).
 
-## BetterGameDLLs 0.5.0: primeira versão pública
+## BetterGameExperience 0.5.0: primeira versão pública
 
-O BetterGameDLLs corrige e acelera o Civilization VI: Gathering Storm com duas DLLs colocadas ao lado
+O BetterGameExperience (BGE) corrige e acelera o Civilization VI: Gathering Storm com duas DLLs colocadas ao lado
 dos arquivos do jogo. **Nenhum arquivo do jogo é substituído**: nem a verificação de arquivos da Steam
 nem as atualizações do jogo o removem. Funciona com DirectX 11 e DirectX 12, com BBG, Better Spectator
 Mod e MPH.
 
 Todas as alterações estão listadas abaixo, por categoria. As marcadas com **[todos os jogadores]**
 mudam as regras da partida: só são ativadas quando todos os jogadores humanos da sala têm a mesma
-versão do BetterGameDLLs. Todo o resto afeta apenas o seu computador. Dá para jogar sem risco com quem
+versão do BetterGameExperience. Todo o resto afeta apenas o seu computador. Dá para jogar sem risco com quem
 não tem o mod.
 
 ### Instalação e atualizações
-- Instalador `BetterGameDLLs.exe`: instalar, atualizar, reparar e desinstalar. Ele encontra o jogo nas
+- Instalador `BetterGameExperience.exe`: instalar, atualizar, reparar e desinstalar. Ele encontra o jogo nas
   suas bibliotecas da Steam e verifica o manifesto assinado e o SHA-256 de cada arquivo antes de copiar
   qualquer coisa.
 - Dois arquivos são adicionados ao lado dos do jogo: `winmm.dll` e `BGD_GameCore_XP2.dll`. Instalações
@@ -30,7 +30,7 @@ não tem o mod.
   escolher outro na parte de baixo da janela.
 
 ### Configurações
-- Nova aba **BetterGameDLLs** nas opções do jogo: um interruptor geral que desativa tudo sem
+- Nova aba **BetterGameExperience** nas opções do jogo: um interruptor geral que desativa tudo sem
   desinstalar, uma configuração por recurso e opções avançadas ocultas por padrão. Ela avisa quando
   uma mudança precisa de reinício.
 - Créditos para os autores dos mods de interface integrados.
@@ -39,13 +39,13 @@ não tem o mod.
   simplificado.
 
 ### Multijogador
-- **Verificação na sala**: cada computador informa a sua versão do BetterGameDLLs, e o anfitrião
-  decide por todos. Mensagens de chat com o prefixo `BGD -` dizem quem está sem o mod ou com outra
+- **Verificação na sala**: cada computador informa a sua versão do BetterGameExperience, e o anfitrião
+  decide por todos. Mensagens de chat com o prefixo `BGE -` dizem quem está sem o mod ou com outra
   versão. As reconexões são tratadas. Se alguém entrar sem o mod enquanto as correções **[todos os
   jogadores]** estão ativas, o anfitrião recebe um aviso.
-- As mensagens de chat `BGD -` são enviadas em inglês, para que quem não tem o mod possa lê-las. Quem
+- As mensagens de chat `BGE -` são enviadas em inglês, para que quem não tem o mod possa lê-las. Quem
   tem o mod as vê no idioma do próprio jogo.
-- **Opção de partida "No First/Last moves (BGD)"** **[todos os jogadores]**:
+- **Opção de partida "No First/Last moves (BGE)"** **[todos os jogadores]**:
   - Todos os jogadores começam o turno juntos. As ordens ficam retidas, e o cronômetro parado, até
     que todos terminem de carregar (no máximo 60 s).
   - O turno termina para todos quando o cronômetro do anfitrião acaba.
@@ -89,8 +89,8 @@ não tem o mod.
   travamentos no multijogador.
 
 ### Mods de interface integrados
-Cada um pode ser desativado na aba BetterGameDLLs. Se você também tiver o mod da Oficina, a versão
-integrada ao BGD o substitui.
+Cada um pode ser desativado na aba BetterGameExperience. Se você também tiver o mod da Oficina, a versão
+integrada ao BGE o substitui.
 - **Cargas dos construtores** nas bandeiras das unidades (baseado em Better Builder Charges Tracking,
   de wltk).
 - **Turnos restantes das rotas comerciais** nas bandeiras dos seus comerciantes (novo).
@@ -120,7 +120,7 @@ integrada ao BGD o substitui.
 
 ### Limitações conhecidas
 - O mod foi feito para a versão oficial atual do jogo. Após uma atualização do jogo, os recursos
-  afetados se desativam sozinhos até que o BetterGameDLLs seja atualizado.
+  afetados se desativam sozinhos até que o BetterGameExperience seja atualizado.
 - Um jogador que entra no meio da partida sem o mod, enquanto as correções **[todos os jogadores]**
   estão ativas, vai dessincronizar. O anfitrião recebe um aviso.
 - As correções marcadas como *(experimental)* ainda não foram testadas numa partida real, ou o

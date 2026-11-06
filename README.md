@@ -1,4 +1,4 @@
-# BetterGameDLLs
+# BetterGameExperience (BGE)
 
 [Français](README.fr.md)
 
@@ -27,40 +27,40 @@ The full list of changes is in the [changelog](CHANGELOG.md), also available in
 ## Install
 
 1. Close Civilization VI.
-2. Download `BetterGameDLLs.exe` from the [latest release](https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest)
+2. Download `BetterGameExperience.exe` from the [latest release](https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest)
    and run it.
 3. Click **Install**. The installer finds the game in your Steam libraries, downloads the release,
    and checks its signature and the SHA-256 of every file before copying anything. Windows may ask
    for administrator rights if the game is in `Program Files`.
 
-That's it: start the game as usual. A **BetterGameDLLs** tab now appears in the game Options.
+That's it: start the game as usual. A **BetterGameExperience** tab now appears in the game Options.
 
 **Updates.** When a new version is out, the game's main menu offers it. **Update** closes the game,
 installs it and offers to restart. You can also run the installer again at any time.
 
 **Optional:** the installer offers a Steam launch option
-(`"%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe" %command%`). With it, the installer checks for
+(`"%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" %command%`). With it, the installer checks for
 updates every time you start the game. It's not needed to keep the mod installed.
 
 **Uninstall.** Run the installer and click **Uninstall**. The game gets its original files back.
 
 ## In multiplayer
 
-Most of BetterGameDLLs only affects your own machine: you can play with people who don't have it, and
+Most of BetterGameExperience only affects your own machine: you can play with people who don't have it, and
 nothing desyncs.
 
 A few fixes change the game rules. They're marked **[all players]** in the changelog, and they only
-turn on when every human player has the same BetterGameDLLs version. The lobby checks this on its
-own. When the game starts, a `BGD -` message in the chat says whether these fixes are on, and who is
+turn on when every human player has the same BetterGameExperience version. The lobby checks this on its
+own. When the game starts, a `BGE -` message in the chat says whether these fixes are on, and who is
 missing the mod. Players without the mod read these messages in English. Players who have it see
 them in their own language.
 
-To use **No First/Last moves (BGD)**, the host ticks it in the game options before launching. Every
-player needs BetterGameDLLs, at the same version.
+To use **No First/Last moves (BGE)**, the host ticks it in the game options before launching. Every
+player needs BetterGameExperience, at the same version.
 
 ## Settings
 
-Everything can be changed in **Options → BetterGameDLLs**: one setting per feature, and a master
+Everything can be changed in **Options → BetterGameExperience**: one setting per feature, and a master
 switch that turns the whole mod off without uninstalling it. Hover a setting to see what it does.
 The settings are stored in `rollover_proxy.cfg`, next to `BGD_GameCore_XP2.dll`.
 
@@ -68,9 +68,9 @@ The settings are stored in `rollover_proxy.cfg`, next to `BGD_GameCore_XP2.dll`.
 
 - The log is at `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`. Please attach it to any bug
   report, with the game's `Lua.log` if the problem is in the interface.
-- After a game update, BetterGameDLLs turns off the affected features on its own until it is updated.
+- After a game update, BetterGameExperience turns off the affected features on its own until it is updated.
   The log says so.
-- Report bugs and translation fixes in the [issues](https://github.com/Goaterino/Civ6BetterGameDLLs/issues).
+- Report bugs and translation fixes in the [issues](https://github.com/Goaterino/Civ6-BetterGameExperience/issues).
   How the translations work: [textes/README.md](textes/README.md).
 
 ## Credits

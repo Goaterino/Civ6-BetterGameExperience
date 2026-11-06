@@ -40,18 +40,18 @@ for _, langue in ipairs(LANGUES) do
 	for cle, t in pairs(env.BGD_TXT) do
 		if cle:sub(1, 13) == "LOC_BGD_CHAT_" then
 			local args = { "Bob, Zoé (0.1.0)", "0.5.0", "Léo" };
-			local envoye = "[COLOR_RED]BGD - " .. anglais.BGD_TxtAnglais(cle, args[1], args[2], args[3]) .. "[ENDCOLOR]";
+			local envoye = "[COLOR_RED]BGE - " .. anglais.BGD_TxtAnglais(cle, args[1], args[2], args[3]) .. "[ENDCOLOR]";
 			local recu = env.BGD_TxtChat(envoye);
 			if langue == "en_US" then
 				Check(cle .. " : rien à traduire en anglais", recu == nil);
 			else
-				local voulu = "[COLOR_RED]BGD - " .. env.BGD_Txt(cle, args[1], args[2], args[3]) .. "[ENDCOLOR]";
+				local voulu = "[COLOR_RED]BGE - " .. env.BGD_Txt(cle, args[1], args[2], args[3]) .. "[ENDCOLOR]";
 				Check(langue .. " " .. cle .. " : " .. tostring(recu), recu == voulu);
 			end
 		end
 	end
 	Check(langue .. " : message d'un joueur laissé tel quel", env.BGD_TxtChat("salut") == nil);
-	Check(langue .. " : message BGD inconnu laissé tel quel", env.BGD_TxtChat("[COLOR_RED]BGD - autre chose[ENDCOLOR]") == nil);
+	Check(langue .. " : message BGD inconnu laissé tel quel", env.BGD_TxtChat("[COLOR_RED]BGE - autre chose[ENDCOLOR]") == nil);
 end
 
 -- pt_PT n'existe pas : le portugais du Brésil.

@@ -2,20 +2,20 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
-## BetterGameDLLs 0.5.0: erste öffentliche Version
+## BetterGameExperience 0.5.0: erste öffentliche Version
 
-BetterGameDLLs behebt Fehler in Civilization VI: Gathering Storm und beschleunigt es, mit zwei DLLs
+BetterGameExperience (BGE) behebt Fehler in Civilization VI: Gathering Storm und beschleunigt es, mit zwei DLLs
 neben den Spieldateien. **Keine Spieldatei wird ersetzt**: Weder die Dateiprüfung von Steam noch
 Spiel-Updates entfernen es. Funktioniert mit DirectX 11 und DirectX 12, mit BBG, Better Spectator Mod
 und MPH.
 
 Alle Änderungen sind unten nach Kategorien aufgeführt. Die mit **[alle Spieler]** markierten ändern
 die Spielregeln: Sie werden nur aktiv, wenn alle menschlichen Spieler in der Lobby dieselbe Version
-von BetterGameDLLs haben. Alles andere betrifft nur Ihren eigenen Rechner. Man kann problemlos mit
+von BetterGameExperience haben. Alles andere betrifft nur Ihren eigenen Rechner. Man kann problemlos mit
 Spielern ohne den Mod spielen.
 
 ### Installation und Updates
-- Installationsprogramm `BetterGameDLLs.exe`: Installieren, Aktualisieren, Reparieren und
+- Installationsprogramm `BetterGameExperience.exe`: Installieren, Aktualisieren, Reparieren und
   Deinstallieren. Es findet das Spiel in Ihren Steam-Bibliotheken und prüft das signierte Manifest
   und den SHA-256 jeder Datei, bevor es etwas kopiert.
 - Zwei Dateien kommen neben die Spieldateien: `winmm.dll` und `BGD_GameCore_XP2.dll`. Ältere
@@ -30,7 +30,7 @@ Spielern ohne den Mod spielen.
   Windows, und unten im Fenster lässt sich eine andere wählen.
 
 ### Einstellungen
-- Neuer Reiter **BetterGameDLLs** in den Spieloptionen: ein Hauptschalter, der alles abschaltet, ohne
+- Neuer Reiter **BetterGameExperience** in den Spieloptionen: ein Hauptschalter, der alles abschaltet, ohne
   zu deinstallieren, eine Einstellung pro Funktion und standardmäßig ausgeblendete erweiterte
   Optionen. Er weist darauf hin, wenn eine Änderung einen Neustart erfordert.
 - Danksagungen an die Autoren der integrierten Oberflächen-Mods.
@@ -39,13 +39,13 @@ Spielern ohne den Mod spielen.
   Russisch und vereinfachtes Chinesisch.
 
 ### Mehrspieler
-- **Prüfung in der Lobby**: Jeder Rechner meldet seine Version von BetterGameDLLs, und der Host
-  entscheidet für alle. Chatnachrichten mit dem Präfix `BGD -` zeigen, wem der Mod fehlt oder wer eine
+- **Prüfung in der Lobby**: Jeder Rechner meldet seine Version von BetterGameExperience, und der Host
+  entscheidet für alle. Chatnachrichten mit dem Präfix `BGE -` zeigen, wem der Mod fehlt oder wer eine
   andere Version hat. Wiedereintritte werden berücksichtigt. Tritt jemand ohne den Mod bei, während
   Korrekturen **[alle Spieler]** aktiv sind, wird der Host gewarnt.
-- `BGD -`-Chatnachrichten werden auf Englisch gesendet, damit Spieler ohne den Mod sie lesen können.
+- `BGE -`-Chatnachrichten werden auf Englisch gesendet, damit Spieler ohne den Mod sie lesen können.
   Spieler mit dem Mod sehen sie in der Sprache ihres Spiels.
-- **Spieloption „No First/Last moves (BGD)“** **[alle Spieler]**:
+- **Spieloption „No First/Last moves (BGE)“** **[alle Spieler]**:
   - Alle Spieler beginnen ihre Runde gemeinsam. Befehle werden zurückgehalten und der Timer bleibt
     stehen, bis alle fertig geladen haben (höchstens 60 s).
   - Die Runde endet für alle, wenn der Timer des Hosts abläuft.
@@ -93,8 +93,8 @@ Spielern ohne den Mod spielen.
   hat: weniger Ruckler im Mehrspielermodus.
 
 ### Integrierte Oberflächen-Mods
-Jeder lässt sich im Reiter BetterGameDLLs abschalten. Haben Sie auch den Workshop-Mod, ersetzt ihn
-die in BGD integrierte Version.
+Jeder lässt sich im Reiter BetterGameExperience abschalten. Haben Sie auch den Workshop-Mod, ersetzt ihn
+die in BGE integrierte Version.
 - **Ladungen der Handwerker** auf den Einheitenflaggen (nach Better Builder Charges Tracking, von
   wltk).
 - **Verbleibende Runden der Handelswege** auf den Flaggen Ihrer Händler (neu).
@@ -124,7 +124,7 @@ die in BGD integrierte Version.
 
 ### Bekannte Einschränkungen
 - Der Mod zielt auf die aktuelle offizielle Version des Spiels. Nach einem Spiel-Update schalten
-  sich die betroffenen Funktionen von selbst ab, bis BetterGameDLLs aktualisiert ist.
+  sich die betroffenen Funktionen von selbst ab, bis BetterGameExperience aktualisiert ist.
 - Ein Spieler, der mitten in der Partie ohne den Mod beitritt, während Korrekturen **[alle Spieler]**
   aktiv sind, wird desynchronisiert. Der Host wird gewarnt.
 - Mit *(experimentell)* markierte Korrekturen wurden noch nicht in einer echten Partie getestet,

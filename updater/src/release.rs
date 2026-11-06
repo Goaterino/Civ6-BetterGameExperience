@@ -17,10 +17,10 @@ use crate::textes as tx;
 /// Pas de fenêtre de console pour curl.exe : l'installeur n'en a pas.
 pub const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
-const RELEASES: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases";
+const RELEASES: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases";
 /// Liste des releases publiées (les brouillons n'y sont pas sans jeton), pour le canal pré-release :
 /// `releases/latest` ne désigne jamais une pré-release.
-const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6BetterGameDLLs/releases?per_page=30";
+const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6-BetterGameExperience/releases?per_page=30";
 const PUBLIC_KEY: &str = include_str!("../../release/public_key.txt");
 
 #[derive(Deserialize)]
@@ -38,13 +38,32 @@ pub struct File {
 
 /// Dossier de travail, où le manifeste et les fichiers sont téléchargés avant l'installation.
 pub fn work_dir() -> PathBuf {
-    std::env::temp_dir().join("BetterGameDLLs")
+    std::env::temp_dir().join("BetterGameExperience")
 }
 
-/// Choix du canal, gardé dans `%LOCALAPPDATA%\BetterGameDLLs\canal.txt` : `prerelease`, sinon le
+/// Dossier des choix du joueur et de la copie de l'installeur : `%LOCALAPPDATA%\BetterGameExperience`.
+pub fn data_dir() -> Option<PathBuf> {
+    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameExperience"))
+}
+
+/// Jusqu'à la v0.5.0 le projet s'appelait BetterGameDLLs : au premier lancement, les choix gardés
+/// dans `%LOCALAPPDATA%\BetterGameDLLs` (langue, canal, version posée) sont repris.
+pub fn migrate_data_dir() {
+    let (Some(new), Some(local)) = (data_dir(), std::env::var_os("LOCALAPPDATA")) else { return };
+    let old = PathBuf::from(local).join("BetterGameDLLs");
+    if new.exists() || !old.is_dir() {
+        return;
+    }
+    let _ = fs::create_dir_all(&new);
+    for name in ["langue.txt", "canal.txt", "installe.txt"] {
+        let _ = fs::copy(old.join(name), new.join(name));
+    }
+}
+
+/// Choix du canal, gardé dans `%LOCALAPPDATA%\BetterGameExperience\canal.txt` : `prerelease`, sinon le
 /// canal release. L'option de lancement Steam et la notification du jeu le suivent aussi.
 fn channel_file() -> Option<PathBuf> {
-    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\canal.txt"))
+    Some(data_dir()?.join("canal.txt"))
 }
 
 /// Canal pré-release : la release publiée la plus récente, pré-release ou non.
@@ -59,10 +78,10 @@ pub fn set_prerelease(on: bool) {
     }
 }
 
-/// Version posée par la dernière installation, gardée dans `%LOCALAPPDATA%\BetterGameDLLs\installe.txt`
+/// Version posée par la dernière installation, gardée dans `%LOCALAPPDATA%\BetterGameExperience\installe.txt`
 /// (les DLL d'une compilation locale n'ont pas de numéro) : sert à reconnaître une pré-release posée.
 fn installed_file() -> Option<PathBuf> {
-    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\installe.txt"))
+    Some(data_dir()?.join("installe.txt"))
 }
 
 pub fn installed_version() -> Option<String> {

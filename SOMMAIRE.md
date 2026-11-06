@@ -17,7 +17,7 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   (`rollover_proxy.cfg`) ;
 - [startup_proxy](startup_proxy/README.md) : le proxy de démarrage (`winmm.dll`) : chargement du
   proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour ;
-- [updater](updater/README.md) : l'installeur `BetterGameDLLs.exe`, et [release](release/README.md) :
+- [updater](updater/README.md) : l'installeur `BetterGameExperience.exe`, et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
   [cascade d'une déclaration de guerre](rollover/cascade_guerre.md) ;
@@ -61,7 +61,7 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),
-  option de partie « No First/Last moves (BGD) » (départ simultané, fin de tour donnée par
+  option de partie « No First/Last moves (BGE) » (départ simultané, fin de tour donnée par
   l'hôte, essayés en partie), synchro de tour de MPH coupée ;
 - [textes](textes/README.md) : textes en jeu et de l'installeur, traduits dans les 11 langues de BBG
   (un fichier XML par langue, au format de Civ6), et messages du chat affichés dans la langue de

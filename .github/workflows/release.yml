@@ -1,4 +1,4 @@
-# Release de BetterGameDLLs (voir release/README.md).
+# Release de BetterGameExperience (voir release/README.md).
 # Un tag vX.Y.Z compile les deux proxys, signe le manifeste et crée une release en brouillon, à relire
 # puis publier à la main : l'updater ne voit que les releases publiées. Lancé à la main
 # (workflow_dispatch), il compile et signe sans créer de release ; les fichiers restent en artefact.
@@ -65,7 +65,7 @@ jobs:
           (cd updater && cargo build --release)
           mkdir dist
           cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
-          cp updater/target/release/BetterGameDLLs.exe dist/
+          cp updater/target/release/BetterGameExperience.exe dist/
 
       - name: Manifeste signé
         env:
@@ -85,11 +85,11 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: BetterGameDLLs-${{ env.VERSION }}
+          name: BetterGameExperience-${{ env.VERSION }}
           path: dist/
 
       - name: Release en brouillon
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameDLLs $VERSION" --notes-file notes.md
+        run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameExperience $VERSION" --notes-file notes.md

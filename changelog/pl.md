@@ -2,20 +2,20 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
-## BetterGameDLLs 0.5.0: pierwsza wersja publiczna
+## BetterGameExperience 0.5.0: pierwsza wersja publiczna
 
-BetterGameDLLs poprawia i przyspiesza Civilization VI: Gathering Storm za pomocą dwóch bibliotek DLL
+BetterGameExperience (BGE) poprawia i przyspiesza Civilization VI: Gathering Storm za pomocą dwóch bibliotek DLL
 umieszczonych obok plików gry. **Żaden plik gry nie jest zastępowany**, więc ani weryfikacja plików
 w Steam, ani aktualizacje gry go nie usuwają. Działa z DirectX 11 i DirectX 12, z BBG, Better
 Spectator Mod i MPH.
 
 Wszystkie zmiany są wymienione poniżej, według kategorii. Zmiany oznaczone **[wszyscy gracze]**
 zmieniają zasady gry: włączają się tylko wtedy, gdy wszyscy ludzcy gracze w poczekalni mają tę samą
-wersję BetterGameDLLs. Cała reszta dotyczy tylko twojego komputera. Można bezpiecznie grać z osobami,
+wersję BetterGameExperience. Cała reszta dotyczy tylko twojego komputera. Można bezpiecznie grać z osobami,
 które nie mają moda.
 
 ### Instalacja i aktualizacje
-- Instalator `BetterGameDLLs.exe`: instalacja, aktualizacja, naprawa i odinstalowanie. Znajduje grę
+- Instalator `BetterGameExperience.exe`: instalacja, aktualizacja, naprawa i odinstalowanie. Znajduje grę
   w bibliotekach Steam i przed skopiowaniem czegokolwiek sprawdza podpisany manifest oraz SHA-256
   każdego pliku.
 - Obok plików gry dodawane są dwa pliki: `winmm.dll` i `BGD_GameCore_XP2.dll`. Starsze instalacje
@@ -30,7 +30,7 @@ które nie mają moda.
   wybrać na dole okna.
 
 ### Ustawienia
-- Nowa karta **BetterGameDLLs** w opcjach gry: główny przełącznik, który wyłącza wszystko bez
+- Nowa karta **BetterGameExperience** w opcjach gry: główny przełącznik, który wyłącza wszystko bez
   odinstalowywania, ustawienie dla każdej funkcji i opcje zaawansowane domyślnie ukryte. Informuje,
   gdy zmiana wymaga ponownego uruchomienia.
 - Podziękowania dla autorów wbudowanych modów interfejsu.
@@ -39,13 +39,13 @@ które nie mają moda.
   i chińskim uproszczonym.
 
 ### Tryb wieloosobowy
-- **Sprawdzanie w poczekalni**: każdy komputer zgłasza swoją wersję BetterGameDLLs, a host decyduje za
-  wszystkich. Wiadomości czatu z przedrostkiem `BGD -` mówią, komu brakuje moda lub kto ma inną
+- **Sprawdzanie w poczekalni**: każdy komputer zgłasza swoją wersję BetterGameExperience, a host decyduje za
+  wszystkich. Wiadomości czatu z przedrostkiem `BGE -` mówią, komu brakuje moda lub kto ma inną
   wersję. Ponowne dołączenia są obsługiwane. Jeśli ktoś dołączy bez moda, gdy poprawki **[wszyscy
   gracze]** są włączone, host dostaje ostrzeżenie.
-- Wiadomości czatu `BGD -` są wysyłane po angielsku, aby gracze bez moda mogli je przeczytać. Gracze
+- Wiadomości czatu `BGE -` są wysyłane po angielsku, aby gracze bez moda mogli je przeczytać. Gracze
   z modem widzą je w języku swojej gry.
-- **Opcja gry „No First/Last moves (BGD)”** **[wszyscy gracze]**:
+- **Opcja gry „No First/Last moves (BGE)”** **[wszyscy gracze]**:
   - Wszyscy gracze zaczynają turę razem. Rozkazy są wstrzymane, a zegar stoi, dopóki wszyscy nie
     skończą wczytywania (najwyżej 60 s).
   - Tura kończy się dla wszystkich, gdy upłynie czas na zegarze hosta.
@@ -85,8 +85,8 @@ które nie mają moda.
   spowolnień w trybie wieloosobowym.
 
 ### Wbudowane mody interfejsu
-Każdy można wyłączyć na karcie BetterGameDLLs. Jeśli masz też moda z Warsztatu, wersja wbudowana w
-BGD go zastępuje.
+Każdy można wyłączyć na karcie BetterGameExperience. Jeśli masz też moda z Warsztatu, wersja wbudowana w
+BGE go zastępuje.
 - **Ładunki budowniczych** na flagach jednostek (na podstawie Better Builder Charges Tracking, autor:
   wltk).
 - **Pozostałe tury szlaków handlowych** na flagach twoich kupców (nowość).
@@ -116,7 +116,7 @@ BGD go zastępuje.
 
 ### Znane ograniczenia
 - Mod jest przeznaczony dla obecnej oficjalnej wersji gry. Po aktualizacji gry odpowiednie funkcje
-  same się wyłączają, dopóki BetterGameDLLs nie zostanie zaktualizowane.
+  same się wyłączają, dopóki BetterGameExperience nie zostanie zaktualizowane.
 - Gracz, który dołączy w trakcie rozgrywki bez moda, gdy poprawki **[wszyscy gracze]** są włączone,
   ulegnie desynchronizacji. Host dostaje ostrzeżenie.
 - Poprawki oznaczone *(eksperymentalne)* nie zostały jeszcze przetestowane w prawdziwej rozgrywce

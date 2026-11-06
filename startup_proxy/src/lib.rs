@@ -84,7 +84,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         // la winmm de System32, avant tout le reste (les modules qui importent winmm passent après).
         let relais = relais::init();
         let exe = std::env::current_exe().map(|p| p.display().to_string()).unwrap_or_default();
-        log(&format!("démarrage : proxy winmm chargé dans {exe}, BetterGameDLLs {}", version::VERSION));
+        log(&format!("démarrage : proxy winmm chargé dans {exe}, BetterGameExperience {}", version::VERSION));
         match relais {
             Ok((path, 0)) => log(&format!("démarrage : exports relayés vers {path}")),
             Ok((path, n)) => log(&format!("démarrage : exports relayés vers {path}, {n} absents de cette winmm (rendent 0)")),

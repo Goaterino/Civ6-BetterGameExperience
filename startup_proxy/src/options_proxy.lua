@@ -16,7 +16,7 @@
 -- ===========================================================================
 
 -- Réécrite avec la version de BetterGameDLLs par le proxy de démarrage (src/options.rs), affichée
--- dans le titre de l'écran quand l'onglet est ouvert (le bouton de l'onglet garde « BetterGameDLLs »).
+-- dans le titre de l'écran quand l'onglet est ouvert (le bouton de l'onglet garde « BetterGameExperience »).
 local PROXY_VERSION = nil;
 
 local function Proxy_T(cle, ...)
@@ -314,7 +314,7 @@ end
 -- Si le XML n'a pas été modifié (Options.xml remplacé par un mod, par exemple), rien n'est ajouté.
 if Controls.ProxyTab ~= nil and Controls.ProxyOptions ~= nil and Controls.ProxyAdvancedStack ~= nil and m_tabs ~= nil then
 	-- 1 : pas de bouton « Restaurer les valeurs par défaut » sur cet onglet, comme pour les raccourcis.
-	local tab = { Controls.ProxyTab, Controls.ProxyOptions, PROXY_VERSION and ("BetterGameDLLs " .. PROXY_VERSION) or "BetterGameDLLs", 1 };
+	local tab = { Controls.ProxyTab, Controls.ProxyOptions, PROXY_VERSION and ("BetterGameExperience " .. PROXY_VERSION) or "BetterGameExperience", 1 };
 	table.insert(m_tabs, tab);
 	Controls.ProxyTab:RegisterCallback(Mouse.eLClick, function() OnSelectTab(tab); end);
 	Controls.ProxyTab:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
@@ -343,5 +343,5 @@ if Controls.ProxyTab ~= nil and Controls.ProxyOptions ~= nil and Controls.ProxyA
 	end
 	Controls.ConfirmButton:RegisterCallback(Mouse.eLClick, OnConfirm);
 
-	print("BetterGameDLLs : onglet des proxys ajouté aux options");
+	print("BetterGameExperience : onglet des proxys ajouté aux options");
 end

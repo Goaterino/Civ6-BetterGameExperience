@@ -22,11 +22,11 @@ use std::sync::{Mutex, Once};
 pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("maj.lua"));
 pub const SCRIPT: &str = "mainmenu.lua";
 
-const MANIFEST_URL: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest/download/manifest.json";
-const RELEASE_PAGE: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest";
-const TAG_PAGE: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/tag/v";
+const MANIFEST_URL: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest/download/manifest.json";
+const RELEASE_PAGE: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest";
+const TAG_PAGE: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/tag/v";
 /// Releases publiées, les plus récentes d'abord (sans jeton, les brouillons n'y sont pas).
-const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6BetterGameDLLs/releases?per_page=30";
+const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6-BetterGameExperience/releases?per_page=30";
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Dernière version trouvée, et si c'est une pré-release.
@@ -94,7 +94,11 @@ fn config_enabled(text: &str) -> bool {
 /// Canal choisi dans l'installeur (updater/src/release.rs) : `prerelease`, sinon release.
 fn prerelease_channel() -> bool {
     let Some(dir) = std::env::var_os("LOCALAPPDATA") else { return false };
-    std::fs::read_to_string(PathBuf::from(dir).join("BetterGameDLLs\\canal.txt")).is_ok_and(|c| c.trim() == "prerelease")
+    // BetterGameDLLs : nom du projet jusqu'à la v0.5.0, tant que le nouvel installeur n'a pas tourné.
+    ["BetterGameExperience", "BetterGameDLLs"]
+        .iter()
+        .find_map(|d| std::fs::read_to_string(PathBuf::from(&dir).join(d).join("canal.txt")).ok())
+        .is_some_and(|c| c.trim() == "prerelease")
 }
 
 fn fetch_latest(prerelease: bool) -> Result<Found, String> {
@@ -169,8 +173,11 @@ fn newer(latest: &str, current: &str) -> bool {
 
 /// L'installeur se copie là à chaque installation (updater/src/main.rs).
 fn installer() -> Option<PathBuf> {
-    let path = PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\BetterGameDLLs.exe");
-    path.is_file().then_some(path)
+    // L'installeur d'avant le changement de nom (BetterGameDLLs) sait aussi installer la release.
+    let dir = PathBuf::from(std::env::var_os("LOCALAPPDATA")?);
+    [dir.join("BetterGameExperience\\BetterGameExperience.exe"), dir.join("BetterGameDLLs\\BetterGameDLLs.exe")]
+        .into_iter()
+        .find(|p| p.is_file())
 }
 
 /// Lance l'installeur, qui attendra la fermeture du jeu ; sinon ouvre la page de la release

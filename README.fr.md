@@ -1,4 +1,4 @@
-# BetterGameDLLs
+# BetterGameExperience (BGE)
 
 [English](README.md)
 
@@ -30,13 +30,13 @@ disponible en [English](CHANGELOG.md), [Deutsch](changelog/de.md), [Español](ch
 ## Installation
 
 1. Fermez Civilization VI.
-2. Téléchargez `BetterGameDLLs.exe` depuis la [dernière release](https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest)
+2. Téléchargez `BetterGameExperience.exe` depuis la [dernière release](https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest)
    et lancez-le.
 3. Cliquez sur **Installer**. L'installeur trouve le jeu dans vos bibliothèques Steam, télécharge la
    release, et vérifie sa signature et le SHA-256 de chaque fichier avant de copier quoi que ce soit.
    Windows peut demander les droits d'administrateur si le jeu est dans `Program Files`.
 
-C'est tout : lancez le jeu comme d'habitude. Un onglet **BetterGameDLLs** apparaît dans les Options
+C'est tout : lancez le jeu comme d'habitude. Un onglet **BetterGameExperience** apparaît dans les Options
 du jeu.
 
 **Mises à jour.** Quand une nouvelle version sort, le menu principal du jeu la propose. **Mettre à
@@ -44,7 +44,7 @@ jour** ferme le jeu, l'installe et propose de le relancer. Vous pouvez aussi rel
 tout moment.
 
 **Facultatif :** l'installeur propose une option de lancement Steam
-(`"%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe" %command%`). Avec elle, l'installeur cherche une
+(`"%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" %command%`). Avec elle, l'installeur cherche une
 mise à jour à chaque lancement du jeu. Elle n'est pas nécessaire pour que le mod reste installé.
 
 **Désinstallation.** Lancez l'installeur et cliquez sur **Désinstaller**. Le jeu retrouve ses
@@ -52,21 +52,21 @@ fichiers d'origine.
 
 ## En multijoueur
 
-L'essentiel de BetterGameDLLs ne concerne que votre machine : vous pouvez jouer avec des joueurs qui
+L'essentiel de BetterGameExperience ne concerne que votre machine : vous pouvez jouer avec des joueurs qui
 ne l'ont pas, et rien ne se désynchronise.
 
 Quelques correctifs changent les règles de la partie. Ils sont marqués **[tous les joueurs]** dans le
 journal des modifications, et ne s'activent que si tous les joueurs humains ont la même version de
-BetterGameDLLs. Le salon le vérifie tout seul. Au lancement de la partie, un message `BGD -` dans le
+BetterGameExperience. Le salon le vérifie tout seul. Au lancement de la partie, un message `BGE -` dans le
 chat dit si ces correctifs sont actifs, et qui n'a pas le mod. Les joueurs sans le mod lisent ces
 messages en anglais. Ceux qui l'ont les voient dans leur langue.
 
-Pour jouer avec **No First/Last moves (BGD)**, l'hôte coche l'option dans les options de partie
-avant le lancement. Tous les joueurs doivent avoir BetterGameDLLs, à la même version.
+Pour jouer avec **No First/Last moves (BGE)**, l'hôte coche l'option dans les options de partie
+avant le lancement. Tous les joueurs doivent avoir BetterGameExperience, à la même version.
 
 ## Réglages
 
-Tout se règle dans **Options → BetterGameDLLs** : un réglage par fonctionnalité, et un interrupteur
+Tout se règle dans **Options → BetterGameExperience** : un réglage par fonctionnalité, et un interrupteur
 général qui coupe tout le mod sans le désinstaller. Survolez un réglage pour voir ce qu'il fait. Les
 réglages sont enregistrés dans `rollover_proxy.cfg`, à côté de `BGD_GameCore_XP2.dll`.
 
@@ -74,10 +74,10 @@ réglages sont enregistrés dans `rollover_proxy.cfg`, à côté de `BGD_GameCor
 
 - Le journal est dans `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`. Joignez-le à tout
   signalement de bug, avec le `Lua.log` du jeu si le problème touche l'interface.
-- Après une mise à jour du jeu, BetterGameDLLs coupe de lui-même les fonctionnalités concernées
+- Après une mise à jour du jeu, BetterGameExperience coupe de lui-même les fonctionnalités concernées
   jusqu'à sa propre mise à jour. Le journal le dit.
 - Signalez les bugs et les corrections de traduction dans les
-  [issues](https://github.com/Goaterino/Civ6BetterGameDLLs/issues). Le fonctionnement des
+  [issues](https://github.com/Goaterino/Civ6-BetterGameExperience/issues). Le fonctionnement des
   traductions : [textes/README.md](textes/README.md).
 
 ## Crédits

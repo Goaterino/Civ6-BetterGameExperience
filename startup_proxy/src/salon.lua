@@ -202,7 +202,7 @@ local function BGD_MessageDeLHote()
 	local sans, autres = BGD_Bilan();
 	local texte;
 	if #sans == 0 and #autres == 0 then
-		BGD_Dire("[COLOR_GREEN]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_TOUS", BGD.version) .. "[ENDCOLOR]");
+		BGD_Dire("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_TOUS", BGD.version) .. "[ENDCOLOR]");
 		return;
 	elseif #autres == 0 then
 		texte = BGD_TxtAnglais("LOC_BGD_CHAT_SANS", table.concat(sans, ", "));
@@ -211,7 +211,7 @@ local function BGD_MessageDeLHote()
 	else
 		texte = BGD_TxtAnglais("LOC_BGD_CHAT_SANS_AUTRES", table.concat(sans, ", "), BGD.version, table.concat(autres, ", "));
 	end
-	BGD_Dire("[COLOR_RED]BGD - " .. texte .. "[ENDCOLOR]");
+	BGD_Dire("[COLOR_RED]BGE - " .. texte .. "[ENDCOLOR]");
 end
 
 -- Client : si l'hôte ne nous voit pas, le premier client équipé le dit. Équipé : son annonce a
@@ -226,7 +226,7 @@ local function BGD_MessageDUnClient()
 			return;  -- un client équipé avant nous s'en charge
 		end
 	end
-	BGD_Dire("[COLOR_RED]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_HOTE_SANS") .. "[ENDCOLOR]");
+	BGD_Dire("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_HOTE_SANS") .. "[ENDCOLOR]");
 end
 
 -- Au démarrage du compte à rebours, sur chaque machine : annonce et verdict à jour, message, et la

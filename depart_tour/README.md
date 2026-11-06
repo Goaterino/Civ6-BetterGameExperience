@@ -51,15 +51,15 @@ rien : elle masque l'écran pendant le passage de tour local. Le proxy la **dés
    et son minuteur est gelé. Un bandeau discret dit qui on attend.
 4. **Départ reçu.** Ordres débloqués, minuteur lancé à cet instant.
 
-Activation : il faut que l'option de partie « No First/Last moves (BGD) » soit cochée **et** que tous
+Activation : il faut que l'option de partie « No First/Last moves (BGE) » soit cochée **et** que tous
 les humains aient le proxy (verdict de l'hôte, comme les correctifs POL), puisqu'un joueur sans proxy
 ne serait pas bloqué.
 
-### L'option de partie « No First/Last moves (BGD) »
+### L'option de partie « No First/Last moves (BGE) »
 
 C'est une option de la config de partie, choisie par l'hôte dans le salon comme les options de MPH,
 et non un réglage de `rollover_proxy.cfg`. Seule l'option d'affichage des signaux du chat caché
-(ci-dessous) est un réglage de BGD, dans l'onglet hors salon.
+(ci-dessous) est un réglage de BGE, dans l'onglet hors salon.
 
 **Comment l'injecter.** Les options de partie viennent de la base `Configuration` :
 `SetupParameters.lua` lit la table `Parameters` (et ses tables liées) par `DB.ConfigurationQuery`,
@@ -231,7 +231,7 @@ la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
   envoie encore les réponses du joueur à la diplomatie des IA : les retenir bloquerait ces
   sessions. Le `TurnComplete` de l'exe suffit.
 - **Conditions** : la même option de partie (`BGD_DEPART_SIMULTANE`, « No First/Last moves
-  (BGD) ») que le départ, correctifs POL actifs (tous les humains ont BetterGameDLLs à la même
+  (BGE) ») que le départ, correctifs POL actifs (tous les humains ont BetterGameExperience à la même
   version), et minuteur de l'exe détourné. Sans minuteur de tour (limite 0), rien ne se passe.
   L'hôte l'annonce au chargement, dans le même message que le départ. La ligne locale « fin du
   tour : le minuteur de l'hôte est écoulé » n'apparaît qu'avec le réglage `depart_signaux`.
@@ -242,7 +242,7 @@ la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
 |---|---|
 | [proxy/src/depart.rs](../proxy/src/depart.rs) | détours de l'envoi (`1800366b0`) et de la pause du minuteur (signature, DX12 et DX11) ; fonctions natives `Civ6RolloverProxy_Depart*`, `Civ6RolloverProxy_FinForcer` et `Civ6RolloverProxy_FinLever` ; réglage `depart_signaux` |
 | [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ, fin envoyée par l'hôte |
-| [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGD - …` |
+| [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGE - …` |
 | [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
 
 Choix faits à l'implémentation :
@@ -250,7 +250,7 @@ Choix faits à l'implémentation :
   tôt retiendrait aussi les actions diplomatiques des IA envers le joueur, que sa machine envoie.
   Au chargement d'une partie, le signal « prêt » attend la fermeture de l'écran de chargement.
 - **Qui est attendu** : les humains vivants, connectés, pas spectateurs, et qui annoncent la même
-  version dans leur config de joueur (`BGD_VERSION`). Un humain sans BetterGameDLLs n'est pas
+  version dans leur config de joueur (`BGD_VERSION`). Un humain sans BetterGameExperience n'est pas
   attendu : il ne serait pas bloqué de toute façon.
 - **Délais** : l'hôte part sans les retardataires après 60 s et les nomme (ligne locale) ; sans
   départ reçu, le proxy lève l'attente au premier ordre tenté après 120 s.

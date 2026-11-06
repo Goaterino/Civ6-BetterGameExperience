@@ -150,7 +150,7 @@ devient
 et, ajouté en tête du fichier :
 
 ```lua
--- Civ6BetterGameDLLs : Entrée ne fait l'« Action suivante » que si le joueur l'y a laissée.
+-- Civ6-BetterGameExperience : Entrée ne fait l'« Action suivante » que si le joueur l'y a laissée.
 function BGD_EntreeEstActionSuivante()
 	local id = Input.GetActionId("EndTurn");
 	if id == nil then return true; end			-- action absente : comportement du jeu

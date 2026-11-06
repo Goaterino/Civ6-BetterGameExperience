@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Textes de BetterGameDLLs en ja_JP : voir textes/README.md. -->
+<!-- Textes de BetterGameExperience en ja_JP : voir textes/README.md. -->
 <GameData>
 	<LocalizedText>
 		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="ja_JP">
@@ -51,7 +51,7 @@
 			<Text>クレジット</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="ja_JP">
-			<Text>BetterGameDLLs プロキシ</Text>
+			<Text>BetterGameExperience プロキシ</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="ja_JP">
 			<Text>GameCore プロキシによる変更を、アンインストールせずにすべて一度に無効にします。ゲームはプロキシがない場合と同じように動作します。他の設定は保持され、このタブから再び有効にできます。</Text>
@@ -60,7 +60,7 @@
 			<Text>アップデートを確認</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="ja_JP">
-			<Text>ゲーム起動時に GitHub で BetterGameDLLs の新しいバージョンを探し、メインメニューで案内します。次回のゲーム起動時から有効です。</Text>
+			<Text>ゲーム起動時に GitHub で BetterGameExperience の新しいバージョンを探し、メインメニューで案内します。次回のゲーム起動時から有効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="ja_JP">
 			<Text>都市の更新をまとめる</Text>
@@ -186,7 +186,7 @@
 			<Text>同時開始・同時終了の信号を表示</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="ja_JP">
-			<Text>ゲームオプション「No First/Last moves (BGD)」では、各PCが非表示のチャットメッセージ (.bgd_pret、.bgd_depart、.bgd_fin) をやり取りします。有効にすると、それらがチャットに表示されたままになり、ホストがターンを終えたときにも1行表示されるので、各ターンの開始と終了を追えます。このPCでの表示のみ。</Text>
+			<Text>ゲームオプション「No First/Last moves (BGE)」では、各PCが非表示のチャットメッセージ (.bgd_pret、.bgd_depart、.bgd_fin) をやり取りします。有効にすると、それらがチャットに表示されたままになり、ホストがターンを終えたときにも1行表示されるので、各ターンの開始と終了を追えます。このPCでの表示のみ。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="ja_JP">
 			<Text>ゲームの計測区間のプロファイル</Text>
@@ -195,10 +195,10 @@
 			<Text>ゲームが計測する各区間 (フレーム、インターフェース、スクリプト、イベント) の所要時間を、パフォーマンス分析のため %LOCALAPPDATA%\Civ6RolloverProxy\zones に記録します。プレイ1秒あたり約1MB。次回のゲーム起動時から有効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="ja_JP">
-			<Text>これは BetterGameDLLs プロキシの設定 (rollover_proxy.cfg) です。次のゲームの開始時に反映されます。</Text>
+			<Text>これは BetterGameExperience プロキシの設定 (rollover_proxy.cfg) です。次のゲームの開始時に反映されます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="ja_JP">
-			<Text>これは BetterGameDLLs プロキシの設定 (rollover_proxy.cfg) です。すでにゲームが開始されているため、ゲームを再起動するまで反映されません。</Text>
+			<Text>これは BetterGameExperience プロキシの設定 (rollover_proxy.cfg) です。すでにゲームが開始されているため、ゲームを再起動するまで反映されません。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="ja_JP">
 			<Text>起動プロキシの機能が見つかりません。設定を読み込むことも保存することもできません。</Text>
@@ -225,7 +225,7 @@
 			<Text>詳細オプションを隠す</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="ja_JP">
-			<Text>組み込みインターフェースMODは作者の成果に基づいています。BetterGameDLLs より感謝します:</Text>
+			<Text>組み込みインターフェースMODは作者の成果に基づいています。BetterGameExperience より感謝します:</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="ja_JP">
 			<Text>{1} (Workshop {2}): {3}。</Text>
@@ -237,16 +237,16 @@
 			<Text>{1}、元のユニット・取引タブ: {2}、謝辞: {3}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="ja_JP">
-			<Text>BetterGameDLLs: 新しいリリース</Text>
+			<Text>BetterGameExperience: 新しいリリース</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="ja_JP">
-			<Text>BetterGameDLLs: 新しいプレリリース</Text>
+			<Text>BetterGameExperience: 新しいプレリリース</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="ja_JP">
-			<Text>BetterGameDLLs のリリース {1} が利用可能です (インストール済み: {2})。[NEWLINE][NEWLINE]「アップデート」を押すとゲームを終了し、インストーラーを起動します。</Text>
+			<Text>BetterGameExperience のリリース {1} が利用可能です (インストール済み: {2})。[NEWLINE][NEWLINE]「アップデート」を押すとゲームを終了し、インストーラーを起動します。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="ja_JP">
-			<Text>BetterGameDLLs のプレリリース {1} が利用可能です (インストール済み: {2})。[NEWLINE][NEWLINE]これはテスト版です。インストーラーで「プレリリース」にチェックが入っているため届いています。[NEWLINE][NEWLINE]「アップデート」を押すとゲームを終了し、インストーラーを起動します。</Text>
+			<Text>BetterGameExperience のプレリリース {1} が利用可能です (インストール済み: {2})。[NEWLINE][NEWLINE]これはテスト版です。インストーラーで「プレリリース」にチェックが入っているため届いています。[NEWLINE][NEWLINE]「アップデート」を押すとゲームを終了し、インストーラーを起動します。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="ja_JP">
 			<Text>アップデート</Text>
@@ -255,28 +255,28 @@
 			<Text>後で</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_PAGE" Language="ja_JP">
-			<Text>BetterGameDLLs のインストーラーが見つかりません。最新リリースのページをブラウザで開きました。</Text>
+			<Text>BetterGameExperience のインストーラーが見つかりません。最新リリースのページをブラウザで開きました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="ja_JP">
-			<Text>全プレイヤーが同時にターンを開始し、同時に終了します。ターン開始時は全員の読み込みが終わるまで待機します。マップは見られますが、命令は保留され、ターンタイマーは進みません。終了時は、ホストのタイマーがゼロになると、自分のタイマーに時間が残っていても全員のターンが終わります。全プレイヤーが同じバージョンの BetterGameDLLs を持っている必要があります。MPH のターン同期は無効になり、これに置き換わります。</Text>
+			<Text>全プレイヤーが同時にターンを開始し、同時に終了します。ターン開始時は全員の読み込みが終わるまで待機します。マップは見られますが、命令は保留され、ターンタイマーは進みません。終了時は、ホストのタイマーがゼロになると、自分のタイマーに時間が残っていても全員のターンが終わります。全プレイヤーが同じバージョンの BetterGameExperience を持っている必要があります。MPH のターン同期は無効になり、これに置き換わります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="ja_JP">
-			<Text>全プレイヤーが BetterGameDLLs {1} を使用中: POL 修正は有効です。</Text>
+			<Text>全プレイヤーが BetterGameExperience {1} を使用中: POL 修正は有効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS" Language="ja_JP">
-			<Text>BetterGameDLLs なし: {1}。このゲームでは POL 修正は無効です。</Text>
+			<Text>BetterGameExperience なし: {1}。このゲームでは POL 修正は無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="ja_JP">
-			<Text>{1} 以外のバージョンの BetterGameDLLs: {2}。このゲームでは POL 修正は無効です。</Text>
+			<Text>{1} 以外のバージョンの BetterGameExperience: {2}。このゲームでは POL 修正は無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="ja_JP">
-			<Text>BetterGameDLLs なし: {1}。{2} 以外のバージョンの BetterGameDLLs: {3}。このゲームでは POL 修正は無効です。</Text>
+			<Text>BetterGameExperience なし: {1}。{2} 以外のバージョンの BetterGameExperience: {3}。このゲームでは POL 修正は無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="ja_JP">
-			<Text>ホストが BetterGameDLLs を持っていないか、互換性のないバージョンです: このゲームでは POL 修正は無効です。</Text>
+			<Text>ホストが BetterGameExperience を持っていないか、互換性のないバージョンです: このゲームでは POL 修正は無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="ja_JP">
-			<Text>{1}: POL 修正が有効なのに、BetterGameDLLs なし (または別のバージョン) で参加しました。このプレイヤーのゲームは同期がずれます。</Text>
+			<Text>{1}: POL 修正が有効なのに、BetterGameExperience なし (または別のバージョン) で参加しました。このプレイヤーのゲームは同期がずれます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ja_JP">
 			<Text>No First/Last moves 有効: 全プレイヤーが一緒にターンを開始し、ホストのタイマーがゼロになると全員のターンが終わります。</Text>
@@ -285,7 +285,7 @@
 			<Text>No First/Last moves: 同時開始は有効、同時終了は利用不可 (ゲームのタイマーをフックできません)。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ja_JP">
-			<Text>No First/Last moves 無効: 全プレイヤーが同じバージョンの BetterGameDLLs を持っている必要があります。</Text>
+			<Text>No First/Last moves 無効: 全プレイヤーが同じバージョンの BetterGameExperience を持っている必要があります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ja_JP">
 			<Text>命令を保留中: まだ全プレイヤーのターンが始まっていません。</Text>
@@ -327,10 +327,10 @@
 			<Text>Civilization VI を終了してから、インストーラーを再実行してください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="ja_JP">
-			<Text>BetterGameDLLs をアンインストール中…</Text>
+			<Text>BetterGameExperience をアンインストール中…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="ja_JP">
-			<Text>BetterGameDLLs はアンインストールされました</Text>
+			<Text>BetterGameExperience はアンインストールされました</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="ja_JP">
 			<Text>ゲームは元のファイルに戻りました。</Text>
@@ -348,28 +348,28 @@
 			<Text>最新バージョン不明</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="ja_JP">
-			<Text>BetterGameDLLs {1} はインストール済みで最新です</Text>
+			<Text>BetterGameExperience {1} はインストール済みで最新です</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="ja_JP">
-			<Text>BetterGameDLLs はインストールされていません</Text>
+			<Text>BetterGameExperience はインストールされていません</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="ja_JP">
 			<Text>インストール\nバージョン {1} をダウンロードしてインストールします。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="ja_JP">
-			<Text>BetterGameDLLs のバージョン {1} が利用可能です</Text>
+			<Text>BetterGameExperience のバージョン {1} が利用可能です</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="ja_JP">
 			<Text>アップデート\nバージョン {1} をインストールします。このバージョンはゲームのファイルを置き換えないため、Steam に削除されなくなります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="ja_JP">
-			<Text>BetterGameDLLs の修復が必要です</Text>
+			<Text>BetterGameExperience の修復が必要です</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="ja_JP">
 			<Text>修復\nバージョン {1} を再インストールします。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="ja_JP">
-			<Text>BetterGameDLLs のバージョン {1} がインストールされています</Text>
+			<Text>BetterGameExperience のバージョン {1} がインストールされています</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="ja_JP">
 			<Text>バージョン {1} に戻す\nプレリリースを最新のリリースに置き換えます。</Text>
@@ -402,13 +402,13 @@
 			<Text>プレリリース: テスト版をインストールする</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="ja_JP">
-			<Text>BetterGameDLLs {1} をインストール中…</Text>
+			<Text>BetterGameExperience {1} をインストール中…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="ja_JP">
 			<Text>自動で更新・修復されるようにするには、Steam で Civilization VI にこの起動オプションを追加してください (プロパティ &gt; 一般 &gt; 起動オプション):\n\n{1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="ja_JP">
-			<Text>BetterGameDLLs {1} がインストールされました</Text>
+			<Text>BetterGameExperience {1} がインストールされました</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="ja_JP">
 			<Text>Civilization VI を再起動\nSteam 経由で起動します。</Text>
@@ -420,7 +420,7 @@
 			<Text>Civilization VI が終了しませんでした。終了してから、インストーラーを再実行してください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="ja_JP">
-			<Text>BetterGameDLLs をアップデートできませんでした</Text>
+			<Text>BetterGameExperience をアップデートできませんでした</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="ja_JP">
 			<Text>{1}\n\nアップデートせずにゲームを起動します。</Text>
@@ -429,7 +429,7 @@
 			<Text>Civilization VI が見つかりません。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="ja_JP">
-			<Text>BetterGameDLLs をバージョン {1} にアップデート中…</Text>
+			<Text>BetterGameExperience をバージョン {1} にアップデート中…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="ja_JP">
 			<Text>失敗 (コード {1})</Text>
@@ -438,7 +438,7 @@
 			<Text>{1} がありません: Steam でゲームファイルの整合性を確認してください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="ja_JP">
-			<Text>{1} は BetterGameDLLs のファイルではありません (別の MOD?)。削除してから、インストーラーを再実行してください。</Text>
+			<Text>{1} は BetterGameExperience のファイルではありません (別の MOD?)。削除してから、インストーラーを再実行してください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="ja_JP">
 			<Text>バージョン {1} にはより新しいインストーラーが必要です。リリースのページからダウンロードしてください。</Text>

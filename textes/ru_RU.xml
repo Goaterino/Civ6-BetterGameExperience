@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Textes de BetterGameDLLs en ru_RU : voir textes/README.md. -->
+<!-- Textes de BetterGameExperience en ru_RU : voir textes/README.md. -->
 <GameData>
 	<LocalizedText>
 		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="ru_RU">
@@ -51,7 +51,7 @@
 			<Text>Благодарности</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="ru_RU">
-			<Text>Прокси BetterGameDLLs</Text>
+			<Text>Прокси BetterGameExperience</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="ru_RU">
 			<Text>Отключает сразу все изменения прокси GameCore, не удаляя его: игра ведёт себя так, как без прокси. Остальные настройки сохраняются, а эта вкладка остаётся доступной, чтобы снова его включить.</Text>
@@ -60,7 +60,7 @@
 			<Text>Проверять обновления</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="ru_RU">
-			<Text>При запуске игры ищет на GitHub новую версию BetterGameDLLs и предлагает её в главном меню. Действует со следующего запуска игры.</Text>
+			<Text>При запуске игры ищет на GitHub новую версию BetterGameExperience и предлагает её в главном меню. Действует со следующего запуска игры.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="ru_RU">
 			<Text>Объединённые обновления городов</Text>
@@ -186,7 +186,7 @@
 			<Text>Показывать сигналы одновременного начала и конца хода</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="ru_RU">
-			<Text>С параметром партии «No First/Last moves (BGD)» компьютеры обмениваются скрытыми сообщениями чата (.bgd_pret, .bgd_depart, .bgd_fin). Если включено, они остаются видимыми в вашем чате, со строкой, когда хост завершает ход, чтобы следить за началом и концом каждого хода. Только отображение, на этом компьютере.</Text>
+			<Text>С параметром партии «No First/Last moves (BGE)» компьютеры обмениваются скрытыми сообщениями чата (.bgd_pret, .bgd_depart, .bgd_fin). Если включено, они остаются видимыми в вашем чате, со строкой, когда хост завершает ход, чтобы следить за началом и концом каждого хода. Только отображение, на этом компьютере.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="ru_RU">
 			<Text>Профиль замеряемых зон игры</Text>
@@ -195,10 +195,10 @@
 			<Text>Записывает длительность каждой зоны, которую замеряет игра (кадр, интерфейс, скрипты, события), в %LOCALAPPDATA%\Civ6RolloverProxy\zones для анализа производительности. Около 1 МБ на секунду игры. Действует со следующего запуска игры.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="ru_RU">
-			<Text>Это настройки прокси BetterGameDLLs (rollover_proxy.cfg). Они вступят в силу при запуске следующей партии.</Text>
+			<Text>Это настройки прокси BetterGameExperience (rollover_proxy.cfg). Они вступят в силу при запуске следующей партии.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="ru_RU">
-			<Text>Это настройки прокси BetterGameDLLs (rollover_proxy.cfg). Партия уже была запущена: они вступят в силу только после перезапуска игры.</Text>
+			<Text>Это настройки прокси BetterGameExperience (rollover_proxy.cfg). Партия уже была запущена: они вступят в силу только после перезапуска игры.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="ru_RU">
 			<Text>Нет функций прокси запуска: настройки нельзя ни прочитать, ни сохранить.</Text>
@@ -225,7 +225,7 @@
 			<Text>Скрыть дополнительные настройки</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="ru_RU">
-			<Text>Встроенные моды интерфейса основаны на работе их авторов, которых BetterGameDLLs благодарит:</Text>
+			<Text>Встроенные моды интерфейса основаны на работе их авторов, которых BetterGameExperience благодарит:</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="ru_RU">
 			<Text>{1} (Workshop {2}): {3}.</Text>
@@ -237,16 +237,16 @@
 			<Text>{1}; исходные вкладки «Отряды» и «Сделки»: {2}; благодарности: {3}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="ru_RU">
-			<Text>BetterGameDLLs: новый выпуск</Text>
+			<Text>BetterGameExperience: новый выпуск</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="ru_RU">
-			<Text>BetterGameDLLs: новая тестовая версия</Text>
+			<Text>BetterGameExperience: новая тестовая версия</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="ru_RU">
-			<Text>Доступен выпуск BetterGameDLLs {1} (установлен: {2}).[NEWLINE][NEWLINE]«Обновить» закрывает игру и запускает установщик.</Text>
+			<Text>Доступен выпуск BetterGameExperience {1} (установлен: {2}).[NEWLINE][NEWLINE]«Обновить» закрывает игру и запускает установщик.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="ru_RU">
-			<Text>Доступна тестовая версия BetterGameDLLs {1} (установлена: {2}).[NEWLINE][NEWLINE]Это тестовая версия: вы получаете её, потому что в установщике отмечен флажок «Тестовые версии».[NEWLINE][NEWLINE]«Обновить» закрывает игру и запускает установщик.</Text>
+			<Text>Доступна тестовая версия BetterGameExperience {1} (установлена: {2}).[NEWLINE][NEWLINE]Это тестовая версия: вы получаете её, потому что в установщике отмечен флажок «Тестовые версии».[NEWLINE][NEWLINE]«Обновить» закрывает игру и запускает установщик.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="ru_RU">
 			<Text>Обновить</Text>
@@ -255,28 +255,28 @@
 			<Text>Позже</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_PAGE" Language="ru_RU">
-			<Text>Установщик BetterGameDLLs не найден: страница последнего выпуска открыта в браузере.</Text>
+			<Text>Установщик BetterGameExperience не найден: страница последнего выпуска открыта в браузере.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="ru_RU">
-			<Text>Все игроки начинают и заканчивают ход в один и тот же момент. В начале хода каждый ждёт, пока все закончат загрузку: можно смотреть карту, но приказы задерживаются, а таймер хода не идёт. В конце, когда таймер хоста доходит до нуля, ход заканчивается для всех, даже если на своём таймере ещё осталось время. Всем игрокам нужен BetterGameDLLs одной и той же версии. Заменяет синхронизацию хода MPH, которая отключается.</Text>
+			<Text>Все игроки начинают и заканчивают ход в один и тот же момент. В начале хода каждый ждёт, пока все закончат загрузку: можно смотреть карту, но приказы задерживаются, а таймер хода не идёт. В конце, когда таймер хоста доходит до нуля, ход заканчивается для всех, даже если на своём таймере ещё осталось время. Всем игрокам нужен BetterGameExperience одной и той же версии. Заменяет синхронизацию хода MPH, которая отключается.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="ru_RU">
-			<Text>У всех игроков BetterGameDLLs {1}: исправления POL включены.</Text>
+			<Text>У всех игроков BetterGameExperience {1}: исправления POL включены.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS" Language="ru_RU">
-			<Text>Без BetterGameDLLs: {1}. Исправления POL отключены в этой партии.</Text>
+			<Text>Без BetterGameExperience: {1}. Исправления POL отключены в этой партии.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="ru_RU">
-			<Text>BetterGameDLLs версии, отличной от {1}: {2}. Исправления POL отключены в этой партии.</Text>
+			<Text>BetterGameExperience версии, отличной от {1}: {2}. Исправления POL отключены в этой партии.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="ru_RU">
-			<Text>Без BetterGameDLLs: {1}. BetterGameDLLs версии, отличной от {2}: {3}. Исправления POL отключены в этой партии.</Text>
+			<Text>Без BetterGameExperience: {1}. BetterGameExperience версии, отличной от {2}: {3}. Исправления POL отключены в этой партии.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="ru_RU">
-			<Text>У хоста нет BetterGameDLLs или нет совместимой версии: исправления POL отключены в этой партии.</Text>
+			<Text>У хоста нет BetterGameExperience или нет совместимой версии: исправления POL отключены в этой партии.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="ru_RU">
-			<Text>{1}: вход без BetterGameDLLs (или с другой версией), пока исправления POL включены. Партия этого игрока рассинхронизируется.</Text>
+			<Text>{1}: вход без BetterGameExperience (или с другой версией), пока исправления POL включены. Партия этого игрока рассинхронизируется.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ru_RU">
 			<Text>No First/Last moves включено: все игроки начинают ход вместе, и ход заканчивается для всех, когда таймер хоста доходит до нуля.</Text>
@@ -285,7 +285,7 @@
 			<Text>No First/Last moves: одновременное начало хода включено; одновременный конец недоступен (таймер игры не перехвачен).</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ru_RU">
-			<Text>No First/Last moves отключено: всем игрокам нужен BetterGameDLLs одной и той же версии.</Text>
+			<Text>No First/Last moves отключено: всем игрокам нужен BetterGameExperience одной и той же версии.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ru_RU">
 			<Text>приказы задержаны: ход ещё не начался для всех игроков.</Text>
@@ -327,10 +327,10 @@
 			<Text>Закройте Civilization VI, затем снова запустите установщик.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="ru_RU">
-			<Text>Удаление BetterGameDLLs…</Text>
+			<Text>Удаление BetterGameExperience…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="ru_RU">
-			<Text>BetterGameDLLs удалён</Text>
+			<Text>BetterGameExperience удалён</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="ru_RU">
 			<Text>Игре возвращены её исходные файлы.</Text>
@@ -348,28 +348,28 @@
 			<Text>Последняя версия неизвестна</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="ru_RU">
-			<Text>BetterGameDLLs {1} установлен и актуален</Text>
+			<Text>BetterGameExperience {1} установлен и актуален</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="ru_RU">
-			<Text>BetterGameDLLs не установлен</Text>
+			<Text>BetterGameExperience не установлен</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="ru_RU">
 			<Text>Установить\nЗагружает и устанавливает версию {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="ru_RU">
-			<Text>Доступна версия BetterGameDLLs {1}</Text>
+			<Text>Доступна версия BetterGameExperience {1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="ru_RU">
 			<Text>Обновить\nУстанавливает версию {1}, которая больше не заменяет файлы игры: Steam её больше не удаляет.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="ru_RU">
-			<Text>BetterGameDLLs нуждается в восстановлении</Text>
+			<Text>BetterGameExperience нуждается в восстановлении</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="ru_RU">
 			<Text>Восстановить\nПереустанавливает версию {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="ru_RU">
-			<Text>Установлена версия BetterGameDLLs {1}</Text>
+			<Text>Установлена версия BetterGameExperience {1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="ru_RU">
 			<Text>Вернуться к версии {1}\nЗаменяет тестовую версию последним выпуском.</Text>
@@ -402,13 +402,13 @@
 			<Text>Тестовые версии: устанавливать тестовые версии</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="ru_RU">
-			<Text>Установка BetterGameDLLs {1}…</Text>
+			<Text>Установка BetterGameExperience {1}…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="ru_RU">
 			<Text>Чтобы он сам обновлялся и восстанавливался, добавьте этот параметр запуска для Civilization VI в Steam (Свойства &gt; Общие &gt; Параметры запуска):\n\n{1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="ru_RU">
-			<Text>BetterGameDLLs {1} установлен</Text>
+			<Text>BetterGameExperience {1} установлен</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="ru_RU">
 			<Text>Перезапустить Civilization VI\nЧерез Steam.</Text>
@@ -420,7 +420,7 @@
 			<Text>Civilization VI не закрылась. Закройте её, затем снова запустите установщик.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="ru_RU">
-			<Text>Не удалось обновить BetterGameDLLs</Text>
+			<Text>Не удалось обновить BetterGameExperience</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="ru_RU">
 			<Text>{1}\n\nИгра запустится без обновления.</Text>
@@ -429,7 +429,7 @@
 			<Text>Civilization VI не найдена.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="ru_RU">
-			<Text>Обновление BetterGameDLLs до версии {1}…</Text>
+			<Text>Обновление BetterGameExperience до версии {1}…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="ru_RU">
 			<Text>ошибка (код {1})</Text>
@@ -438,7 +438,7 @@
 			<Text>Отсутствует {1}: проверьте файлы игры в Steam.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="ru_RU">
-			<Text>{1} не является файлом BetterGameDLLs (другой мод?): удалите его, затем снова запустите установщик.</Text>
+			<Text>{1} не является файлом BetterGameExperience (другой мод?): удалите его, затем снова запустите установщик.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="ru_RU">
 			<Text>версии {1} нужен более новый установщик: загрузите его со страницы выпуска.</Text>

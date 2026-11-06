@@ -1,6 +1,6 @@
 """Notes d'une release GitHub, tirées de CHANGELOG.md (voir release/README.md).
 
-Écrit sur la sortie la section « ## BetterGameDLLs <version> » de CHANGELOG.md, puis les liens vers
+Écrit sur la sortie la section « ## BetterGameExperience <version> » de CHANGELOG.md, puis les liens vers
 les changelogs traduits (changelog/<langue>.md) au commit du tag. Échoue si la section manque : une
 release ne part pas sans son changelog.
 
@@ -18,7 +18,7 @@ LANGUES = [
 
 def section(texte, version):
     lignes = texte.splitlines()
-    titre = f"## BetterGameDLLs {version}"
+    titre = f"## BetterGameExperience {version}"
     debut = next((i for i, l in enumerate(lignes) if l == titre or l.startswith(titre + ":") or l.startswith(titre + " ")), None)
     if debut is None:
         return None
@@ -31,7 +31,7 @@ def main():
     with open(os.path.join(RACINE, "CHANGELOG.md"), encoding="utf-8") as f:
         corps = section(f.read(), version)
     if corps is None:
-        raise SystemExit(f"CHANGELOG.md n'a pas de section « ## BetterGameDLLs {version} »")
+        raise SystemExit(f"CHANGELOG.md n'a pas de section « ## BetterGameExperience {version} »")
     liens = [f"[{nom}](https://github.com/{repo}/blob/{tag}/changelog/{code}.md)"
              for code, nom in LANGUES if os.path.exists(os.path.join(RACINE, "changelog", code + ".md"))]
     sortie = corps

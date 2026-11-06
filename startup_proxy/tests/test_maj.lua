@@ -102,7 +102,7 @@ do
 	m.etat = { "0.1.2", "0.1.1" };
 	m.Frame();
 	check(m.popup.open and m.opened == 1, "nouvelle version : popup ouvert");
-	check(m.popup.title == "BetterGameDLLs : nouvelle release", "titre : release");
+	check(m.popup.title == "BetterGameExperience : nouvelle release", "titre : release");
 	check(m.popup.texts[1]:find("La release 0.1.2", 1, true) and m.popup.texts[1]:find("installée : 0.1.1", 1, true), "texte en français avec les versions");
 	check(not m.popup.texts[1]:find("pré-release", 1, true), "release : pas de mention de pré-release");
 	check(#m.popup.buttons == 2 and m.popup.buttons[1].label == "Mettre à jour" and m.popup.buttons[2].label == "Plus tard", "deux boutons");
@@ -148,7 +148,7 @@ end
 do
 	local m = NewMenu({ etat = { "0.1.3", "0.1.2", "prerelease" } });
 	m.Show(); m.Frame();
-	check(m.popup.title == "BetterGameDLLs : nouvelle pré-release", "titre : pré-release");
+	check(m.popup.title == "BetterGameExperience : nouvelle pré-release", "titre : pré-release");
 	check(m.popup.texts[1]:find("La pré-release 0.1.3", 1, true) and m.popup.texts[1]:find("case « Pré-release »", 1, true), "pré-release : dite et expliquée");
 	check(m.journal[#m.journal]:find("pré-release 0.1.3", 1, true), "pré-release : au journal");
 end
@@ -156,7 +156,7 @@ end
 do
 	local m = NewMenu({ etat = { "0.1.3", "0.1.2", "prerelease" }, lang = "en_US" });
 	m.Show(); m.Frame();
-	check(m.popup.title == "BetterGameDLLs: new pre-release" and m.popup.texts[1]:find("pre-release 0.1.3", 1, true), "anglais : pré-release");
+	check(m.popup.title == "BetterGameExperience: new pre-release" and m.popup.texts[1]:find("pre-release 0.1.3", 1, true), "anglais : pré-release");
 end
 
 do

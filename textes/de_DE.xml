@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Textes de BetterGameDLLs en de_DE : voir textes/README.md. -->
+<!-- Textes de BetterGameExperience en de_DE : voir textes/README.md. -->
 <GameData>
 	<LocalizedText>
 		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="de_DE">
@@ -51,7 +51,7 @@
 			<Text>Danksagungen</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="de_DE">
-			<Text>BetterGameDLLs-Proxys</Text>
+			<Text>BetterGameExperience-Proxys</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="de_DE">
 			<Text>Schaltet alle Änderungen des GameCore-Proxys auf einmal ab, ohne ihn zu deinstallieren: Das Spiel verhält sich wie ohne Proxy. Die anderen Einstellungen bleiben erhalten, und dieser Reiter bleibt verfügbar, um ihn wieder einzuschalten.</Text>
@@ -60,7 +60,7 @@
 			<Text>Nach Updates suchen</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="de_DE">
-			<Text>Sucht beim Spielstart auf GitHub nach einer neuen Version von BetterGameDLLs und bietet sie im Hauptmenü an. Wirkt beim nächsten Spielstart.</Text>
+			<Text>Sucht beim Spielstart auf GitHub nach einer neuen Version von BetterGameExperience und bietet sie im Hauptmenü an. Wirkt beim nächsten Spielstart.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="de_DE">
 			<Text>Gebündelte Stadt-Aktualisierungen</Text>
@@ -186,7 +186,7 @@
 			<Text>Signale des gleichzeitigen Rundenbeginns und -endes anzeigen</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="de_DE">
-			<Text>Mit der Spieloption „No First/Last moves (BGD)“ tauschen die Rechner versteckte Chatnachrichten aus (.bgd_pret, .bgd_depart, .bgd_fin). Wenn aktiviert, bleiben sie in Ihrem Chat sichtbar, mit einer Zeile, wenn der Host die Runde beendet, um Beginn und Ende jeder Runde zu verfolgen. Nur Anzeige, auf diesem Rechner.</Text>
+			<Text>Mit der Spieloption „No First/Last moves (BGE)“ tauschen die Rechner versteckte Chatnachrichten aus (.bgd_pret, .bgd_depart, .bgd_fin). Wenn aktiviert, bleiben sie in Ihrem Chat sichtbar, mit einer Zeile, wenn der Host die Runde beendet, um Beginn und Ende jeder Runde zu verfolgen. Nur Anzeige, auf diesem Rechner.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="de_DE">
 			<Text>Zeitzonen des Spiels aufzeichnen</Text>
@@ -195,10 +195,10 @@
 			<Text>Zeichnet die Dauer jeder vom Spiel gemessenen Zone (Bild, Oberfläche, Skripte, Ereignisse) in %LOCALAPPDATA%\Civ6RolloverProxy\zones auf, für die Leistungsanalyse. Etwa 1 MB pro Sekunde Spielzeit. Wirkt beim nächsten Spielstart.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="de_DE">
-			<Text>Dies sind die Einstellungen der BetterGameDLLs-Proxys (rollover_proxy.cfg). Sie wirken ab dem Start der nächsten Partie.</Text>
+			<Text>Dies sind die Einstellungen der BetterGameExperience-Proxys (rollover_proxy.cfg). Sie wirken ab dem Start der nächsten Partie.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="de_DE">
-			<Text>Dies sind die Einstellungen der BetterGameDLLs-Proxys (rollover_proxy.cfg). Es wurde bereits eine Partie gestartet: Sie wirken erst nach einem Neustart des Spiels.</Text>
+			<Text>Dies sind die Einstellungen der BetterGameExperience-Proxys (rollover_proxy.cfg). Es wurde bereits eine Partie gestartet: Sie wirken erst nach einem Neustart des Spiels.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="de_DE">
 			<Text>Funktionen des Start-Proxys fehlen: Die Einstellungen können weder gelesen noch gespeichert werden.</Text>
@@ -225,7 +225,7 @@
 			<Text>Erweiterte Optionen ausblenden</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="de_DE">
-			<Text>Die integrierten Oberflächen-Mods bauen auf der Arbeit ihrer Autoren auf, denen BetterGameDLLs dankt:</Text>
+			<Text>Die integrierten Oberflächen-Mods bauen auf der Arbeit ihrer Autoren auf, denen BetterGameExperience dankt:</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="de_DE">
 			<Text>{1} (Workshop {2}): {3}.</Text>
@@ -237,16 +237,16 @@
 			<Text>{1}; ursprüngliche Reiter Einheiten und Abkommen: {2}; Dank an: {3}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="de_DE">
-			<Text>BetterGameDLLs: neue Version</Text>
+			<Text>BetterGameExperience: neue Version</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="de_DE">
-			<Text>BetterGameDLLs: neue Vorabversion</Text>
+			<Text>BetterGameExperience: neue Vorabversion</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="de_DE">
-			<Text>BetterGameDLLs-Version {1} ist verfügbar (installiert: {2}).[NEWLINE][NEWLINE]„Aktualisieren“ schließt das Spiel und startet das Installationsprogramm.</Text>
+			<Text>BetterGameExperience-Version {1} ist verfügbar (installiert: {2}).[NEWLINE][NEWLINE]„Aktualisieren“ schließt das Spiel und startet das Installationsprogramm.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="de_DE">
-			<Text>BetterGameDLLs-Vorabversion {1} ist verfügbar (installiert: {2}).[NEWLINE][NEWLINE]Dies ist eine Testversion: Sie erhalten sie, weil im Installationsprogramm das Kästchen „Vorabversion“ angehakt ist.[NEWLINE][NEWLINE]„Aktualisieren“ schließt das Spiel und startet das Installationsprogramm.</Text>
+			<Text>BetterGameExperience-Vorabversion {1} ist verfügbar (installiert: {2}).[NEWLINE][NEWLINE]Dies ist eine Testversion: Sie erhalten sie, weil im Installationsprogramm das Kästchen „Vorabversion“ angehakt ist.[NEWLINE][NEWLINE]„Aktualisieren“ schließt das Spiel und startet das Installationsprogramm.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="de_DE">
 			<Text>Aktualisieren</Text>
@@ -255,28 +255,28 @@
 			<Text>Später</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_PAGE" Language="de_DE">
-			<Text>Das Installationsprogramm von BetterGameDLLs wurde nicht gefunden: Die Seite der neuesten Version wurde im Browser geöffnet.</Text>
+			<Text>Das Installationsprogramm von BetterGameExperience wurde nicht gefunden: Die Seite der neuesten Version wurde im Browser geöffnet.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="de_DE">
-			<Text>Alle Spieler beginnen und beenden ihre Runde im selben Moment. Zu Rundenbeginn warten alle, bis jeder fertig geladen hat: Man kann die Karte ansehen, aber Befehle werden zurückgehalten und der Rundentimer läuft nicht. Am Ende, wenn der Timer des Hosts abläuft, endet die Runde für alle, auch wenn der eigene Timer noch Zeit anzeigt. Alle Spieler brauchen BetterGameDLLs in derselben Version. Ersetzt die Rundensynchronisation von MPH, die abgeschaltet wird.</Text>
+			<Text>Alle Spieler beginnen und beenden ihre Runde im selben Moment. Zu Rundenbeginn warten alle, bis jeder fertig geladen hat: Man kann die Karte ansehen, aber Befehle werden zurückgehalten und der Rundentimer läuft nicht. Am Ende, wenn der Timer des Hosts abläuft, endet die Runde für alle, auch wenn der eigene Timer noch Zeit anzeigt. Alle Spieler brauchen BetterGameExperience in derselben Version. Ersetzt die Rundensynchronisation von MPH, die abgeschaltet wird.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="de_DE">
-			<Text>Alle Spieler haben BetterGameDLLs {1}: POL-Korrekturen aktiv.</Text>
+			<Text>Alle Spieler haben BetterGameExperience {1}: POL-Korrekturen aktiv.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS" Language="de_DE">
-			<Text>Ohne BetterGameDLLs: {1}. POL-Korrekturen für diese Partie deaktiviert.</Text>
+			<Text>Ohne BetterGameExperience: {1}. POL-Korrekturen für diese Partie deaktiviert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="de_DE">
-			<Text>BetterGameDLLs in einer anderen Version als {1}: {2}. POL-Korrekturen für diese Partie deaktiviert.</Text>
+			<Text>BetterGameExperience in einer anderen Version als {1}: {2}. POL-Korrekturen für diese Partie deaktiviert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="de_DE">
-			<Text>Ohne BetterGameDLLs: {1}. BetterGameDLLs in einer anderen Version als {2}: {3}. POL-Korrekturen für diese Partie deaktiviert.</Text>
+			<Text>Ohne BetterGameExperience: {1}. BetterGameExperience in einer anderen Version als {2}: {3}. POL-Korrekturen für diese Partie deaktiviert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="de_DE">
-			<Text>Der Host hat BetterGameDLLs nicht oder keine kompatible Version: POL-Korrekturen für diese Partie deaktiviert.</Text>
+			<Text>Der Host hat BetterGameExperience nicht oder keine kompatible Version: POL-Korrekturen für diese Partie deaktiviert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="de_DE">
-			<Text>{1}: ohne BetterGameDLLs (oder mit einer anderen Version) beigetreten, während POL-Korrekturen aktiv sind. Die Partie dieses Spielers wird desynchronisiert.</Text>
+			<Text>{1}: ohne BetterGameExperience (oder mit einer anderen Version) beigetreten, während POL-Korrekturen aktiv sind. Die Partie dieses Spielers wird desynchronisiert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="de_DE">
 			<Text>No First/Last moves aktiv: Alle Spieler beginnen ihre Runde gemeinsam, und die Runde endet für alle, wenn der Timer des Hosts abläuft.</Text>
@@ -285,7 +285,7 @@
 			<Text>No First/Last moves: gleichzeitiger Rundenbeginn aktiv; gleichzeitiges Rundenende nicht verfügbar (Timer des Spiels nicht umgeleitet).</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="de_DE">
-			<Text>No First/Last moves deaktiviert: Alle Spieler brauchen BetterGameDLLs in derselben Version.</Text>
+			<Text>No First/Last moves deaktiviert: Alle Spieler brauchen BetterGameExperience in derselben Version.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="de_DE">
 			<Text>Befehle zurückgehalten: Die Runde hat noch nicht für alle Spieler begonnen.</Text>
@@ -327,10 +327,10 @@
 			<Text>Schließen Sie Civilization VI und starten Sie dann das Installationsprogramm erneut.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="de_DE">
-			<Text>BetterGameDLLs wird deinstalliert …</Text>
+			<Text>BetterGameExperience wird deinstalliert …</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="de_DE">
-			<Text>BetterGameDLLs ist deinstalliert</Text>
+			<Text>BetterGameExperience ist deinstalliert</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="de_DE">
 			<Text>Das Spiel hat wieder seine Originaldateien.</Text>
@@ -348,28 +348,28 @@
 			<Text>Neueste Version unbekannt</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="de_DE">
-			<Text>BetterGameDLLs {1} ist installiert und aktuell</Text>
+			<Text>BetterGameExperience {1} ist installiert und aktuell</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="de_DE">
-			<Text>BetterGameDLLs ist nicht installiert</Text>
+			<Text>BetterGameExperience ist nicht installiert</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="de_DE">
 			<Text>Installieren\nLädt Version {1} herunter und installiert sie.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="de_DE">
-			<Text>BetterGameDLLs-Version {1} ist verfügbar</Text>
+			<Text>BetterGameExperience-Version {1} ist verfügbar</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="de_DE">
 			<Text>Aktualisieren\nInstalliert Version {1}, die keine Spieldatei mehr ersetzt: Steam entfernt sie nicht mehr.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="de_DE">
-			<Text>BetterGameDLLs muss repariert werden</Text>
+			<Text>BetterGameExperience muss repariert werden</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="de_DE">
 			<Text>Reparieren\nInstalliert Version {1} neu.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="de_DE">
-			<Text>BetterGameDLLs-Version {1} ist installiert</Text>
+			<Text>BetterGameExperience-Version {1} ist installiert</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="de_DE">
 			<Text>Zurück zu Version {1}\nErsetzt die Vorabversion durch die neueste Version.</Text>
@@ -402,13 +402,13 @@
 			<Text>Vorabversion: Testversionen installieren</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="de_DE">
-			<Text>BetterGameDLLs {1} wird installiert …</Text>
+			<Text>BetterGameExperience {1} wird installiert …</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="de_DE">
 			<Text>Damit es sich automatisch aktualisiert und repariert, fügen Sie Civilization VI in Steam diese Startoption hinzu (Eigenschaften &gt; Allgemein &gt; Startoptionen):\n\n{1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="de_DE">
-			<Text>BetterGameDLLs {1} ist installiert</Text>
+			<Text>BetterGameExperience {1} ist installiert</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="de_DE">
 			<Text>Civilization VI neu starten\nÜber Steam.</Text>
@@ -420,7 +420,7 @@
 			<Text>Civilization VI wurde nicht geschlossen. Schließen Sie es und starten Sie dann das Installationsprogramm erneut.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="de_DE">
-			<Text>BetterGameDLLs konnte nicht aktualisiert werden</Text>
+			<Text>BetterGameExperience konnte nicht aktualisiert werden</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="de_DE">
 			<Text>{1}\n\nDas Spiel startet ohne das Update.</Text>
@@ -429,7 +429,7 @@
 			<Text>Civilization VI nicht gefunden.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="de_DE">
-			<Text>BetterGameDLLs wird auf Version {1} aktualisiert …</Text>
+			<Text>BetterGameExperience wird auf Version {1} aktualisiert …</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="de_DE">
 			<Text>Fehler (Code {1})</Text>
@@ -438,7 +438,7 @@
 			<Text>{1} fehlt: Überprüfen Sie die Spieldateien in Steam.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="de_DE">
-			<Text>{1} ist keine Datei von BetterGameDLLs (ein anderer Mod?): Entfernen Sie sie und starten Sie dann das Installationsprogramm erneut.</Text>
+			<Text>{1} ist keine Datei von BetterGameExperience (ein anderer Mod?): Entfernen Sie sie und starten Sie dann das Installationsprogramm erneut.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="de_DE">
 			<Text>Version {1} benötigt ein neueres Installationsprogramm: Laden Sie es von der Seite der Version herunter.</Text>

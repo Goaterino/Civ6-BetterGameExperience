@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Textes de BetterGameDLLs en en_US : voir textes/README.md. -->
+<!-- Textes de BetterGameExperience en en_US : voir textes/README.md. -->
 <GameData>
 	<LocalizedText>
 		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="en_US">
@@ -51,7 +51,7 @@
 			<Text>Credits</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="en_US">
-			<Text>BetterGameDLLs proxies</Text>
+			<Text>BetterGameExperience proxies</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="en_US">
 			<Text>Turns off all GameCore proxy changes at once, without uninstalling it: the game behaves as without the proxy. The other settings are kept, and this tab stays available to turn it back on.</Text>
@@ -60,7 +60,7 @@
 			<Text>Check for updates</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="en_US">
-			<Text>When the game starts, looks on GitHub for a new version of BetterGameDLLs, and offers it in the main menu. Takes effect the next time the game starts.</Text>
+			<Text>When the game starts, looks on GitHub for a new version of BetterGameExperience, and offers it in the main menu. Takes effect the next time the game starts.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="en_US">
 			<Text>Batched city updates</Text>
@@ -186,7 +186,7 @@
 			<Text>Show simultaneous turn start and end signals</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="en_US">
-			<Text>With the "No First/Last moves (BGD)" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart, .bgd_fin). When on, they stay visible in your chat, with a line when the host ends the turn, to follow each turn start and end. Display only, on this machine.</Text>
+			<Text>With the "No First/Last moves (BGE)" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart, .bgd_fin). When on, they stay visible in your chat, with a line when the host ends the turn, to follow each turn start and end. Display only, on this machine.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="en_US">
 			<Text>Profile the game's timed zones</Text>
@@ -195,10 +195,10 @@
 			<Text>Records the duration of every zone the game times (frame, interface, scripts, events) to %LOCALAPPDATA%\Civ6RolloverProxy\zones, for performance analysis. About 1 MB per second of play. Takes effect the next time the game starts.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="en_US">
-			<Text>These are the settings of the BetterGameDLLs proxies (rollover_proxy.cfg). They will take effect when the next game starts.</Text>
+			<Text>These are the settings of the BetterGameExperience proxies (rollover_proxy.cfg). They will take effect when the next game starts.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="en_US">
-			<Text>These are the settings of the BetterGameDLLs proxies (rollover_proxy.cfg). A game has already been started: they will only take effect after restarting the game.</Text>
+			<Text>These are the settings of the BetterGameExperience proxies (rollover_proxy.cfg). A game has already been started: they will only take effect after restarting the game.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="en_US">
 			<Text>Startup proxy functions missing: settings can be neither read nor saved.</Text>
@@ -225,7 +225,7 @@
 			<Text>Hide advanced options</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="en_US">
-			<Text>The built-in interface mods build on their authors' work, with BetterGameDLLs' thanks:</Text>
+			<Text>The built-in interface mods build on their authors' work, with BetterGameExperience' thanks:</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="en_US">
 			<Text>{1} (Workshop {2}): {3}.</Text>
@@ -237,16 +237,16 @@
 			<Text>{1}; original Units and Deals tabs: {2}; thanks: {3}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="en_US">
-			<Text>BetterGameDLLs: new release</Text>
+			<Text>BetterGameExperience: new release</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="en_US">
-			<Text>BetterGameDLLs: new pre-release</Text>
+			<Text>BetterGameExperience: new pre-release</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="en_US">
-			<Text>BetterGameDLLs release {1} is available (installed: {2}).[NEWLINE][NEWLINE]"Update" closes the game and starts the installer.</Text>
+			<Text>BetterGameExperience release {1} is available (installed: {2}).[NEWLINE][NEWLINE]"Update" closes the game and starts the installer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="en_US">
-			<Text>BetterGameDLLs pre-release {1} is available (installed: {2}).[NEWLINE][NEWLINE]This is a test version: you get it because the "Pre-release" box is ticked in the installer.[NEWLINE][NEWLINE]"Update" closes the game and starts the installer.</Text>
+			<Text>BetterGameExperience pre-release {1} is available (installed: {2}).[NEWLINE][NEWLINE]This is a test version: you get it because the "Pre-release" box is ticked in the installer.[NEWLINE][NEWLINE]"Update" closes the game and starts the installer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="en_US">
 			<Text>Update</Text>
@@ -255,28 +255,28 @@
 			<Text>Later</Text>
 		</Row>
 		<Row Tag="LOC_BGD_MAJ_PAGE" Language="en_US">
-			<Text>The BetterGameDLLs installer was not found: the latest release page has opened in the browser.</Text>
+			<Text>The BetterGameExperience installer was not found: the latest release page has opened in the browser.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="en_US">
-			<Text>Every player starts and ends their turn at the same moment. At the start of the turn, everyone waits until all players have finished loading: you can look at the map, but orders are held and the turn timer does not run. At the end, when the host's turn timer runs out, the turn ends for everyone, even if their own timer still shows time left. Every player needs BetterGameDLLs, at the same version. Replaces MPH's turn synchronisation, which is turned off.</Text>
+			<Text>Every player starts and ends their turn at the same moment. At the start of the turn, everyone waits until all players have finished loading: you can look at the map, but orders are held and the turn timer does not run. At the end, when the host's turn timer runs out, the turn ends for everyone, even if their own timer still shows time left. Every player needs BetterGameExperience, at the same version. Replaces MPH's turn synchronisation, which is turned off.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="en_US">
-			<Text>All players have BetterGameDLLs {1}: POL fixes enabled.</Text>
+			<Text>All players have BetterGameExperience {1}: POL fixes enabled.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS" Language="en_US">
-			<Text>Without BetterGameDLLs: {1}. POL fixes disabled for this game.</Text>
+			<Text>Without BetterGameExperience: {1}. POL fixes disabled for this game.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="en_US">
-			<Text>BetterGameDLLs version other than {1}: {2}. POL fixes disabled for this game.</Text>
+			<Text>BetterGameExperience version other than {1}: {2}. POL fixes disabled for this game.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="en_US">
-			<Text>Without BetterGameDLLs: {1}. BetterGameDLLs version other than {2}: {3}. POL fixes disabled for this game.</Text>
+			<Text>Without BetterGameExperience: {1}. BetterGameExperience version other than {2}: {3}. POL fixes disabled for this game.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="en_US">
-			<Text>The host does not have BetterGameDLLs, or not a compatible version: POL fixes disabled for this game.</Text>
+			<Text>The host does not have BetterGameExperience, or not a compatible version: POL fixes disabled for this game.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="en_US">
-			<Text>{1}: joined without BetterGameDLLs (or with another version) while POL fixes are enabled. Their game will desync.</Text>
+			<Text>{1}: joined without BetterGameExperience (or with another version) while POL fixes are enabled. Their game will desync.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="en_US">
 			<Text>No First/Last moves enabled: every player starts their turn together, and the turn ends for everyone when the host's timer runs out.</Text>
@@ -285,7 +285,7 @@
 			<Text>No First/Last moves: simultaneous turn start enabled; simultaneous turn end unavailable (exe timer not hooked).</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="en_US">
-			<Text>No First/Last moves disabled: every player needs BetterGameDLLs, at the same version.</Text>
+			<Text>No First/Last moves disabled: every player needs BetterGameExperience, at the same version.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="en_US">
 			<Text>orders held: the turn has not started for every player yet.</Text>
@@ -327,10 +327,10 @@
 			<Text>Close Civilization VI, then run the installer again.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="en_US">
-			<Text>Uninstalling BetterGameDLLs…</Text>
+			<Text>Uninstalling BetterGameExperience…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="en_US">
-			<Text>BetterGameDLLs is uninstalled</Text>
+			<Text>BetterGameExperience is uninstalled</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="en_US">
 			<Text>The game has its original files back.</Text>
@@ -348,28 +348,28 @@
 			<Text>Latest version unknown</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="en_US">
-			<Text>BetterGameDLLs {1} is installed and up to date</Text>
+			<Text>BetterGameExperience {1} is installed and up to date</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="en_US">
-			<Text>BetterGameDLLs is not installed</Text>
+			<Text>BetterGameExperience is not installed</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="en_US">
 			<Text>Install\nDownloads and installs version {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="en_US">
-			<Text>BetterGameDLLs version {1} is available</Text>
+			<Text>BetterGameExperience version {1} is available</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="en_US">
 			<Text>Update\nInstalls version {1}, which no longer replaces any game file: Steam no longer removes it.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="en_US">
-			<Text>BetterGameDLLs needs to be repaired</Text>
+			<Text>BetterGameExperience needs to be repaired</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="en_US">
 			<Text>Repair\nReinstalls version {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="en_US">
-			<Text>BetterGameDLLs version {1} is installed</Text>
+			<Text>BetterGameExperience version {1} is installed</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="en_US">
 			<Text>Go back to version {1}\nReplaces the pre-release with the latest release.</Text>
@@ -402,13 +402,13 @@
 			<Text>Pre-release: install test versions</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="en_US">
-			<Text>Installing BetterGameDLLs {1}…</Text>
+			<Text>Installing BetterGameExperience {1}…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="en_US">
 			<Text>To keep it updated and repaired automatically, add this launch option to Civilization VI in Steam (Properties &gt; General &gt; Launch options):\n\n{1}</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="en_US">
-			<Text>BetterGameDLLs {1} is installed</Text>
+			<Text>BetterGameExperience {1} is installed</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="en_US">
 			<Text>Restart Civilization VI\nThrough Steam.</Text>
@@ -420,7 +420,7 @@
 			<Text>Civilization VI did not close. Close it, then run the installer again.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="en_US">
-			<Text>BetterGameDLLs could not update</Text>
+			<Text>BetterGameExperience could not update</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="en_US">
 			<Text>{1}\n\nThe game will start without the update.</Text>
@@ -429,7 +429,7 @@
 			<Text>Civilization VI not found.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="en_US">
-			<Text>Updating BetterGameDLLs to version {1}…</Text>
+			<Text>Updating BetterGameExperience to version {1}…</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="en_US">
 			<Text>failure (code {1})</Text>
@@ -438,7 +438,7 @@
 			<Text>{1} is missing: verify the game files in Steam.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="en_US">
-			<Text>{1} is not a BetterGameDLLs file (another mod?): remove it, then run the installer again.</Text>
+			<Text>{1} is not a BetterGameExperience file (another mod?): remove it, then run the installer again.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="en_US">
 			<Text>version {1} needs a newer installer: download it from the release page.</Text>
