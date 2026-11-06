@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="pl_PL">
 			<Text>Zamknij</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="pl_PL">
+			<Text>Wróć do głosowania</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="pl_PL">
+			<Text>Cofnij zakończenie tury, aby zmienić głosy. Możliwe, dopóki masz jeszcze czas, a inny gracz nadal głosuje.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="pl_PL">
 			<Text>Szlak handlowy: kończy się za {1} tur(y), gdy kupiec wróci do miasta pochodzenia.</Text>
 		</Row>

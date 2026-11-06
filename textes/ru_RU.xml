@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="ru_RU">
 			<Text>Закрыть</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="ru_RU">
+			<Text>Вернуться к голосованию</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="ru_RU">
+			<Text>Отменить завершение хода, чтобы изменить голоса. Возможно, пока у вас осталось время и другой игрок ещё голосует.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="ru_RU">
 			<Text>Торговый путь: закончится через {1} ход(а), когда торговец вернётся в родной город.</Text>
 		</Row>

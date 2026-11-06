@@ -1,7 +1,11 @@
--- Test hors jeu de src/ui_congres_cibles.lua et src/ui_congres.lua, sur les vrais fichiers du jeu :
+-- Test hors jeu des blocs du congrès, sur les vrais fichiers du jeu :
 --   lua proxy/tests/test_congres.lua [WorldCongress.lua] [WorldCongressPopup.lua]
--- On patche comme le proxy (`patch_congres_cibles`, `patch_congres`), puis on exécute avec des
--- bouchons du jeu : un spectateur (LEADER_SPECTATOR) et un votant, correctifs POL actifs ou non.
+-- On patche comme le proxy, puis on exécute avec des bouchons du jeu :
+-- - src/ui_congres_cibles.lua et src/ui_congres.lua : un spectateur (LEADER_SPECTATOR) et un votant,
+--   correctifs POL actifs ou non ; liste des luxes recalculée si POL ;
+-- - src/ui_congres_vote.lua : pas de fin de tour sur un cache vide, retour au vote et faveur ;
+-- - src/ui_congres_attente.lua : bouton de retour au vote de l'écran d'attente ;
+-- - src/ui_congres_fin_auto.lua et src/ui_congres_minuteur.lua.
 
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
 local function ReadFile(path)
@@ -47,7 +51,8 @@ local function Event()
 		end
 	end
 	function e.Fire(...) for _, f in ipairs(e.handlers) do f(...); end end
-	return e;
+	-- LuaEvents.X(…) déclenche l'événement, comme dans le jeu.
+	return setmetatable(e, { __call = function(_, ...) e.Fire(...); end });
 end
 local function Events()
 	return setmetatable({}, { __index = function(t, k) local e = Event(); rawset(t, k, e); return e; end });
@@ -75,6 +80,7 @@ local function NewEnv(pol, localPlayer)
 			IsTurnActive = function() return env.turnActive; end,
 			GetFavor = function() return 0; end,
 			IsHuman = function() return true; end,
+			IsAI = function() return false; end,
 		};
 	end
 	env.Players = players;
@@ -115,7 +121,8 @@ end
 -- ---------------------------------------------------------------------------------------------
 -- Cibles des résolutions (script de gameplay).
 local cibles = ReadFile(dir .. "/../src/ui_congres_cibles.lua") .. "\r\n"
-	.. ReadFile(CONGRESS_PATH):gsub("PlayerManager%.GetAliveMajors%(%)", "BGD_MajorsCibles()");
+	.. ReadFile(CONGRESS_PATH):gsub("PlayerManager%.GetAliveMajors%(%)", "BGD_MajorsCibles()")
+		:gsub("%(cachedLuxuryResources == nil%)", "(cachedLuxuryResources == nil or BGD_LuxesARecalculer())");
 local function Targets(pol, event)
 	local env = NewEnv(pol, 0);
 	env.GameEvents = Events();
@@ -130,6 +137,31 @@ for _, event in ipairs({ "WC_Validate_BorderControl", "WC_Validate_MigrationTrea
 	Check(Targets(1, event) == "0,2", event .. " : spectateur retiré, POL actifs (" .. Targets(1, event) .. ")");
 	Check(Targets(0, event) == "0,1,2", event .. " : liste du jeu, POL coupés (" .. Targets(0, event) .. ")");
 end
+
+-- Luxes : un luxe apparu sur la carte entre deux sessions.
+local function Luxes(pol)
+	local env = NewEnv(pol, 0);
+	env.GameEvents = Events();
+	local surCarte = { [11] = 1, [12] = 0 };
+	local resources = { { Hash = 11, ResourceClassType = "RESOURCECLASS_LUXURY", Frequency = 1, SeaFrequency = 0 },
+		{ Hash = 12, ResourceClassType = "RESOURCECLASS_LUXURY", Frequency = 1, SeaFrequency = 0 } };
+	env.GameInfo = setmetatable({ Resources = function() local i = 0; return function() i = i + 1; return resources[i]; end; end },
+		{ __index = function() return nil; end });
+	env.Map = { GetResourceCount = function(h) return surCarte[h] or 0; end };
+	assert(load(Strip(cibles), "@WorldCongress.lua", "t", env))();
+	local function Session()
+		local options = {};
+		env.GameEvents.WC_Validate_LuxuryBan.Fire(0, 0, options);
+		return table.concat(options.ResolutionOptions or {}, ",");
+	end
+	local premiere = Session();
+	surCarte[12] = 1;
+	return premiere, Session();
+end
+local a, b = Luxes(1);
+Check(a == "11" and b == "11,12", "luxes : recalculés à chaque session, POL actifs (" .. a .. " puis " .. b .. ")");
+a, b = Luxes(0);
+Check(a == "11" and b == "11", "luxes : cache du jeu, POL coupés (" .. a .. " puis " .. b .. ")");
 
 -- ---------------------------------------------------------------------------------------------
 -- Fenêtre du congrès.
@@ -187,5 +219,191 @@ local off = NewPopup(0, 1);
 off.Events.WorldCongressStage1.Fire(1);
 Check(#off.ops == 0, "spectateur sans POL : pas de soumission d'office");
 Check(Votes(off) == 1, "spectateur sans POL : le vote compte, comme dans le jeu");
+
+-- ---------------------------------------------------------------------------------------------
+-- Fenêtre du congrès : bloc du vote (ui_congres_vote.lua), ajouté après celui des spectateurs.
+local popupVote = popup .. "\r\n" .. ReadFile(dir .. "/../src/ui_congres_vote.lua");
+local function NewVoter()
+	local env = NewEnv(1, 0);
+	env.alloues = 1;
+	env.resolutions = { Stage = 1, [1] = { Type = "WC_RES_X", FavoredPlayerIDs = {}, DisfavoredPlayerIDs = {}, PossibleTargets = {} } };
+	env.favor = 100;
+	env.lookups = {};
+	env.hidden = 0;
+	env.Locale = { Lookup = function(k, a) env.lookups[k] = a; return k; end, ToUpper = function(s) return s; end,
+		GetCurrentLanguage = function() return { Type = "fr_FR" }; end };
+	env.Players[0].GetFavor = function() return env.favor; end
+	env.Game.GetWorldCongress = function()
+		return setmetatable({
+			GetResolutions = function() return env.resolutions; end,
+			GetVotesandFavorCost = function() return { [0] = 0, 10, 30, 60, 100, MaxVotes = 5 }; end,
+		}, mt);
+	end
+	env.GameInfo = Magic;
+	env.Controls = Magic;
+	env.ContextPtr = setmetatable({
+		IsVisible = function() return true; end, IsHidden = function() return false; end,
+		SetUpdate = function(_, f) env.update = f; end, ClearUpdate = function() env.update = nil; end,
+	}, { __index = function() return Magic; end });
+	env.InstanceManager = { new = function()
+		return setmetatable({}, { __index = function(_, k)
+			if k == "m_iAllocatedInstances" then return env.alloues; end
+			return Magic;
+		end });
+	end };
+	env.PopupDialog = { new = function() return Magic; end };
+	env.Input = Magic;
+	env.Mouse = Magic;
+	env.InputContext = Magic;
+	env.PopupPriority = Magic;
+	assert(load(Strip(popupVote), "@WorldCongressPopup.lua", "t", env))();
+	-- Les données de vote de la première résolution, telles que la fenêtre les lie à ses boutons.
+	local UpdateVotingWidget = env.UpdateVotingWidget;
+	env.UpdateVotingWidget = function(w, data, ...)
+		env.voteA = env.voteA or data;
+		return UpdateVotingWidget(w, data, ...);
+	end
+	env.LuaEvents.WorldCongressPopup_HideWorldCongressBetweenTurns.Add(function() env.hidden = env.hidden + 1; end);
+	return env;
+end
+local function Ops(env) return table.concat(env.ops, " "); end
+
+-- Cache vide à l'ouverture, résolutions arrivées ensuite.
+local v = NewVoter();
+v.alloues = 0;
+v.resolutions = { Stage = 1 };
+v.SetupWorldCongress(1, true);
+Check(#v.ops == 0, "cache vide : pas de fin de tour automatique (" .. Ops(v) .. ")");
+Check(v.update ~= nil, "cache vide : attente des résolutions");
+v.update(1);
+Check(#v.ops == 0 and v.update ~= nil, "cache vide : on attend encore");
+v.alloues = 1;
+v.resolutions = { Stage = 1, [1] = { Type = "WC_RES_X", FavoredPlayerIDs = {}, DisfavoredPlayerIDs = {}, PossibleTargets = {} } };
+v.update(0.5);
+Check(#v.ops == 0 and v.update == nil, "résolutions arrivées : fenêtre remplie, toujours pas de fin de tour");
+
+-- Cache toujours vide : comportement du jeu après l'attente.
+v = NewVoter();
+v.alloues = 0;
+v.resolutions = { Stage = 1 };
+v.SetupWorldCongress(1, true);
+v.update(11);
+Check(Ops(v) == "op:WORLD_CONGRESS_SUBMIT_TURN action:ACTION_ENDTURN", "cache vide 10 s : envoi automatique du jeu (" .. Ops(v) .. ")");
+
+-- Session extraordinaire sans proposition : envoi automatique du jeu, sans attente.
+v = NewVoter();
+v.alloues = 0;
+v.segment = Hash("TURNSEG_WORLDCONGRESS_2");
+v.SetupWorldCongress(2, true);
+Check(Ops(v) == "op:WORLD_CONGRESS_SUBMIT_TURN action:ACTION_ENDTURN" and v.update == nil,
+	"session extraordinaire sans choix : comportement du jeu (" .. Ops(v) .. ")");
+
+-- Retour au vote : 3 voix à 30 de faveur, envoyées, puis fin de tour annulée.
+v = NewVoter();
+v.SetupWorldCongress(1, true);
+Check(v.voteA ~= nil, "votant : données de vote de la première résolution");
+v.voteA.votes = 3;
+v.voteA.cost = 30;
+v.UpdateWorkingFavor();
+Check(v.lookups.LOC_WORLD_CONGRESS_FAVOR_TITLE == 70, "votant : 100 - 30 de faveur avant l'envoi");
+v.OnAccept();
+Check(Ops(v) == "op:WORLD_CONGRESS_RESOLUTION_VOTE op:WORLD_CONGRESS_SUBMIT_TURN action:ACTION_ENDTURN", "votant : vote envoyé (" .. Ops(v) .. ")");
+v.favor = 70;	-- débitée par GameCore
+v.Events.LocalPlayerTurnEnd.Fire();
+v.Events.LocalPlayerTurnUnready.Fire();
+Check(v.hidden == 1, "retour au vote : écran d'attente fermé");
+Check(v.voteA.votes == 3, "retour au vote : votes envoyés remis dans la fenêtre");
+Check(v.lookups.LOC_WORLD_CONGRESS_FAVOR_TITLE == 70,
+	"retour au vote : faveur affichée = celle d'avant l'envoi (" .. tostring(v.lookups.LOC_WORLD_CONGRESS_FAVOR_TITLE) .. ")");
+v.ops = {};
+v.OnAccept();
+Check(Ops(v) == "op:WORLD_CONGRESS_RESOLUTION_VOTE op:WORLD_CONGRESS_SUBMIT_TURN action:ACTION_ENDTURN", "retour au vote : nouvel envoi");
+v.Events.LocalPlayerTurnUnready.Fire();
+Check(v.hidden == 2, "retour au vote : possible une seconde fois");
+v.segment = Hash("TURNSEG_SINGLEPHASE");
+v.OnAccept();
+v.Events.LocalPlayerTurnUnready.Fire();
+Check(v.hidden == 2, "hors du vote : une annulation ne rouvre rien");
+
+-- ---------------------------------------------------------------------------------------------
+-- Écran d'attente : bouton de retour au vote (ui_congres_attente.lua).
+local ATTENTE_PATH = POPUP_PATH:gsub("WorldCongressPopup%.lua$", "WorldCongressBetweenTurns.lua");
+local attente = ReadFile(ATTENTE_PATH) .. "\r\n" .. ReadFile(dir .. "/../../textes/bgd_textes.lua")
+	.. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/ui_congres_attente.lua");
+local function NewAttente(revote)
+	local env = NewEnv(1, 0);
+	env.Civ6RolloverProxy_Revote = function() return revote; end
+	env.turnActive = false;
+	env.canUnready = true;
+	env.elapsed = false;
+	env.Players[0].CanUnreadyTurn = function() return env.canUnready; end
+	env.UI.IsTurnTimerElapsed = function() return env.elapsed; end
+	env.UI.PlaySound = function() end
+	env.bouton = { hidden = true };
+	function env.bouton:SetHide(h) self.hidden = h; end
+	function env.bouton:RegisterCallback(_, f) self.click = f; end
+	function env.bouton:SetText(t) self.text = t; end
+	function env.bouton:SetToolTipString() end
+	env.Controls = setmetatable({ BGD_Revoter = env.bouton }, { __index = function() return Magic; end });
+	env.ContextPtr = setmetatable({ IsVisible = function() return true; end }, { __index = function() return Magic; end });
+	env.InstanceManager = { new = function() return Magic; end };
+	env.LeaderIcon = Magic;
+	env.Mouse = Magic;
+	env.PopupPriority = Magic;
+	env.Keys = Magic;
+	env.KeyEvents = Magic;
+	assert(load(Strip(attente), "@WorldCongressBetweenTurns.lua", "t", env))();
+	env.LuaEvents.WorldCongressPopup_ShowWorldCongressBetweenTurns.Fire(1);
+	return env;
+end
+local att = NewAttente(1);
+Check(att.bouton.hidden == false and att.bouton.text == "Revenir au vote", "attente : bouton « Revenir au vote » montré");
+att.bouton.click();
+Check(Ops(att) == "action:ACTION_UNREADYTURN", "attente : le bouton annule la fin de tour (" .. Ops(att) .. ")");
+att.elapsed = true;
+att.Events.TurnTimerUpdated.Fire(60, 60);
+Check(att.bouton.hidden == true, "attente : caché quand le minuteur est écoulé");
+att.elapsed = false;
+att.canUnready = false;
+att.Events.TurnTimerUpdated.Fire(10, 60);
+Check(att.bouton.hidden == true, "attente : caché quand plus personne ne vote");
+att.canUnready = true;
+att.segment = Hash("TURNSEG_WORLDCONGRESS_RESOLUTION");
+att.Events.TurnTimerUpdated.Fire(10, 60);
+Check(att.bouton.hidden == true, "attente : caché hors du vote");
+Check(NewAttente(0).bouton.hidden == true, "attente : caché sans le détour ou sans POL");
+
+-- ---------------------------------------------------------------------------------------------
+-- Fin de tour automatique (ui_congres_fin_auto.lua) et minuteur de MPH (ui_congres_minuteur.lua).
+local finAuto = assert(load(Strip(ReadFile(dir .. "/../src/ui_congres_fin_auto.lua")), "@ActionPanel_Expansion2.lua", "t", (function()
+	local env = NewEnv(1, 0);
+	env.inSession = false;
+	env.Game.GetWorldCongress = function() return { IsInSession = function() return env.inSession; end }; end
+	env.XP1_AllowAutoEndTurn_Expansion = function() return true; end
+	_G.finAutoEnv = env;
+	return env;
+end)()));
+finAuto();
+local fa = _G.finAutoEnv;
+Check(fa.AllowAutoEndTurn_Expansion() == false, "fin auto : bloquée pendant le vote");
+fa.segment = Hash("TURNSEG_SINGLEPHASE");
+Check(fa.AllowAutoEndTurn_Expansion() == true, "fin auto : permise hors du congrès");
+fa.inSession = true;
+Check(fa.AllowAutoEndTurn_Expansion() == false, "fin auto : bloquée si le congrès est en session");
+
+local function Minuteur(valeur, smart, segment)
+	local env = NewEnv(1, 0);
+	env.segment = Hash(segment);
+	local conf = { TURN_TIMER_TIME = valeur, CPL_SMARTTIMER = smart };
+	env.GameConfiguration = { IsNetworkMultiplayer = function() return true; end,
+		GetValue = function(k) return conf[k]; end, SetValue = function(k, x) conf[k] = x; end };
+	assert(load(Strip(ReadFile(dir .. "/../src/ui_congres_minuteur.lua")), "@TurnProcessing.lua", "t", env))();
+	env.Events.LocalPlayerTurnBegin.Fire();
+	return conf.TURN_TIMER_TIME;
+end
+Check(Minuteur(90, 0, "TURNSEG_WORLDCONGRESS_1") == 240, "minuteur : 90 s portées à 240 s pendant le vote");
+Check(Minuteur(300, 0, "TURNSEG_WORLDCONGRESS_2") == 300, "minuteur : un minuteur plus long est gardé");
+Check(Minuteur(90, 0, "TURNSEG_SINGLEPHASE") == 90, "minuteur : rien hors du vote");
+Check(Minuteur(90, 1, "TURNSEG_WORLDCONGRESS_1") == 90, "minuteur : rien sans le minuteur intelligent de MPH");
 
 os.exit(failures == 0 and 0 or 1);

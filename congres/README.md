@@ -5,6 +5,9 @@ BBG 7.5.1, décompilation de `GameCore_XP2_FinalRelease.dll` (projet Ghidra `civ
 `CivilizationVI_DX12.exe` (projet `civ6exe`). Aucune partie avec congrès n'a encore été capturée :
 tout ce qui est marqué **hypothèse** reste à confirmer par les mesures de la fin du document.
 
+**État (2026-11-06)** : correctifs intégrés au proxy, testés hors jeu, **pas encore essayés en
+partie**. Voir [Correctifs intégrés](#correctifs-intégrés) ; restent ouverts H1b, H2d et H3c.
+
 Les trois symptômes rapportés en multijoueur (tours simultanés) :
 1. certains joueurs voient un triplet de résolutions différent de celui de l'hôte ;
 2. certains joueurs voient leur tour passé contre leur gré, sans avoir pu voter ;
@@ -55,7 +58,7 @@ L'état du congrès est l'archive synchronisée `WorldCongress` (constructeur `1
 `m_Resolutions` (`+0x108`, données en `+0x118`, nombre en `+0x128`, éléments de `0x218` octets),
 `m_ResolutionsForInjection`, `m_Discussions` (`+0x158`), `m_LastResolutionsOfTypes` (`+0x180`).
 Une divergence de ces champs entre machines apparaît donc au contrôle de synchro de fin de tour
-(`AutoArchive=WorldCongress` dans `net_message_debug.log`, voir [docs/netcode](../../docs/netcode/README.md)).
+(`AutoArchive=WorldCongress` dans `net_message_debug.log`, voir [docs/netcode](../docs/netcode/README.md)).
 
 ### Interface (Lua, locale à chaque machine)
 
@@ -124,7 +127,7 @@ L'aléa est synchronisé : deux machines ne tirent autrement que si leurs **entr
     MPH ni BBG : leurs tirages sont dans des scripts de gameplay, exécutés partout) ;
   - un revenant qui a rechargé la partie : on sait déjà que `AI::CultureAi.m_resolutionAnalyzers`,
     l'analyse des résolutions par l'IA, diffère après un rechargement
-    ([docs/netcode](../../docs/netcode/README.md#test-solo-du-2026-10-29--état-en-mémoire-contre-état-rechargé)).
+    ([docs/netcode](../docs/netcode/README.md#test-solo-du-2026-10-29--état-en-mémoire-contre-état-rechargé)).
 
   Signe distinctif : `AutoArchive=WorldCongress` dans les écarts de fin de tour, et des votes ignorés
   (bug 3) pour qui a voté sur une résolution que l'hôte n'a pas.
@@ -248,6 +251,51 @@ du jeu ; seul le drapeau du segment et l'interface manquent.
 | 2 (H2d, H2e) | refuser dans le détour de `PlayerTurnComplete` un `TurnComplete` arrivé dans les premières secondes d'un segment de congrès pour un joueur qui n'y a encore rien fait ; ou rendre l'annulation possible (section précédente) | POL |
 | 3 (H3a, H3b) | dépend des bugs 1 et 2 ; au minimum, prévenir le joueur quand son vote n'apparaît pas dans `GetResolutions` | interface |
 | 1 (H1c) | ne plus mettre en cache la liste des luxes de `WC_Validate_LuxuryBan` (script de gameplay : mod ou patch, identique pour tous) | POL |
+
+## Correctifs intégrés
+
+Le 2026-11-06, dans le proxy de GameCore ([proxy/README.md](../proxy/README.md#congrès-mondial--tours-passés-retour-au-vote)).
+Aucun réglage : ce sont des corrections de bugs.
+
+| cause | correctif | où | nature |
+|---|---|---|---|
+| bug 2, toutes causes | **retour au vote** : `18005b640` réécrite, annulation permise pendant `WORLDCONGRESS_1` et `_2` ; bouton « Revenir au vote » sur l'écran d'attente, fenêtre de vote rouverte avec les votes envoyés | `src/congres.rs`, `ui_congres_attente.lua` / `.xml`, `ui_congres_vote.lua` | POL |
+| revote | coût des voix déjà comptées rendu avant un second vote sur la même résolution ou proposition, repris si le jeu refuse ce vote ; faveur gagnée (`+0xd8`) inchangée | `src/congres.rs`, appelé par les détours de vote de `src/spectateurs.rs` | POL |
+| H2a | 240 s de MPH appliquées au début du segment de vote, si le minuteur est plus court | `ui_congres_minuteur.lua` (`TurnProcessing.lua` de MPH) | local |
+| H2b, H1a | en session ordinaire, pas de fin de tour sur une liste vide : attente des résolutions (10 s au plus, puis comportement du jeu) | `ui_congres_vote.lua` | local |
+| H2c | fin de tour automatique relue à chaque vérification, bloquée pendant le vote | `ui_congres_fin_auto.lua` (`ActionPanel_Expansion2.lua`) | local |
+| H1c, H3d | luxes de `WC_Validate_LuxuryBan` recalculés à chaque session | `ui_congres_cibles.lua` (`WorldCongress.lua`) | POL |
+
+Choix faits :
+- **Revote.** Les votes ne sont pas retirés à l'annulation : un joueur qui revient au vote puis ne
+  revalide pas garde son premier vote. Revalider renvoie tout (la fenêtre exige des voix sur chaque
+  résolution et chaque proposition), donc chaque sujet passe par le remboursement. La faveur
+  affichée à la réouverture est celle d'avant le premier envoi.
+- **Coût.** `180371020(paramètres, n)` = `k × n × (n − 1)` (`k` du paramètre `0x500` de la vitesse de
+  jeu), sur le nombre de voix borné par la faveur (`180371500`). Les voix d'une résolution sont en
+  `+0x104 + 4 × joueur` de l'élément (`m_Resolutions`, `0x218` octets), celles d'une proposition en
+  `+0x10 + 4 × joueur` (signées) de l'élément de `m_Discussions` (`0x140` octets, écrites par la
+  méthode `+0x20`, `1803c0950`). Le crédit passe par `18026c410(faveur, +coût, raison)`, qui
+  augmente aussi la faveur gagnée (`+0xd8`, variable synchronisée en `+0xc8`) : le proxy la remet par
+  `18064a6d0`.
+- **Autres chemins d'annulation.** `18005b640` sert aussi à `18005c98a`, qui remet un joueur en jeu
+  dans une autre situation (non identifiée). Pendant le vote, ni commande stratégique ni diplomatie :
+  sans effet attendu, à surveiller.
+- **Non traités** : H2d (`TurnComplete` en double au changement de segment) et H2e (raccourci de fin
+  de tour sur l'intro) : le retour au vote en rattrape les effets tant que du temps reste. H1b
+  (simulation divergente) et H3c (faveur rabotée) : à mesurer d'abord.
+
+À vérifier en partie :
+- l'annulation pendant le vote, de bout en bout : bouton visible, `PlayerTurnUnready` accepté
+  partout (journal `congrès : annulation …`, pas de `Unable to unready` dans `net_message_debug.log`),
+  fenêtre rouverte, nouveau vote retenu (`World_Congress.csv`) et faveur juste (journal `congrès :
+  joueur N revote …`), pas de désynchro ;
+- l'événement `RemotePlayerTurnUnready` (nom supposé : l'écran d'attente remet l'autre joueur « en
+  attente ») ;
+- le minuteur à 240 s pendant le vote (journal de l'exe `Turn Timer Sending TurnComplete,
+  turnTimeLimit: 240`), et la fin de tour simultanée de l'hôte (`depart_tour`) qui suit ;
+- les lignes `BGE congrès : aucune résolution dans le cache…` dans `Lua.log` : elles confirmeraient
+  H1a/H2b.
 
 ## Mesures à faire
 

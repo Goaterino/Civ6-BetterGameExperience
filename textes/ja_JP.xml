@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="ja_JP">
 			<Text>閉じる</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="ja_JP">
+			<Text>投票に戻る</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="ja_JP">
+			<Text>ターン終了を取り消して投票を変更します。残り時間があり、他のプレイヤーがまだ投票中の場合に可能です。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="ja_JP">
 			<Text>交易路: あと {1} ターンで、交易商が出発都市に戻ったときに終わります。</Text>
 		</Row>

@@ -60,6 +60,7 @@ pub(crate) fn real_module() -> usize {
         crate::mods_ui::on_gamecore_loaded(h);
         // Avant `ui` : l'accroche Lua n'est posée que si une fonctionnalité en a besoin.
         crate::spectateurs::on_gamecore_loaded(h);
+        crate::congres::on_gamecore_loaded(h);
         crate::ui::on_gamecore_loaded();
         crate::citoyens::on_gamecore_loaded(h);
         crate::ports::on_gamecore_loaded(h);
@@ -97,6 +98,7 @@ macro_rules! forward {
                 crate::wmd::reset();
                 crate::citoyens::reset();
                 crate::spectateurs::reset();
+                crate::congres::reset();
                 crate::ports::reset();
                 crate::depart::reset();
                 crate::rendements_empire::reset();

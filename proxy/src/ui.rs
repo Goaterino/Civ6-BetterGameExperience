@@ -56,6 +56,11 @@ const MERVEILLES_BLOCK: &str = include_str!("ui_merveilles.lua");
 const RENDEMENTS_BLOCK: &str = include_str!("ui_rendements.lua");
 const CONGRES_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres.lua"));
 const CIBLES_BLOCK: &str = include_str!("ui_congres_cibles.lua");
+const VOTE_BLOCK: &str = include_str!("ui_congres_vote.lua");
+const ATTENTE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres_attente.lua"));
+const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
+const FIN_AUTO_BLOCK: &str = include_str!("ui_congres_fin_auto.lua");
+const MINUTEUR_BLOCK: &str = include_str!("ui_congres_minuteur.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 
 static BOUTONS: AtomicBool = AtomicBool::new(true);
@@ -531,6 +536,45 @@ unsafe fn publish_pol(l: *mut c_void) {
     }
 }
 
+/// `Civ6RolloverProxy_Revote()` → 1 si un joueur peut revenir au vote après avoir fini son tour
+/// pendant le congrès (`congres::actif` : détour posé, correctifs POL actifs), sinon 0.
+const REVOTE_NAME: &[u8] = b"Civ6RolloverProxy_Revote\0";
+static REVOTE_LOGGED: AtomicBool = AtomicBool::new(false);
+
+unsafe extern "C-unwind" fn lua_revote(l: *mut c_void) -> i32 {
+    if let Some(h) = hks() {
+        (h.push_number)(l, if crate::congres::actif() { 1.0 } else { 0.0 });
+        return 1;
+    }
+    0
+}
+
+unsafe extern "C-unwind" fn install_revote(l: *mut c_void) -> i32 {
+    if let Some(h) = hks() {
+        (h.push_closure)(l, lua_revote, 0, REVOTE_NAME.as_ptr() as *const c_char, 0);
+        (h.set_field)(l, LUA_GLOBALSINDEX, REVOTE_NAME.as_ptr() as *const c_char);
+    }
+    0
+}
+
+/// Pose `Civ6RolloverProxy_Revote` dans la table globale de l'état qui compile le script. Absente,
+/// l'écran d'attente du congrès n'a pas de bouton de retour au vote.
+unsafe fn publish_revote(l: *mut c_void) {
+    let r = match hks() {
+        Some(h) => {
+            let r = (h.cpcall)(l, install_revote, std::ptr::null_mut());
+            if r != 0 {
+                (h.set_top)(l, -2);
+            }
+            r
+        }
+        None => -1,
+    };
+    if r != 0 || !REVOTE_LOGGED.swap(true, Ordering::Relaxed) {
+        log(&if r == 0 { "ui : Civ6RolloverProxy_Revote posée".to_string() } else { format!("ui : Civ6RolloverProxy_Revote non posée ({r}), pas de retour au vote") });
+    }
+}
+
 /// Le script suivi du bloc d'optimisation (`opti`), puis du bloc de mesure (`mesure`), chacun
 /// précédé de son contexte (`EpinglesOpti_Ctx`, `MesureEpingles_Ctx`). La mesure vient en dernier :
 /// elle enveloppe les fonctions déjà optimisées. Octets laissés tels quels : les fichiers du jeu ne
@@ -580,20 +624,32 @@ pub fn patch_top_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// WorldCongressPopup.lua suivi de `ui_congres.lua` : la fenêtre du congrès en lecture seule pour
-/// un spectateur. Le bloc lit les locales du fichier : on vérifie qu'elles y sont.
-pub fn patch_congres(src: &[u8]) -> Result<Vec<u8>, String> {
+/// WorldCongressPopup.lua suivi de `ui_congres.lua` si `spectateurs` (la fenêtre du congrès en
+/// lecture seule pour un spectateur), puis de `ui_congres_vote.lua` (pas de fin de tour sur un cache
+/// vide, retour au vote). Les blocs lisent les locales du fichier : on vérifie qu'elles y sont.
+pub fn patch_congres(src: &[u8], spectateurs: bool) -> Result<Vec<u8>, String> {
     let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
-    if has("Civ6RolloverProxy (src/ui_congres.lua)") {
+    if has("Civ6RolloverProxy (src/ui_congres") {
         return Err("déjà corrigé".into());
     }
     for pat in [
         "local m_IsInSession",
         "local m_CurrentPhase",
+        "local m_CurrentStage",
+        "local m_HasAccepted",
+        "local m_StartingFavor",
+        "local m_WorkingFavor",
         "local PHASE_STEP_MAX",
         "local WORLD_CONGRESS_STAGE_1",
+        "local WORLD_CONGRESS_STAGE_2",
         "local m_kResolutionVotes",
+        "local m_kResolutionChoices",
+        "local m_kProposalVotes",
         "function SetPhase(",
+        "function HasChoices(",
+        "function UpdateWorkingFavor(",
+        "function OnAccept(",
+        "function SetupWorldCongress(",
         "function OnLocalPlayerTurnEnd(",
         "function OnResumeCongress(",
     ] {
@@ -602,15 +658,94 @@ pub fn patch_congres(src: &[u8]) -> Result<Vec<u8>, String> {
         }
     }
     let mut out = src.to_vec();
+    if spectateurs {
+        out.extend_from_slice(b"\r\n");
+        out.extend_from_slice(CONGRES_BLOCK.as_bytes());
+    }
     out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(CONGRES_BLOCK.as_bytes());
+    out.extend_from_slice(VOTE_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// WorldCongressBetweenTurns.lua suivi de `ui_congres_attente.lua` : bouton de retour au vote.
+pub fn patch_congres_attente(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_congres_attente.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    for pat in [
+        "local m_kPlayerStages",
+        "local m_uiPlayersByID",
+        "local COLOR_WAITING",
+        "local LOC_PROPOSAL_WAITING",
+        "function UpdateCanContinue(",
+        "function OnHide(",
+    ] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ATTENTE_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// WorldCongressBetweenTurns.xml : le bouton `BGD_Revoter` sous la description de l'écran d'attente.
+pub fn patch_congres_attente_xml(src: &[u8]) -> Result<Vec<u8>, String> {
+    let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
+    if text.contains("BGD_Revoter") {
+        return Err("déjà corrigé".into());
+    }
+    let at = text.find("LOC_WORLD_CONGRESS_BETWEEN_TURNS_DESCRIPTION").ok_or("description introuvable")?;
+    let end = text[at..].find("/>").ok_or("description non fermée")? + at + 2;
+    let mut out = String::with_capacity(text.len() + ATTENTE_XML.len() + 2);
+    out.push_str(&text[..end]);
+    out.push_str("\r\n");
+    out.push_str(ATTENTE_XML.trim_end());
+    out.push_str(&text[end..]);
+    Ok(out.into_bytes())
+}
+
+/// ActionPanel_Expansion2.lua suivi de `ui_congres_fin_auto.lua` : pas de fin de tour automatique
+/// pendant le vote du congrès.
+pub fn patch_fin_auto(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_congres_fin_auto.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    if !has("function AllowAutoEndTurn_Expansion(") {
+        return Err("AllowAutoEndTurn_Expansion introuvable".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(FIN_AUTO_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// TurnProcessing.lua de MPH suivi de `ui_congres_minuteur.lua` : les 240 s que SmartTimer prévoit
+/// pour le vote du congrès.
+pub fn patch_minuteur_mph(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_congres_minuteur.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    if !has("function SmartTimer(") || !has("CPL_SMARTTIMER") || !has("WORLD_CONGRESS_STAGE_1") {
+        return Err("pas le TurnProcessing.lua de MPH".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(MINUTEUR_BLOCK.as_bytes());
     Ok(out)
 }
 
 /// WorldCongress.lua (script de gameplay) précédé de `ui_congres_cibles.lua` : les cibles
-/// « joueur » des résolutions tirées de `BGD_MajorsCibles()`, sans les spectateurs.
+/// « joueur » des résolutions tirées de `BGD_MajorsCibles()`, sans les spectateurs, et la liste des
+/// luxes recalculée à chaque session (`BGD_LuxesARecalculer()`).
 pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
     const APPEL: &str = "PlayerManager.GetAliveMajors()";
+    // Le test du cache des luxes de WC_Validate_LuxuryBan, entre les parenthèses de son `if`.
+    const LUXES: &str = "(cachedLuxuryResources == nil)";
     let text = String::from_utf8_lossy(src);
     if text.contains("BGD_MajorsCibles") {
         return Err("déjà corrigé".into());
@@ -627,6 +762,9 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
         if src[i..].starts_with(APPEL.as_bytes()) {
             out.extend_from_slice(b"BGD_MajorsCibles()");
             i += APPEL.len();
+        } else if src[i..].starts_with(LUXES.as_bytes()) {
+            out.extend_from_slice(b"(cachedLuxuryResources == nil or BGD_LuxesARecalculer())");
+            i += LUXES.len();
         } else {
             out.push(src[i]);
             i += 1;
@@ -638,7 +776,7 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 8] = [
+const FIXES: [(&str, Fix, &str); 10] = [
     ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
     ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
     ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
@@ -647,6 +785,8 @@ const FIXES: [(&str, Fix, &str); 8] = [
     ("CityPanel.lua", patch_city_panel, "owningPlayerID corrigé"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
     ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville"),
+    ("ActionPanel_Expansion2.lua", patch_fin_auto, "pas de fin de tour automatique pendant le vote du congrès"),
+    ("TurnProcessing.lua", patch_minuteur_mph, "minuteur du vote du congrès de MPH appliqué (240 s)"),
 ];
 
 /// Les cadres que les calques de ui_boutons.xml reproduisent : sans eux, les boutons déplacés ne
@@ -718,27 +858,49 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         what.push("rattrapage des merveilles ajouté".into());
         return Some(patch_merveilles(src));
     }
-    let congres: [(&str, Fix, &str); 2] = [
-        ("WorldCongressPopup.lua", patch_congres, "fenêtre du congrès en lecture seule pour les spectateurs"),
-        ("WorldCongress.lua", patch_congres_cibles, "spectateurs retirés des cibles des résolutions"),
-    ];
-    if crate::spectateurs::poses() {
-        for (file, patch, done) in congres {
-            if !is_file(chunk, file) {
-                continue;
+    if is_file(chunk, "WorldCongressPopup.lua") {
+        publish_pol(l);
+        publish_revote(l);
+        let spectateurs = crate::spectateurs::poses();
+        return match patch_congres(src, spectateurs) {
+            Ok(text) => {
+                if spectateurs {
+                    what.push("fenêtre du congrès en lecture seule pour les spectateurs".into());
+                }
+                what.push("pas de fin de tour sur un cache vide, retour au vote".into());
+                Some(text)
             }
-            publish_pol(l);
-            return match patch(src) {
-                Ok(text) => {
-                    what.push(done.into());
-                    Some(text)
-                }
-                Err(e) => {
-                    log(&format!("ui : {chunk} laissé tel quel : {e}"));
-                    None
-                }
-            };
-        }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if is_file(chunk, "WorldCongressBetweenTurns.lua") {
+        publish_revote(l);
+        return match patch_congres_attente(src) {
+            Ok(text) => {
+                what.push("bouton de retour au vote".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if crate::spectateurs::poses() && is_file(chunk, "WorldCongress.lua") {
+        publish_pol(l);
+        return match patch_congres_cibles(src) {
+            Ok(text) => {
+                what.push("spectateurs retirés des cibles des résolutions, luxes recalculés à chaque session".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
     }
     if crate::rendements_empire::enabled() && is_file(chunk, "TopPanel.lua") {
         return match patch_top_panel(src) {
@@ -879,6 +1041,16 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
         }
         return r;
     }
+    if crate::congres::pose() && is_file(&name, "WorldCongressBetweenTurns.xml") {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match patch_congres_attente_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("ui : {name} : bouton de retour au vote ajouté")),
+            Ok(_) => log(&format!("ui : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("ui : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
     if !BOUTONS.load(Ordering::Relaxed) || !is_file(&name, "CityBannerInstances.xml") {
         return r;
     }
@@ -903,7 +1075,7 @@ pub unsafe fn on_gamecore_loaded() {
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
 
     // XML d'abord : le bloc Lua dépend des calques.
-    if BOUTONS.load(Ordering::Relaxed) || JOURNAL.load(Ordering::Relaxed) || crate::mods_ui::xml_needed() {
+    if BOUTONS.load(Ordering::Relaxed) || JOURNAL.load(Ordering::Relaxed) || crate::mods_ui::xml_needed() || crate::congres::pose() {
         // Si le proxy de démarrage est installé, la lecture est déjà détournée : on s'enchaîne.
         match exe::hook_read_xml(exe, hook_read_xml as *const () as usize) {
             Ok(h) => {
@@ -961,6 +1133,7 @@ mod tests {
 
     const GAME: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI";
     const BSM: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407";
+    const MPH: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\3307282026";
 
     fn read(path: String) -> Option<Vec<u8>> {
         let r = std::fs::read(&path).ok();
@@ -1143,7 +1316,6 @@ mod tests {
 
     #[test]
     fn in_game_du_jeu_et_de_mph() {
-        const MPH: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\3307282026";
         for path in [format!(r"{GAME}\DLC\Expansion2\UI\Replacements\InGame.lua"), format!(r"{MPH}\ui\ingame.lua")] {
             let Some(src) = read(path) else { continue };
             let bytes = patch_in_game(&src).unwrap();
@@ -1202,10 +1374,15 @@ mod tests {
     #[test]
     fn congres_du_jeu() {
         let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua")) else { return };
-        let new = patch_congres(&src).unwrap();
-        assert!(new.starts_with(&src) && new.ends_with(CONGRES_BLOCK.as_bytes()));
-        assert!(patch_congres(&new).is_err(), "pas deux fois");
-        assert!(patch_congres(b"function SetPhase() end").is_err());
+        let new = patch_congres(&src, true).unwrap();
+        assert!(new.starts_with(&src) && new.ends_with(VOTE_BLOCK.as_bytes()));
+        let n = new.len() - VOTE_BLOCK.len() - 2;
+        assert!(new[..n].ends_with(CONGRES_BLOCK.as_bytes()));
+        assert!(patch_congres(&new, true).is_err(), "pas deux fois");
+        let seul = patch_congres(&src, false).unwrap();
+        assert_eq!(seul.len(), src.len() + 2 + VOTE_BLOCK.len(), "sans spectateurs, le bloc du vote seul");
+        assert!(patch_congres(&seul, false).is_err(), "pas deux fois");
+        assert!(patch_congres(b"function SetPhase() end", false).is_err());
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongressPopup.lua"));
         assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongress.lua"));
     }
@@ -1220,9 +1397,51 @@ mod tests {
         let corps = &text[CIBLES_BLOCK.len()..];
         assert_eq!(corps.matches("BGD_MajorsCibles()").count(), 5);
         assert_eq!(corps.matches("PlayerManager.GetAliveMajors()").count(), 0);
-        assert_eq!(new.len() + 5 * "PlayerManager.GetAliveMajors()".len(), src.len() + CIBLES_BLOCK.len() + 2 + 5 * "BGD_MajorsCibles()".len());
+        // Le cache des luxes, recalculé si POL : un seul test dans le jeu.
+        let luxes = "(cachedLuxuryResources == nil or BGD_LuxesARecalculer())";
+        assert_eq!(corps.matches(luxes).count(), 1);
+        assert_eq!(corps.matches("cachedLuxuryResources == nil)").count(), 0);
+        assert_eq!(
+            new.len() + 5 * "PlayerManager.GetAliveMajors()".len() + "(cachedLuxuryResources == nil)".len(),
+            src.len() + CIBLES_BLOCK.len() + 2 + 5 * "BGD_MajorsCibles()".len() + luxes.len()
+        );
         assert!(patch_congres_cibles(&new).is_err(), "pas deux fois");
         assert!(patch_congres_cibles(b"local x = 1").is_err());
+    }
+
+    #[test]
+    fn attente_du_congres_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Additions\WorldCongressBetweenTurns.lua")) else { return };
+        let new = patch_congres_attente(&src).unwrap();
+        assert!(new.starts_with(&src) && new.ends_with(ATTENTE_BLOCK.as_bytes()));
+        assert!(patch_congres_attente(&new).is_err(), "pas deux fois");
+        assert!(is_file(r"C:\x\WorldCongressBetweenTurns.lua", "WorldCongressBetweenTurns.lua"));
+        let Some(xml) = read(format!(r"{GAME}\DLC\Expansion2\UI\Additions\WorldCongressBetweenTurns.xml")) else { return };
+        let new = String::from_utf8(patch_congres_attente_xml(&xml).unwrap()).unwrap();
+        // Le bouton, dans la grille de la description, juste après celle-ci.
+        let bouton = new.find(r#"<GridButton ID="BGD_Revoter""#).unwrap();
+        let description = new.find("LOC_WORLD_CONGRESS_BETWEEN_TURNS_DESCRIPTION").unwrap();
+        assert!(description < bouton && bouton < new[description..].find("</Grid>").unwrap() + description);
+        assert!(patch_congres_attente_xml(new.as_bytes()).is_err(), "pas deux fois");
+    }
+
+    #[test]
+    fn fin_auto_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua")) else { return };
+        let new = patch_fin_auto(&src).unwrap();
+        assert!(new.starts_with(&src) && new.ends_with(FIN_AUTO_BLOCK.as_bytes()));
+        assert!(patch_fin_auto(&new).is_err(), "pas deux fois");
+        assert!(is_file(r"C:\x\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua", "ActionPanel_Expansion2.lua"));
+        assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua", "ActionPanel.lua"));
+    }
+
+    #[test]
+    fn minuteur_de_mph() {
+        let Some(src) = read(format!(r"{MPH}\ui\Additions\TurnProcessing.lua")) else { return };
+        let new = patch_minuteur_mph(&src).unwrap();
+        assert!(new.starts_with(&src) && new.ends_with(MINUTEUR_BLOCK.as_bytes()));
+        assert!(patch_minuteur_mph(&new).is_err(), "pas deux fois");
+        assert!(patch_minuteur_mph(b"function OnTurnEnd() end").is_err(), "un autre TurnProcessing.lua");
     }
 
     #[test]

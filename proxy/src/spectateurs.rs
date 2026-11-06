@@ -17,6 +17,8 @@
 //!   et que la voix d'office ne touche pas), puis voix et choix sont remis à 0, ce qui le laisse aussi
 //!   hors de la rétribution de faveur qui suit (`1803bff40`).
 //!
+//! Les mêmes détours de vote rendent la faveur d'un second vote (retour au vote, `congres`).
+//!
 //! Les cibles « joueur » des résolutions (`WorldCongress.lua`) et la fenêtre du congrès en lecture
 //! seule pour le spectateur sont dans `ui`, avec `ui_congres_cibles.lua` et `ui_congres.lua`.
 
@@ -240,7 +242,13 @@ unsafe extern "system" fn hook_vote(congres: usize, joueur: u32, resolution: u32
         return 0;
     }
     let original: unsafe extern "system" fn(usize, u32, u32, i32) -> u64 = std::mem::transmute(T_VOTE.load(Ordering::Relaxed));
-    original(congres, joueur, resolution, voix)
+    // Second vote du joueur sur cette résolution (retour au vote) : le coût du premier est rendu.
+    let rendu = crate::congres::avant_vote(congres, joueur, resolution);
+    let r = original(congres, joueur, resolution, voix);
+    if let Some(rendu) = rendu.filter(|_| r as u8 == 0) {
+        crate::congres::reprendre(rendu);
+    }
+    r
 }
 
 unsafe extern "system" fn hook_discussion(congres: usize, joueur: u32, discussion: usize, voix: i32) -> u64 {
@@ -249,7 +257,12 @@ unsafe extern "system" fn hook_discussion(congres: usize, joueur: u32, discussio
         return 0;
     }
     let original: unsafe extern "system" fn(usize, u32, usize, i32) -> u64 = std::mem::transmute(T_DISCUSSION.load(Ordering::Relaxed));
-    original(congres, joueur, discussion, voix)
+    let rendu = crate::congres::avant_discussion(congres, joueur, discussion);
+    let r = original(congres, joueur, discussion, voix);
+    if let Some(rendu) = rendu.filter(|_| r as u8 == 0) {
+        crate::congres::reprendre(rendu);
+    }
+    r
 }
 
 unsafe extern "system" fn hook_depouillement(resolution: usize) -> u64 {

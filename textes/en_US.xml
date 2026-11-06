@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="en_US">
 			<Text>Close</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="en_US">
+			<Text>Back to the vote</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="en_US">
+			<Text>Cancel your end of turn to change your votes. Possible while you have time left and another player is still voting.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="en_US">
 			<Text>Trade route: ends in {1} turn(s), when the trader returns to its origin city.</Text>
 		</Row>
