@@ -2,6 +2,40 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.6.1
+
+Zawiera wszystko z wersji przedpremierowej 0.6.0. W grze wieloosobowej poprawki **[wszyscy gracze]**
+wymagają, by wszyscy ludzcy gracze mieli 0.6.0 lub 0.6.1: poczekalnia, w której są 0.5.0 i 0.6.x,
+je wyłącza.
+
+### Instalacja i aktualizacje
+- Po instalacji instalator nie pokazuje już opcji uruchamiania Steam: informuje, że wszystko jest
+  gotowe, i można go zamknąć. Powiadomienie o aktualizacji w grze wystarcza, by być na bieżąco. Już
+  dodana opcja uruchamiania nadal działa.
+- Instalator nazywa się teraz `BetterGameExperience_V<version>.exe`. Po uruchomieniu usuwa starsze
+  instalatory z tego samego folderu (zwykle Pobrane).
+
+### Tryb wieloosobowy
+- **„No First/Last moves (BGE)”** **[wszyscy gracze]**: zostajesz na ekranie zmiany tury, razem z
+  przyciskiem końca tury, dopóki gospodarz nie rozpocznie tury, zamiast widzieć otwartą turę z
+  odrzucanymi rozkazami.
+
+### Kongres Światowy
+- *(eksperymentalne)* **[wszyscy gracze]** Gdy czekasz na innych graczy, przycisk **Wróć do
+  głosowania** ponownie otwiera okno głosowania z twoimi głosami i właściwą ilością przychylności
+  dyplomatycznej.
+- *(eksperymentalne)* Tura nie kończy się już wbrew twojej woli podczas głosowania: bez
+  automatycznego końca tury, bez wymuszonego końca tury przy pustej liście rezolucji, a zegar MPH daje
+  przewidziane 240 s na głosowanie.
+- *(eksperymentalne)* **[wszyscy gracze]** Dobra luksusowe objęte zakazem są przeliczane na każdej
+  sesji.
+- Ekran powitalny Kongresu Światowego i jego dźwięk pojawiają się tylko raz na sesję, zamiast wracać
+  za każdym razem, gdy inny gracz wraca do głosowania.
+
+### Poprawki interfejsu
+- Z Better Spectator Mod górny pasek znów pokazuje zasoby strategiczne twoich współgraczy oraz
+  zasoby, które odblokowuje współgracz.
+
 ## BetterGameExperience 0.5.0: pierwsza wersja publiczna
 
 BetterGameExperience (BGE) poprawia i przyspiesza Civilization VI: Gathering Storm za pomocą dwóch bibliotek DLL
