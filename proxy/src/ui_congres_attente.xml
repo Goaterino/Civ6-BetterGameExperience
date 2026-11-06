@@ -1,0 +1,2 @@
+      <!-- Civ6RolloverProxy (src/ui_congres_attente.xml) : retour au vote, voir ui_congres_attente.lua. -->
+      <GridButton ID="BGD_Revoter" Style="MainButton" Size="260,41" Anchor="C,T" Offset="0,125" Hidden="1"/>

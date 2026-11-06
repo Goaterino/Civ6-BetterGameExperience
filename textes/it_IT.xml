@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="it_IT">
 			<Text>Chiudi</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="it_IT">
+			<Text>Torna al voto</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="it_IT">
+			<Text>Annulla la fine del tuo turno per cambiare i tuoi voti. Possibile finché ti resta tempo e un altro giocatore sta ancora votando.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="it_IT">
 			<Text>Rotta commerciale: termina tra {1} turno/i, quando il commerciante torna alla sua città d'origine.</Text>
 		</Row>

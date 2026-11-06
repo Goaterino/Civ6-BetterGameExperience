@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="ko_KR">
 			<Text>닫기</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="ko_KR">
+			<Text>투표로 돌아가기</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="ko_KR">
+			<Text>턴 종료를 취소하고 투표를 변경합니다. 남은 시간이 있고 다른 플레이어가 아직 투표 중일 때 가능합니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="ko_KR">
 			<Text>교역로: {1}턴 뒤, 상인이 출발 도시로 돌아오면 끝납니다.</Text>
 		</Row>

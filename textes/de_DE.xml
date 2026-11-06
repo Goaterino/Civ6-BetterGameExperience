@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="de_DE">
 			<Text>Schließen</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="de_DE">
+			<Text>Zurück zur Abstimmung</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="de_DE">
+			<Text>Nimmt Ihr Rundenende zurück, um Ihre Stimmen zu ändern. Möglich, solange Ihnen Zeit bleibt und ein anderer Spieler noch abstimmt.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="de_DE">
 			<Text>Handelsweg: endet in {1} Runde(n), wenn der Händler in seine Heimatstadt zurückkehrt.</Text>
 		</Row>

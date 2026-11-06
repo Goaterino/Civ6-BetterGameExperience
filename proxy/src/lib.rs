@@ -21,6 +21,7 @@
 
 mod citoyens;
 mod coalesce;
+mod congres;
 mod depart;
 mod exe;
 mod forward;
@@ -209,6 +210,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
         win::DLL_PROCESS_DETACH if reserved.is_null() => {
             coalesce::on_proxy_unload();
             citoyens::on_proxy_unload();
+            congres::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();
             depart::on_proxy_unload();

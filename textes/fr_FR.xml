@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="fr_FR">
 			<Text>Fermer</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="fr_FR">
+			<Text>Revenir au vote</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="fr_FR">
+			<Text>Annulez votre fin de tour pour modifier vos votes. Possible tant qu'il vous reste du temps et qu'un autre joueur vote encore.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="fr_FR">
 			<Text>Route commerciale : fin dans {1} tour(s), au retour du négociant dans sa ville d'origine.</Text>
 		</Row>

@@ -200,7 +200,7 @@ attendent dans la file de GameCore, dans l'ordre. Comme le minuteur de l'exe par
 ## Minuteur de tour (exe, `CivilizationVI_DX12.exe`)
 
 Projet Ghidra `~/Tools/ghidra-projects/civ6exe`. Complète
-[analyses/congres](../analyses/congres/README.md#exe-minuteur-et-annulation) et
+[congres](../congres/README.md#exe-minuteur-et-annulation) et
 [nuke](../nuke/README.md).
 
 Le gestionnaire (objet `this`, enregistré par `1400f55a0` / `1400f7e80`) tient deux chronos sur

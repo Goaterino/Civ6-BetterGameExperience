@@ -305,6 +305,12 @@
 		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="zh_Hans_CN">
 			<Text>关闭</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER" Language="zh_Hans_CN">
+			<Text>返回投票</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_REVOTER_AIDE" Language="zh_Hans_CN">
+			<Text>取消回合结束以修改投票。仅在您仍有剩余时间且其他玩家仍在投票时可用。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="zh_Hans_CN">
 			<Text>贸易路线：{1} 回合后，在商人回到出发城市时结束。</Text>
 		</Row>
