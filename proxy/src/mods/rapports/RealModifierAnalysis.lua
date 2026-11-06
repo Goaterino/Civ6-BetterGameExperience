@@ -203,10 +203,6 @@ if GameInfo.GreatPersonClasses ~= nil then
 		BGD_ClesRendement[ sCle ] = true;
 	end
 end
--- vrai si l'objet calculé a un modificateur de points de personnages illustres qui porte sur les
--- villes (quantité variable : par bâtiment) ; sinon ces points ne sont pas montrés, la description
--- donne déjà la quantité fixe.
-local bBGDPointsPGVariables:boolean = false;
 
 --print("YieldTypes"); dshowtable(YieldTypes);
 --print("YieldTypesMap"); dshowtable(YieldTypesMap);
@@ -2912,16 +2908,12 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 	local bUnknownEffect:boolean = false;
 	local sSubjectFilter:string = ( sInfluence and "PLAYER_HAS_"..sInfluence.."_INFLUENCE" or nil );
 	sBGDCurrentPolicy = ( sObject == "Policy" and sObjectType or nil );
-	bBGDPointsPGVariables = false;
 	for mod in GameInfo[sModifiersTable]() do
 		if mod[sObjectTypeField] == sObjectType then
 			-- stupid Firaxis, some fields are named ModifierId and some ModifierID (sic!)
 			local sModifierId:string = mod.ModifierId;
 			if not sModifierId then sModifierId = mod.ModifierID; end -- fix for BeliefModifiers, GoodyHutSubTypes, ImprovementModifiers
 			local sText:string, pYields:table, sAttachedId:string, bUnknown:boolean, tMod:table, tSubjects:table, sSubjectType:string = DecodeModifier(sModifierId, ePlayerID, iCityID);
-			if tMod ~= nil and tMod.EffectType == "EFFECT_ADJUST_GREAT_PERSON_POINTS" and tMod.CollectionType ~= "COLLECTION_OWNER" then
-				bBGDPointsPGVariables = true;
-			end
 			-- this the place to check for extra conditions
 			if sSubjectFilter == nil or tMod.SubjectReqSetId == sSubjectFilter then
 				table.insert(tToolTip, sText);
@@ -2960,11 +2952,8 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 	--for	_,yield in ipairs(YieldTypesOrder) do
 		--if tTotalImpact[yield] ~= 0 then sTotalImpact = sTotalImpact..(sTotalImpact=="" and "" or " ")..GetYieldString("YIELD_"..yield, tTotalImpact[yield]); end
 	--end
-	-- BGD : points de personnages illustres seulement si une partie dépend des villes (le total, fixe
-	-- compris : Invention 4 + 2 par atelier) ; une carte à points fixes n'apprend rien de plus.
-	if not bBGDPointsPGVariables then
-		for _,pg in ipairs(BGD_ClesPG) do tTotalImpact[pg.Cle] = 0; end
-	end
+	-- BGD : points de personnages illustres toujours montrés, [icône]+x, qu'ils soient fixes (cartes
+	-- d'Inspiration…) ou par ville (Invention : 4 + 2 par atelier).
 	local sTotalImpact:string = YieldTableGetInfo(tTotalImpact);
 	if sTotalImpact == "" then
 		--sTotalImpact = "-"; -- just to show that there's nothing; empty string could be misleading
