@@ -238,7 +238,10 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
     // En unités de dialogue : assez large pour les chemins du jeu, que la fenêtre abrège sinon.
     cfg.cxWidth = 320;
     let mut pressed = 0;
-    unsafe { task_dialog(&cfg, &mut pressed, null_mut(), null_mut()) };
+    // Le dernier paramètre (l'état final de la case) doit être fourni : NULL désactive la case à
+    // cocher. Son état passe par TDN_VERIFICATION_CLICKED.
+    let mut checked = 0;
+    unsafe { task_dialog(&cfg, &mut pressed, null_mut(), &mut checked) };
     if ctx.relang.get() {
         LANGUAGE_CHANGED
     } else if ctx.toggled.get() {
