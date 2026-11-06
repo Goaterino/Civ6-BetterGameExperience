@@ -27,7 +27,7 @@ The full list of changes is in the [changelog](CHANGELOG.md), also available in
 ## Install
 
 1. Close Civilization VI.
-2. Download `BetterGameExperience.exe` from the [latest release](https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest)
+2. Download `BetterGameExperience_V<version>.exe` from the [latest release](https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest)
    and run it.
 3. Click **Install**. The installer finds the game in your Steam libraries, downloads the release,
    and checks its signature and the SHA-256 of every file before copying anything. Windows may ask
@@ -36,11 +36,8 @@ The full list of changes is in the [changelog](CHANGELOG.md), also available in
 That's it: start the game as usual. A **BetterGameExperience** tab now appears in the game Options.
 
 **Updates.** When a new version is out, the game's main menu offers it. **Update** closes the game,
-installs it and offers to restart. You can also run the installer again at any time.
-
-**Optional:** the installer offers a Steam launch option
-(`"%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" %command%`). With it, the installer checks for
-updates every time you start the game. It's not needed to keep the mod installed.
+installs it and offers to restart. You can also run the installer again at any time: a newer installer
+removes the older ones from its folder.
 
 **Uninstall.** Run the installer and click **Uninstall**. The game gets its original files back.
 

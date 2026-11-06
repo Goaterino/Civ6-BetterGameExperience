@@ -11,8 +11,6 @@ const RRF_RT_REG_SZ: u32 = 0x2;
 const SEE_MASK_NOCLOSEPROCESS: u32 = 0x40;
 const SW_HIDE: i32 = 0;
 const INFINITE: u32 = 0xFFFF_FFFF;
-const CF_UNICODETEXT: u32 = 13;
-const GMEM_MOVEABLE: u32 = 0x2;
 const COINIT_APARTMENTTHREADED: u32 = 0x2;
 
 /// Fenêtre ouverte de l'installeur : parent de l'invite UAC, qui passe ainsi au premier plan.
@@ -59,20 +57,12 @@ extern "system" {
     pub fn ActivateActCtx(ctx: *mut c_void, cookie: *mut usize) -> i32;
     pub fn LoadLibraryW(name: *const u16) -> *mut c_void;
     pub fn GetProcAddress(module: *mut c_void, name: *const u8) -> *mut c_void;
-    fn GlobalAlloc(flags: u32, size: usize) -> *mut c_void;
-    fn GlobalLock(mem: *mut c_void) -> *mut c_void;
-    fn GlobalUnlock(mem: *mut c_void) -> i32;
-    fn GlobalFree(mem: *mut c_void) -> *mut c_void;
 }
 
 #[link(name = "user32")]
 extern "system" {
     pub fn SendMessageW(hwnd: *mut c_void, msg: u32, wparam: usize, lparam: isize) -> isize;
     pub fn SetProcessDPIAware() -> i32;
-    fn OpenClipboard(hwnd: *mut c_void) -> i32;
-    fn EmptyClipboard() -> i32;
-    fn SetClipboardData(format: u32, mem: *mut c_void) -> *mut c_void;
-    fn CloseClipboard() -> i32;
 }
 
 #[link(name = "shell32")]
@@ -150,26 +140,4 @@ pub fn run_elevated(exe: &Path, params: &str) -> Result<u32, String> {
         CloseHandle(info.hProcess);
     }
     Ok(code)
-}
-
-pub fn copy_to_clipboard(text: &str) -> bool {
-    let text = wide(text);
-    unsafe {
-        if OpenClipboard(OWNER.load(Ordering::Relaxed)) == 0 {
-            return false;
-        }
-        EmptyClipboard();
-        let mem = GlobalAlloc(GMEM_MOVEABLE, text.len() * 2);
-        let ok = !mem.is_null() && {
-            let dst = GlobalLock(mem) as *mut u16;
-            std::ptr::copy_nonoverlapping(text.as_ptr(), dst, text.len());
-            GlobalUnlock(mem);
-            !SetClipboardData(CF_UNICODETEXT, mem).is_null()
-        };
-        if !ok && !mem.is_null() {
-            GlobalFree(mem);
-        }
-        CloseClipboard();
-        ok
-    }
 }

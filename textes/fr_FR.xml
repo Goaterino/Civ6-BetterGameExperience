@@ -410,17 +410,14 @@
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="fr_FR">
 			<Text>Installation de BetterGameExperience {1}…</Text>
 		</Row>
-		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="fr_FR">
-			<Text>Pour qu'il se mette à jour et se répare tout seul, ajoute cette option de lancement à Civilization VI dans Steam (Propriétés &gt; Général &gt; Options de lancement) :\n\n{1}</Text>
+		<Row Tag="LOC_BGD_INST_YOU_CAN_CLOSE_THIS_WINDOW" Language="fr_FR">
+			<Text>Tout est en place : tu peux fermer cette fenêtre et lancer Civilization VI. Le jeu te préviendra quand une mise à jour sera disponible.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="fr_FR">
 			<Text>BetterGameExperience {1} est installé</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="fr_FR">
 			<Text>Relancer Civilization VI\nPar Steam.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="fr_FR">
-			<Text>Copier l'option de lancement\nÀ coller dans les options de lancement de Steam.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="fr_FR">
 			<Text>Civilization VI ne s'est pas fermé. Ferme-le, puis relance l'installeur.</Text>

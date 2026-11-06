@@ -1,11 +1,12 @@
-//! BetterGameDLLs.exe : installe, met à jour, répare ou retire les proxys de BetterGameDLLs dans
-//! Civilization VI, à partir des releases GitHub (voir updater/README.md).
+//! BetterGameExperience_V<version>.exe : installe, met à jour, répare ou retire les proxys de
+//! BetterGameExperience dans Civilization VI, à partir des releases GitHub (voir updater/README.md).
 //!
-//!   BetterGameDLLs.exe                          fenêtre d'installation
-//!   BetterGameDLLs.exe --game-dir <dossier>     idem, pour un jeu hors des bibliothèques Steam
-//!   BetterGameDLLs.exe %command%                (options de lancement Steam) met à jour, puis lance le jeu
-//!   BetterGameDLLs.exe --after-game [<dossier>] (notification du jeu) attend la fermeture du jeu, puis
-//!                                               met à jour
+//!   BetterGameExperience.exe                          fenêtre d'installation
+//!   BetterGameExperience.exe --game-dir <dossier>     idem, pour un jeu hors des bibliothèques Steam
+//!   BetterGameExperience.exe %command%                (option de lancement Steam, plus proposée) met
+//!                                                     à jour, puis lance le jeu
+//!   BetterGameExperience.exe --after-game [<dossier>] (notification du jeu) attend la fermeture du
+//!                                                     jeu, puis met à jour
 #![windows_subsystem = "windows"]
 
 mod game;
@@ -29,7 +30,6 @@ use textes as tx;
 
 const INSTALL: i32 = 100;
 const UNINSTALL: i32 = 101;
-const COPY: i32 = 102;
 const RELAUNCH: i32 = 103;
 
 /// Civilization VI sur Steam.
@@ -59,6 +59,7 @@ fn interactive(game: Option<PathBuf>) -> i32 {
     // Dès l'ouverture, pas seulement après une installation : un joueur déjà à jour, qui ouvre un
     // installeur plus récent, met aussi à jour celui que la notification du jeu lance.
     copy_self();
+    remove_old_installers();
     match menu(game) {
         Ok(()) => 0,
         Err(e) => failed(&e),
@@ -268,27 +269,70 @@ fn copy_self() {
     let _ = std::fs::copy(&me, &stable);
 }
 
-/// Fin d'installation : propose l'option de lancement Steam qui garde le proxy à jour, et, après
-/// une mise à jour lancée depuis le jeu, de le relancer.
+/// Version de la release qui a produit cet installeur (`BGD_RELEASE`, posé par le workflow de
+/// release). Aucune pour une compilation locale.
+const RELEASE: Option<&str> = match option_env!("BGD_RELEASE") {
+    Some(v) if !v.is_empty() => Some(v),
+    _ => None,
+};
+
+/// Retire, dans le dossier de l'installeur lancé (d'habitude celui des téléchargements), les
+/// installeurs téléchargés avant lui : `BetterGameExperience.exe` et `BetterGameDLLs.exe` (avant les
+/// noms versionnés), et les `BetterGameExperience_V<version>.exe` de même version ou plus anciens.
+/// Jamais la copie à l'emplacement fixe, que l'option de lancement Steam d'un joueur peut désigner.
+fn remove_old_installers() {
+    let Some(mine) = RELEASE else { return };
+    let Ok(me) = std::env::current_exe().and_then(std::fs::canonicalize) else { return };
+    let Some(dir) = me.parent() else { return };
+    if release::data_dir().and_then(|d| std::fs::canonicalize(d).ok()).as_deref() == Some(dir) {
+        return;
+    }
+    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let old = path.file_name().and_then(|n| n.to_str()).is_some_and(|n| is_old_installer(n, mine));
+        if old && path.is_file() && std::fs::canonicalize(&path).ok().as_deref() != Some(me.as_path()) {
+            let _ = std::fs::remove_file(&path);
+        }
+    }
+}
+
+/// Vrai si `name` est un installeur antérieur à la version `mine`. Le navigateur ajoute « (1) » à un
+/// fichier téléchargé deux fois.
+fn is_old_installer(name: &str, mine: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    let Some(stem) = name.strip_suffix(".exe") else { return false };
+    let stem = match stem.rsplit_once(" (") {
+        Some((base, n)) if n.strip_suffix(')').is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit())) => base,
+        _ => stem,
+    };
+    if stem == "bettergameexperience" || stem == "bettergamedlls" {
+        return true;
+    }
+    match stem.strip_prefix("bettergameexperience_v") {
+        Some(v) => v == mine || release::is_newer(mine, v),
+        None => false,
+    }
+}
+
+/// Fin d'installation : dit que tout est en place, et, après une mise à jour lancée depuis le jeu,
+/// propose de le relancer.
 fn installed(version: &str, relaunch: bool) {
-    let exe = stable_exe().filter(|p| p.is_file()).or_else(|| std::env::current_exe().ok()).unwrap_or_default();
-    let option = format!("\"{}\" %command%", exe.display());
     loop {
-        let content = f(
-            tx::TO_KEEP_IT_UPDATED_AND_REPAIRED,
-            &[&option],
-        );
         let instruction = f(tx::BETTERGAMEDLLS_X_IS_INSTALLED, &[&version]);
         let mut buttons = Vec::new();
         if relaunch {
             buttons.push((RELAUNCH, t(tx::RESTART_CIVILIZATION_VI_THROUGH_STEAM)));
         }
-        buttons.push((
-            COPY,
-            t(tx::COPY_THE_LAUNCH_OPTION_TO_PASTE),
-        ));
-        let page = Page { icon: Icon::Info, instruction: &instruction, content: &content, details: None, buttons: &buttons, checkbox: None };
-        match gui::ask(&page, &|id| id == COPY && win::copy_to_clipboard(&option)) {
+        let page = Page {
+            icon: Icon::Info,
+            instruction: &instruction,
+            content: t(tx::YOU_CAN_CLOSE_THIS_WINDOW),
+            details: None,
+            buttons: &buttons,
+            checkbox: None,
+        };
+        match gui::ask(&page, &|_| false) {
             LANGUAGE_CHANGED => continue,
             RELAUNCH => {
                 let _ = Command::new("explorer.exe").arg(STEAM_RUN).spawn();
@@ -359,4 +403,24 @@ fn update(exe: &Path) -> Result<(), String> {
     })?;
     release::remember_installed(Some(&m.version));
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_old_installer;
+
+    #[test]
+    fn anciens_installeurs() {
+        assert!(is_old_installer("BetterGameExperience.exe", "0.6.0"));
+        assert!(is_old_installer("BetterGameExperience (2).exe", "0.6.0"));
+        assert!(is_old_installer("BetterGameDLLs.exe", "0.6.0"));
+        assert!(is_old_installer("BetterGameExperience_V0.5.1.exe", "0.6.0"));
+        assert!(is_old_installer("BetterGameExperience_V0.6.0-rc.1.exe", "0.6.0"));
+        assert!(is_old_installer("BetterGameExperience_V0.6.0 (1).exe", "0.6.0"));
+        assert!(!is_old_installer("BetterGameExperience_V0.6.1.exe", "0.6.0"));
+        assert!(!is_old_installer("BetterGameExperience_V0.7.0-rc.1.exe", "0.6.0"));
+        assert!(!is_old_installer("BetterGameExperience_Vtruc.exe", "0.6.0"));
+        assert!(!is_old_installer("BetterGameExperience.zip", "0.6.0"));
+        assert!(!is_old_installer("CivilizationVI.exe", "0.6.0"));
+    }
 }

@@ -217,20 +217,6 @@ pub const CLOSE_CIVILIZATION_VI_THEN_RUN_THE: Texts = [
     "请关闭 Civilization VI，然后重新运行安装程序。",
 ];
 
-pub const COPY_THE_LAUNCH_OPTION_TO_PASTE: Texts = [
-    "Copy the launch option\nTo paste into Steam's launch options.",
-    "Copier l'option de lancement\nÀ coller dans les options de lancement de Steam.",
-    "Startoption kopieren\nZum Einfügen in die Startoptionen von Steam.",
-    "Copiar la opción de lanzamiento\nPara pegarla en las opciones de lanzamiento de Steam.",
-    "Copia l'opzione di avvio\nDa incollare nelle opzioni di avvio di Steam.",
-    "起動オプションをコピー\nSteam の起動オプションに貼り付けます。",
-    "실행 옵션 복사\nSteam의 실행 옵션에 붙여 넣습니다.",
-    "Skopiuj opcję uruchamiania\nDo wklejenia w opcjach uruchamiania Steam.",
-    "Copiar a opção de inicialização\nPara colar nas opções de inicialização da Steam.",
-    "Скопировать параметр запуска\nДля вставки в параметры запуска Steam.",
-    "复制启动选项\n粘贴到 Steam 的启动选项中。",
-];
-
 pub const COULD_NOT_READ_THE_LATEST_VERSION: Texts = [
     "\n\nCould not read the latest version: {1}",
     "\n\nImpossible de lire la dernière version : {1}",
@@ -567,20 +553,6 @@ pub const THE_OPERATION_FAILED: Texts = [
     "操作失败",
 ];
 
-pub const TO_KEEP_IT_UPDATED_AND_REPAIRED: Texts = [
-    "To keep it updated and repaired automatically, add this launch option to Civilization VI in Steam (Properties > General > Launch options):\n\n{1}",
-    "Pour qu'il se mette à jour et se répare tout seul, ajoute cette option de lancement à Civilization VI dans Steam (Propriétés > Général > Options de lancement) :\n\n{1}",
-    "Damit es sich automatisch aktualisiert und repariert, fügen Sie Civilization VI in Steam diese Startoption hinzu (Eigenschaften > Allgemein > Startoptionen):\n\n{1}",
-    "Para que se actualice y se repare solo, añade esta opción de lanzamiento a Civilization VI en Steam (Propiedades > General > Opciones de lanzamiento):\n\n{1}",
-    "Perché si aggiorni e si ripari da solo, aggiungi questa opzione di avvio a Civilization VI in Steam (Proprietà > Generale > Opzioni di avvio):\n\n{1}",
-    "自動で更新・修復されるようにするには、Steam で Civilization VI にこの起動オプションを追加してください (プロパティ > 一般 > 起動オプション):\n\n{1}",
-    "자동으로 업데이트하고 복구하려면 Steam에서 Civilization VI에 이 실행 옵션을 추가하세요(속성 > 일반 > 실행 옵션):\n\n{1}",
-    "Aby aktualizowało się i naprawiało samo, dodaj tę opcję uruchamiania do Civilization VI w Steam (Właściwości > Ogólne > Opcje uruchamiania):\n\n{1}",
-    "Para que ele se atualize e se repare sozinho, adicione esta opção de inicialização ao Civilization VI na Steam (Propriedades > Geral > Opções de inicialização):\n\n{1}",
-    "Чтобы он сам обновлялся и восстанавливался, добавьте этот параметр запуска для Civilization VI в Steam (Свойства > Общие > Параметры запуска):\n\n{1}",
-    "若要让它自动更新和修复，请在 Steam 中为 Civilization VI 添加此启动选项（属性 > 通用 > 启动选项）：\n\n{1}",
-];
-
 pub const UNINSTALLING_BETTERGAMEDLLS: Texts = [
     "Uninstalling BetterGameExperience…",
     "Désinstallation de BetterGameExperience…",
@@ -789,4 +761,18 @@ pub const X_THE_GAME_WILL_START_WITHOUT: Texts = [
     "{1}\n\nO jogo vai iniciar sem a atualização.",
     "{1}\n\nИгра запустится без обновления.",
     "{1}\n\n游戏将在不更新的情况下启动。",
+];
+
+pub const YOU_CAN_CLOSE_THIS_WINDOW: Texts = [
+    "Everything is in place: you can close this window and launch Civilization VI. The game will tell you when an update is available.",
+    "Tout est en place : tu peux fermer cette fenêtre et lancer Civilization VI. Le jeu te préviendra quand une mise à jour sera disponible.",
+    "Alles ist bereit: Sie können dieses Fenster schließen und Civilization VI starten. Das Spiel meldet Ihnen, wenn ein Update verfügbar ist.",
+    "Todo está listo: puedes cerrar esta ventana y lanzar Civilization VI. El juego te avisará cuando haya una actualización disponible.",
+    "È tutto pronto: puoi chiudere questa finestra e avviare Civilization VI. Il gioco ti avviserà quando sarà disponibile un aggiornamento.",
+    "準備が整いました。このウィンドウを閉じて Civilization VI を起動できます。アップデートがあるときはゲーム内でお知らせします。",
+    "모든 준비가 끝났습니다. 이 창을 닫고 Civilization VI를 실행하세요. 업데이트가 있으면 게임에서 알려 드립니다.",
+    "Wszystko gotowe: możesz zamknąć to okno i uruchomić Civilization VI. Gra powiadomi cię, gdy pojawi się aktualizacja.",
+    "Tudo pronto: você pode fechar esta janela e iniciar o Civilization VI. O jogo avisará quando houver uma atualização disponível.",
+    "Всё готово: можно закрыть это окно и запустить Civilization VI. Игра сообщит, когда выйдет обновление.",
+    "一切就绪：你可以关闭此窗口并启动 Civilization VI。有可用更新时，游戏会通知你。",
 ];
