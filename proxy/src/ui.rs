@@ -920,15 +920,19 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     }
     if let Some((text, done)) = crate::depart::patch_lua(l, chunk, src) {
         what.push(done.into());
-        // InGame.lua reçoit toujours le bloc du départ : le correctif des raccourcis s'y ajoute.
-        if is_file(chunk, "InGame.lua") {
-            return match patch_in_game(&text) {
+        // InGame.lua et ActionPanel.lua reçoivent toujours le bloc du départ : leur correctif
+        // (raccourcis, touche Entrée) s'y ajoute.
+        for (file, patch, fix_done) in FIXES {
+            if !is_file(chunk, file) {
+                continue;
+            }
+            return match patch(&text) {
                 Ok(both) => {
-                    what.push(RACCOURCIS_DONE.into());
+                    what.push(fix_done.into());
                     Some(both)
                 }
                 Err(e) => {
-                    log(&format!("ui : {chunk} : raccourcis laissés tels quels : {e}"));
+                    log(&format!("ui : {chunk} : « {fix_done} » laissé tel quel : {e}"));
                     Some(text)
                 }
             };
@@ -1328,6 +1332,15 @@ mod tests {
         }
         assert!(is_file(r"C:\x\ui\ingame.lua", "InGame.lua"));
         assert!(!is_file(r"C:\x\InGameTopOptionsMenu.lua", "InGame.lua"));
+    }
+
+    #[test]
+    fn action_panel_recoit_le_depart_et_la_touche_entree() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\ActionPanel.lua")) else { return };
+        let (depart, _) = crate::depart::patch(r"C:\x\Base\Assets\UI\ActionPanel.lua", &src).unwrap();
+        let seul = patch_action_panel(&src).unwrap();
+        let both = patch_action_panel(&depart).unwrap();
+        assert!(both.len() == seul.len() + (depart.len() - src.len()), "les deux blocs");
     }
 
     #[test]

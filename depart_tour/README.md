@@ -172,7 +172,10 @@ est décalé : `14006e2c0` en DX12, `14006d2f0` en DX11, mêmes octets hors dép
 - `14006ea00(q)` **transfère**, sous section critique, la file écrite par GameCore vers la file lue ;
 - `1400603a0` **distribue** les enregistrements de `q + 0x3c` à la fin du tampon : pour chacun,
   `table[type].+0x20(données, entrée)` (table en `publieur + 0xb0 + jeu * 0x4800`, 0x30 octets par
-  type) ; `140060450` fait de même avec un enregistreur (`q + 0x40`, nul en partie) ;
+  type) ; `140060450` fait de même quand la file a un observateur (`q + 0x40`), en appelant aussi un
+  foncteur posé sur la pile (table `140fba430`). Cet observateur est présent en partie : la
+  première version du détour rendait alors la main à l'originale, et rien n'était retenu (essai
+  du 2026-11-06) ;
 - puis `q + 0x3c` = taille, et l'on recommence tant que quelque chose a été distribué.
 
 Enregistrement : taille en `+0`, type en `+4`, données en `+0x50`. Les types sont numérotés dans
@@ -287,6 +290,7 @@ la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
 |---|---|
 | [proxy/src/depart.rs](../proxy/src/depart.rs) | détours de l'envoi (`1800366b0`), de la publication des événements GameCore et de la pause du minuteur (signatures, DX12 et DX11) ; fonctions natives `Civ6RolloverProxy_Depart*`, `Civ6RolloverProxy_FinForcer` et `Civ6RolloverProxy_FinLever` ; réglage `depart_signaux` |
 | [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ, fin envoyée par l'hôte |
+| [proxy/src/ui_depart_panneau.lua](../proxy/src/ui_depart_panneau.lua) | à la fin de `ActionPanel.lua` : pendant la retenue, `UI.IsProcessingMessages()` vrai par une table `UI` propre au contexte (bouton de fin de tour en attente : `OnRefresh` lit l'état réel de la simulation, et `EndTurnDirty` / `EndTurnBlockingChanged` arrivent avant `LocalPlayerTurnBegin`), `OnEndTurnBlockingChanged` rejoué au début du tour, jauge du minuteur figée ; journal `depart : panneau : …` |
 | [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGE - …` |
 | [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
 

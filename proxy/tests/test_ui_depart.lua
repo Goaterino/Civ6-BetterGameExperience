@@ -526,6 +526,40 @@ do
 end
 
 do
+	-- ActionPanel.lua suivi de ui_depart_panneau.lua : bouton en attente pendant la retenue.
+	local PANNEAU = ReadFile(dir .. "/../src/ui_depart_panneau.lua");
+	local retenu, occupe, minuteur, blocages, journal = 0, false, 0, {}, {};
+	local UI_JEU = { IsProcessingMessages = function() return occupe; end, GetInterfaceMode = function() return 7; end };
+	local debut = NewEvent();
+	local env = { pcall = pcall, print = print, tostring = tostring, setmetatable = setmetatable,
+		UI = UI_JEU, Events = { LocalPlayerTurnBegin = debut },
+		Civ6RolloverProxy_DepartEtat = function() return 1, 0, 0, retenu; end,
+		Civ6RolloverProxy_DepartJournal = function(t) table.insert(journal, t); end };
+	env.OnTurnTimerUpdated = function() minuteur = minuteur + 1; end;
+	env.OnEndTurnBlockingChanged = function(a, b) table.insert(blocages, b); end;
+	assert(load(PANNEAU, "@ui_depart_panneau.lua", "t", env))();
+	env.OnTurnTimerUpdated(1, 60);
+	env.OnEndTurnBlockingChanged(0, 5);
+	Check("panneau : hors retenue, état du jeu", env.UI.IsProcessingMessages() == false and minuteur == 1 and #blocages == 1);
+	Check("panneau : le reste de UI passe", env.UI.GetInterfaceMode() == 7 and journal[1] == "panneau : posé");
+	retenu = 1;
+	env.OnTurnTimerUpdated(1, 60);
+	env.OnEndTurnBlockingChanged(0, 9);
+	Check("panneau : retenue, bouton en attente et jauge figée", env.UI.IsProcessingMessages() == true and minuteur == 1);
+	Check("panneau : blocage remis à plus tard", #blocages == 1);
+	retenu = 0;
+	debut();
+	Check("panneau : blocage rejoué au début du tour", #blocages == 2 and blocages[2] == 9);
+	debut();
+	Check("panneau : rejoué une seule fois", #blocages == 2);
+	env.OnTurnTimerUpdated(2, 60);
+	Check("panneau : après le départ, tout reprend", env.UI.IsProcessingMessages() == false and minuteur == 2);
+	assert(load(PANNEAU, "@ui_depart_panneau.lua", "t", env))();
+	env.OnTurnTimerUpdated(3, 60);
+	Check("panneau : inclus deux fois, posé une fois", minuteur == 3);
+end
+
+do
 	local erreurs = {};
 	for _, m in ipairs(MACHINES) do
 		for _, t in ipairs(m.journal) do

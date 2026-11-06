@@ -79,6 +79,10 @@ const PUBLIER_PROLOGUE: usize = 16;
 const APPEL_TASSER: usize = 0x52;
 const APPEL_TRANSFERER: usize = 0x5b;
 const APPEL_DISTRIBUER: usize = 0x184;
+/// Distribution avec observateur de file (`140060450`), et `lea r15,[rip+…]` de la table du
+/// foncteur qu'on lui passe (`140fba430`) : déplacement en `+0x3c`, instruction suivante en `+0x40`.
+const APPEL_DISTRIBUER_OBS: usize = 0x152;
+const LEA_FONCTEUR: usize = 0x39;
 
 /// File d'événements (`publieur + 0x20 + i * 0x90`) : deux tampons de 0x18 octets (adresse,
 /// capacité u32 en `+8`, taille u32 en `+0x10`), compteur de bascule en `+0x30` (le tampon lu est
@@ -172,6 +176,12 @@ static PUBLIER_TRAMP: AtomicUsize = AtomicUsize::new(0);
 static TASSER: AtomicUsize = AtomicUsize::new(0);
 static TRANSFERER: AtomicUsize = AtomicUsize::new(0);
 static DISTRIBUER: AtomicUsize = AtomicUsize::new(0);
+static DISTRIBUER_OBS: AtomicUsize = AtomicUsize::new(0);
+static FONCTEUR_VTABLE: AtomicUsize = AtomicUsize::new(0);
+static VARIANTE_VUE: AtomicBool = AtomicBool::new(false);
+/// Lignes de diagnostic : passages des types 8 et 15 dans la publication (par partie).
+static DIAG: AtomicU32 = AtomicU32::new(0);
+const MAX_DIAG: u32 = 40;
 /// L'activation du prochain tour local sera retenue (posé par le Lua à chaque fin de tour).
 static ARME: AtomicBool = AtomicBool::new(false);
 /// La publication est arrêtée juste avant l'activation du tour local : l'interface est encore
@@ -260,6 +270,7 @@ unsafe extern "system" fn hook_minuteur(this: usize) {
 }
 
 type Distribuer = unsafe extern "system" fn(usize, *const [usize; 3], *mut usize, usize) -> u8;
+type DistribuerObs = unsafe extern "system" fn(usize, *const [usize; 3], *mut usize, usize, usize) -> u8;
 
 /// L'enregistrement est-il l'activation du tour local ?
 unsafe fn activation_locale(rec: usize) -> bool {
@@ -275,15 +286,6 @@ unsafe fn activation_locale(rec: usize) -> bool {
 /// l'activation du tour local et la garde pour le départ. Les événements qui suivent restent dans
 /// les files, dans l'ordre, et partent avec elle.
 unsafe extern "system" fn hook_publier(p: usize) {
-    let q0 = p + 0x20 + rd::<u32>(p + 4) as usize * 0x90;
-    if rd::<usize>(q0 + F_ENREGISTREUR) != 0 {
-        // Enregistreur d'événements (outil de développement) : l'originale, sans retenue.
-        if RETENU.swap(false, Ordering::Relaxed) | REPRISE.swap(false, Ordering::Relaxed) {
-            log("depart : enregistreur d'événements actif, publication rendue au jeu");
-        }
-        let real: unsafe extern "system" fn(usize) = std::mem::transmute(PUBLIER_TRAMP.load(Ordering::Relaxed));
-        return real(p);
-    }
     let garde = &*((p + P_GARDE) as *const AtomicU32);
     if garde.compare_exchange(0, 1, Ordering::Acquire, Ordering::Relaxed).is_err() {
         return;
@@ -298,6 +300,7 @@ unsafe extern "system" fn hook_publier(p: usize) {
     let tasser: unsafe extern "system" fn(usize) = std::mem::transmute(TASSER.load(Ordering::Relaxed));
     let transferer: unsafe extern "system" fn(usize) = std::mem::transmute(TRANSFERER.load(Ordering::Relaxed));
     let distribuer: Distribuer = std::mem::transmute(DISTRIBUER.load(Ordering::Relaxed));
+    let distribuer_obs: DistribuerObs = std::mem::transmute(DISTRIBUER_OBS.load(Ordering::Relaxed));
     // Reprise : les enregistrements retenus sont encore dans la file lue, après le décalage
     // distribué ; un tassement les effacerait.
     let mut reprise = REPRISE.swap(false, Ordering::Relaxed);
@@ -320,24 +323,56 @@ unsafe extern "system" fn hook_publier(p: usize) {
         let fin = base + taille as usize;
         let mut cur = base + rd::<u32>(q + F_LU) as usize;
         let mut distribue = false;
+        // Observateur de la file (`q + 0x40`, présent en partie) : l'originale passe alors par
+        // `140060450` avec un foncteur sur la pile (table `140fba430`, file en `+8`, pointeur sur
+        // lui-même en `+0x38`), détruit après par sa méthode `+0x20`.
+        let observe = rd::<usize>(q + F_ENREGISTREUR) != 0;
+        let mut foncteur = [0usize; 8];
+        foncteur[0] = FONCTEUR_VTABLE.load(Ordering::Relaxed);
+        foncteur[1] = q;
+        foncteur[7] = foncteur.as_mut_ptr() as usize;
+        if !VARIANTE_VUE.swap(true, Ordering::Relaxed) {
+            log(&format!("depart : publication {} observateur de file", if observe { "avec" } else { "sans" }));
+        }
+        let mut retenu = false;
         while taille != 0 && cur < fin {
+            let genre = rd::<u32>(cur + E_TYPE);
+            if (genre == TYPE_DEBUT_LOCAL || genre == TYPE_ACTIVE) && DIAG.fetch_add(1, Ordering::Relaxed) < MAX_DIAG {
+                log(&format!(
+                    "depart : publication du type {genre} (joueur {}), {}",
+                    rd::<i32>(cur + E_DONNEES + ACTIVE_JOUEUR),
+                    if ARME.load(Ordering::Relaxed) { "armé" } else { "pas armé" }
+                ));
+            }
             if ARME.load(Ordering::Relaxed) && activation_locale(cur) {
                 *((q + F_LU) as *mut u32) = (cur - base) as u32;
                 ARME.store(false, Ordering::Relaxed);
                 RETENU.store(true, Ordering::Relaxed);
                 attendre(JOUEUR.load(Ordering::Relaxed), EXECUTE_SCRIPT.load(Ordering::Relaxed));
-                log(&format!("depart : interface retenue avant le début du tour (type {})", rd::<u32>(cur + E_TYPE)));
-                garde.store(0, Ordering::Release);
-                return;
+                log(&format!("depart : interface retenue avant le début du tour (type {genre})"));
+                retenu = true;
+                break;
             }
             // Le distributeur va jusqu'à la fin du tampon qu'on lui donne : un tampon réduit à
             // cet enregistrement.
             let suivant = cur + rd::<u32>(cur) as usize;
             let un = [base, 0, suivant - base];
             let mut c = cur;
-            distribuer(p + 8, &un, &mut c, table);
+            if observe {
+                distribuer_obs(p + 8, &un, &mut c, table, foncteur.as_mut_ptr() as usize);
+            } else {
+                distribuer(p + 8, &un, &mut c, table);
+            }
             cur = suivant;
             distribue = true;
+        }
+        if observe {
+            let detruire: unsafe extern "system" fn(usize, u8) = std::mem::transmute(rd::<usize>(foncteur[0] + 0x20));
+            detruire(foncteur.as_mut_ptr() as usize, 0);
+        }
+        if retenu {
+            garde.store(0, Ordering::Release);
+            return;
         }
         *((q + F_LU) as *mut u32) = rd::<u32>(tampon + 0x10);
         if !distribue {
@@ -655,7 +690,8 @@ unsafe fn publier(l: *mut c_void) -> bool {
 // Scripts.
 
 const BLOC_PARTIE: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_depart.lua"));
-const BLOC_CHAT: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_depart_chat.lua"));
+const BLOC_PANNEAU: &str = include_str!("ui_depart_panneau.lua");
+const BLOC_CHAT: &str =concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_depart_chat.lua"));
 
 /// Le script suivi de son bloc, si c'est `InGame.lua` (ou son remplaçant du même nom, celui de
 /// MPH) ou `ChatPanel.lua` (que MPH inclut). Le bloc d'InGame coupe aussi la synchro de tour de
@@ -665,6 +701,8 @@ pub fn patch(chunk: &str, src: &[u8]) -> Option<(Vec<u8>, &'static str)> {
         (BLOC_PARTIE, "départ simultané et synchro de tour de MPH coupée")
     } else if is_file(chunk, "ChatPanel.lua") {
         (BLOC_CHAT, "signaux du départ simultané cachés")
+    } else if is_file(chunk, "ActionPanel.lua") {
+        (BLOC_PANNEAU, "bouton de fin de tour en attente pendant la retenue du début de tour")
     } else {
         return None;
     };
@@ -741,11 +779,18 @@ unsafe fn poser_publication(exe: usize) -> Result<usize, String> {
     };
     let appel = |off: usize| cible_appel(at + off).ok_or_else(|| format!("appel attendu en +{off:#x}"));
     let (tasser, transferer, distribuer) = (appel(APPEL_TASSER)?, appel(APPEL_TRANSFERER)?, appel(APPEL_DISTRIBUER)?);
+    let distribuer_obs = appel(APPEL_DISTRIBUER_OBS)?;
+    if rd::<[u8; 3]>(at + LEA_FONCTEUR) != [0x4c, 0x8d, 0x3d] {
+        return Err("lea de la table du foncteur attendu".into());
+    }
+    let vtable = (at as i64 + LEA_FONCTEUR as i64 + 7 + rd::<i32>(at + LEA_FONCTEUR + 3) as i64) as usize;
     verifier_types(exe)?;
     let prologue = std::slice::from_raw_parts(at as *const u8, PUBLIER_PROLOGUE).to_vec();
     TASSER.store(tasser, Ordering::Relaxed);
     TRANSFERER.store(transferer, Ordering::Relaxed);
     DISTRIBUER.store(distribuer, Ordering::Relaxed);
+    DISTRIBUER_OBS.store(distribuer_obs, Ordering::Relaxed);
+    FONCTEUR_VTABLE.store(vtable, Ordering::Relaxed);
     let t = patch::install_at("publication des événements", at, &prologue, at + PUBLIER_PROLOGUE, hook_publier as *const () as usize)?;
     PUBLIER_TRAMP.store(t, Ordering::Relaxed);
     PUBLIER_SITE.store(at, Ordering::Relaxed);
@@ -758,6 +803,8 @@ pub fn reset() {
     ARME.store(false, Ordering::Relaxed);
     RETENU.store(false, Ordering::Relaxed);
     REPRISE.store(false, Ordering::Relaxed);
+    DIAG.store(0, Ordering::Relaxed);
+    VARIANTE_VUE.store(false, Ordering::Relaxed);
     FORCE.store(false, Ordering::Relaxed);
     MINUTEUR_THIS.store(0, Ordering::Relaxed);
     REJETS.store(0, Ordering::Relaxed);
@@ -809,7 +856,8 @@ mod tests {
             assert_eq!(find_sig(&data, MINUTEUR_SIG).len(), 1, "{path}");
             let publier = find_sig(&data, PUBLIER_SIG);
             assert_eq!(publier.len(), 1, "{path}");
-            for off in [APPEL_TASSER, APPEL_TRANSFERER, APPEL_DISTRIBUER] {
+            assert_eq!(&data[publier[0] + LEA_FONCTEUR..publier[0] + LEA_FONCTEUR + 3], &[0x4c, 0x8d, 0x3d]);
+            for off in [APPEL_TASSER, APPEL_TRANSFERER, APPEL_DISTRIBUER, APPEL_DISTRIBUER_OBS] {
                 assert_eq!(data[publier[0] + off], 0xe8, "{path} : appel en +{off:#x}");
             }
             // Le prologue recopié s'arrête sur une fin d'instruction (xor eax,eax).
@@ -833,6 +881,8 @@ mod tests {
         assert!(patch(r"C:\x\Popups\ChatPanel.lua", b"x").is_some());
         assert!(patch(r"C:\x\chatpanel_MPH.lua", b"x").is_none(), "MPH inclut ChatPanel.lua, qui reçoit le bloc");
         assert!(patch(r"C:\x\InGameTopOptionsMenu.lua", b"x").is_none());
+        assert!(patch(r"C:\x\Base\Assets\UI\ActionPanel.lua", b"x").is_some());
+        assert!(patch(r"C:\x\ActionPanel_Expansion2.lua", b"x").is_none(), "il inclut ActionPanel.lua, qui reçoit le bloc");
         for (name, _) in NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(BLOC_PARTIE.contains(name) || BLOC_CHAT.contains(name), "{name} posée mais pas utilisée");
