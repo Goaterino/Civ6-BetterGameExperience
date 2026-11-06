@@ -5,7 +5,8 @@
 --   correctifs POL actifs ou non ; liste des luxes recalculée si POL ;
 -- - src/ui_congres_vote.lua : pas de fin de tour sur un cache vide, retour au vote et faveur ;
 -- - src/ui_congres_attente.lua : bouton de retour au vote de l'écran d'attente ;
--- - src/ui_congres_fin_auto.lua et src/ui_congres_minuteur.lua.
+-- - src/ui_congres_fin_auto.lua et src/ui_congres_minuteur.lua ;
+-- - src/ui_congres_intro.lua : intro une seule fois par tour et par session.
 
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
 local function ReadFile(path)
@@ -405,5 +406,31 @@ Check(Minuteur(90, 0, "TURNSEG_WORLDCONGRESS_1") == 240, "minuteur : 90 s porté
 Check(Minuteur(300, 0, "TURNSEG_WORLDCONGRESS_2") == 300, "minuteur : un minuteur plus long est gardé");
 Check(Minuteur(90, 0, "TURNSEG_SINGLEPHASE") == 90, "minuteur : rien hors du vote");
 Check(Minuteur(90, 1, "TURNSEG_WORLDCONGRESS_1") == 90, "minuteur : rien sans le minuteur intelligent de MPH");
+
+-- ---------------------------------------------------------------------------------------------
+-- Intro du congrès (ui_congres_intro.lua) : relancée par l'annulation de fin de tour d'un autre joueur.
+local INTRO_PATH = POPUP_PATH:gsub("WorldCongressPopup%.lua$", "WorldCongressIntro.lua");
+local intro = ReadFile(INTRO_PATH) .. "\r\n" .. ReadFile(dir .. "/../src/ui_congres_intro.lua");
+local ie = NewEnv(1, 0);
+ie.sons = 0;
+ie.tour = 100;
+ie.Game.GetCurrentGameTurn = function() return ie.tour; end
+ie.UI.PlaySound = function(s) if s == "WC_Open" then ie.sons = ie.sons + 1; end end
+ie.Controls = Magic;
+ie.ContextPtr = Magic;
+ie.Input = Magic;
+ie.Mouse = Magic;
+ie.PopupPriority = Magic;
+assert(load(Strip(intro), "@WorldCongressIntro.lua", "t", ie))();
+ie.Events.WorldCongressStage1.Fire(0);
+Check(ie.sons == 1, "intro : ouverte au début de la session");
+ie.Events.WorldCongressStage1.Fire(2);
+ie.Events.WorldCongressStage1.Fire(0);
+Check(ie.sons == 1, "intro : pas rouverte par une annulation de fin de tour (" .. ie.sons .. ")");
+ie.Events.WorldCongressStage2.Fire(0);
+Check(ie.sons == 2, "intro : session extraordinaire du même tour ouverte");
+ie.tour = 130;
+ie.Events.WorldCongressStage1.Fire(0);
+Check(ie.sons == 3, "intro : session suivante ouverte");
 
 os.exit(failures == 0 and 0 or 1);

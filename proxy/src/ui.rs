@@ -61,6 +61,7 @@ const ATTENTE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"),
 const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
 const FIN_AUTO_BLOCK: &str = include_str!("ui_congres_fin_auto.lua");
 const MINUTEUR_BLOCK: &str = include_str!("ui_congres_minuteur.lua");
+const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 
 static BOUTONS: AtomicBool = AtomicBool::new(true);
@@ -707,6 +708,25 @@ pub fn patch_congres_attente_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out.into_bytes())
 }
 
+/// WorldCongressIntro.lua suivi de `ui_congres_intro.lua` : l'intro ne s'ouvre qu'une fois par tour
+/// et par session, même si l'annulation de fin de tour d'un autre joueur relance l'événement.
+pub fn patch_congres_intro(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_congres_intro.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    // Les rappels des événements appellent OnOpen par son nom global : l'enveloppe les atteint.
+    for pat in ["function OnOpen(", "OnOpen(1); end", "OnOpen(2); end"] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(INTRO_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// ActionPanel_Expansion2.lua suivi de `ui_congres_fin_auto.lua` : pas de fin de tour automatique
 /// pendant le vote du congrès.
 pub fn patch_fin_auto(src: &[u8]) -> Result<Vec<u8>, String> {
@@ -868,6 +888,18 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                     what.push("fenêtre du congrès en lecture seule pour les spectateurs".into());
                 }
                 what.push("pas de fin de tour sur un cache vide, retour au vote".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if is_file(chunk, "WorldCongressIntro.lua") {
+        return match patch_congres_intro(src) {
+            Ok(text) => {
+                what.push("intro du congrès une seule fois par tour et par session".into());
                 Some(text)
             }
             Err(e) => {
@@ -1436,6 +1468,15 @@ mod tests {
         let description = new.find("LOC_WORLD_CONGRESS_BETWEEN_TURNS_DESCRIPTION").unwrap();
         assert!(description < bouton && bouton < new[description..].find("</Grid>").unwrap() + description);
         assert!(patch_congres_attente_xml(new.as_bytes()).is_err(), "pas deux fois");
+    }
+
+    #[test]
+    fn intro_du_congres_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Additions\WorldCongressIntro.lua")) else { return };
+        let new = patch_congres_intro(&src).unwrap();
+        assert!(new.starts_with(&src) && new.ends_with(INTRO_BLOCK.as_bytes()));
+        assert!(patch_congres_intro(&new).is_err(), "pas deux fois");
+        assert!(is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressIntro.lua", "WorldCongressIntro.lua"));
     }
 
     #[test]

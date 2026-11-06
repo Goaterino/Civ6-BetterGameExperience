@@ -265,6 +265,7 @@ Aucun réglage : ce sont des corrections de bugs.
 | H2b, H1a | en session ordinaire, pas de fin de tour sur une liste vide : attente des résolutions (10 s au plus, puis comportement du jeu) | `ui_congres_vote.lua` | local |
 | H2c | fin de tour automatique relue à chaque vérification, bloquée pendant le vote | `ui_congres_fin_auto.lua` (`ActionPanel_Expansion2.lua`) | local |
 | H1c, H3d | luxes de `WC_Validate_LuxuryBan` recalculés à chaque session | `ui_congres_cibles.lua` (`WorldCongress.lua`) | POL |
+| effet du retour au vote | l'annulation d'un autre joueur relançait l'intro (`WorldCongressStage1`) chez tous : une seule intro par tour et par session (essayé en partie, 2026-11-06) | `ui_congres_intro.lua` (`WorldCongressIntro.lua`) | local |
 
 Choix faits :
 - **Revote.** Les votes ne sont pas retirés à l'annulation : un joueur qui revient au vote puis ne
