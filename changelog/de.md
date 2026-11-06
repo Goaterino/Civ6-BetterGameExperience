@@ -49,7 +49,7 @@ Spielern ohne den Mod spielen.
   - Alle Spieler beginnen ihre Runde gemeinsam. Befehle werden zurückgehalten und der Timer bleibt
     stehen, bis alle fertig geladen haben (höchstens 60 s).
   - Die Runde endet für alle, wenn der Timer des Hosts abläuft.
-  - Die Rundensynchronisation von MPH, die nichts synchronisierte, wird abgeschaltet.
+  - Die alte Rundensynchronisation von MPH wird abgeschaltet.
 - Geladene Partien in der Lobby von MPH: Stadtstaaten verursachen kein „Ungültige Spieleroptionen“
   und keine ausgegraute Bereit-Schaltfläche mehr.
 
@@ -59,21 +59,24 @@ Spielern ohne den Mod spielen.
 - Zuschauer von Better Spectator Mod zählen nicht mehr beim Tourismus. Sie können im Weltkongress
   nicht abstimmen und nicht Ziel einer Resolution sein. Den Kongressbildschirm können sie weiterhin
   ansehen.
-- Marineeinheiten können sich von jedem Bezirk aus (Hafen, Wasserpark, Kanal …) in eine Stadt
-  teleportieren, nicht mehr nur vom Stadtzentrum aus.
+- Marineeinheiten können sich von jedem Marinebezirk aus (Hafen, Wasserpark, Kanal …) in eine Stadt
+  teleportieren, nicht mehr nur vom Stadtzentrum aus, so wie sie sich schon von einer Stadt in jeden
+  Marinebezirk teleportieren konnten (kein Admiral mehr, der auf einem See aus einem Feld
+  feststeckt).
 
 ### Korrekturen der Oberfläche
 - Angriffsschaltflächen (Stadt, Lager, Atomschlag aus einem Silo) werden über den Einheitenflaggen
   gezeichnet, wo man sie anklicken kann.
 - Ein Fernangriff aus einer nicht ausgewählten Stadt braucht einen Klick statt zwei.
-- Im Zielmodus feuert ein Klick auf die Flagge einer feindlichen Einheit auf sie.
+- Im Zielmodus für den Fernangriff einer Stadt oder eines Bezirks feuert ein Klick auf die Flagge
+  einer feindlichen Einheit auf sie.
 - Die Kamera zentriert sich beim Klick auf eine Angriffsschaltfläche nicht mehr (lässt sich wieder
   einschalten).
 - Der Produktions-Rundenzähler berücksichtigt jetzt die Regierungsboni: Faschismus, Autokratie und
   Handelsrepublik.
 - Ein Weltwunder, das nach zwei Tauschvorgängen aus der Produktionswarteschlange fällt, wird wieder
   eingereiht.
-- Die laufende Produktion bleibt sichtbar, wenn man zu einer anderen Stadt wechselt.
+- Die laufende Produktion wird beim Wechsel zu einer anderen Stadt richtig aktualisiert.
 - Die Reichserträge der oberen Leiste aktualisieren sich nach einer Gouverneursaktion oder einer
   Großen Persönlichkeit.
 - *(experimentell)* Tastenkürzel funktionieren weiter, nachdem ein Diplomatiebildschirm das Esc-Menü
@@ -82,16 +85,16 @@ Spielern ohne den Mod spielen.
   nicht mehr.
 - *(experimentell)* Die Siedler-Linse wird nach einer Stadtgründung neu gezeichnet, und zu nah an
   einer Stadt liegende Felder werden als verboten angezeigt.
-- Enter folgt Ihrer Tastenbelegung für „Nächste Aktion“. Umschalt+Enter erzwingt weiterhin das
-  Rundenende.
+- Enter folgt Ihrer Tastenbelegung für „Nächste Aktion“: Sie können die Taste dort also entfernen
+  und einer anderen Belegung zuweisen. Umschalt+Enter erzwingt weiterhin das Rundenende.
 - Der Bewegungsbereich wird für eine Einheit auf einem feindlichen verteidigungsfähigen Bezirk
   angezeigt.
-- Kartenmarkierungen werden nicht mehr neu aufgebaut, wenn sich nichts geändert hat: weniger Ruckler
-  im Mehrspielermodus.
+- *(experimentell)* Kartenmarkierungen werden nicht mehr neu aufgebaut, wenn sich nichts geändert
+  hat: weniger Ruckler im Mehrspielermodus.
 
 ### Integrierte Oberflächen-Mods
 Jeder lässt sich im Reiter BetterGameDLLs abschalten. Haben Sie auch den Workshop-Mod, ersetzt ihn
-die integrierte Version.
+die in BGD integrierte Version.
 - **Ladungen der Handwerker** auf den Einheitenflaggen (nach Better Builder Charges Tracking, von
   wltk).
 - **Verbleibende Runden der Handelswege** auf den Flaggen Ihrer Händler (neu).
@@ -111,7 +114,8 @@ die integrierte Version.
 ### Leistung und Komfort
 - Schnellere Rundenberechnung:
   - Während einer Kaskade von Kriegserklärungen werden Stadt- und Diplomatiedaten nur einmal
-    aktualisiert. Die gemessene Runde war 2,4 s schneller (−82 % bei der Kaskade).
+    aktualisiert. Die gemessene Runde war 2,4 s schneller (−82 % bei der Kaskade): deutlich weniger
+    Ruckler, wenn Stadtstaaten in einem Krieg die Seite wechseln.
   - Zwei Caches beschleunigen die Runde der KI: baubare Modernisierungen und Feld-Erträge.
   - Die Ergebnisse sind identisch mit dem Grundspiel: sicher mit Spielern ohne den Mod.
 - Die Animation von Atomschlägen läuft mit Schnellkampf 20-mal schneller: etwa 0,6 s statt 11 s. Nur
@@ -119,10 +123,11 @@ die integrierte Version.
 - Der Bildratenbegrenzer bietet 45, 75, 90 und 100 FPS.
 
 ### Bekannte Einschränkungen
-- Der Mod zielt auf die aktuelle Version des Spiels. Nach einem Spiel-Update schalten sich die
-  betroffenen Funktionen von selbst ab, bis BetterGameDLLs aktualisiert ist.
+- Der Mod zielt auf die aktuelle offizielle Version des Spiels. Nach einem Spiel-Update schalten
+  sich die betroffenen Funktionen von selbst ab, bis BetterGameDLLs aktualisiert ist.
 - Ein Spieler, der mitten in der Partie ohne den Mod beitritt, während Korrekturen **[alle Spieler]**
   aktiv sind, wird desynchronisiert. Der Host wird gewarnt.
-- Mit *(experimentell)* markierte Korrekturen wurden noch nicht in einer echten Partie getestet.
+- Mit *(experimentell)* markierte Korrekturen wurden noch nicht in einer echten Partie getestet,
+  oder ihre Wirkung ist noch nicht vollständig gemessen.
 - Die Übersetzungen außer Englisch und Französisch wurden noch nicht von Muttersprachlern geprüft.
   Korrekturen sind willkommen.
