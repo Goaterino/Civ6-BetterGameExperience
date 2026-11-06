@@ -292,16 +292,26 @@ touche pas au passage de tour. Contexte et mesures : [nuke/README.md](../nuke/RE
 - **DX12 et DX11.** Les deux exe sont compilés des mêmes sources, avec les mêmes fonctions à
   d'autres adresses. La table `EXES` donne un agencement par exe :
 
-  | | DX12 | DX11 |
+  | build 15296837 | DX12 | DX11 |
   |---|---|---|
   | CombatVisBegin / End | `1400f0400` / `1400f0460` | `1400eff70` / `1400effd0` |
   | configuration utilisateur, IsQuickCombat | `140118ca0`, `140119880` | `1401182e0`, `140118ec0` |
   | objet application, échelle de temps | `[1412fa2c8]` + `0x559c` | `[1412c2c88]` + `0x557c` |
 
-  Les adresses DX11 viennent du projet Ghidra `civ6exe11`. Elles ont été retrouvées par les chaînes
-  `SerialEvent::CombatVis*` (fonctions d'enregistrement), `IsQuickCombat` (sa closure Lua) et
-  `timescale` (commande de console). Le module prend l'agencement dont tous les octets vérifiés
-  correspondent. Avec un autre build, il ne pose rien et le note dans le journal.
+  | build 26407122 (exe du 2026-11-02) | DX12 | DX11 |
+  |---|---|---|
+  | CombatVisBegin / End | `1400f0390` / `1400f03f0` | `1400ef640` / `1400ef6a0` |
+  | configuration utilisateur, IsQuickCombat | `140118a50`, `140119630` | `140117b60`, `140118740` |
+  | objet application, échelle de temps | `[1412fb2c8]` + `0x559c` | `[1412c3c88]` + `0x557c` |
+
+  Les adresses DX11 du premier build viennent du projet Ghidra `civ6exe11`. Elles ont été
+  retrouvées par les chaînes `SerialEvent::CombatVis*` (fonctions d'enregistrement), `IsQuickCombat`
+  (sa closure Lua) et `timescale` (commande de console). Celles du second build, par le même chemin
+  dans [tests/wmd_sites.py](tests/wmd_sites.py), qui retrouve en plus l'objet application par son
+  constructeur (celui qui pose 1.0 à l'échelle de temps). Le module prend l'agencement dont tous
+  les octets vérifiés correspondent. Avec un autre build, il ne pose rien et le note dans le
+  journal. Le test `wmd::tests::agencement_des_exe_installes` échoue alors : il faut relancer le
+  script et ajouter un agencement à `EXES`.
 - **Les garde-fous.** L'échelle d'origine revient à `CombatVisEnd`, ou au bout de 5 s. Elle revient
   aussi à chaque nouvelle partie et au déchargement du proxy.
 - **Le journal.** Une ligne `wmd : visualisation accélérée` par frappe, puis

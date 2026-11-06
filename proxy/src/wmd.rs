@@ -71,6 +71,8 @@ struct ExeSite {
 /// Ce dont le module a besoin dans un exe. Adresses Ghidra : projets civ6exe (DX12) et civ6exe11
 /// (DX11), retrouvés dans le second par les chaînes « SerialEvent::CombatVis* » (fonctions
 /// d'enregistrement), « IsQuickCombat » (sa closure Lua) et « timescale » (commande de console).
+/// Celles du build 26407122 (exe du 2026-11-02) sont retrouvées par le même chemin, plus le
+/// constructeur de l'application (celui qui pose 1.0 à l'échelle de temps) pour son pointeur global.
 struct Exe {
     name: &'static str,
     vis_begin: ExeSite,
@@ -89,9 +91,28 @@ const fn dispatch_prologue(disp: [u8; 4]) -> [u8; 17] {
     [0x48, 0x89, 0x5c, 0x24, 0x08, 0x57, 0x48, 0x83, 0xec, 0x40, 0x48, 0x8b, 0x05, disp[0], disp[1], disp[2], disp[3]]
 }
 
-const EXES: [Exe; 2] = [
+/// Un agencement par exe connu : le premier dont tous les octets vérifiés correspondent est pris.
+const EXES: [Exe; 4] = [
     Exe {
-        name: "DX12",
+        name: "DX12, build 26407122",
+        vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400f_0390, expected: dispatch_prologue([0xe7, 0xdd, 0x21, 0x02]) },
+        vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400f_03f0, expected: dispatch_prologue([0x97, 0xdd, 0x21, 0x02]) },
+        user_config: 0x1_4011_8a50,
+        is_quick_combat: 0x1_4011_9630,
+        app: 0x1_412f_b2c8,
+        timescale: 0x559c,
+    },
+    Exe {
+        name: "DX11, build 26407122",
+        vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400e_f640, expected: dispatch_prologue([0xb7, 0x74, 0x1e, 0x02]) },
+        vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400e_f6a0, expected: dispatch_prologue([0x67, 0x74, 0x1e, 0x02]) },
+        user_config: 0x1_4011_7b60,
+        is_quick_combat: 0x1_4011_8740,
+        app: 0x1_412c_3c88,
+        timescale: 0x557c,
+    },
+    Exe {
+        name: "DX12, build 15296837",
         vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400f_0400, expected: dispatch_prologue([0x77, 0xcd, 0x21, 0x02]) },
         vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400f_0460, expected: dispatch_prologue([0x27, 0xcd, 0x21, 0x02]) },
         user_config: 0x1_4011_8ca0,
@@ -100,7 +121,7 @@ const EXES: [Exe; 2] = [
         timescale: 0x559c,
     },
     Exe {
-        name: "DX11",
+        name: "DX11, build 15296837",
         vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400e_ff70, expected: dispatch_prologue([0x87, 0x5b, 0x1e, 0x02]) },
         vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400e_ffd0, expected: dispatch_prologue([0x37, 0x5b, 0x1e, 0x02]) },
         user_config: 0x1_4011_82e0,
@@ -318,7 +339,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
     }
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
     let Some(index) = EXES.iter().position(|e| matches(exe, e)) else {
-        log("wmd : exe inattendu (ni DX12 ni DX11 de cette version), aucun détour");
+        log("wmd : exe inattendu (aucun agencement connu de DX12 ni de DX11), aucun détour");
         return;
     };
     if let Err(e) = patch::check(base, &[DRAIN, ICBM, UNIT_WMD]) {
@@ -369,6 +390,41 @@ pub unsafe fn on_proxy_unload() {
         for (site, tramp) in [(&DRAIN, &DRAIN_TRAMP), (&ICBM, &ICBM_TRAMP), (&UNIT_WMD, &UNIT_TRAMP)] {
             if tramp.load(Ordering::Relaxed) != 0 {
                 patch::restore(base, site);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const GAME: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI";
+
+    /// Chaque exe installé, projeté comme image sans être exécuté, a exactement un agencement connu,
+    /// de son propre type (DX12 ou DX11). Échoue après une mise à jour du jeu qui déplace le code.
+    #[test]
+    fn agencement_des_exe_installes() {
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn LoadLibraryExW(name: *const u16, file: *mut std::ffi::c_void, flags: u32) -> win::HMODULE;
+            fn FreeLibrary(module: win::HMODULE) -> i32;
+        }
+        const LOAD_LIBRARY_AS_IMAGE_RESOURCE: u32 = 0x20;
+        for (exe, kind) in [("CivilizationVI_DX12.exe", "DX12"), ("CivilizationVI.exe", "DX11")] {
+            let path = format!(r"{GAME}\Base\Binaries\Win64Steam\{exe}");
+            if !std::path::Path::new(&path).exists() {
+                eprintln!("absent, test sauté : {path}");
+                continue;
+            }
+            unsafe {
+                let h = LoadLibraryExW(win::wide(&path).as_ptr(), std::ptr::null_mut(), LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+                assert!(!h.is_null(), "{exe}");
+                let base = h as usize & !3;
+                let found: Vec<&str> = EXES.iter().filter(|e| matches(base, e)).map(|e| e.name).collect();
+                FreeLibrary(h);
+                assert_eq!(found.len(), 1, "{exe} : {found:?}");
+                assert!(found[0].starts_with(kind), "{exe} : {found:?}");
             }
         }
     }

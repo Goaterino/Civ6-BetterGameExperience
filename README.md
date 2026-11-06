@@ -51,7 +51,7 @@ Prérequis : Rust (`stable-x86_64-pc-windows-gnu` suffit), Python 3.10+.
 
 ```bash
 python -m venv .venv
-.venv/Scripts/python.exe -m pip install frida
+.venv/Scripts/python.exe -m pip install frida capstone numpy
 ```
 
 Les commandes des README se lancent depuis la racine du dépôt.

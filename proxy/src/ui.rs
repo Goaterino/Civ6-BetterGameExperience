@@ -1021,7 +1021,7 @@ mod tests {
     }
 
     /// L'entrée luaL_loadbuffer des vrais exe, projetés comme images sans être exécutés : celle que
-    /// Ghidra montre en DX12 (`140fa54e8`).
+    /// Ghidra montre en DX12 (`140fa54e8` au build 15296837, `140fa62e0` au build 26407122).
     #[test]
     fn import_havokscript_des_exe() {
         #[link(name = "kernel32")]
@@ -1043,7 +1043,7 @@ mod tests {
                 let base = h as usize & !3;
                 let slot = iat_slot(base, "HavokScript_FinalRelease.dll", "luaL_loadbuffer").unwrap_or_else(|| panic!("{exe}"));
                 if exe == "CivilizationVI_DX12.exe" {
-                    assert_eq!(slot - base, 0xfa54e8);
+                    assert!([0xfa54e8, 0xfa62e0].contains(&(slot - base)), "{:#x}", slot - base);
                 }
                 FreeLibrary(h);
             }
@@ -1052,7 +1052,8 @@ mod tests {
 
     #[test]
     fn signature_xml() {
-        for (exe, expected) in [("CivilizationVI_DX12.exe", 0xa2d280usize), ("CivilizationVI.exe", 0xa1f3f0)] {
+        // Adresse de chaque build connu : 15296837, puis 26407122 (exe du 2026-11-02).
+        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80])] {
             let Some(bytes) = read(format!(r"{GAME}\Base\Binaries\Win64Steam\{exe}")) else { continue };
             // Adresse virtuelle relative de chaque occurrence, par les en-têtes de sections.
             let base = bytes.as_ptr() as usize;
@@ -1069,7 +1070,7 @@ mod tests {
                     })
                     .unwrap()
             };
-            assert_eq!(rva, expected, "{exe}");
+            assert!(expected.contains(&rva), "{exe} : {rva:#x}");
         }
     }
 }

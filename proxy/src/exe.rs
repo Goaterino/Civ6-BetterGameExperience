@@ -4,7 +4,7 @@
 //! - **Table d'imports.** `iat_slot` trouve l'entrée d'un import ; `write_slot` la remplace.
 //!   Deux proxys s'y enchaînent d'eux-mêmes : le second lit l'accroche du premier comme fonction
 //!   d'origine.
-//! - **Lecture XML.** `140a2d280` (DX12 ; `140a1f3f0` en DX11) lit un fichier XML entier dans un
+//! - **Lecture XML.** `140a2d280` (DX12 ; `140a1f3f0` en DX11 ; `140a2d700` et `140a1fc80` au build 26407122) lit un fichier XML entier dans un
 //!   tampon du jeu (`GameBuf`). Elle est retrouvée par une signature. Le proxy de démarrage la
 //!   détourne le premier, au lancement : le proxy de GameCore trouve alors à sa place le
 //!   `jmp [rip+0]` de ce détour, et l'enchaîne (`hook_read_xml`).
