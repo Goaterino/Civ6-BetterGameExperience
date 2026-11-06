@@ -48,7 +48,7 @@ Everything else only affects your own machine. It is safe to play with people wh
   - Every player starts their turn together. Orders are held, and the timer stays stopped, until
     everyone has finished loading (60 s at most).
   - The turn ends for everyone when the host's timer runs out.
-  - MPH's turn sync, which did not sync anything, is turned off.
+  - MPH's old turn sync is turned off.
 - Loaded games in MPH's lobby: city-states no longer cause "Invalid player options" and a greyed-out
   Ready button.
 
@@ -57,32 +57,32 @@ Everything else only affects your own machine. It is safe to play with people wh
   focus).
 - Better Spectator Mod spectators no longer count in tourism. They can't vote in the World Congress
   and can't be the target of a resolution. They can still view the Congress screen.
-- Naval units can teleport to a city from any district (Harbor, Water Park, Canal…), not only from
-  a city center.
+- Naval units can teleport to a city from any naval district (Harbor, Water Park, Canal…), not only from
+  a city center, just like they could teleport from a city to any naval district. (no more admiral stuck on a one tile lake)
 
 ### Interface fixes
 - Attack buttons (city, encampment, nuclear strike from a silo) are drawn above unit flags, where you
   can click them.
 - Ranged attack from a city that isn't selected takes one click, not two.
-- In targeting mode, clicking an enemy unit's flag fires at it.
+- In city/district ranged attack targeting mode, clicking an enemy unit's flag fires at it.
 - The camera no longer recenters when you click an attack button (this can be turned back on).
 - The production turn counter now includes government bonuses: Fascism, Autocracy and Merchant
   Republic.
 - A wonder dropped from the production queue after two swaps is put back.
-- The current production stays visible when you switch to another city.
+- The current production properly updates when you switch to another city.
 - The top bar's empire yields update after a governor action or a great person.
 - *(experimental)* Keyboard shortcuts no longer stop working after a diplomacy screen closes the Esc
   menu, or after a double Congress popup.
 - Esc now closes the Envoys screen properly, so pending envoys no longer block the end of the turn.
 - *(experimental)* The Settler lens is redrawn after a city is founded, and tiles too close to a city
   are shown as forbidden.
-- Enter follows your "Next action" key binding. Shift+Enter still forces the end of the turn.
+- Enter follows your "Next action" key binding, meaning you can remove it for another keybind. Shift+Enter still forces the end of the turn.
 - The movement range now shows for a unit on an enemy defensible district.
-- Map pins are no longer rebuilt when nothing changed, which means less lag in multiplayer.
+- *(experimental)* Map pins are no longer rebuilt when nothing changed, which means less lag in multiplayer.
 
 ### Built-in interface mods
 Each one can be turned off in the BetterGameDLLs tab. If you also have the Workshop mod, the built-in
-version replaces it.
+version from BGD replaces it.
 - **Builder charges** on unit flags (from Better Builder Charges Tracking, by wltk).
 - **Trade route turns remaining** on your traders' flags (new).
 - **Clear notifications** button (from NotificationClear, by 336tarot).
@@ -100,7 +100,7 @@ version replaces it.
 ### Performance and comfort
 - Faster turn processing:
   - During a cascade of war declarations, city and diplomacy updates happen only once. The measured
-    turn was 2.4 s faster (−82 % on the cascade).
+    turn was 2.4 s faster (−82 % on the cascade). => drastically reduced lag from city-states switching sides in a war.
   - Two caches speed up the AI's turn: buildable improvements and tile yields.
   - Results are identical to the base game, so these are safe with players who don't have the mod.
 - Nuclear strike animation runs 20× faster when Quick Combat is on: about 0.6 s instead of 11 s.
@@ -108,10 +108,10 @@ version replaces it.
 - The frame limiter offers 45, 75, 90 and 100 FPS.
 
 ### Known limitations
-- The mod targets the current game build. After a game update, the affected features turn off on
+- The mod targets the current official game build. After a game update, the affected features turn off on
   their own until BetterGameDLLs is updated.
 - A player who joins mid-game without the mod while **[all players]** fixes are on will desync. The
   host is warned.
-- Fixes marked *(experimental)* haven't been tested in a real game yet.
+- Fixes marked *(experimental)* haven't been tested in a real game yet, or their impact has yet to be fully measured.
 - Translations other than English and French were made without a native speaker's review. Corrections
   are welcome.
