@@ -3,7 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File startup_proxy\install.ps1 -Uninstall
 # Aucun fichier du jeu n'est remplacé : une vérification des fichiers ou une mise à jour par Steam ne
 # retire pas le proxy. C'est lui qui charge le proxy de GameCore (proxy\install.ps1).
-# Une installation d'avant la version 0.4 (proxy à la place de DatabaseDLL_FinalRelease.dll, original
+# Une installation de la v0.3.0 ou d'avant (proxy à la place de DatabaseDLL_FinalRelease.dll, original
 # sous DatabaseDLL_FinalRelease_orig.dll) est d'abord remise en place, comme le fait l'installeur.
 param(
     [switch]$Uninstall,

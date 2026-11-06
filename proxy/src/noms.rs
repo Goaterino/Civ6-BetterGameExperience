@@ -17,6 +17,6 @@ pub const GAMECORE_PROXY: &str = "BGD_GameCore_XP2.dll";
 /// Proxy de démarrage, `Base\Binaries\Win64Steam`.
 pub const DEMARRAGE: &str = "winmm.dll";
 
-/// Jusqu'à la version 0.3 : chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
+/// Jusqu'à la v0.3.0 : chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
 /// L'installeur remet ces originaux en place.
 pub const ANCIENS: [(&str, &str); 2] = [("DLC/Expansion2/Binaries/Win64", GAMECORE), ("Base/Binaries/Win64Steam", "DatabaseDLL_FinalRelease.dll")];

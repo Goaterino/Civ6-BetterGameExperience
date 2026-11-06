@@ -15,7 +15,7 @@ qu'un par couple (événement, joueur), à la fin de la cascade.
   proxy à la place. Aucun fichier du dépôt Steam n'est remplacé : une vérification des fichiers ou
   une mise à jour du jeu ne retire pas le proxy. Les noms sont dans [src/noms.rs](src/noms.rs),
   communs aux proxys et à l'installeur.
-- **Jusqu'à la version 0.3**, le proxy prenait le nom de l'original, renommé
+- **Jusqu'à la v0.3.0**, le proxy prenait le nom de l'original, renommé
   `GameCore_XP2_FinalRelease_orig.dll`. Steam remettait l'original à chaque vérification des
   fichiers ou mise à jour, y compris celle qu'il traite avant de télécharger un mod du Workshop en
   rejoignant un salon. L'installeur et `install.ps1` remettent ces anciennes installations en place.
@@ -118,7 +118,7 @@ et le proxy récupère ce module tel quel.
 ```
 
 **Installation**, jeu fermé. Le script :
-- remet en place une installation d'avant la version 0.4 (l'original sous `_orig`), et retire un
+- remet en place une installation de la v0.3.0 ou d'avant (l'original sous `_orig`), et retire un
   `_orig` périmé à côté d'un original remis par Steam ;
 - copie le proxy sous le nom `BGD_GameCore_XP2.dll`, et `rollover_proxy.cfg` ;
 - retire les anciens prototypes posés à côté de l'exe.

@@ -15,8 +15,8 @@ use std::sync::OnceLock;
 
 static REAL: OnceLock<usize> = OnceLock::new();
 
-/// L'originale, à côté du proxy. Un proxy posé sous le nom de l'original (installation d'avant la
-/// version 0.4) se chargerait lui-même : il ne charge rien.
+/// L'originale, à côté du proxy. Un proxy posé sous le nom de l'original (installation de la
+/// v0.3.0 ou d'avant) se chargerait lui-même : il ne charge rien.
 fn original_path() -> Result<std::path::PathBuf, String> {
     let module = crate::self_path().ok_or("chemin du proxy introuvable")?;
     let name = module.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();

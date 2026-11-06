@@ -3,7 +3,7 @@
 //! vérification des fichiers ou une mise à jour du jeu par Steam ne les retire pas.
 //! `rollover_proxy.cfg` n'est pas touché : sans lui, le proxy prend ses réglages par défaut.
 //!
-//! Jusqu'à la version 0.3, chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
+//! Jusqu'à la v0.3.0, chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
 //! L'installation et la désinstallation remettent ces originaux en place.
 
 use std::fs;
@@ -38,7 +38,7 @@ pub enum State {
     Absent,
     /// Un fichier de ce nom qui n'est pas de BetterGameDLLs (une autre `winmm.dll`, d'un autre mod).
     Foreign,
-    /// Ancien proxy posé à la place d'un original (installation d'avant la version 0.4).
+    /// Ancien proxy posé à la place d'un original (installation de la v0.3.0 ou d'avant).
     Old,
     /// Proxy posé, d'une autre version que la release (ou release inconnue).
     Installed,
@@ -156,7 +156,7 @@ fn writable(game: &Path) -> bool {
     })
 }
 
-/// Remet les originaux d'une installation d'avant la version 0.4. Un `_orig` à côté d'un original
+/// Remet les originaux d'une installation de la v0.3.0 ou d'avant. Un `_orig` à côté d'un original
 /// en place vient d'une installation écrasée par Steam (vérification des fichiers, mise à jour) :
 /// l'original remis par Steam fait foi, le `_orig` est retiré.
 fn restore_old(game: &Path) -> Result<(), String> {

@@ -15,7 +15,7 @@ Au menu principal, il propose les nouvelles versions (voir
 Aucun fichier du dépôt Steam ne doit être remplacé : Steam remet les originaux à chaque
 vérification des fichiers ou mise à jour du jeu. Il en traite une avant de télécharger un mod du
 Workshop : rejoindre un salon qui demande un mod suffisait à désinstaller les proxys jusqu'à la
-version 0.3, qui remplaçaient `DatabaseDLL_FinalRelease.dll` et `GameCore_XP2_FinalRelease.dll`.
+v0.3.0, qui remplaçaient `DatabaseDLL_FinalRelease.dll` et `GameCore_XP2_FinalRelease.dll`.
 Steam ne supprime pas, en revanche, les fichiers qui ne sont pas dans son dépôt.
 
 Les deux exe (DX11 et DX12) importent statiquement, depuis System32, des DLL de Windows qui ne sont
@@ -338,8 +338,8 @@ cd startup_proxy && cargo build --release
   .venv/Scripts/python.exe -I startup_proxy/tests/check_relais.py startup_proxy/target/release/winmm.dll <dossier temporaire>
   ```
 
-**Installation**, jeu fermé. Le script remet d'abord en place une installation d'avant la version
-0.4 (l'original sous `DatabaseDLL_FinalRelease_orig.dll`), puis pose `winmm.dll`. Il refuse
+**Installation**, jeu fermé. Le script remet d'abord en place une installation de la v0.3.0 ou
+d'avant (l'original sous `DatabaseDLL_FinalRelease_orig.dll`), puis pose `winmm.dll`. Il refuse
 d'écraser une `winmm.dll` qui n'est pas la sienne (un autre mod). Une vérification des fichiers ou
 une mise à jour du jeu par Steam ne la retire pas.
 

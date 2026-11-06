@@ -17,7 +17,7 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   ```
   À chaque lancement, l'installeur vérifie la dernière release (environ 1 s, sans fenêtre si tout
   est à jour), installe si besoin derrière une fenêtre de progression, puis lance le jeu et attend
-  sa fin, pour que Steam le voie en cours. Depuis la version 0.4, Steam ne retire plus les proxys :
+  sa fin, pour que Steam le voie en cours. Depuis la release qui suit la v0.3.0, Steam ne retire plus les proxys :
   cette option ne sert plus qu'aux mises à jour de BetterGameDLLs. Un échec (GitHub injoignable, droits refusés) est affiché,
   et le jeu se lance quand même.
 - **`--after-game [<dossier>]`** : lancé par la notification de mise à jour du jeu
@@ -40,11 +40,11 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   (`StartupProxyStatus`, `RolloverProxyStatus`). Une `winmm.dll` qui n'est pas la nôtre (un autre
   mod) n'est pas écrasée : l'installation s'arrête et le dit. `rollover_proxy.cfg` n'est jamais
   touché.
-- **Anciennes installations** (jusqu'à la version 0.3, chaque proxy à la place d'un original,
+- **Anciennes installations** (jusqu'à la v0.3.0, chaque proxy à la place d'un original,
   renommé `<nom>_orig.dll`) : l'installation et la désinstallation remettent l'original en place.
   Un `_orig` à côté d'un original remis par Steam est périmé : il est retiré. La fenêtre les montre
   (« ancien proxy à la place de l'original ») et propose la mise à jour.
-- **Compatibilité** : un installeur d'avant la version 0.4 refuse une release 0.4 (fichiers
+- **Compatibilité** : un installeur de la v0.3.0 ou d'avant refuse les releases suivantes (fichiers
   inconnus) et demande de télécharger le nouvel installeur depuis la page de la release.
 - **Droits** : si le dossier du jeu n'est pas modifiable (Program Files), seule la pose est relancée
   en administrateur (`--apply`, invite UAC, sans fenêtre), qui revérifie signature et SHA-256 avant
