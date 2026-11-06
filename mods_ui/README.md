@@ -213,7 +213,12 @@ le mod fonctionne comme avant.
   script, toute la chaîne est chargée : le bloc enveloppe les fonctions définitives (`RefreshYields`,
   `LateInitialize`), avant l'initialisation du contexte.
 - **`RefreshResources` de TPE** est une copie de celle de XP2, avec les ressources stratégiques des
-  coéquipiers. Elle n'est posée que si BSM n'est pas actif : le bandeau du spectateur reste le sien.
+  coéquipiers. Si le fichier de BSM est chargé, son `RefreshResources` reste (bandeau du joueur
+  observé par un spectateur). Pour les autres joueurs, il appelle la version de XP2 qu'il a gardée
+  dans `XP2_RefreshResources` : c'est celle-là qui est remplacée. Le test porte sur
+  `XP2_RefreshResources`, pas sur BSM actif : avec TPE présent, BSM est actif mais son fichier est
+  perdu. Jusqu'au 6 novembre 2026, la surcharge était sautée dès que BSM était actif : plus de
+  stratégiques des coéquipiers dans les parties avec BSM.
 - **Infobulles** : les gestionnaires de `TopPanel_TT.lua` vivent dans le même contexte, appelés
   directement, sans `LuaEvents`. Les noms des `ToolTipType` sont préfixés (`BGD_…`), pour ne pas
   heurter ceux du mod.

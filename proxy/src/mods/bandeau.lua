@@ -8,14 +8,14 @@
 -- ressources. Changements :
 -- - les infobulles (TopPanel_TT du mod, un contexte à part) vivent dans ce contexte : leurs types,
 --   préfixés BGD_, sont ajoutés à TopPanel.xml par le proxy, et elles sont remplies directement ;
--- - RefreshResources n'est pas remplacée si BSM est actif : le bandeau du spectateur reste ;
+-- - avec le fichier de BSM, son RefreshResources reste (bandeau du joueur observé) : c'est la version
+--   de XP2 qu'il appelle pour les autres joueurs (XP2_RefreshResources) qui est remplacée ;
 -- - textes du mod embarqués (BGD_Lookup).
 -- ===========================================================================
 do
 	local f = Civ6Proxy_Charger and Civ6Proxy_Charger("BGD_Commun");
 	if type(f) == "function" then f(); end
 	local L = BGD_Lookup or Locale.Lookup;
-	local BSM_ACTIF = Modding.IsModActive("c6e5ad32-0600-4a98-a7cd-5854a1abcaaf");
 
 	local BGD_RefreshYields_jeu = RefreshYields;
 	local BGD_LateInitialize_jeu = LateInitialize;
@@ -442,126 +442,133 @@ do
 		end
 	end
 
-	-- RefreshResources de XP2, avec les stratégiques des coéquipiers (pas avec BSM : son bandeau reste).
-	if not BSM_ACTIF and BGD_RefreshResources_jeu ~= nil then
-		function RefreshResources()
-			if not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_RESOURCES") then
-				m_kResourceIM:ResetInstances();
-				return;
-			end
-			local localPlayerID = Game.GetLocalPlayer();
-			if localPlayerID == -1 then return; end
-			local localPlayer = Players[localPlayerID];
+	-- RefreshResources de XP2, avec les stratégiques des coéquipiers. Avec BSM, son RefreshResources
+	-- reste (bandeau du joueur observé par un spectateur) ; pour les autres, il appelle la version de
+	-- XP2 qu'il a gardée dans XP2_RefreshResources : c'est elle qu'on remplace.
+	local function RefreshResourcesEquipe()
+		if not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_RESOURCES") then
 			m_kResourceIM:ResetInstances();
-			local pPlayerResources = localPlayer:GetResources();
-			local yieldStackX = Controls.YieldStack:GetSizeX();
-			local infoStackX = Controls.StaticInfoStack:GetSizeX();
-			local metaStackX = Controls.RightContents:GetSizeX();
-			local screenX, _ = UIManager:GetScreenSizeVal();
-			local maxSize = screenX - yieldStackX - infoStackX - metaStackX - m_viewReportsX - META_PADDING;
-			if maxSize < 0 then maxSize = 0; end
-			local currSize = 0;
-			local isOverflow = false;
-			local overflowString = "";
-			local plusInstance;
-			for resource in GameInfo.Resources() do
-				if IsStrategic(resource) then
-					local stockpileAmount = pPlayerResources:GetResourceAmount(resource.ResourceType);
-					local stockpileCap = pPlayerResources:GetResourceStockpileCap(resource.ResourceType);
-					local reservedAmount = pPlayerResources:GetReservedResourceAmount(resource.ResourceType);
-					local accumulationPerTurn = pPlayerResources:GetResourceAccumulationPerTurn(resource.ResourceType);
-					local importPerTurn = pPlayerResources:GetResourceImportPerTurn(resource.ResourceType);
-					local bonusPerTurn = pPlayerResources:GetBonusResourcePerTurn(resource.ResourceType);
-					local unitConsumptionPerTurn = pPlayerResources:GetUnitResourceDemandPerTurn(resource.ResourceType);
-					local powerConsumptionPerTurn = pPlayerResources:GetPowerResourceDemandPerTurn(resource.ResourceType);
-					local totalConsumptionPerTurn = unitConsumptionPerTurn + powerConsumptionPerTurn;
-					local totalAmount = math.min(stockpileAmount + reservedAmount, stockpileCap);
-					local iconName = "[ICON_" .. resource.ResourceType .. "]";
-					local totalAccumulationPerTurn = accumulationPerTurn + importPerTurn + bonusPerTurn;
-					local resourceText = iconName .. " " .. stockpileAmount;
-					local numDigits = (stockpileAmount >= 10) and 4 or 3;
-					local guessinstanceWidth = math.ceil(numDigits * FONT_MULTIPLIER);
+			return;
+		end
+		local localPlayerID = Game.GetLocalPlayer();
+		if localPlayerID == -1 then return; end
+		local localPlayer = Players[localPlayerID];
+		m_kResourceIM:ResetInstances();
+		local pPlayerResources = localPlayer:GetResources();
+		local yieldStackX = Controls.YieldStack:GetSizeX();
+		local infoStackX = Controls.StaticInfoStack:GetSizeX();
+		local metaStackX = Controls.RightContents:GetSizeX();
+		local screenX, _ = UIManager:GetScreenSizeVal();
+		local maxSize = screenX - yieldStackX - infoStackX - metaStackX - m_viewReportsX - META_PADDING;
+		if maxSize < 0 then maxSize = 0; end
+		local currSize = 0;
+		local isOverflow = false;
+		local overflowString = "";
+		local plusInstance;
+		for resource in GameInfo.Resources() do
+			if IsStrategic(resource) then
+				local stockpileAmount = pPlayerResources:GetResourceAmount(resource.ResourceType);
+				local stockpileCap = pPlayerResources:GetResourceStockpileCap(resource.ResourceType);
+				local reservedAmount = pPlayerResources:GetReservedResourceAmount(resource.ResourceType);
+				local accumulationPerTurn = pPlayerResources:GetResourceAccumulationPerTurn(resource.ResourceType);
+				local importPerTurn = pPlayerResources:GetResourceImportPerTurn(resource.ResourceType);
+				local bonusPerTurn = pPlayerResources:GetBonusResourcePerTurn(resource.ResourceType);
+				local unitConsumptionPerTurn = pPlayerResources:GetUnitResourceDemandPerTurn(resource.ResourceType);
+				local powerConsumptionPerTurn = pPlayerResources:GetPowerResourceDemandPerTurn(resource.ResourceType);
+				local totalConsumptionPerTurn = unitConsumptionPerTurn + powerConsumptionPerTurn;
+				local totalAmount = math.min(stockpileAmount + reservedAmount, stockpileCap);
+				local iconName = "[ICON_" .. resource.ResourceType .. "]";
+				local totalAccumulationPerTurn = accumulationPerTurn + importPerTurn + bonusPerTurn;
+				local resourceText = iconName .. " " .. stockpileAmount;
+				local numDigits = (stockpileAmount >= 10) and 4 or 3;
+				local guessinstanceWidth = math.ceil(numDigits * FONT_MULTIPLIER);
 
-					local tooltip = iconName .. " " .. Locale.Lookup(resource.Name);
-					tooltip = tooltip .. "[NEWLINE]" .. totalAmount .. "/" .. stockpileCap .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_STOCKPILE");
-					if reservedAmount ~= 0 then
-						tooltip = tooltip .. "[NEWLINE]-" .. reservedAmount .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_RESERVE");
+				local tooltip = iconName .. " " .. Locale.Lookup(resource.Name);
+				tooltip = tooltip .. "[NEWLINE]" .. totalAmount .. "/" .. stockpileCap .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_STOCKPILE");
+				if reservedAmount ~= 0 then
+					tooltip = tooltip .. "[NEWLINE]-" .. reservedAmount .. " " .. Locale.Lookup("LOC_RESOURCE_ITEM_IN_RESERVE");
+				end
+				if totalAccumulationPerTurn >= 0 then
+					tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN", totalAccumulationPerTurn);
+				else
+					tooltip = tooltip .. "[NEWLINE][COLOR_RED]" .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN", totalAccumulationPerTurn) .. "[ENDCOLOR]";
+				end
+				if accumulationPerTurn > 0 then
+					tooltip = tooltip .. "[NEWLINE] " .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN_EXTRACTED", accumulationPerTurn);
+				end
+				if importPerTurn > 0 then
+					tooltip = tooltip .. "[NEWLINE] " .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN_FROM_CITY_STATES", importPerTurn);
+				end
+				if bonusPerTurn > 0 then
+					tooltip = tooltip .. "[NEWLINE] " .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN_FROM_BONUS_SOURCES", bonusPerTurn);
+				end
+				if totalConsumptionPerTurn > 0 then
+					tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_CONSUMPTION", totalConsumptionPerTurn);
+					if unitConsumptionPerTurn > 0 then
+						tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_UNIT_CONSUMPTION_PER_TURN", unitConsumptionPerTurn);
 					end
-					if totalAccumulationPerTurn >= 0 then
-						tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN", totalAccumulationPerTurn);
-					else
-						tooltip = tooltip .. "[NEWLINE][COLOR_RED]" .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN", totalAccumulationPerTurn) .. "[ENDCOLOR]";
+					if powerConsumptionPerTurn > 0 then
+						tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_POWER_CONSUMPTION_PER_TURN", powerConsumptionPerTurn);
 					end
-					if accumulationPerTurn > 0 then
-						tooltip = tooltip .. "[NEWLINE] " .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN_EXTRACTED", accumulationPerTurn);
-					end
-					if importPerTurn > 0 then
-						tooltip = tooltip .. "[NEWLINE] " .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN_FROM_CITY_STATES", importPerTurn);
-					end
-					if bonusPerTurn > 0 then
-						tooltip = tooltip .. "[NEWLINE] " .. Locale.Lookup("LOC_RESOURCE_ACCUMULATION_PER_TURN_FROM_BONUS_SOURCES", bonusPerTurn);
-					end
-					if totalConsumptionPerTurn > 0 then
-						tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_CONSUMPTION", totalConsumptionPerTurn);
-						if unitConsumptionPerTurn > 0 then
-							tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_UNIT_CONSUMPTION_PER_TURN", unitConsumptionPerTurn);
-						end
-						if powerConsumptionPerTurn > 0 then
-							tooltip = tooltip .. "[NEWLINE]" .. Locale.Lookup("LOC_RESOURCE_POWER_CONSUMPTION_PER_TURN", powerConsumptionPerTurn);
-						end
-					end
-					local TeamStrategicText = L("LOC_TOP_PANEL_TEAM_MORE_STRATEGIC_NAME");
-					local TeamMore = false;
-					for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
-						if localPlayer:GetTeam() == Players[playerID]:GetTeam() and localPlayerID ~= playerID then
-							local s = GetMoreStrategicString(playerID, resource);
-							if s then
-								TeamMore = true;
-								TeamStrategicText = TeamStrategicText .. s;
-							end
-						end
-					end
-					if TeamMore and isStrategicsTradingAllowed then
-						tooltip = tooltip .. "[NEWLINE]" .. TeamStrategicText;
-					end
-
-					if stockpileAmount > 0 or totalAccumulationPerTurn > 0 or totalConsumptionPerTurn > 0 or g_TeamVisibleResources[resource.Index] then
-						if currSize + guessinstanceWidth < maxSize and not isOverflow then
-							if stockpileCap > 0 then
-								local instance = m_kResourceIM:GetInstance();
-								if totalAccumulationPerTurn > totalConsumptionPerTurn then
-									instance.ResourceVelocity:SetHide(false);
-									instance.ResourceVelocity:SetTexture("CityCondition_Rising");
-								elseif totalAccumulationPerTurn < totalConsumptionPerTurn then
-									instance.ResourceVelocity:SetHide(false);
-									instance.ResourceVelocity:SetTexture("CityCondition_Falling");
-								else
-									instance.ResourceVelocity:SetHide(true);
-								end
-								instance.ResourceText:SetText(resourceText);
-								instance.ResourceText:SetToolTipString(tooltip);
-								currSize = currSize + instance.ResourceText:GetSizeX();
-							end
-						else
-							if not isOverflow then
-								overflowString = tooltip;
-								local instance = m_kResourceIM:GetInstance();
-								instance.ResourceText:SetText("[ICON_Plus]");
-								plusInstance = instance.ResourceText;
-							else
-								overflowString = overflowString .. "[NEWLINE]" .. tooltip;
-							end
-							isOverflow = true;
+				end
+				local TeamStrategicText = L("LOC_TOP_PANEL_TEAM_MORE_STRATEGIC_NAME");
+				local TeamMore = false;
+				for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
+					if localPlayer:GetTeam() == Players[playerID]:GetTeam() and localPlayerID ~= playerID then
+						local s = GetMoreStrategicString(playerID, resource);
+						if s then
+							TeamMore = true;
+							TeamStrategicText = TeamStrategicText .. s;
 						end
 					end
 				end
+				if TeamMore and isStrategicsTradingAllowed then
+					tooltip = tooltip .. "[NEWLINE]" .. TeamStrategicText;
+				end
+
+				if stockpileAmount > 0 or totalAccumulationPerTurn > 0 or totalConsumptionPerTurn > 0 or g_TeamVisibleResources[resource.Index] then
+					if currSize + guessinstanceWidth < maxSize and not isOverflow then
+						if stockpileCap > 0 then
+							local instance = m_kResourceIM:GetInstance();
+							if totalAccumulationPerTurn > totalConsumptionPerTurn then
+								instance.ResourceVelocity:SetHide(false);
+								instance.ResourceVelocity:SetTexture("CityCondition_Rising");
+							elseif totalAccumulationPerTurn < totalConsumptionPerTurn then
+								instance.ResourceVelocity:SetHide(false);
+								instance.ResourceVelocity:SetTexture("CityCondition_Falling");
+							else
+								instance.ResourceVelocity:SetHide(true);
+							end
+							instance.ResourceText:SetText(resourceText);
+							instance.ResourceText:SetToolTipString(tooltip);
+							currSize = currSize + instance.ResourceText:GetSizeX();
+						end
+					else
+						if not isOverflow then
+							overflowString = tooltip;
+							local instance = m_kResourceIM:GetInstance();
+							instance.ResourceText:SetText("[ICON_Plus]");
+							plusInstance = instance.ResourceText;
+						else
+							overflowString = overflowString .. "[NEWLINE]" .. tooltip;
+						end
+						isOverflow = true;
+					end
+				end
 			end
-			if plusInstance ~= nil then
-				plusInstance:SetToolTipString(overflowString);
-			end
-			Controls.ResourceStack:CalculateSize();
-			Controls.Resources:SetHide(Controls.ResourceStack:GetSizeX() == 0);
 		end
+		if plusInstance ~= nil then
+			plusInstance:SetToolTipString(overflowString);
+		end
+		Controls.ResourceStack:CalculateSize();
+		Controls.Resources:SetHide(Controls.ResourceStack:GetSizeX() == 0);
+	end
+	-- XP2_RefreshResources n'existe que si le fichier de BSM est chargé : BSM peut être actif sans
+	-- (TPE présent : son fichier est alors perdu, voir mods_ui/README.md).
+	if XP2_RefreshResources ~= nil then
+		XP2_RefreshResources = RefreshResourcesEquipe;
+	elseif BGD_RefreshResources_jeu ~= nil then
+		RefreshResources = RefreshResourcesEquipe;
 	end
 
 	function RefreshYields()
