@@ -4,7 +4,7 @@ Le proxy de GameCore ([proxy](../proxy/README.md)) n'est chargé qu'au lancement
 Gathering Storm. Ce second proxy est chargé au démarrage de l'exe, avant le menu principal. C'est
 lui qui fait charger le proxy de GameCore à la place de l'original (voir
 [Le chargement du proxy de GameCore](#le-chargement-du-proxy-de-gamecore)). Il ajoute à l'écran
-d'options du jeu un onglet **BetterGameDLLs**, qui édite les réglages du proxy de GameCore
+d'options du jeu un onglet **BetterGameExperience**, qui édite les réglages du proxy de GameCore
 (`rollover_proxy.cfg`). Dans le salon multijoueur, il annonce sa version aux autres joueurs, et
 l'hôte établit si tous ont le proxy (voir [Le salon multijoueur](#le-salon-multijoueur--qui-a-le-proxy-)).
 Au menu principal, il propose les nouvelles versions (voir
@@ -64,7 +64,7 @@ partie Gathering Storm ; son nom vient de `Expansion2.modinfo`. Il n'importe que
   (`proxy/src/pol.rs`) : la winmm de System32 porte le même nom de module. Celui de démarrage cherche
   celui de GameCore sous le nom `BGD_GameCore_XP2.dll`.
 
-## L'onglet BetterGameDLLs
+## L'onglet BetterGameExperience
 
 [src/options.rs](src/options.rs). L'écran d'options est le même contexte `Options.xml` /
 `Options.lua` au menu principal et en jeu.
@@ -124,13 +124,13 @@ L'exe fait `Sleep` du reste de l'intervalle, en millisecondes entières, avec un
 71, à cause des accrocs que le jeu a aussi sans limite).
 Le choix prend effet tout de suite et s'enregistre dans `AppOptions.txt` comme les autres.
 
-Pas de réglage dans l'onglet BetterGameDLLs : rien ne change tant qu'on ne choisit pas l'une de ces
+Pas de réglage dans l'onglet BetterGameExperience : rien ne change tant qu'on ne choisit pas l'une de ces
 entrées. Si la liste du jeu change de forme, elle reste telle quelle (journal :
 `liste du limiteur d'images introuvable`). Mesures : [rollover](../rollover/README.md).
 
 ## Le profil des zones de l'exe (`profil_zones`)
 
-Réglage de diagnostic, désactivé par défaut (onglet BetterGameDLLs, section Diagnostic, ou
+Réglage de diagnostic, désactivé par défaut (onglet BetterGameExperience, section Diagnostic, ou
 `proxy/install.ps1 -ProfilZones on`). Il prend effet au lancement suivant du jeu. Il n'existe que
 dans les builds locaux : la release est compilée sans la feature `diag`
 (voir [release/README.md](../release/README.md#diagnostic)). Code :
@@ -163,7 +163,7 @@ donnent en français et en anglais.
 [src/salon.rs](src/salon.rs) et [src/salon.lua](src/salon.lua). Certains correctifs changent la
 simulation : chaque machine recalcule la partie (lockstep), donc un joueur sans le proxy, ou d'une
 autre version, se désynchroniserait. Ce sont les **correctifs POL** (« proxy-only lobbies ») : ils
-ne s'activent que si tous les humains ont BetterGameDLLs à la même version. Les autres correctifs
+ne s'activent que si tous les humains ont BetterGameExperience à la même version. Les autres correctifs
 (interface, performances sans effet sur la partie) n'en dépendent pas.
 
 - **La version** est dans [proxy/src/version.rs](../proxy/src/version.rs), commune aux deux
@@ -181,7 +181,7 @@ ne s'activent que si tous les humains ont BetterGameDLLs à la même version. Le
 - **Qui s'annonce.** Seule une machine qui appliquera les correctifs POL. `Civ6Proxy_Version()` rend
   nil et la raison si le proxy de GameCore n'est pas installé, si `actif=off`, ou, une fois chargé,
   s'il n'a pas posé ses correctifs POL (bit 16 de `RolloverProxyStatus`). Elle ne s'annonce pas, et
-  compte donc comme sans BetterGameDLLs.
+  compte donc comme sans BetterGameExperience.
 - **Les jetons.** Les configurations de joueur sont enregistrées avec la partie : une sauvegarde
   rechargée rapporte les annonces et le verdict d'une session précédente, peut-être chez des
   joueurs qui n'ont plus le proxy. Chaque ouverture du salon, et chaque migration d'hôte, tire donc
@@ -202,11 +202,11 @@ ne s'activent que si tous les humains ont BetterGameDLLs à la même version. Le
 - **Les messages.** Au démarrage du compte à rebours de lancement, dans le chat, pour tous, une fois
   par contenu, en anglais ; chaque machine équipée les affiche dans sa langue (`BGD_TxtChat`, voir
   [textes/](../textes/README.md)). Leur sens, en français :
-  - l'hôte, en rouge : `BGD - Sans BetterGameDLLs : Bob. BetterGameDLLs d'une autre version que
+  - l'hôte, en rouge : `BGE - Sans BetterGameExperience : Bob. BetterGameExperience d'une autre version que
     0.2.0 : Zoé (0.1.0). Correctifs POL désactivés pour cette partie.` ;
-  - l'hôte, en vert : `BGD - Tous les joueurs ont BetterGameDLLs 0.2.0 : correctifs POL actifs.` ;
+  - l'hôte, en vert : `BGE - Tous les joueurs ont BetterGameExperience 0.2.0 : correctifs POL actifs.` ;
   - si l'hôte n'a pas reçu notre annonce, le premier client équipé, par ordre d'identifiant, en
-    rouge : `BGD - L'hôte n'a pas BetterGameDLLs, ou pas une version compatible : correctifs POL
+    rouge : `BGE - L'hôte n'a pas BetterGameExperience, ou pas une version compatible : correctifs POL
     désactivés pour cette partie.` Équipé : son annonce a changé depuis l'ouverture du salon, ce
     qu'une annonce restée d'une sauvegarde ne fait pas. Un client arrivé après l'annonce d'un autre
     ne la voit pas changer : les deux peuvent alors écrire le même message, mais il n'en manque
@@ -223,7 +223,7 @@ ne s'activent que si tous les humains ont BetterGameDLLs à la même version. Le
   `InGame.lua` (ou de son remplaçant, celui de MPH), le relaie : quand un humain connecté annonce la
   version et le jeton de l'hôte, celui-ci ajoute son jeton au verdict, sans en changer l'état. Le
   nouveau venu conclut comme les autres. Si les correctifs POL sont actifs et qu'un humain se met
-  prêt sans s'être annoncé, l'hôte écrit en rouge : `BGD - Léo : arrivée sans BetterGameDLLs (ou
+  prêt sans s'être annoncé, l'hôte écrit en rouge : `BGE - Léo : arrivée sans BetterGameExperience (ou
   d'une autre version) alors que les correctifs POL sont actifs. Sa partie va se désynchroniser.`
 - **Le journal** : `salon : bloc chargé`, `salon : pas d'annonce : <raison>`,
   `pol : correctifs POL actifs|désactivés (<raison>)` à chaque changement de l'état,
@@ -268,12 +268,12 @@ appliquent. Le journal le dit (`citoyens : version inattendue`).
   (`BGD_RELEASE`, `RELEASE` dans [proxy/src/version.rs](../proxy/src/version.rs)). Une compilation
   locale n'a pas de version de release : elle ne vérifie rien. Le manifeste n'est pas vérifié ici :
   il ne sert qu'à prévenir, et l'installeur vérifie sa signature avant d'installer.
-- **Le canal.** Elle suit la case « Pré-release » de l'installeur (`%LOCALAPPDATA%\BetterGameDLLs\canal.txt`).
+- **Le canal.** Elle suit la case « Pré-release » de l'installeur (`%LOCALAPPDATA%\BetterGameExperience\canal.txt`).
   Cochée, elle lit à la place la liste des releases de l'API GitHub et prend la release publiée au
   plus grand numéro `vX.Y.Z`, pré-releases comprises. Le popup dit si la version proposée est une
   release ou une pré-release (titre et texte), et rappelle pour une pré-release que c'est la case de
   l'installeur qui la fait recevoir. Sans installeur, le bouton ouvre la page de cette version.
-- **Le réglage.** `verif_maj=on|off` (on par défaut), dans l'onglet BetterGameDLLs, jamais grisé
+- **Le réglage.** `verif_maj=on|off` (on par défaut), dans l'onglet BetterGameExperience, jamais grisé
   par l'interrupteur général, qui ne concerne que le proxy de GameCore. Lu au lancement du jeu.
 - **L'accroche.** La même accroche `luaL_loadbuffer` ajoute `maj.lua` à la fin de `MainMenu.lua`,
   après avoir posé `Civ6Proxy_MiseAJour([action])` et `Civ6Proxy_Journal(texte)`. Le bloc enveloppe
@@ -285,8 +285,8 @@ appliquent. Le journal le dit (`citoyens : version inattendue`).
   le XML du jeu, et le bloc crée son popup sur ces contrôles (`include("PopupDialog")`). Sans ces
   contrôles, l'erreur va au journal.
 - **Le message**, dans le popup du menu (`g_PopupDialog`, ou le sien), dans la langue du jeu
-  ([textes/](../textes/README.md)) : « La version 0.1.2 de BetterGameDLLs est disponible (installée : 0.1.1) ».
-  - **Mettre à jour** lance l'installeur, `%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe`
+  ([textes/](../textes/README.md)) : « La version 0.1.2 de BetterGameExperience est disponible (installée : 0.1.1) ».
+  - **Mettre à jour** lance l'installeur, `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`
     (il s'y copie à chaque installation), avec `--after-game <dossier de l'exe>`, puis ferme le jeu
     (`Events.UserConfirmedClose()`, comme « Quitter vers le bureau » ; `UI.ExitGame()` ne ferme le jeu qu'en partie). L'installeur attend la fin du jeu, installe, et propose de le relancer.
     Sans installeur à cet endroit, la page de la release s'ouvre dans le navigateur, et le jeu reste
@@ -327,7 +327,7 @@ cd startup_proxy && cargo build --release
   ```bash
   lua startup_proxy/tests/test_maj.lua
   ```
-- Le bloc de l'option de partie « No First/Last moves (BGD) » (`option_partie.lua`, à la fin de
+- Le bloc de l'option de partie « No First/Last moves (BGE) » (`option_partie.lua`, à la fin de
   `SetupParameters.lua`) : ligne ajoutée à `Parameters` avant chaque lecture des options, sans
   doublon, cache vidé, libellés français et
   anglais, écriture refusée sans casser l'écran. Voir

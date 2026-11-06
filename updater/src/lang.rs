@@ -1,7 +1,7 @@
 //! Langues de l'installeur : celles de Better Balanced Game. Les textes sont dans `textes`, généré
 //! par `textes/gen_textes.py` depuis `textes/<langue>.xml` : un tableau `Texts` par texte, une entrée
 //! par langue de `LANGUAGES`, dans le même ordre. Le choix du joueur (liens en bas des fenêtres) est
-//! gardé dans `%LOCALAPPDATA%\BetterGameDLLs\langue.txt` ; sans choix, la langue de Windows, sinon
+//! gardé dans `%LOCALAPPDATA%\BetterGameExperience\langue.txt` ; sans choix, la langue de Windows, sinon
 //! l'anglais.
 
 use std::path::PathBuf;
@@ -42,7 +42,7 @@ extern "system" {
 }
 
 fn choice_file() -> Option<PathBuf> {
-    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\langue.txt"))
+    Some(crate::release::data_dir()?.join("langue.txt"))
 }
 
 pub fn init() {

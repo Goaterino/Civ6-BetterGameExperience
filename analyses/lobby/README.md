@@ -353,7 +353,7 @@ Tout passe par l'API Lua, côté hôte :
    emplacement modifié.
 
 **Où le faire.** Un script d'interface du front-end, ajouté par le proxy de démarrage comme l'onglet
-BetterGameDLLs, peut s'en charger. Il recevrait le résultat du civdraft par un fichier ou un
+BetterGameExperience, peut s'en charger. Il recevrait le résultat du civdraft par un fichier ou un
 `LuaEvents`.
 
 **Précautions :**

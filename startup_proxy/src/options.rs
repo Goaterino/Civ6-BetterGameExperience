@@ -373,7 +373,7 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
             (crate::salon::prepare_chargement(l, src), "chargement : correctifs POL des parties locales ajoutés")
         }
         crate::maj::SCRIPT => (crate::maj::prepare(l, src), "maj : notification de mise à jour ajoutée"),
-        crate::salon::SCRIPT_OPTION => (crate::salon::prepare_option(l, src), "option : « No First/Last moves (BGD) » ajoutée"),
+        crate::salon::SCRIPT_OPTION => (crate::salon::prepare_option(l, src), "option : « No First/Last moves (BGE) » ajoutée"),
         _ => return real(l, buf, size, name),
     };
     let r = real(l, text.as_ptr(), text.len(), name);

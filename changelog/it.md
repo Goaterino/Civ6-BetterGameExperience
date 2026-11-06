@@ -2,20 +2,20 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
-## BetterGameDLLs 0.5.0: prima versione pubblica
+## BetterGameExperience 0.5.0: prima versione pubblica
 
-BetterGameDLLs corregge e velocizza Civilization VI: Gathering Storm con due DLL posate accanto ai
+BetterGameExperience (BGE) corregge e velocizza Civilization VI: Gathering Storm con due DLL posate accanto ai
 file del gioco. **Nessun file del gioco viene sostituito**: né la verifica dei file di Steam né gli
 aggiornamenti del gioco lo rimuovono. Funziona con DirectX 11 e DirectX 12, con BBG, Better Spectator
 Mod e MPH.
 
 Tutte le modifiche sono elencate qui sotto, per categoria. Quelle segnate **[tutti i giocatori]**
 cambiano le regole della partita: si attivano solo quando tutti i giocatori umani della sala hanno la
-stessa versione di BetterGameDLLs. Tutto il resto riguarda solo il tuo computer. Si può giocare senza
+stessa versione di BetterGameExperience. Tutto il resto riguarda solo il tuo computer. Si può giocare senza
 rischi con chi non ha la mod.
 
 ### Installazione e aggiornamenti
-- Programma di installazione `BetterGameDLLs.exe`: installa, aggiorna, ripara e disinstalla. Trova il
+- Programma di installazione `BetterGameExperience.exe`: installa, aggiorna, ripara e disinstalla. Trova il
   gioco nelle tue librerie di Steam e verifica il manifesto firmato e lo SHA-256 di ogni file prima di
   copiare qualsiasi cosa.
 - Due file vengono aggiunti accanto a quelli del gioco: `winmm.dll` e `BGD_GameCore_XP2.dll`. Le
@@ -30,7 +30,7 @@ rischi con chi non ha la mod.
   e se ne può scegliere un'altra in fondo alla finestra.
 
 ### Impostazioni
-- Nuova scheda **BetterGameDLLs** nelle opzioni del gioco: un interruttore generale che disattiva tutto
+- Nuova scheda **BetterGameExperience** nelle opzioni del gioco: un interruttore generale che disattiva tutto
   senza disinstallare, un'impostazione per funzione e opzioni avanzate nascoste per impostazione
   predefinita. Avvisa quando una modifica richiede un riavvio.
 - Riconoscimenti per gli autori delle mod dell'interfaccia integrate.
@@ -39,13 +39,13 @@ rischi con chi non ha la mod.
   semplificato.
 
 ### Multigiocatore
-- **Controllo nella sala**: ogni computer comunica la sua versione di BetterGameDLLs, e l'host decide
-  per tutti. I messaggi di chat con il prefisso `BGD -` indicano a chi manca la mod o chi ha un'altra
+- **Controllo nella sala**: ogni computer comunica la sua versione di BetterGameExperience, e l'host decide
+  per tutti. I messaggi di chat con il prefisso `BGE -` indicano a chi manca la mod o chi ha un'altra
   versione. Le riconnessioni sono gestite. Se qualcuno entra senza la mod mentre le correzioni
   **[tutti i giocatori]** sono attive, l'host viene avvisato.
-- I messaggi di chat `BGD -` vengono inviati in inglese, così chi non ha la mod può leggerli. Chi ha la
+- I messaggi di chat `BGE -` vengono inviati in inglese, così chi non ha la mod può leggerli. Chi ha la
   mod li vede nella lingua del proprio gioco.
-- **Opzione di partita «No First/Last moves (BGD)»** **[tutti i giocatori]**:
+- **Opzione di partita «No First/Last moves (BGE)»** **[tutti i giocatori]**:
   - Tutti i giocatori iniziano il turno insieme. Gli ordini vengono trattenuti, e il timer resta
     fermo, finché tutti non hanno finito di caricare (al massimo 60 s).
   - Il turno finisce per tutti quando scade il timer dell'host.
@@ -89,8 +89,8 @@ rischi con chi non ha la mod.
   rallentamenti in multigiocatore.
 
 ### Mod dell'interfaccia integrate
-Ognuna si può disattivare nella scheda BetterGameDLLs. Se hai anche la mod del Workshop, la versione
-integrata in BGD la sostituisce.
+Ognuna si può disattivare nella scheda BetterGameExperience. Se hai anche la mod del Workshop, la versione
+integrata in BGE la sostituisce.
 - **Cariche dei costruttori** sulle bandiere delle unità (da Better Builder Charges Tracking, di wltk).
 - **Turni rimanenti delle rotte commerciali** sulle bandiere dei tuoi commercianti (nuovo).
 - Pulsante **Cancella notifiche** (da NotificationClear, di 336tarot).
@@ -118,7 +118,7 @@ integrata in BGD la sostituisce.
 
 ### Limiti noti
 - La mod è fatta per la versione ufficiale attuale del gioco. Dopo un aggiornamento del gioco, le
-  funzioni interessate si disattivano da sole finché BetterGameDLLs non viene aggiornato.
+  funzioni interessate si disattivano da sole finché BetterGameExperience non viene aggiornato.
 - Un giocatore che entra a partita in corso senza la mod, mentre le correzioni **[tutti i
   giocatori]** sono attive, si desincronizza. L'host viene avvisato.
 - Le correzioni segnate *(sperimentale)* non sono ancora state provate in una partita reale, o il

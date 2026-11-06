@@ -2,20 +2,20 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
-## BetterGameDLLs 0.5.0: primera versión pública
+## BetterGameExperience 0.5.0: primera versión pública
 
-BetterGameDLLs corrige y acelera Civilization VI: Gathering Storm con dos DLL colocadas junto a los
+BetterGameExperience (BGE) corrige y acelera Civilization VI: Gathering Storm con dos DLL colocadas junto a los
 archivos del juego. **No se reemplaza ningún archivo del juego**: ni la verificación de archivos de
 Steam ni las actualizaciones del juego lo eliminan. Funciona con DirectX 11 y DirectX 12, con BBG,
 Better Spectator Mod y MPH.
 
 Todos los cambios se enumeran a continuación, por categoría. Los marcados **[todos los jugadores]**
 cambian las reglas de la partida: solo se activan cuando todos los jugadores humanos de la sala
-tienen la misma versión de BetterGameDLLs. Todo lo demás solo afecta a tu equipo. Se puede jugar sin
+tienen la misma versión de BetterGameExperience. Todo lo demás solo afecta a tu equipo. Se puede jugar sin
 riesgo con jugadores que no tienen el mod.
 
 ### Instalación y actualizaciones
-- Instalador `BetterGameDLLs.exe`: instalar, actualizar, reparar y desinstalar. Encuentra el juego en
+- Instalador `BetterGameExperience.exe`: instalar, actualizar, reparar y desinstalar. Encuentra el juego en
   tus bibliotecas de Steam y comprueba el manifiesto firmado y el SHA-256 de cada archivo antes de
   copiar nada.
 - Se añaden dos archivos junto a los del juego: `winmm.dll` y `BGD_GameCore_XP2.dll`. Las
@@ -30,7 +30,7 @@ riesgo con jugadores que no tienen el mod.
   otro en la parte inferior de la ventana.
 
 ### Ajustes
-- Nueva pestaña **BetterGameDLLs** en las opciones del juego: un interruptor general que lo desactiva
+- Nueva pestaña **BetterGameExperience** en las opciones del juego: un interruptor general que lo desactiva
   todo sin desinstalar, un ajuste por función y opciones avanzadas ocultas por defecto. Avisa cuando
   un cambio necesita reiniciar.
 - Créditos para los autores de los mods de interfaz integrados.
@@ -39,13 +39,13 @@ riesgo con jugadores que no tienen el mod.
   simplificado.
 
 ### Multijugador
-- **Comprobación en la sala**: cada equipo comunica su versión de BetterGameDLLs, y el anfitrión decide
-  por todos. Los mensajes de chat con el prefijo `BGD -` indican a quién le falta el mod o quién tiene
+- **Comprobación en la sala**: cada equipo comunica su versión de BetterGameExperience, y el anfitrión decide
+  por todos. Los mensajes de chat con el prefijo `BGE -` indican a quién le falta el mod o quién tiene
   otra versión. Se tienen en cuenta las reconexiones. Si alguien se une sin el mod mientras las
   correcciones **[todos los jugadores]** están activas, el anfitrión recibe un aviso.
-- Los mensajes de chat `BGD -` se envían en inglés, para que los jugadores sin el mod puedan leerlos.
+- Los mensajes de chat `BGE -` se envían en inglés, para que los jugadores sin el mod puedan leerlos.
   Los jugadores con el mod los ven en el idioma de su juego.
-- **Opción de partida «No First/Last moves (BGD)»** **[todos los jugadores]**:
+- **Opción de partida «No First/Last moves (BGE)»** **[todos los jugadores]**:
   - Todos los jugadores empiezan su turno a la vez. Las órdenes se retienen, y el temporizador sigue
     parado, hasta que todos hayan terminado de cargar (60 s como máximo).
   - El turno termina para todos cuando se acaba el temporizador del anfitrión.
@@ -89,8 +89,8 @@ riesgo con jugadores que no tienen el mod.
   ralentizaciones en multijugador.
 
 ### Mods de interfaz integrados
-Cada uno se puede desactivar en la pestaña BetterGameDLLs. Si también tienes el mod del Workshop, la
-versión integrada en BGD lo sustituye.
+Cada uno se puede desactivar en la pestaña BetterGameExperience. Si también tienes el mod del Workshop, la
+versión integrada en BGE lo sustituye.
 - **Cargas de los constructores** en las banderas de unidades (de Better Builder Charges Tracking, por
   wltk).
 - **Turnos restantes de las rutas comerciales** en las banderas de tus comerciantes (nuevo).
@@ -120,7 +120,7 @@ versión integrada en BGD lo sustituye.
 
 ### Limitaciones conocidas
 - El mod está hecho para la versión oficial actual del juego. Tras una actualización del juego, las
-  funciones afectadas se desactivan solas hasta que BetterGameDLLs se actualice.
+  funciones afectadas se desactivan solas hasta que BetterGameExperience se actualice.
 - Un jugador que se une a mitad de partida sin el mod, mientras las correcciones **[todos los
   jugadores]** están activas, se desincroniza. El anfitrión recibe un aviso.
 - Las correcciones marcadas *(experimental)* aún no se han probado en una partida real, o su efecto

@@ -1,6 +1,6 @@
 # Textes traduits
 
-Tous les textes que BetterGameDLLs affiche, en jeu et dans l'installeur, dans les 11 langues de
+Tous les textes que BetterGameExperience affiche, en jeu et dans l'installeur, dans les 11 langues de
 Better Balanced Game : en_US, fr_FR, de_DE, es_ES, it_IT, ja_JP, ko_KR, pl_PL, pt_BR, ru_RU,
 zh_Hans_CN. Les textes des mods d'interface repris (Better Report Screen…) restent ceux de leurs
 auteurs : voir [proxy/gen_textes.py](../proxy/gen_textes.py).
@@ -35,7 +35,7 @@ traduction dont les `{1}`, `{2}`… ne sont pas ceux de l'anglais (`--check --st
   apparaître dans la traduction, dans l'ordre que la langue demande.
 - `[NEWLINE]` est un saut de ligne en jeu ; `\n` en est un dans l'installeur (clés `LOC_BGD_INST_*`).
   Dans l'installeur, la première ligne d'un bouton (avant `\n`) est son titre, la suite sa description.
-- On garde tels quels : BetterGameDLLs, POL, « No First/Last moves (BGD) », les noms de mods, de
+- On garde tels quels : BetterGameExperience, POL, « No First/Last moves (BGE) », les noms de mods, de
   fichiers et de réglages, `Lua.log`, `%LOCALAPPDATA%…`.
 - Les termes du jeu prennent le nom officiel de la langue (gouverneur, personnage illustre, combat
   rapide, Médina…), relevé dans les textes du jeu (`Base/Assets/Text`).
@@ -50,8 +50,8 @@ contexte définit les fonctions.
 - `BGD_Txt(clé, …)` : le texte dans la langue du jeu (`Locale.GetCurrentLanguage`), à défaut une
   langue de même base (pt_PT → pt_BR), puis l'anglais, puis la clé elle-même : un texte brut (« x5 »)
   passe tel quel.
-- **Messages du chat.** Les messages `BGD -` que les machines s'envoient (salon, départ simultané,
-  arrivée d'un joueur) partent en anglais (`BGD_TxtAnglais`) : un joueur sans BetterGameDLLs les lit.
+- **Messages du chat.** Les messages `BGE -` que les machines s'envoient (salon, départ simultané,
+  arrivée d'un joueur) partent en anglais (`BGD_TxtAnglais`) : un joueur sans BetterGameExperience les lit.
   `BGD_TxtChat` reconnaît, à l'arrivée, un message construit sur une clé `LOC_BGD_CHAT_*` (le texte
   anglais sert de modèle, `{n}` capturés) et le réécrit dans la langue du jeu. Il est appelé par
   l'enveloppe d'`OnChat` du salon (`startup_proxy/src/salon.lua`) et de la partie

@@ -235,7 +235,7 @@ du jeu ; seul le drapeau du segment et l'interface manquent.
    - sur `Events.LocalPlayerTurnUnready`, rouvrir `WorldCongressPopup` à l'étape en cours :
      `m_HasAccepted` et `m_CurrentStage` sont des locales du script, il faut donc patcher le script
      lui-même (le remettre à `SetupWorldCongress(stage, true)`).
-4. Réglage dans l'onglet BetterGameDLLs si c'est un choix de préférence ; s'il n'est vu que comme
+4. Réglage dans l'onglet BetterGameExperience si c'est un choix de préférence ; s'il n'est vu que comme
    la correction du bug 2, pas de réglage (voir la règle des correctifs POL).
 
 ## Corrections envisageables, par bug

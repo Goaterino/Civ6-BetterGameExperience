@@ -41,7 +41,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 
 	-- Ligne locale dans le chat, que ChatPanel.lua affiche sans l'envoyer.
 	local function Afficher(texte)
-		LuaEvents.BGD_DepartTexte("[COLOR_Civ6Yellow]BGD - " .. texte .. "[ENDCOLOR]");
+		LuaEvents.BGD_DepartTexte("[COLOR_Civ6Yellow]BGE - " .. texte .. "[ENDCOLOR]");
 	end
 
 	-- Réglage depart_signaux : signaux `.bgd_` et lignes de diagnostic visibles dans le chat.
@@ -335,11 +335,11 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		D.annonce = true;
 		local texte;
 		if FinActif() then
-			texte = "[COLOR_GREEN]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_ACTIF") .. "[ENDCOLOR]";
+			texte = "[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_ACTIF") .. "[ENDCOLOR]";
 		elseif Dispo() then
-			texte = "[COLOR_GREEN]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_DEPART_SEUL") .. "[ENDCOLOR]";
+			texte = "[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_DEPART_SEUL") .. "[ENDCOLOR]";
 		else
-			texte = "[COLOR_RED]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_DESACTIVE") .. "[ENDCOLOR]";
+			texte = "[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_DESACTIVE") .. "[ENDCOLOR]";
 		end
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		J("annonce : " .. texte);

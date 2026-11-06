@@ -9,7 +9,7 @@ jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui
 |---|---|
 | `BGD_GameCore_XP2.dll` | proxy de GameCore (`proxy/`), à poser dans `DLC/Expansion2/Binaries/Win64`, à côté de l'original |
 | `winmm.dll` | proxy de démarrage (`startup_proxy/`), à poser dans `Base/Binaries/Win64Steam`, à côté de l'exe |
-| `BetterGameDLLs.exe` | l'installeur ([updater/](../updater/README.md)), hors manifeste : c'est lui qui le lit |
+| `BetterGameExperience.exe` | l'installeur ([updater/](../updater/README.md)), hors manifeste : c'est lui qui le lit |
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |
 
@@ -36,7 +36,7 @@ proxys, activée par défaut : un `cargo build --release` local les contient, le
 - le proxy de démarrage ne pose pas le détour du profil des zones (`profil_zones`, `src/zones.rs`) ;
 - le proxy de GameCore ne lit pas `ui_journal`, `ui_mesure_epingles` ni `ui_diag_accords`, qui
   restent sur off même s'ils sont dans `rollover_proxy.cfg` ;
-- l'onglet BetterGameDLLs ne montre pas ces quatre réglages (`diag = true` dans
+- l'onglet BetterGameExperience ne montre pas ces quatre réglages (`diag = true` dans
   `startup_proxy/src/options_proxy.lua`).
 
 `depart_signaux` (signaux du départ simultané) reste en release. Les scripts de `rollover/`,
@@ -49,7 +49,7 @@ faut recompiler et réinstaller pour les retrouver.
 ## Publier une release
 
 1. Vérifier que tout est commité et poussé : la release ne compile que le contenu du tag.
-   `CHANGELOG.md` doit avoir une section `## BetterGameDLLs <version>` (le tag sans `v`) : le
+   `CHANGELOG.md` doit avoir une section `## BetterGameExperience <version>` (le tag sans `v`) : le
    workflow en fait les notes de la release ([notes.py](notes.py)), avec les liens vers les
    traductions de `changelog/`, et échoue sans elle. Mettre aussi à jour `changelog/<langue>.md`.
 2. Si la release change la simulation ou l'échange du salon, augmenter `VERSION` dans

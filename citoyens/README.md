@@ -5,7 +5,7 @@ et 1 de production alors qu'une case 2/2 est libre. Analyse statique de
 `GameCore_XP2_FinalRelease.dll` (projet Ghidra `civ6xp2`, SHA-256 `324c51e9…`), correctif dans le
 proxy de GameCore ([proxy/src/citoyens.rs](../proxy/src/citoyens.rs)). C'est le premier correctif
 **POL** (« proxy-only lobbies ») : il change la simulation, donc il ne s'applique que si tous les
-joueurs ont BetterGameDLLs à la même version (voir
+joueurs ont BetterGameExperience à la même version (voir
 [le salon multijoueur](../startup_proxy/README.md#le-salon-multijoueur--qui-a-le-proxy-)).
 
 ## Le code du jeu
@@ -79,7 +79,7 @@ l'originale : c'est le cas aussi sans le proxy de démarrage. Le proxy de GameCo
 dans le salon.
 
 **Le journal**, `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log` :
-- `citoyens : détour posé en 0x18010f050, BetterGameDLLs 0.2.0` ;
+- `citoyens : détour posé en 0x18010f050, BetterGameExperience 0.2.0` ;
 - `pol : correctifs POL actifs` ou `coupés`, à chaque changement ;
 - `citoyens : choix corrigé (n), K citoyens. Jeu : … BGD : …` : les 30 premiers écarts de chaque
   partie avec le choix de l'originale, recalculé sur une copie. Chaque emplacement y est écrit

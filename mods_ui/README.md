@@ -184,7 +184,7 @@ le mod fonctionne comme avant.
 - **Réécrit plutôt que copié** : effacement sur `NotificationManager.GetList`, sans anneau.
 - **Mod présent** : `NotificationPanel_QuickClear.lua` (marque `NPQC_`) est vidé, sans quoi le joker
   le chargerait après notre bloc et aurait deux boutons.
-- **Texte de l'infobulle** : en français et en anglais, comme l'onglet BetterGameDLLs.
+- **Texte de l'infobulle** : en français et en anglais, comme l'onglet BetterGameExperience.
 
 ### `ui_charges` : Better Builder Charges Tracking
 
@@ -407,7 +407,7 @@ gouverneur **compte**. Dans GameCore :
 
 D'après la règle du dépôt, chaque fonctionnalité réglable a sa clé dans `read_config`
 ([proxy/src/lib.rs](../proxy/src/lib.rs)), son paramètre dans `install.ps1` et sa ligne dans l'onglet
-BetterGameDLLs (`PROXY_REGLAGES` de `options_proxy.lua`, que vérifie `cles_communes_avec_le_proxy`).
+BetterGameExperience (`PROXY_REGLAGES` de `options_proxy.lua`, que vérifie `cles_communes_avec_le_proxy`).
 
 | clé | `install.ps1` | défaut |
 |---|---|---|
@@ -427,7 +427,7 @@ Le code des mods est repris, avec ses corrections, et leurs auteurs sont crédit
 de licence, l'usage du Workshop de Civ6 étant le partage. Les en-têtes d'origine (auteurs, dates)
 restent dans les fichiers embarqués.
 
-- **Dans le jeu** : une section **Crédits**, en bas de l'onglet BetterGameDLLs. Pour chaque reprise :
+- **Dans le jeu** : une section **Crédits**, en bas de l'onglet BetterGameExperience. Pour chaque reprise :
   le nom du mod, ses auteurs et remerciements, et le numéro du Workshop. Les différences avec le mod
   n'y figurent pas : elles sont dans ce document.
   Elle n'est jamais grisée par l'interrupteur général. Textes en français et en anglais, comme le
@@ -450,7 +450,7 @@ drapeaux ont leurs tests Lua. Restent à voir en jeu :
 
 1. **HavokScript** : `getfenv` / `setfenv` (RMA isolé), et `Locale.Lookup` qui met en forme un texte
    brut (les textes des mods passent par là). Le journal `Lua.log` dira tout échec
-   (`BetterGameDLLs : …`).
+   (`BetterGameExperience : …`).
 2. **Les fonctions natives** : `mods : fonctions natives posées` au journal, puis un écran des
    rapports qui s'ouvre avec ses pages.
 3. **Les tours des routes** : comparer le macaron au tour où la route prend fin, sur une route
@@ -462,7 +462,7 @@ drapeaux ont leurs tests Lua. Restent à voir en jeu :
    Conscription et Levée en masse avec le Trône du seigneur de guerre, Prestige civil, Monachisme.
 6. **Avec les mods encore actifs** : la version du proxy doit s'afficher seule (un seul bouton de
    notifications, pas de double bandeau, l'écran des rapports du proxy).
-7. **Les crédits**, en bas de l'onglet BetterGameDLLs.
+7. **Les crédits**, en bas de l'onglet BetterGameExperience.
 
 **Pertes connues sans le mod** : le raccourci F8 de l'écran des rapports, et les 15 icônes de police de
 BRS (quelques quartiers dans l'onglet des villes).

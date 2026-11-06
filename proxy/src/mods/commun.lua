@@ -15,7 +15,7 @@ if BGD_Lookup == nil then
 	local G = getfenv and getfenv(1) or _G;
 
 	local function Erreur(nom, err)
-		print("BetterGameDLLs : " .. tostring(nom) .. " : " .. tostring(err));
+		print("BetterGameExperience : " .. tostring(nom) .. " : " .. tostring(err));
 	end
 
 	local function Charger(nom)

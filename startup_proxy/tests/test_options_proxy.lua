@@ -171,7 +171,7 @@ do
 	Check("avancées : performances et diagnostic", StackOf("Performances du passage de tour") == C.ProxyAdvancedStack
 		and StackOf("Cache des améliorations constructibles") == C.ProxyAdvancedStack
 		and StackOf("Diagnostic") == C.ProxyAdvancedStack and StackOf("Journal des scripts et XML chargés") == C.ProxyAdvancedStack);
-	Check("visibles : général, interface, correctifs, mods", StackOf("Proxys BetterGameDLLs") == C.ProxyBasicStack
+	Check("visibles : général, interface, correctifs, mods", StackOf("Proxys BetterGameExperience") == C.ProxyBasicStack
 		and StackOf("Recherche des mises à jour") == C.ProxyBasicStack
 		and StackOf("Boutons d'attaque au-dessus des drapeaux d'unités") == C.ProxyBasicStack
 		and StackOf("Merveille gardée dans la file après un échange") == C.ProxyBasicStack
@@ -292,7 +292,7 @@ do
 	-- Interrupteur général.
 	local m = NewScreen("ui_boutons=off\r\n", 1, 0);
 	local C = m.env.Controls;
-	local actif = m.Row("Proxys BetterGameDLLs");
+	local actif = m.Row("Proxys BetterGameExperience");
 	local boutons = m.Row("Boutons d'attaque au-dessus des drapeaux d'unités");
 	Check("général : absent du fichier, activé", actif.PullDown.button.text == "Activé" and not actif.PullDown.disabled);
 	Check("général : autres réglages modifiables", not boutons.PullDown.disabled);

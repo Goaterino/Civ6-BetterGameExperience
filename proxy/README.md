@@ -65,7 +65,7 @@ précharge pas, et qui ne touche pas au graphisme.
 proxy reste installé, charge l'original et relaie ses exports, mais ne pose aucun détour : le jeu se
 comporte comme sans proxy (journal : `proxy désactivé (actif=off) : aucun détour posé`). Les autres
 réglages restent dans le fichier, pour la réactivation. C'est aussi le premier réglage de l'onglet
-BetterGameDLLs, qui grise alors les autres.
+BetterGameExperience, qui grise alors les autres.
 
 Le mode se règle dans `rollover_proxy.cfg`, à côté de la DLL, par une ligne `mode=…` :
 
@@ -78,7 +78,7 @@ Le mode se règle dans `rollover_proxy.cfg`, à côté de la DLL, par une ligne 
 Les autres réglages (`portee`, `ameliorations`, `rendements`, `wmd_accel`, `ui_*`,
 `tours_production`) sont décrits plus bas, avec leur détour, et ceux des mods d'interface repris dans
 [Mods d'interface repris](#mods-dinterface-repris). Ils se changent aussi en jeu, dans
-l'onglet **BetterGameDLLs** de l'écran d'options, qu'ajoute le proxy de démarrage
+l'onglet **BetterGameExperience** de l'écran d'options, qu'ajoute le proxy de démarrage
 ([startup_proxy](../startup_proxy/README.md)). **Tout nouveau réglage doit y figurer** : le test
 `cles_communes_avec_le_proxy` (startup_proxy) le vérifie.
 
@@ -463,7 +463,7 @@ Analyse : [production_turns/README.md](../production_turns/README.md).
   locale). Sinon, ou sans le proxy de démarrage, l'originale. Le détour posé lève le bit 16 de
   `RolloverProxyStatus` ; avec `actif=off`, il n'est pas posé, et le proxy de démarrage ne
   s'annonce pas dans le salon.
-- **Le journal.** `citoyens : détour posé en 0x18010f050, BetterGameDLLs 0.2.0`,
+- **Le journal.** `citoyens : détour posé en 0x18010f050, BetterGameExperience 0.2.0`,
   `pol : correctifs POL actifs|coupés` (état lu par [src/pol.rs](src/pol.rs), commun aux
   correctifs POL), et les 30 premiers écarts de chaque partie avec le choix de l'originale
   (`citoyens : choix corrigé …`).
@@ -517,7 +517,7 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   0x18067d315)`, puis les 20 premiers départs acceptés de chaque partie.
 - **Tests.** `check_hooks.py` vérifie la redirection et sa restauration.
 
-## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGD) »)
+## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGE) »)
 
 [src/depart.rs](src/depart.rs), [src/ui_depart.lua](src/ui_depart.lua),
 [src/ui_depart_chat.lua](src/ui_depart_chat.lua). Conception et reverse :
@@ -662,7 +662,7 @@ plus les tours des routes commerciales.
   - `lua proxy/tests/test_mods_rma.lua` : corrections de RMA ;
   - `lua proxy/tests/test_mods_drapeaux.lua` : charges et routes ;
   - `lua proxy/tests/check_havok.lua <fichiers>` : syntaxe des scripts HavokScript.
-- **Crédits** : section en bas de l'onglet BetterGameDLLs (`PROXY_CREDITS` de
+- **Crédits** : section en bas de l'onglet BetterGameExperience (`PROXY_CREDITS` de
   `startup_proxy/src/options_proxy.lua`) :
   - Better Report Screen, Real Modifier Analysis et ReportsList Loader : Infixo ; onglets Unités et
     Accords d'origine : Greg Miller ; remerciements : nightfearer, Tyolan, copysoul, RohBang, Gorlod,

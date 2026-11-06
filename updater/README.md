@@ -1,4 +1,4 @@
-# Installeur : BetterGameDLLs.exe
+# Installeur : BetterGameExperience.exe
 
 Installe, met à jour, répare ou retire les deux proxys à partir de la dernière release publiée sur
 GitHub (voir [release/README.md](../release/README.md)). Il est publié avec chaque release.
@@ -14,7 +14,7 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   vise la release publiée au plus grand numéro, pré-releases comprises (liste de l'API GitHub) ;
   décochée, la dernière release (`releases/latest`, qui ne désigne jamais une pré-release). Décochée
   alors qu'une pré-release est posée, la fenêtre propose « Revenir à la version … », la dernière
-  release. Le choix est gardé dans `%LOCALAPPDATA%\BetterGameDLLs\canal.txt` : l'option de
+  release. Le choix est gardé dans `%LOCALAPPDATA%\BetterGameExperience\canal.txt` : l'option de
   lancement Steam et `--after-game` le suivent (en canal release, une pré-release posée y est
   remplacée par la dernière release), tout comme la notification du jeu
   ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)), qui dit si elle
@@ -22,12 +22,12 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
 - **`--game-dir "<dossier>"`** : même fenêtre, pour un jeu hors des bibliothèques Steam.
 - **Options de lancement Steam** (Propriétés > Général) :
   ```
-  "%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe" %command%
+  "%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" %command%
   ```
   À chaque lancement, l'installeur vérifie la dernière release (environ 1 s, sans fenêtre si tout
   est à jour), installe si besoin derrière une fenêtre de progression, puis lance le jeu et attend
   sa fin, pour que Steam le voie en cours. Depuis la release qui suit la v0.3.0, Steam ne retire plus les proxys :
-  cette option ne sert plus qu'aux mises à jour de BetterGameDLLs. Un échec (GitHub injoignable, droits refusés) est affiché,
+  cette option ne sert plus qu'aux mises à jour de BetterGameExperience. Un échec (GitHub injoignable, droits refusés) est affiché,
   et le jeu se lance quand même.
 - **`--after-game [<dossier>]`** : lancé par la notification de mise à jour du jeu
   ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)), qui se ferme
@@ -40,7 +40,7 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
 - **Jeu** : le dossier qui contient `DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll`,
   cherché parmi les parents de l'exe lancé par Steam, sinon dans les bibliothèques de
   `steamapps/libraryfolders.vdf` (dossier de Steam lu dans `HKCU\Software\Valve\Steam`).
-- **Téléchargement** : par le `curl.exe` de Windows, dans `%TEMP%\BetterGameDLLs`. Le manifeste doit
+- **Téléchargement** : par le `curl.exe` de Windows, dans `%TEMP%\BetterGameExperience`. Le manifeste doit
   porter une signature valide pour la clé publique embarquée, et chaque DLL le SHA-256 du manifeste.
 - **Pose**, comme les `install.ps1` : à côté des fichiers du jeu, sans en remplacer aucun
   ([proxy/src/noms.rs](../proxy/src/noms.rs)) : `winmm.dll` dans `Base/Binaries/Win64Steam`,
@@ -59,14 +59,14 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   en administrateur (`--apply`, invite UAC, sans fenêtre), qui revérifie signature et SHA-256 avant
   de copier.
 - **Emplacement fixe** : à l'ouverture de sa fenêtre et après chaque installation, l'installeur se copie dans
-  `%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe`, s'il n'y tourne pas déjà. La notification du
+  `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`, s'il n'y tourne pas déjà. La notification du
   jeu le lance là, et l'option de lancement Steam proposée le désigne : peu importe où le joueur a
   téléchargé l'exe, et la copie suit le dernier installeur lancé.
 - **Pas de console** : l'exe est une application fenêtrée, et `curl.exe` et `tasklist` sont lancés
   sans fenêtre (`CREATE_NO_WINDOW`).
 - **Fenêtres** : le TaskDialog vient de comctl32 v6, qu'on active d'habitude par un manifeste
   embarqué dans l'exe. La chaîne GNU n'ayant pas `windres`, `gui.rs` l'active au démarrage par un
-  contexte d'activation, à partir d'un manifeste écrit dans `%TEMP%\BetterGameDLLs`.
+  contexte d'activation, à partir d'un manifeste écrit dans `%TEMP%\BetterGameExperience`.
 - **À jour** : le SHA-256 de la DLL installée est celui du manifeste. L'installeur ne se fie pas au
   numéro de release gravé dans les DLL : une compilation locale n'en a pas.
 
@@ -81,7 +81,7 @@ qu'une traduction peut placer dans un autre ordre.
 - Le choix se fait par une ligne de liens en bas des fenêtres à choix (pied de page du TaskDialog,
   `TDF_ENABLE_HYPERLINKS`), la langue actuelle sans lien : onze boutons radio prenaient trop de
   place. Il réaffiche aussitôt la fenêtre et est gardé dans
-  `%LOCALAPPDATA%\BetterGameDLLs\langue.txt` ; sans choix, la langue de Windows si elle est connue,
+  `%LOCALAPPDATA%\BetterGameExperience\langue.txt` ; sans choix, la langue de Windows si elle est connue,
   sinon l'anglais.
 - Les boutons standard de Windows (« Fermer », « OK ») suivent la langue de Windows, pas ce choix.
 
@@ -90,5 +90,5 @@ qu'une traduction peut placer dans un autre ordre.
 `BGD_DIST` remplace GitHub par un dossier local qui contient une release signée (`manifest.json`,
 `manifest.json.sig` et les DLL, produits par `release/manifest.py`) :
 ```
-$env:BGD_DIST = "C:\...\dist"; .\target\release\BetterGameDLLs.exe --game-dir "C:\...\faux_jeu"
+$env:BGD_DIST = "C:\...\dist"; .\target\release\BetterGameExperience.exe --game-dir "C:\...\faux_jeu"
 ```

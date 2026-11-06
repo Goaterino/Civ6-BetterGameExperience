@@ -196,7 +196,7 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
         Icon::Error => 0xFFFE,
         Icon::Info => 0xFFFD,
     } as *const u16;
-    let title = wide("BetterGameDLLs");
+    let title = wide("BetterGameExperience");
     let instruction = wide(page.instruction);
     let content = wide(page.content);
     let details = page.details.map(wide);

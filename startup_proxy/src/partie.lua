@@ -72,7 +72,7 @@ local function BGD_PartieRelais()
 	end
 	if #sans > 0 then
 		-- En anglais : chaque machine équipée l'affiche dans sa langue (ui_depart_chat.lua).
-		local texte = "[COLOR_RED]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ARRIVEE", table.concat(sans, ", ")) .. "[ENDCOLOR]";
+		local texte = "[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ARRIVEE", table.concat(sans, ", ")) .. "[ENDCOLOR]";
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		BGD_PartieJournal("message : " .. texte);
 	end
