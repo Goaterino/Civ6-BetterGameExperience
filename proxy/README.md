@@ -524,6 +524,9 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   appliquées au début du segment de vote (le script de MPH ne les applique jamais).
 - **Luxes (correctif POL).** `WorldCongress.lua` : la liste des luxes de l'interdiction d'un luxe est
   recalculée à chaque session, au lieu d'être gardée depuis le premier appel de l'état Lua.
+- **Intro (local).** `WorldCongressIntro.lua` s'ouvrait à chaque `WorldCongressStage1` / `2` ;
+  l'annulation de fin de tour d'un autre joueur relance l'événement. Elle ne s'ouvre plus qu'une
+  fois par tour et par session (vérifié en partie le 2026-11-06).
 - **Pas de réglage** : ce sont des corrections de bugs.
 - **Le journal.** `congrès : détour posé (…)`, `congrès : annulation de fin de tour permise pendant le
   vote`, `congrès : joueur N revote sur … : X voix déjà comptées, Y de faveur rendue`, et dans
