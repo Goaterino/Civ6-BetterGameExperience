@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textes de BetterGameDLLs en zh_Hans_CN : voir textes/README.md. -->
+<GameData>
+	<LocalizedText>
+		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="zh_Hans_CN">
+			<Text>开启</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_DESACTIVE" Language="zh_Hans_CN">
+			<Text>关闭</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_JOURNAL" Language="zh_Hans_CN">
+			<Text>开启（记录日志）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_MESURE" Language="zh_Hans_CN">
+			<Text>仅测量（诊断）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_VERIFICATION" Language="zh_Hans_CN">
+			<Text>校验（诊断，较慢）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_OUI" Language="zh_Hans_CN">
+			<Text>是</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_NON" Language="zh_Hans_CN">
+			<Text>否</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CASCADES" Language="zh_Hans_CN">
+			<Text>仅连锁宣战</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="zh_Hans_CN">
+			<Text>每条游戏消息</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="zh_Hans_CN">
+			<Text>常规</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_PERFORMANCES" Language="zh_Hans_CN">
+			<Text>回合处理性能</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_INTERFACE" Language="zh_Hans_CN">
+			<Text>界面</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_CORRECTIFS" Language="zh_Hans_CN">
+			<Text>修正</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_MODS" Language="zh_Hans_CN">
+			<Text>内置界面模组</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_DIAGNOSTIC" Language="zh_Hans_CN">
+			<Text>诊断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_CREDITS" Language="zh_Hans_CN">
+			<Text>致谢</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 代理</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="zh_Hans_CN">
+			<Text>一次性关闭 GameCore 代理的所有改动，但不卸载它：游戏的表现与没有代理时相同。其他设置会保留，此标签页也仍然可用，以便重新开启。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_NOM" Language="zh_Hans_CN">
+			<Text>检查更新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="zh_Hans_CN">
+			<Text>游戏启动时在 GitHub 上查找 BetterGameDLLs 的新版本，并在主菜单中提示。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="zh_Hans_CN">
+			<Text>合并城市更新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MODE_AIDE" Language="zh_Hans_CN">
+			<Text>在连锁宣战期间，城市和外交数据只在最后刷新一次：繁重的回合可节省 2 秒以上。不改变游戏内容：在多人游戏中安全，即使对方没有代理。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PORTEE_NOM" Language="zh_Hans_CN">
+			<Text>合并范围</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PORTEE_AIDE" Language="zh_Hans_CN">
+			<Text>“每条游戏消息”也会合并战争以外的刷新（总督、资源、交易）。此时界面显示的城市数据可能会稍有延迟。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AMELIORATIONS_NOM" Language="zh_Hans_CN">
+			<Text>可建造改良设施缓存</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AMELIORATIONS_AIDE" Language="zh_Hans_CN">
+			<Text>加速“该玩家能否建造此改良设施？”这一判断，AI 每回合要问数百万次。结果与游戏相同，已验证无任何差异。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RENDEMENTS_NOM" Language="zh_Hans_CN">
+			<Text>为 AI 记忆单元格产出</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="zh_Hans_CN">
+			<Text>在 AI 并行计算期间（地图不会变化）记住单元格的产出。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="zh_Hans_CN">
+			<Text>加速核打击动画</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_AIDE" Language="zh_Hans_CN">
+			<Text>仅在开启快速战斗时有效（游戏标签页）。加速打击过程中的显示，不影响游戏。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BOUTONS_NOM" Language="zh_Hans_CN">
+			<Text>攻击按钮显示在单位旗帜上方</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BOUTONS_AIDE" Language="zh_Hans_CN">
+			<Text>城市和军营的攻击按钮，以及发射井的核打击按钮，绘制在单位旗帜上方，保持可点击。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RECENTRAGE_NOM" Language="zh_Hans_CN">
+			<Text>点击这些按钮时移动镜头</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RECENTRAGE_AIDE" Language="zh_Hans_CN">
+			<Text>游戏原本的行为：点击攻击按钮时镜头会移到城市。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_NOM" Language="zh_Hans_CN">
+			<Text>更轻量的地图标记</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="zh_Hans_CN">
+			<Text>没有变化时不再重建地图标记及其列表：减少多人游戏中的卡顿。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="zh_Hans_CN">
+			<Text>修正生产回合数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_AIDE" Language="zh_Hans_CN">
+			<Text>显示的回合数会像实际生产一样计入政体加成（法西斯主义、独裁统治、商人共和国）。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_NOM" Language="zh_Hans_CN">
+			<Text>交换后奇观仍留在队列中</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="zh_Hans_CN">
+			<Text>因交换而被移出生产队列的奇观，会通过正常的游戏指令放回：不会不同步，即使对方没有代理。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="zh_Hans_CN">
+			<Text>总督或伟人之后更新帝国产出</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="zh_Hans_CN">
+			<Text>在总督头衔、总督调任或伟人之后，无需调整公民，顶部栏也会更新。仅影响显示：不会不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="zh_Hans_CN">
+			<Text>在旗帜上显示建造者次数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="zh_Hans_CN">
+			<Text>基于 Better Builder Charges Tracking（wltk）。有可用次数的单位（建造者、军事工程师、罗马军团……）的旗帜上显示次数，代替晋升。如果该模组已启用，则取代它。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="zh_Hans_CN">
+			<Text>贸易路线剩余回合</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ROUTES_AIDE" Language="zh_Hans_CN">
+			<Text>你每个正在运营路线的商人旗帜上，显示其贸易路线结束前的回合数。之后商人回到出发城市时结束该路线。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_NOM" Language="zh_Hans_CN">
+			<Text>清除通知按钮</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="zh_Hans_CN">
+			<Text>基于 NotificationClear（336tarot）。通知面板中的按钮可一键关闭所有你能自行关闭的通知。如果该模组已启用，则取代它。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="zh_Hans_CN">
+			<Text>扩展顶部栏</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="zh_Hans_CN">
+			<Text>基于 TopPanel Extension Pro（号码菌 / Azukii）。在顶部栏显示食物、生产力、人口和奢侈品资源，并附各城市详情；还显示队友的资源。如果该模组已启用，则取代它。没有该模组时，保留 Better Spectator Mod 的顶部栏。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="zh_Hans_CN">
+			<Text>政策卡效果</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_AIDE" Language="zh_Hans_CN">
+			<Text>基于 Extended Policy Cards（Aristos）。每张卡显示其对你帝国的数值收益，由修正后的 Real Modifier Analysis（Infixo）计算（统治、古老城区、修道主义、公民威望、维护费卡、伟人卡的食物）。不再需要 Better Report Screen。如果该模组已启用，则取代它。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_NOM" Language="zh_Hans_CN">
+			<Text>改进的报告界面</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="zh_Hans_CN">
+			<Text>基于 Better Report Screen（Infixo）。重做的报告界面，含交易、单位、政策、城邦和城市标签页，并显示每项政策和每个城邦的效果，与政策卡一样经过修正。如果该模组已启用，则取代它。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="zh_Hans_CN">
+			<Text>记录已加载的脚本和 XML</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_AIDE" Language="zh_Hans_CN">
+			<Text>将读取的每个界面文件记入代理日志。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_NOM" Language="zh_Hans_CN">
+			<Text>测量地图标记的开销</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_AIDE" Language="zh_Hans_CN">
+			<Text>将地图标记和领袖栏重建所需的时间写入 Lua.log。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_NOM" Language="zh_Hans_CN">
+			<Text>玩家间交易诊断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="zh_Hans_CN">
+			<Text>将发送和收到的交易提议以及交易界面显示的内容写入 Lua.log，用于分析人类玩家之间交错的交易。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="zh_Hans_CN">
+			<Text>显示同时开始与结束回合的信号</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="zh_Hans_CN">
+			<Text>使用游戏选项“No First/Last moves (BGD)”时，各台电脑会互发隐藏的聊天消息（.bgd_pret、.bgd_depart、.bgd_fin）。开启后，这些消息会留在你的聊天中，主机结束回合时还会显示一行，便于跟踪每回合的开始和结束。仅影响本机显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="zh_Hans_CN">
+			<Text>游戏计时区段分析</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="zh_Hans_CN">
+			<Text>将游戏计时的每个区段（帧、界面、脚本、事件）的耗时记录到 %LOCALAPPDATA%\Civ6RolloverProxy\zones，用于性能分析。每秒游戏约 1 MB。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="zh_Hans_CN">
+			<Text>这些是 BetterGameDLLs 代理的设置（rollover_proxy.cfg）。将在下一局游戏开始时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="zh_Hans_CN">
+			<Text>这些是 BetterGameDLLs 代理的设置（rollover_proxy.cfg）。已经开始过一局游戏：只有重启游戏后才会生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="zh_Hans_CN">
+			<Text>缺少启动代理的功能：无法读取或保存设置。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_LECTURE_IMPOSSIBLE" Language="zh_Hans_CN">
+			<Text>无法读取设置：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_INSTALLE" Language="zh_Hans_CN">
+			<Text>GameCore 代理已安装。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_NON_INSTALLE" Language="zh_Hans_CN">
+			<Text>GameCore 代理未安装：这些设置要在安装后才会生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_NON_ENREGISTRES" Language="zh_Hans_CN">
+			<Text>设置未保存：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VALEUR_FICHIER" Language="zh_Hans_CN">
+			<Text>{1}（文件中的值）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AFFICHER_AVANCEES" Language="zh_Hans_CN">
+			<Text>显示高级选项</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="zh_Hans_CN">
+			<Text>隐藏高级选项</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="zh_Hans_CN">
+			<Text>内置界面模组基于其作者的成果，BetterGameDLLs 在此致谢：</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="zh_Hans_CN">
+			<Text>{1}（Workshop {2}）：{3}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_AUTEURS_MERCI" Language="zh_Hans_CN">
+			<Text>{1}；鸣谢：{2}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_AUTEURS_BRS" Language="zh_Hans_CN">
+			<Text>{1}；原始单位和交易标签页：{2}；鸣谢：{3}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs：新版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs：新的预发布版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 版本 {1} 已可用（已安装：{2}）。[NEWLINE][NEWLINE]“更新”会关闭游戏并启动安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 预发布版本 {1} 已可用（已安装：{2}）。[NEWLINE][NEWLINE]这是测试版本：你收到它是因为安装程序中勾选了“预发布版本”。[NEWLINE][NEWLINE]“更新”会关闭游戏并启动安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="zh_Hans_CN">
+			<Text>更新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_BOUTON_PLUS_TARD" Language="zh_Hans_CN">
+			<Text>稍后</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_PAGE" Language="zh_Hans_CN">
+			<Text>找不到 BetterGameDLLs 安装程序：已在浏览器中打开最新版本的页面。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="zh_Hans_CN">
+			<Text>所有玩家在同一时刻开始和结束回合。回合开始时，每个人都要等所有人加载完毕：可以查看地图，但指令会被暂缓，回合计时器也不会走。回合结束时，当主机的计时器归零，所有人的回合都会结束，即使自己的计时器还显示有剩余时间。所有玩家都需要安装相同版本的 BetterGameDLLs。取代 MPH 的回合同步，该功能会被关闭。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_TOUS" Language="zh_Hans_CN">
+			<Text>所有玩家都安装了 BetterGameDLLs {1}：POL 修正已启用。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SANS" Language="zh_Hans_CN">
+			<Text>未安装 BetterGameDLLs：{1}。本局已关闭 POL 修正。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 版本不是 {1}：{2}。本局已关闭 POL 修正。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="zh_Hans_CN">
+			<Text>未安装 BetterGameDLLs：{1}。BetterGameDLLs 版本不是 {2}：{3}。本局已关闭 POL 修正。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="zh_Hans_CN">
+			<Text>主机没有安装 BetterGameDLLs，或版本不兼容：本局已关闭 POL 修正。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="zh_Hans_CN">
+			<Text>{1}：在 POL 修正已启用时未安装 BetterGameDLLs（或版本不同）加入。该玩家的游戏将会不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="zh_Hans_CN">
+			<Text>No First/Last moves 已启用：所有玩家一起开始回合，主机计时器归零时所有人的回合结束。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="zh_Hans_CN">
+			<Text>No First/Last moves：同时开始回合已启用；同时结束不可用（未能挂接游戏计时器）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="zh_Hans_CN">
+			<Text>No First/Last moves 已关闭：所有玩家都需要安装相同版本的 BetterGameDLLs。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="zh_Hans_CN">
+			<Text>指令已暂缓：还不是所有玩家的回合都已开始。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_PARTI" Language="zh_Hans_CN">
+			<Text>开始！</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS" Language="zh_Hans_CN">
+			<Text>已在没有 {1} 的情况下开始（{2} 秒后仍未准备好）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="zh_Hans_CN">
+			<Text>回合结束：主机的计时器已到。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="zh_Hans_CN">
+			<Text>观战者：仅可查看，你的投票不计入。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="zh_Hans_CN">
+			<Text>关闭</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="zh_Hans_CN">
+			<Text>贸易路线：{1} 回合后，在商人回到出发城市时结束。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="zh_Hans_CN">
+			<Text>清除你能自行关闭的通知（交易和待做的选择会保留）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="zh_Hans_CN">
+			<Text>操作失败</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_NOT_THE_CIVILIZATION_VI" Language="zh_Hans_CN">
+			<Text>{1} 不是 Civilization VI（Gathering Storm）的文件夹。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="zh_Hans_CN">
+			<Text>在 Steam 库中找不到 Civilization VI。\n\n请使用 --game-dir "&lt;游戏文件夹&gt;" 重新运行安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="zh_Hans_CN">
+			<Text>正在查找最新版本…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CLOSE_CIVILIZATION_VI_THEN_RUN_THE" Language="zh_Hans_CN">
+			<Text>请关闭 Civilization VI，然后重新运行安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="zh_Hans_CN">
+			<Text>正在卸载 BetterGameDLLs…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 已卸载</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="zh_Hans_CN">
+			<Text>游戏已恢复原始文件。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_GAME_X" Language="zh_Hans_CN">
+			<Text>游戏：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CHANNEL_PRE_RELEASE_TEST_VERSIONS_AHEAD" Language="zh_Hans_CN">
+			<Text>\n渠道：预发布版本（发布前的测试版本）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_COULD_NOT_READ_THE_LATEST_VERSION" Language="zh_Hans_CN">
+			<Text>\n\n无法读取最新版本：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LATEST_VERSION_UNKNOWN" Language="zh_Hans_CN">
+			<Text>最新版本未知</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs {1} 已安装且为最新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 未安装</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="zh_Hans_CN">
+			<Text>安装\n下载并安装版本 {1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 版本 {1} 已可用</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="zh_Hans_CN">
+			<Text>更新\n安装版本 {1}，它不再替换任何游戏文件：Steam 不会再移除它。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 需要修复</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="zh_Hans_CN">
+			<Text>修复\n重新安装版本 {1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="zh_Hans_CN">
+			<Text>已安装 BetterGameDLLs 版本 {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="zh_Hans_CN">
+			<Text>回到版本 {1}\n用最新的正式版本替换预发布版本。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X" Language="zh_Hans_CN">
+			<Text>更新\n安装版本 {1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_NOT_INSTALLED" Language="zh_Hans_CN">
+			<Text>未安装</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_FILE_FROM_ANOTHER_PROGRAM" Language="zh_Hans_CN">
+			<Text>其他程序的文件</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_OLD_PROXY_IN_PLACE_OF_THE" Language="zh_Hans_CN">
+			<Text>旧代理替换了原始文件</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PROXY_INSTALLED_OTHER_VERSION" Language="zh_Hans_CN">
+			<Text>代理已安装，版本不同</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PROXY_UP_TO_DATE" Language="zh_Hans_CN">
+			<Text>代理为最新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_VERSION_INSTALLED_BY_THE_INSTALLER_X" Language="zh_Hans_CN">
+			<Text>安装程序安装的版本：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNINSTALL_RESTORES_THE_GAME_S_ORIGINAL" Language="zh_Hans_CN">
+			<Text>卸载\n恢复游戏的原始文件。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PRE_RELEASE_INSTALL_TEST_VERSIONS" Language="zh_Hans_CN">
+			<Text>预发布版本：安装测试版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="zh_Hans_CN">
+			<Text>正在安装 BetterGameDLLs {1}…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="zh_Hans_CN">
+			<Text>若要让它自动更新和修复，请在 Steam 中为 Civilization VI 添加此启动选项（属性 &gt; 通用 &gt; 启动选项）：\n\n{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs {1} 已安装</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="zh_Hans_CN">
+			<Text>重新启动 Civilization VI\n通过 Steam 启动。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="zh_Hans_CN">
+			<Text>复制启动选项\n粘贴到 Steam 的启动选项中。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="zh_Hans_CN">
+			<Text>Civilization VI 没有关闭。请关闭它，然后重新运行安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="zh_Hans_CN">
+			<Text>BetterGameDLLs 无法更新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="zh_Hans_CN">
+			<Text>{1}\n\n游戏将在不更新的情况下启动。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_NOT_FOUND" Language="zh_Hans_CN">
+			<Text>找不到 Civilization VI。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="zh_Hans_CN">
+			<Text>正在将 BetterGameDLLs 更新到版本 {1}…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="zh_Hans_CN">
+			<Text>失败（代码 {1}）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_MISSING_VERIFY_THE_GAME" Language="zh_Hans_CN">
+			<Text>缺少 {1}：请在 Steam 中验证游戏文件。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="zh_Hans_CN">
+			<Text>{1} 不是 BetterGameDLLs 的文件（其他模组？）：请删除它，然后重新运行安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="zh_Hans_CN">
+			<Text>版本 {1} 需要更新的安装程序：请从版本页面下载。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_RELEASE_LIST_X" Language="zh_Hans_CN">
+			<Text>无法读取版本列表：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_NO_PUBLISHED_RELEASE" Language="zh_Hans_CN">
+			<Text>没有已发布的版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_MANIFEST_SIGNATURE" Language="zh_Hans_CN">
+			<Text>无法读取清单签名</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INVALID_MANIFEST_SIGNATURE" Language="zh_Hans_CN">
+			<Text>清单签名无效</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_MANIFEST_X" Language="zh_Hans_CN">
+			<Text>无法读取清单：{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_SHA_256_DIFFERS_FROM_THE" Language="zh_Hans_CN">
+			<Text>{1}：SHA-256 与清单不符</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_DOWNLOAD_OF_X_X" Language="zh_Hans_CN">
+			<Text>下载 {1}：{2}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_HIDE_DETAILS" Language="zh_Hans_CN">
+			<Text>隐藏详情</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_DETAILS" Language="zh_Hans_CN">
+			<Text>详情</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PLEASE_WAIT" Language="zh_Hans_CN">
+			<Text>请稍候。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CLOSE" Language="zh_Hans_CN">
+			<Text>关闭</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="zh_Hans_CN">
+			<Text>管理员权限被拒绝</Text>
+		</Row>
+	</LocalizedText>
+</GameData>

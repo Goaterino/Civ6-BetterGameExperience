@@ -409,8 +409,8 @@ unsafe fn publier(l: *mut c_void) -> bool {
 // ---------------------------------------------------------------------------------------------
 // Scripts.
 
-const BLOC_PARTIE: &str = include_str!("ui_depart.lua");
-const BLOC_CHAT: &str = include_str!("ui_depart_chat.lua");
+const BLOC_PARTIE: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_depart.lua"));
+const BLOC_CHAT: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_depart_chat.lua"));
 
 /// Le script suivi de son bloc, si c'est `InGame.lua` (ou son remplaçant du même nom, celui de
 /// MPH) ou `ChatPanel.lua` (que MPH inclut). Le bloc d'InGame coupe aussi la synchro de tour de

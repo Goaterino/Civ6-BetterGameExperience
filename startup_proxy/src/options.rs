@@ -26,7 +26,7 @@ use crate::{log, win};
 use std::ffi::{c_char, c_void, CStr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-pub const LUA_BLOCK: &str = include_str!("options_proxy.lua");
+pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("options_proxy.lua"));
 const XML_TAB: &str = include_str!("options_proxy_tab.xml");
 const XML_PANEL: &str = include_str!("options_proxy_panel.xml");
 
@@ -74,12 +74,18 @@ pub fn patch_options_xml(src: &[u8]) -> Result<Vec<u8>, String> {
 /// `true` quand le proxy est compilé avec la feature `diag` (builds locaux, pas la release).
 const DIAG_LINE: &str = "local PROXY_DIAG = false;";
 
-/// Le bloc de l'onglet, réglages de diagnostic compris avec la feature `diag`.
-fn lua_block() -> std::borrow::Cow<'static, str> {
+/// Ligne du bloc qui porte la version affichée dans le titre de l'onglet : réécrite avec celle de la
+/// release (`version::RELEASE`), ou celle du salon (`version::VERSION`) pour une compilation locale.
+const VERSION_LINE: &str = "local PROXY_VERSION = nil;";
+
+/// Le bloc de l'onglet : version dans le titre, réglages de diagnostic compris avec la feature `diag`.
+fn lua_block() -> String {
+    let version = crate::version::RELEASE.unwrap_or(crate::version::VERSION);
+    let block = LUA_BLOCK.replacen(VERSION_LINE, &format!("local PROXY_VERSION = \"{version}\";"), 1);
     if cfg!(feature = "diag") {
-        LUA_BLOCK.replacen(DIAG_LINE, "local PROXY_DIAG = true;", 1).into()
+        block.replacen(DIAG_LINE, "local PROXY_DIAG = true;", 1)
     } else {
-        LUA_BLOCK.into()
+        block
     }
 }
 
@@ -488,6 +494,8 @@ mod tests {
     #[test]
     fn reglages_de_diagnostic() {
         assert_eq!(LUA_BLOCK.matches(DIAG_LINE).count(), 1);
+        assert_eq!(LUA_BLOCK.matches(VERSION_LINE).count(), 1);
+        assert!(lua_block().contains(&format!("local PROXY_VERSION = \"{}\";", crate::version::RELEASE.unwrap_or(crate::version::VERSION))));
         assert_eq!(lua_block().contains("local PROXY_DIAG = true;"), cfg!(feature = "diag"));
     }
 
@@ -534,6 +542,24 @@ mod tests {
         }
         for k in &tab {
             assert!(read.contains(k), "{k} dans l'onglet, inconnu du proxy");
+        }
+    }
+
+    /// Chaque réglage de l'onglet a son nom et son aide dans les textes (textes/en_US.xml), et
+    /// chaque clé LOC_ que le bloc emploie existe.
+    #[test]
+    fn textes_de_l_onglet() {
+        let en = include_str!("../../textes/en_US.xml");
+        let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
+        for k in &tab {
+            for suffixe in ["NOM", "AIDE"] {
+                let tag = format!("Tag=\"LOC_BGD_OPT_{}_{suffixe}\"", k.to_uppercase());
+                assert!(en.contains(&tag), "{tag} manque dans textes/en_US.xml");
+            }
+        }
+        let bloc = include_str!("options_proxy.lua");
+        for cle in bloc.split('"').filter(|s| s.starts_with("LOC_BGD_") && !s.ends_with('_')) {
+            assert!(en.contains(&format!("Tag=\"{cle}\"")), "{cle} manque dans textes/en_US.xml");
         }
     }
 }

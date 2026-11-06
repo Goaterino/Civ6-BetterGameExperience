@@ -12,9 +12,9 @@ local function ReadFile(path)
 	f:close();
 	return s;
 end
-local BLOCK = ReadFile(dir .. "/../src/salon.lua");
+local BLOCK = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/salon.lua");
 -- Relais de l'hôte en cours de partie (InGame.lua) et écran de chargement (LoadScreen.lua).
-local PARTIE = ReadFile(dir .. "/../src/partie.lua");
+local PARTIE = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/partie.lua");
 local CHARGEMENT = ReadFile(dir .. "/../src/chargement.lua");
 
 local failures = 0;
@@ -171,7 +171,7 @@ do
 	check(l.actif() == "1", "tous équipés : verdict 1 (" .. tostring(l.verdict()) .. ")");
 	l.countdown();
 	check(#l.chat == 1 and l.chat[1].from == 0, "un seul message, de l'hôte");
-	check(LastChat(l):find("^%[COLOR_GREEN%]BGD %- ") and LastChat(l):find("correctifs POL actifs", 1, true), "message vert : " .. LastChat(l));
+	check(LastChat(l):find("^%[COLOR_GREEN%]BGD %- ") and LastChat(l):find("POL fixes enabled", 1, true), "message vert : " .. LastChat(l));
 	l.countdown();
 	check(#l.chat == 1, "pas de second message identique");
 	check(l.machines[1].countdowns == 2, "le compte à rebours d'origine est toujours lancé");
@@ -185,8 +185,8 @@ do
 	check(l.actif() == "0", "sans proxy : verdict 0");
 	l.countdown();
 	local t = LastChat(l);
-	check(t:find("^%[COLOR_RED%]BGD %- Sans BetterGameDLLs : Bob%."), "message rouge : " .. t);
-	check(t:find("Correctifs POL désactivés pour cette partie.", 1, true), "correctifs POL désactivés : " .. t);
+	check(t:find("^%[COLOR_RED%]BGD %- Without BetterGameDLLs: Bob%."), "message rouge : " .. t);
+	check(t:find("POL fixes disabled for this game.", 1, true), "correctifs POL désactivés : " .. t);
 	check(not t:find("Zoé", 1, true), "Zoé est équipée");
 	check(#l.chat == 1, "Zoé, vue par l'hôte, n'écrit rien");
 	check(Pol(l, 0) == "désactivés" and Pol(l, 2) == "désactivés", "POL désactivés chez l'hôte et Zoé");
@@ -199,7 +199,7 @@ do
 	l.open();
 	check(l.actif() == "0", "valeur d'une sauvegarde : verdict 0");
 	l.countdown();
-	check(LastChat(l):find("Sans BetterGameDLLs : Bob", 1, true), "Bob compté sans proxy : " .. LastChat(l));
+	check(LastChat(l):find("Without BetterGameDLLs: Bob", 1, true), "Bob compté sans proxy : " .. LastChat(l));
 end
 
 -- 4. Autre version, en anglais.
@@ -231,7 +231,7 @@ do
 	l.countdown();
 	local deZoe = 0;
 	for _, c in ipairs(l.chat) do
-		check(c.from ~= 0 and c.text:find("^%[COLOR_RED%]BGD %- L'hôte n'a pas BetterGameDLLs"), "message d'un client : " .. c.text);
+		check(c.from ~= 0 and c.text:find("^%[COLOR_RED%]BGD %- The host does not have BetterGameDLLs"), "message d'un client : " .. c.text);
 		if c.from == 2 then deZoe = deZoe + 1; end
 	end
 	check(deZoe == 1, "Zoé écrit une fois");
@@ -251,7 +251,7 @@ do
 	for _, m in pairs(l.machines) do m.events.PlayerInfoChanged.Fire(0); end
 	l.countdown();
 	check(Pol(l, 1) == "désactivés" and Pol(l, 2) == "désactivés", "verdict périmé ignoré : " .. tostring(Pol(l, 1)) .. ", " .. tostring(Pol(l, 2)));
-	check(#l.chat >= 1 and l.chat[1].text:find("L'hôte n'a pas BetterGameDLLs", 1, true), "un client prévient");
+	check(#l.chat >= 1 and l.chat[1].text:find("The host does not have BetterGameDLLs", 1, true), "un client prévient");
 end
 
 -- 7. Hotseat : rien.
@@ -292,7 +292,7 @@ do
 	check(l.actif() == "0", "Bob indisponible : verdict 0");
 	check(l.machines[1].values[1].BGD_VERSION == nil, "Bob ne s'annonce pas");
 	l.countdown();
-	check(LastChat(l):find("Sans BetterGameDLLs : Bob", 1, true), "Bob listé : " .. LastChat(l));
+	check(LastChat(l):find("Without BetterGameDLLs: Bob", 1, true), "Bob listé : " .. LastChat(l));
 	check(Pol(l, 0) == "désactivés" and Pol(l, 1) == "désactivés", "POL coupés chez tous, Bob compris");
 	check(l.machines[1].log:find("pas d'annonce : proxys désactivés", 1, true), "raison au journal de Bob");
 end
@@ -348,7 +348,7 @@ do
 	joueurs[3].pret = true;
 	hote.events.PlayerInfoChanged.Fire(2);
 	hote.events.PlayerInfoChanged.Fire(2);
-	check(#l.chat == 2 and LastChat(l):find("^%[COLOR_RED%]BGD %- Léo : arrivée sans BetterGameDLLs"), "message de l'hôte : " .. LastChat(l));
+	check(#l.chat == 2 and LastChat(l):find("^%[COLOR_RED%]BGD %- Léo: joined without BetterGameDLLs"), "message de l'hôte : " .. LastChat(l));
 	check(Pol(l, 0) == "actifs", "l'état ne change pas en pleine partie");
 end
 

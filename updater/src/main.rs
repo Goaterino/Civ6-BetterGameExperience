@@ -15,6 +15,7 @@ mod lang;
 #[path = "../../proxy/src/noms.rs"]
 mod noms;
 mod release;
+mod textes;
 mod win;
 
 use std::path::{Path, PathBuf};
@@ -24,6 +25,7 @@ use std::time::Duration;
 use gui::{Icon, Page, LANGUAGE_CHANGED, TOGGLED};
 use install::{Action, State};
 use lang::{f, t};
+use textes as tx;
 
 const INSTALL: i32 = 100;
 const UNINSTALL: i32 = 101;
@@ -48,7 +50,7 @@ fn main() {
 }
 
 fn failed(e: &str) -> i32 {
-    gui::message(Icon::Error, t(["L'opération a échoué", "The operation failed"]), e);
+    gui::message(Icon::Error, t(tx::THE_OPERATION_FAILED), e);
     1
 }
 
@@ -66,15 +68,12 @@ fn find_game(dir: Option<PathBuf>) -> Result<PathBuf, String> {
     match dir {
         Some(dir) => game::from_command(&dir).ok_or_else(|| {
             f(
-                ["{} n'est pas le dossier de Civilization VI (Gathering Storm).", "{} is not the Civilization VI (Gathering Storm) folder."],
+                tx::X_IS_NOT_THE_CIVILIZATION_VI,
                 &[&dir.display()],
             )
         }),
         None => game::find().ok_or_else(|| {
-            t([
-                "Civilization VI est introuvable dans les bibliothèques Steam.\n\nRelance l'installeur avec --game-dir \"<dossier du jeu>\".",
-                "Civilization VI was not found in the Steam libraries.\n\nRun the installer again with --game-dir \"<game folder>\".",
-            ])
+            t(tx::CIVILIZATION_VI_WAS_NOT_FOUND_IN)
             .to_string()
         }),
     }
@@ -92,7 +91,7 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
             Choice::Toggle => {
                 release::set_prerelease(!release::prerelease());
                 let mut fetched = Err(String::new());
-                let _ = gui::progress(t(["Recherche de la dernière version…", "Looking for the latest version…"]), || {
+                let _ = gui::progress(t(tx::LOOKING_FOR_THE_LATEST_VERSION), || {
                     fetched = release::fetch_manifest(&work);
                     Ok(())
                 });
@@ -101,7 +100,7 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
         }
     };
     if game::running() {
-        return Err(t(["Ferme Civilization VI, puis relance l'installeur.", "Close Civilization VI, then run the installer again."]).into());
+        return Err(t(tx::CLOSE_CIVILIZATION_VI_THEN_RUN_THE).into());
     }
     match action {
         Action::Install => {
@@ -110,14 +109,14 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
             installed(&m.version, false);
         }
         Action::Uninstall => {
-            gui::progress(t(["Désinstallation de BetterGameDLLs…", "Uninstalling BetterGameDLLs…"]), || {
+            gui::progress(t(tx::UNINSTALLING_BETTERGAMEDLLS), || {
                 install::run(action, &game, &work)
             })?;
             release::remember_installed(None);
             gui::message(
                 Icon::Info,
-                t(["BetterGameDLLs est désinstallé", "BetterGameDLLs is uninstalled"]),
-                t(["Le jeu a retrouvé ses fichiers d'origine.", "The game has its original files back."]),
+                t(tx::BETTERGAMEDLLS_IS_UNINSTALLED),
+                t(tx::THE_GAME_HAS_ITS_ORIGINAL_FILES),
             );
         }
     }
@@ -149,61 +148,52 @@ fn ask_action(game: &Path, manifest: &Result<release::Manifest, String>) -> Choi
 
     // Reconstruite à chaque changement de langue.
     loop {
-        let mut content = f(["Jeu : {}", "Game: {}"], &[&game.display()]);
+        let mut content = f(tx::GAME_X, &[&game.display()]);
         if prerelease {
-            content += t([
-                "\nCanal : pré-release (versions de test, avant leur publication)",
-                "\nChannel: pre-release (test versions, ahead of their release)",
-            ]);
+            content += t(tx::CHANNEL_PRE_RELEASE_TEST_VERSIONS_AHEAD);
         }
         let (icon, instruction, install_text) = match manifest {
             Err(e) => {
-                content += &f(["\n\nImpossible de lire la dernière version : {}", "\n\nCould not read the latest version: {}"], &[e]);
-                (Icon::Warning, t(["Dernière version inconnue", "Latest version unknown"]).to_string(), String::new())
+                content += &f(tx::COULD_NOT_READ_THE_LATEST_VERSION, &[e]);
+                (Icon::Warning, t(tx::LATEST_VERSION_UNKNOWN).to_string(), String::new())
             }
             Ok(m) if up_to_date => (
                 Icon::Info,
-                f(["BetterGameDLLs {} est installé et à jour", "BetterGameDLLs {} is installed and up to date"], &[&m.version]),
+                f(tx::BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP, &[&m.version]),
                 String::new(),
             ),
             Ok(m) if ours == 0 && !old => (
                 Icon::Info,
-                t(["BetterGameDLLs n'est pas installé", "BetterGameDLLs is not installed"]).to_string(),
-                f(["Installer\nTélécharge et installe la version {}.", "Install\nDownloads and installs version {}."], &[&m.version]),
+                t(tx::BETTERGAMEDLLS_IS_NOT_INSTALLED).to_string(),
+                f(tx::INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X, &[&m.version]),
             ),
             Ok(m) if old => (
                 Icon::Info,
-                f(["La version {} de BetterGameDLLs est disponible", "BetterGameDLLs version {} is available"], &[&m.version]),
+                f(tx::BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE, &[&m.version]),
                 f(
-                    [
-                        "Mettre à jour\nInstalle la version {}, qui ne remplace plus aucun fichier du jeu : Steam ne la retire plus.",
-                        "Update\nInstalls version {}, which no longer replaces any game file: Steam no longer removes it.",
-                    ],
+                    tx::UPDATE_INSTALLS_VERSION_X_WHICH_NO,
                     &[&m.version],
                 ),
             ),
             // Une partie seulement : un fichier a été retiré à la main.
             Ok(m) if ours < install::TARGETS.len() => (
                 Icon::Warning,
-                t(["BetterGameDLLs doit être réparé", "BetterGameDLLs needs to be repaired"]).to_string(),
-                f(["Réparer\nRéinstalle la version {}.", "Repair\nReinstalls version {}."], &[&m.version]),
+                t(tx::BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED).to_string(),
+                f(tx::REPAIR_REINSTALLS_VERSION_X, &[&m.version]),
             ),
             Ok(m) => match &downgrade {
                 Some(v) => (
                     Icon::Info,
-                    f(["La version {} de BetterGameDLLs est installée", "BetterGameDLLs version {} is installed"], &[v]),
+                    f(tx::BETTERGAMEDLLS_VERSION_X_IS_INSTALLED, &[v]),
                     f(
-                        [
-                            "Revenir à la version {}\nRemplace la pré-release par la dernière release.",
-                            "Go back to version {}\nReplaces the pre-release with the latest release.",
-                        ],
+                        tx::GO_BACK_TO_VERSION_X_REPLACES,
                         &[&m.version],
                     ),
                 ),
                 None => (
                     Icon::Info,
-                    f(["La version {} de BetterGameDLLs est disponible", "BetterGameDLLs version {} is available"], &[&m.version]),
-                    f(["Mettre à jour\nInstalle la version {}.", "Update\nInstalls version {}."], &[&m.version]),
+                    f(tx::BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE, &[&m.version]),
+                    f(tx::UPDATE_INSTALLS_VERSION_X, &[&m.version]),
                 ),
             },
         };
@@ -211,27 +201,27 @@ fn ask_action(game: &Path, manifest: &Result<release::Manifest, String>) -> Choi
             .iter()
             .map(|(name, state)| {
                 let text = match state {
-                    State::Absent => t(["pas installé", "not installed"]),
-                    State::Foreign => t(["fichier d'un autre programme", "file from another program"]),
-                    State::Old => t(["ancien proxy à la place de l'original", "old proxy in place of the original"]),
-                    State::Installed => t(["proxy installé, autre version", "proxy installed, other version"]),
-                    State::UpToDate => t(["proxy à jour", "proxy up to date"]),
+                    State::Absent => t(tx::NOT_INSTALLED),
+                    State::Foreign => t(tx::FILE_FROM_ANOTHER_PROGRAM),
+                    State::Old => t(tx::OLD_PROXY_IN_PLACE_OF_THE),
+                    State::Installed => t(tx::PROXY_INSTALLED_OTHER_VERSION),
+                    State::UpToDate => t(tx::PROXY_UP_TO_DATE),
                 };
                 format!("{name} : {text}")
             })
             .collect();
         if let (Some(v), true) = (&installed, ours > 0) {
-            details.push(f(["Version posée par l'installeur : {}", "Version installed by the installer: {}"], &[v]));
+            details.push(f(tx::VERSION_INSTALLED_BY_THE_INSTALLER_X, &[v]));
         }
         let mut buttons = Vec::new();
         if !install_text.is_empty() {
             buttons.push((INSTALL, install_text.as_str()));
         }
         if ours > 0 || old {
-            buttons.push((UNINSTALL, t(["Désinstaller\nRemet les fichiers d'origine du jeu.", "Uninstall\nRestores the game's original files."])));
+            buttons.push((UNINSTALL, t(tx::UNINSTALL_RESTORES_THE_GAME_S_ORIGINAL)));
         }
         let details = details.join("\n");
-        let checkbox = t(["Pré-release : installer les versions de test", "Pre-release: install test versions"]);
+        let checkbox = t(tx::PRE_RELEASE_INSTALL_TEST_VERSIONS);
         let page = Page {
             icon,
             instruction: &instruction,
@@ -251,7 +241,7 @@ fn ask_action(game: &Path, manifest: &Result<release::Manifest, String>) -> Choi
 }
 
 fn install_release(m: &release::Manifest, game: &Path, work: &Path) -> Result<(), String> {
-    gui::progress(&f(["Installation de BetterGameDLLs {}…", "Installing BetterGameDLLs {}…"], &[&m.version]), || {
+    gui::progress(&f(tx::INSTALLING_BETTERGAMEDLLS_X, &[&m.version]), || {
         release::fetch_files(m, work)?;
         install::run(Action::Install, game, work)
     })?;
@@ -284,20 +274,17 @@ fn installed(version: &str, relaunch: bool) {
     let option = format!("\"{}\" %command%", exe.display());
     loop {
         let content = f(
-            [
-                "Pour qu'il se mette à jour et se répare tout seul, ajoute cette option de lancement à Civilization VI dans Steam (Propriétés > Général > Options de lancement) :\n\n{}",
-                "To keep it updated and repaired automatically, add this launch option to Civilization VI in Steam (Properties > General > Launch options):\n\n{}",
-            ],
+            tx::TO_KEEP_IT_UPDATED_AND_REPAIRED,
             &[&option],
         );
-        let instruction = f(["BetterGameDLLs {} est installé", "BetterGameDLLs {} is installed"], &[&version]);
+        let instruction = f(tx::BETTERGAMEDLLS_X_IS_INSTALLED, &[&version]);
         let mut buttons = Vec::new();
         if relaunch {
-            buttons.push((RELAUNCH, t(["Relancer Civilization VI\nPar Steam.", "Restart Civilization VI\nThrough Steam."])));
+            buttons.push((RELAUNCH, t(tx::RESTART_CIVILIZATION_VI_THROUGH_STEAM)));
         }
         buttons.push((
             COPY,
-            t(["Copier l'option de lancement\nÀ coller dans les options de lancement de Steam.", "Copy the launch option\nTo paste into Steam's launch options."]),
+            t(tx::COPY_THE_LAUNCH_OPTION_TO_PASTE),
         ));
         let page = Page { icon: Icon::Info, instruction: &instruction, content: &content, details: None, buttons: &buttons, checkbox: None };
         match gui::ask(&page, &|id| id == COPY && win::copy_to_clipboard(&option)) {
@@ -321,10 +308,7 @@ fn after_game(dir: Option<PathBuf>) -> i32 {
         std::thread::sleep(Duration::from_millis(500));
     }
     if game::running() {
-        return failed(t([
-            "Civilization VI ne s'est pas fermé. Ferme-le, puis relance l'installeur.",
-            "Civilization VI did not close. Close it, then run the installer again.",
-        ]));
+        return failed(t(tx::CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE));
     }
     let result = (|| {
         let game = find_game(dir)?;
@@ -348,8 +332,8 @@ fn launch(command: &[String]) -> i32 {
     if let Err(e) = update(Path::new(&command[0])) {
         gui::message(
             Icon::Warning,
-            t(["BetterGameDLLs n'a pas pu se mettre à jour", "BetterGameDLLs could not update"]),
-            &f(["{}\n\nLe jeu va se lancer sans mise à jour.", "{}\n\nThe game will start without the update."], &[&e]),
+            t(tx::BETTERGAMEDLLS_COULD_NOT_UPDATE),
+            &f(tx::X_THE_GAME_WILL_START_WITHOUT, &[&e]),
         );
     }
     // L'attente garde le jeu « en cours » pour Steam.
@@ -362,13 +346,13 @@ fn launch(command: &[String]) -> i32 {
 fn update(exe: &Path) -> Result<(), String> {
     let game = game::from_command(exe)
         .or_else(game::find)
-        .ok_or_else(|| t(["Civilization VI introuvable.", "Civilization VI not found."]).to_string())?;
+        .ok_or_else(|| t(tx::CIVILIZATION_VI_NOT_FOUND).to_string())?;
     let work = release::work_dir();
     let m = release::fetch_manifest(&work)?;
     if install::status(&game, Some(&m)).iter().all(|(_, s)| *s == State::UpToDate) {
         return Ok(());
     }
-    gui::progress(&f(["Mise à jour de BetterGameDLLs vers la version {}…", "Updating BetterGameDLLs to version {}…"], &[&m.version]), || {
+    gui::progress(&f(tx::UPDATING_BETTERGAMEDLLS_TO_VERSION_X, &[&m.version]), || {
         release::fetch_files(&m, &work)?;
         install::run(Action::Install, &game, &work)
     })?;

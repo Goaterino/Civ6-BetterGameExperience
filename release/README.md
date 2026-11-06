@@ -49,6 +49,9 @@ faut recompiler et réinstaller pour les retrouver.
 ## Publier une release
 
 1. Vérifier que tout est commité et poussé : la release ne compile que le contenu du tag.
+   `CHANGELOG.md` doit avoir une section `## BetterGameDLLs <version>` (le tag sans `v`) : le
+   workflow en fait les notes de la release ([notes.py](notes.py)), avec les liens vers les
+   traductions de `changelog/`, et échoue sans elle. Mettre aussi à jour `changelog/<langue>.md`.
 2. Si la release change la simulation ou l'échange du salon, augmenter `VERSION` dans
    `proxy/src/version.rs` (X.Y.0). Jamais pour une release qui ne change ni l'une ni l'autre.
 3. Choisir le tag : le X.Y du tag est celui de `VERSION`. Si `VERSION` vient de monter, `vX.Y.0`
@@ -58,7 +61,8 @@ faut recompiler et réinstaller pour les retrouver.
    git tag v0.2.0
    git push origin v0.2.0
    ```
-5. Le workflow teste, compile, signe et crée une release **en brouillon**. La relire sur GitHub, puis
+5. Le workflow vérifie les textes traduits ([textes/](../textes/README.md)), teste, compile, signe et
+   crée une release **en brouillon**. La relire sur GitHub, puis
    la publier : l'updater ne voit que les releases publiées.
    Pour une version de test, cocher *Set as a pre-release* : seuls les joueurs qui ont coché
    « Pré-release » dans l'installeur la reçoivent, par l'installeur comme par la notification du jeu.

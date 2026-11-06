@@ -133,7 +133,8 @@ end
 
 -- ---------------------------------------------------------------------------------------------
 -- Fenêtre du congrès.
-local popup = ReadFile(POPUP_PATH) .. "\r\n" .. ReadFile(dir .. "/../src/ui_congres.lua");
+local popup = ReadFile(POPUP_PATH) .. "\r\n" .. ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua")
+	.. ReadFile(dir .. "/../src/ui_congres.lua");
 local function NewPopup(pol, localPlayer)
 	local env = NewEnv(pol, localPlayer);
 	env.Controls = Magic;

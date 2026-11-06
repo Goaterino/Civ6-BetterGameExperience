@@ -19,7 +19,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::{Mutex, Once};
 
-pub const LUA_BLOCK: &str = include_str!("maj.lua");
+pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("maj.lua"));
 pub const SCRIPT: &str = "mainmenu.lua";
 
 const MANIFEST_URL: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest/download/manifest.json";

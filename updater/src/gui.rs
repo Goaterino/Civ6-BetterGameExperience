@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
 
 use crate::lang::{self, t, LANGUAGES};
+use crate::textes as tx;
 use crate::win::{self, wide, SendMessageW};
 
 #[repr(C, packed)]
@@ -50,6 +51,7 @@ struct TASKDIALOGCONFIG {
 type Callback = unsafe extern "system" fn(*mut c_void, u32, usize, isize, isize) -> i32;
 type TaskDialogIndirect = unsafe extern "system" fn(*const TASKDIALOGCONFIG, *mut i32, *mut i32, *mut i32) -> i32;
 
+const TDF_ENABLE_HYPERLINKS: i32 = 0x1;
 const TDF_USE_COMMAND_LINKS: i32 = 0x10;
 const TDF_SHOW_MARQUEE_PROGRESS_BAR: i32 = 0x400;
 const TDF_CALLBACK_TIMER: i32 = 0x800;
@@ -58,9 +60,9 @@ const TDCBF_OK_BUTTON: i32 = 0x1;
 const TDCBF_CLOSE_BUTTON: i32 = 0x20;
 const TDN_CREATED: u32 = 0;
 const TDN_BUTTON_CLICKED: u32 = 2;
+const TDN_HYPERLINK_CLICKED: u32 = 3;
 const TDN_TIMER: u32 = 4;
 const TDN_DESTROYED: u32 = 5;
-const TDN_RADIO_BUTTON_CLICKED: u32 = 6;
 const TDN_VERIFICATION_CLICKED: u32 = 8;
 const IDCLOSE: usize = 8;
 const WM_USER: u32 = 0x400;
@@ -72,9 +74,6 @@ const S_FALSE: i32 = 1;
 
 /// Bouton de la fenêtre de progression, grisé jusqu'à la fin du travail.
 const WAIT_BUTTON: i32 = 1000;
-/// Boutons radio des langues : `RADIO_BASE` + rang dans `LANGUAGES`.
-const RADIO_BASE: i32 = 2000;
-
 /// Rendu par `ask` quand le joueur a changé de langue : la fenêtre est à reconstruire.
 pub const LANGUAGE_CHANGED: i32 = -1;
 /// Rendu par `ask` quand le joueur a coché ou décoché la case de la page.
@@ -143,7 +142,7 @@ fn load() -> Option<TaskDialogIndirect> {
     }
 }
 
-unsafe extern "system" fn callback(hwnd: *mut c_void, msg: u32, wparam: usize, _: isize, data: isize) -> i32 {
+unsafe extern "system" fn callback(hwnd: *mut c_void, msg: u32, wparam: usize, lparam: isize, data: isize) -> i32 {
     let ctx = &*(data as *const Ctx);
     let finished = ctx.done.map(|d| d.load(Ordering::Acquire));
     match msg {
@@ -163,8 +162,15 @@ unsafe extern "system" fn callback(hwnd: *mut c_void, msg: u32, wparam: usize, _
             None if (ctx.keep_open)(wparam as i32) => return S_FALSE,
             _ => {}
         },
-        TDN_RADIO_BUTTON_CLICKED => {
-            let index = (wparam as i32 - RADIO_BASE) as usize;
+        // Lien d'une langue, en bas de la fenêtre : son rang dans `LANGUAGES`.
+        TDN_HYPERLINK_CLICKED => {
+            let href = lparam as *const u16;
+            let mut len = 0;
+            while !href.is_null() && *href.add(len) != 0 {
+                len += 1;
+            }
+            let href = if href.is_null() { String::new() } else { String::from_utf16_lossy(std::slice::from_raw_parts(href, len)) };
+            let index = href.parse::<usize>().unwrap_or(usize::MAX);
             if index < LANGUAGES.len() && index != lang::current() {
                 lang::set(index);
                 ctx.relang.set(true);
@@ -194,7 +200,7 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
     let instruction = wide(page.instruction);
     let content = wide(page.content);
     let details = page.details.map(wide);
-    let (expand, collapse) = (wide(t(["Masquer les détails", "Hide details"])), wide(t(["Détails", "Details"])));
+    let (expand, collapse) = (wide(t(tx::HIDE_DETAILS)), wide(t(tx::DETAILS)));
     let texts: Vec<Vec<u16>> = page.buttons.iter().map(|(_, text)| wide(text)).collect();
     let buttons: Vec<TASKDIALOG_BUTTON> = page
         .buttons
@@ -216,16 +222,11 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
     cfg.pszContent = content.as_ptr();
     cfg.cButtons = buttons.len() as u32;
     cfg.pButtons = buttons.as_ptr();
-    let labels: Vec<Vec<u16>> = LANGUAGES.iter().map(|l| wide(l.label)).collect();
-    let radio_buttons: Vec<TASKDIALOG_BUTTON> = labels
-        .iter()
-        .enumerate()
-        .map(|(i, label)| TASKDIALOG_BUTTON { nButtonID: RADIO_BASE + i as i32, pszButtonText: label.as_ptr() })
-        .collect();
+    // Choix de la langue : un lien par langue en bas de la fenêtre, la langue actuelle sans lien.
+    let footer = wide(&language_links());
     if radios {
-        cfg.cRadioButtons = radio_buttons.len() as u32;
-        cfg.pRadioButtons = radio_buttons.as_ptr();
-        cfg.nDefaultRadioButton = RADIO_BASE + lang::current() as i32;
+        cfg.dwFlags |= TDF_ENABLE_HYPERLINKS;
+        cfg.pszFooter = footer.as_ptr();
     }
     if let Some(details) = &details {
         cfg.pszExpandedInformation = details.as_ptr();
@@ -245,6 +246,16 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
     } else {
         pressed
     }
+}
+
+/// Les langues de `LANGUAGES`, chacune un lien vers son rang, sauf la langue actuelle.
+fn language_links() -> String {
+    LANGUAGES
+        .iter()
+        .enumerate()
+        .map(|(i, l)| if i == lang::current() { l.label.to_string() } else { format!("<a href=\"{i}\">{}</a>", l.label) })
+        .collect::<Vec<_>>()
+        .join("  ·  ")
 }
 
 /// Fenêtre à liens de commande, choix de la langue et bouton Fermer ; renvoie l'identifiant du
@@ -271,9 +282,9 @@ pub fn progress(instruction: &str, work: impl FnOnce() -> Result<(), String> + S
         let page = Page {
             icon: Icon::Info,
             instruction,
-            content: t(["Merci de patienter.", "Please wait."]),
+            content: t(tx::PLEASE_WAIT),
             details: None,
-            buttons: &[(WAIT_BUTTON, t(["Fermer", "Close"]))],
+            buttons: &[(WAIT_BUTTON, t(tx::CLOSE))],
             checkbox: None,
         };
         let flags = TDF_SHOW_MARQUEE_PROGRESS_BAR | TDF_CALLBACK_TIMER;

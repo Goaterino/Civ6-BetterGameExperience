@@ -102,9 +102,9 @@ partie Gathering Storm ; son nom vient de `Expansion2.modinfo`. Il n'importe que
     propre message « redémarrage nécessaire » (`LOC_OPTIONS_CHANGES_REQUIRE_APP_RESTART`), et
     l'avertissement le dit aussi.
   - **Annuler** n'écrit rien. Chaque ouverture relit le fichier et met l'avertissement à jour.
-- **Langue.** Textes en français si la langue du jeu (`Locale.GetCurrentLanguage().Type`)
-  commence par `fr`, en anglais pour toutes les autres. Chaque texte de `options_proxy.lua` est une
-  paire `{ français, anglais }`.
+- **Langue.** Textes dans la langue du jeu, parmi les 11 de BBG ([textes/](../textes/README.md)).
+  Le nom et l'aide d'un réglage sont les clés `LOC_BGD_OPT_<CLÉ>_NOM` et `LOC_BGD_OPT_<CLÉ>_AIDE` :
+  le test `textes_de_l_onglet` vérifie qu'elles existent pour chaque réglage.
 - **Un mod qui remplace `Options.xml`** : sans le bouton et le panneau, le bloc Lua ne fait rien.
 - **Coexistence avec le proxy de GameCore.** L'accroche Lua s'enchaîne d'elle-même : il lit notre
   accroche comme fonction d'origine. Pour la lecture XML, il trouve notre `jmp [rip+0]` au lieu du
@@ -200,7 +200,8 @@ ne s'activent que si tous les humains ont BetterGameDLLs à la même version. Le
   diffusion remet tout le monde « pas prêt »), ni le hotseat, ni PlayByCloud (pas de salon commun)
   ne servent.
 - **Les messages.** Au démarrage du compte à rebours de lancement, dans le chat, pour tous, une fois
-  par contenu, dans la langue de l'émetteur :
+  par contenu, en anglais ; chaque machine équipée les affiche dans sa langue (`BGD_TxtChat`, voir
+  [textes/](../textes/README.md)). Leur sens, en français :
   - l'hôte, en rouge : `BGD - Sans BetterGameDLLs : Bob. BetterGameDLLs d'une autre version que
     0.2.0 : Zoé (0.1.0). Correctifs POL désactivés pour cette partie.` ;
   - l'hôte, en vert : `BGD - Tous les joueurs ont BetterGameDLLs 0.2.0 : correctifs POL actifs.` ;
@@ -283,8 +284,8 @@ appliquent. Le journal le dit (`citoyens : version inattendue`).
   `<MakeInstance Name="PopupDialog" />` à la fin de `MainMenu.xml` (et le modèle s'il manque), comme
   le XML du jeu, et le bloc crée son popup sur ces contrôles (`include("PopupDialog")`). Sans ces
   contrôles, l'erreur va au journal.
-- **Le message**, dans le popup du menu (`g_PopupDialog`, ou le sien), en français ou en anglais selon la langue
-  du jeu : « La version 0.1.2 de BetterGameDLLs est disponible (installée : 0.1.1) ».
+- **Le message**, dans le popup du menu (`g_PopupDialog`, ou le sien), dans la langue du jeu
+  ([textes/](../textes/README.md)) : « La version 0.1.2 de BetterGameDLLs est disponible (installée : 0.1.1) ».
   - **Mettre à jour** lance l'installeur, `%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe`
     (il s'y copie à chaque installation), avec `--after-game <dossier de l'exe>`, puis ferme le jeu
     (`Events.UserConfirmedClose()`, comme « Quitter vers le bureau » ; `UI.ExitGame()` ne ferme le jeu qu'en partie). L'installeur attend la fin du jeu, installe, et propose de le relancer.

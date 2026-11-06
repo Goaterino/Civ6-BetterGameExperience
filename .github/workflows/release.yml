@@ -35,6 +35,17 @@ jobs:
           rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
           rustup default stable-x86_64-pc-windows-gnu
 
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      # Textes traduits (textes/README.md) : fichiers générés à jour, chaque texte dans chaque langue,
+      # mêmes paramètres que l'anglais. Sur un tag, le changelog de la version doit exister.
+      - name: Textes et changelog
+        run: |
+          python textes/gen_textes.py --check --strict
+          if [ "$GITHUB_REF_TYPE" = tag ]; then python release/notes.py "$VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > notes.md; fi
+
       # Avec et sans les outils de diagnostic (feature `diag`, par défaut), que la release omet.
       - name: Tests
         run: |
@@ -55,10 +66,6 @@ jobs:
           mkdir dist
           cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
           cp updater/target/release/BetterGameDLLs.exe dist/
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
 
       - name: Manifeste signé
         env:
@@ -85,4 +92,4 @@ jobs:
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameDLLs $VERSION" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameDLLs $VERSION" --notes-file notes.md

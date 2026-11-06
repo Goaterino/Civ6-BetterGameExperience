@@ -10,6 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::lang::f;
+use crate::textes as tx;
 use crate::noms;
 use crate::release::{self, Manifest};
 use crate::win;
@@ -123,7 +124,7 @@ pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     match win::run_elevated(&exe, &params)? {
         0 => Ok(()),
-        code => Err(fs::read_to_string(work.join(ERROR_FILE)).unwrap_or(f(["échec (code {})", "failure (code {})"], &[&code]))),
+        code => Err(fs::read_to_string(work.join(ERROR_FILE)).unwrap_or(f(tx::FAILURE_CODE_X, &[&code]))),
     }
 }
 
@@ -163,7 +164,7 @@ fn restore_old(game: &Path) -> Result<(), String> {
     for (dll, orig) in old_files(game) {
         if is_old_proxy(&dll)? {
             if !orig.exists() {
-                return Err(f(["{} manque : vérifie les fichiers du jeu dans Steam.", "{} is missing: verify the game files in Steam."], &[&orig.display()]));
+                return Err(f(tx::X_IS_MISSING_VERIFY_THE_GAME, &[&orig.display()]));
             }
             fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
             fs::rename(&orig, &dll).map_err(|e| format!("{}: {e}", orig.display()))?;
@@ -179,10 +180,7 @@ fn check_foreign(game: &Path) -> Result<(), String> {
     for t in &TARGETS {
         if t.state(game, None)? == State::Foreign {
             return Err(f(
-                [
-                    "{} n'est pas un fichier de BetterGameDLLs (un autre mod ?) : retire-le, puis relance l'installeur.",
-                    "{} is not a BetterGameDLLs file (another mod?): remove it, then run the installer again.",
-                ],
+                tx::X_IS_NOT_A_BETTERGAMEDLLS_FILE,
                 &[&t.path(game).display()],
             ));
         }
@@ -194,7 +192,7 @@ fn install(game: &Path, work: &Path, m: &Manifest) -> Result<(), String> {
     // La release doit poser exactement nos cibles, aux mêmes endroits.
     let known = |f: &release::File| TARGETS.iter().any(|t| t.name == f.name && t.dest == f.dest);
     if m.files.len() != TARGETS.len() || !m.files.iter().all(known) {
-        return Err(f(["la version {} demande un installeur plus récent : télécharge-le depuis la page de la release.", "version {} needs a newer installer: download it from the release page."], &[&m.version]));
+        return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
     }
     check_foreign(game)?;
     restore_old(game)?;

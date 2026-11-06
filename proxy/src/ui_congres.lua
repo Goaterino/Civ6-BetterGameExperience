@@ -19,16 +19,6 @@ do
 		return pConfig ~= nil and pConfig ~= false and pConfig:GetLeaderTypeName() == "LEADER_SPECTATOR";
 	end
 
-	local function BGD_FR()
-		local language = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-		local code = language and language.Type;
-		return type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
-	end
-
-	local function BGD_Texte(fr, en)
-		return BGD_FR() and fr or en;
-	end
-
 	-- Segment de vote (session ordinaire ou extraordinaire), et sa clé pour ce tour.
 	local function BGD_EnVote()
 		local segment = Game.GetCurrentTurnSegment();
@@ -109,8 +99,7 @@ do
 		local shown = BGD_SetPhase(phaseNum);
 		if shown and BGD_EstSpectateur() and m_IsInSession then
 			Controls.Description:SetText(Controls.Description:GetText() .. "[NEWLINE][COLOR_RED]"
-				.. BGD_Texte("Spectateur : consultation seule, vos votes ne comptent pas.",
-					"Spectator: read only, your votes are not counted.") .. "[ENDCOLOR]");
+				.. BGD_Txt("LOC_BGD_CONGRES_SPECTATEUR") .. "[ENDCOLOR]");
 			BGD_Soumettre();
 		end
 		return shown;
@@ -120,7 +109,7 @@ do
 	function UpdateNavButtons()
 		BGD_UpdateNavButtons();
 		if BGD_EstSpectateur() and m_IsInSession and Controls.AcceptButton:IsVisible() then
-			Controls.AcceptButton:SetText(BGD_Texte("Fermer", "Close"));
+			Controls.AcceptButton:SetText(BGD_Txt("LOC_BGD_CONGRES_FERMER"));
 			Controls.AcceptButton:SetDisabled(false);
 		end
 	end

@@ -4,6 +4,8 @@
 -- remplaçant de MPH inclut avant de reprendre OnChat : il hérite donc de ce filtre.
 -- - Les messages qui commencent par `.bgd_` (`.bgd_pret`, `.bgd_depart`) ne s'affichent pas, sauf
 --   avec le réglage « Afficher les signaux du départ simultané » (depart_signaux=on).
+-- - Les messages de BetterGameDLLs, envoyés en anglais, sont affichés dans la langue du jeu
+--   (BGD_TxtChat, textes/bgd_texte.lua).
 -- - LuaEvents.BGD_DepartTexte(texte) ajoute une ligne locale, que ui_depart.lua emploie pour
 --   prévenir le joueur ; rien n'est envoyé.
 -- ===========================================================================
@@ -18,6 +20,13 @@ local BGD_DepartChatOk, BGD_DepartChatErr = pcall(function()
 		if type(text) == "string" and string.sub(text, 1, 5) == ".bgd_"
 			and not (Civ6RolloverProxy_DepartSignaux ~= nil and Civ6RolloverProxy_DepartSignaux() == 1) then
 			return;
+		end
+		-- Messages de BetterGameDLLs reçus en anglais, affichés dans la langue du jeu.
+		if BGD_TxtChat ~= nil then
+			local ok, traduit = pcall(BGD_TxtChat, text);
+			if ok and traduit ~= nil then
+				text = traduit;
+			end
 		end
 		return BGD_OnChatBase(fromPlayer, toPlayer, text, eTargetType, playSounds);
 	end

@@ -9,7 +9,7 @@ local function ReadFile(path)
 end
 
 local dir = (arg and arg[0] or ""):match("^(.*)[/\\]") or ".";
-local BLOC = ReadFile(dir .. "/../src/ui_depart.lua");
+local BLOC = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/ui_depart.lua");
 
 local failures = 0;
 local function Check(name, ok)
@@ -426,7 +426,7 @@ end
 
 do
 	-- ChatPanel.lua suivi de ui_depart_chat.lua : signaux cachés, sauf réglage ; lignes locales.
-	local CHAT = ReadFile(dir .. "/../src/ui_depart_chat.lua");
+	local CHAT = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/ui_depart_chat.lua");
 	local function Panel(signaux)
 		local shown, entries = {}, {};
 		local LuaEvents = setmetatable({}, { __index = function(t, k) local e = NewEvent(); rawset(t, k, e); return e; end });

@@ -5,38 +5,9 @@
 -- Popup : celui du menu (g_PopupDialog) ; sinon (MainMenu de MPH), le bloc crée le sien sur l'instance
 -- PopupDialog que le proxy ajoute au XML du menu.
 
-local BGD_MAJ_FR = false;
-do
-	local language = Locale and Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-	local code = language and language.Type;
-	BGD_MAJ_FR = type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
-end
-
--- Chaque texte : { français, anglais }. La native dit si la version proposée est une release ou une
--- pré-release (canal choisi dans l'installeur, case « Pré-release »).
-local BGD_MAJ_TEXTES = {
-	titre_release = { "BetterGameDLLs : nouvelle release", "BetterGameDLLs: new release" },
-	titre_prerelease = { "BetterGameDLLs : nouvelle pré-release", "BetterGameDLLs: new pre-release" },
-	texte_release = {
-		"La release %s de BetterGameDLLs est disponible (installée : %s).[NEWLINE][NEWLINE]« Mettre à jour » ferme le jeu et lance l'installeur.",
-		"BetterGameDLLs release %s is available (installed: %s).[NEWLINE][NEWLINE]\"Update\" closes the game and starts the installer.",
-	},
-	texte_prerelease = {
-		"La pré-release %s de BetterGameDLLs est disponible (installée : %s).[NEWLINE][NEWLINE]C'est une version de test : tu la reçois parce que la case « Pré-release » est cochée dans l'installeur.[NEWLINE][NEWLINE]« Mettre à jour » ferme le jeu et lance l'installeur.",
-		"BetterGameDLLs pre-release %s is available (installed: %s).[NEWLINE][NEWLINE]This is a test version: you get it because the \"Pre-release\" box is ticked in the installer.[NEWLINE][NEWLINE]\"Update\" closes the game and starts the installer.",
-	},
-	maj = { "Mettre à jour", "Update" },
-	plus_tard = { "Plus tard", "Later" },
-	page = {
-		"L'installeur de BetterGameDLLs est introuvable : la page de la dernière version s'est ouverte dans le navigateur.",
-		"The BetterGameDLLs installer was not found: the latest release page has opened in the browser.",
-	},
-};
-
-local function BGD_Maj_T(t)
-	if BGD_MAJ_FR then return t[1]; end
-	return t[2];
-end
+-- Textes dans la langue du jeu : BGD_Txt (textes/bgd_texte.lua, placé devant ce bloc). La native
+-- dit si la version proposée est une release ou une pré-release (canal choisi dans l'installeur,
+-- case « Pré-release »).
 
 -- Plus rien à faire : pas de proxy, vérification finie, ou notification déjà montrée.
 local bgd_majFinie = Civ6Proxy_MiseAJour == nil;
@@ -70,7 +41,7 @@ local function BGD_Maj_Installer()
 		if friends ~= nil then friends:ClearRichPresence(); end
 		Events.UserConfirmedClose();
 	else
-		BGD_Maj_Popup():ShowOkDialog(BGD_Maj_T(BGD_MAJ_TEXTES.page));
+		BGD_Maj_Popup():ShowOkDialog(BGD_Txt("LOC_BGD_MAJ_PAGE"));
 	end
 end
 
@@ -86,10 +57,10 @@ local function BGD_Maj_Verifier()
 	local pre = kind == "prerelease";
 	BGD_Maj_Journal("notification de la " .. (pre and "pré-release " or "release ") .. latest);
 	popup:Reset();
-	popup:AddTitle(BGD_Maj_T(pre and BGD_MAJ_TEXTES.titre_prerelease or BGD_MAJ_TEXTES.titre_release));
-	popup:AddText(string.format(BGD_Maj_T(pre and BGD_MAJ_TEXTES.texte_prerelease or BGD_MAJ_TEXTES.texte_release), latest, current));
-	popup:AddButton(BGD_Maj_T(BGD_MAJ_TEXTES.maj), BGD_Maj_Installer, PopupDialog.COMMAND_CONFIRM);
-	popup:AddButton(BGD_Maj_T(BGD_MAJ_TEXTES.plus_tard), function() Civ6Proxy_MiseAJour("plus_tard"); end, PopupDialog.COMMAND_CANCEL);
+	popup:AddTitle(BGD_Txt(pre and "LOC_BGD_MAJ_TITRE_PRERELEASE" or "LOC_BGD_MAJ_TITRE_RELEASE"));
+	popup:AddText(BGD_Txt(pre and "LOC_BGD_MAJ_TEXTE_PRERELEASE" or "LOC_BGD_MAJ_TEXTE_RELEASE", latest, current));
+	popup:AddButton(BGD_Txt("LOC_BGD_MAJ_BOUTON_MAJ"), BGD_Maj_Installer, PopupDialog.COMMAND_CONFIRM);
+	popup:AddButton(BGD_Txt("LOC_BGD_MAJ_BOUTON_PLUS_TARD"), function() Civ6Proxy_MiseAJour("plus_tard"); end, PopupDialog.COMMAND_CANCEL);
 	popup:Open();
 end
 

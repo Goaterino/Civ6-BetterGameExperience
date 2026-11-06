@@ -7,6 +7,9 @@
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
 local f = assert(io.open(dir .. "/../src/maj.lua", "rb"));
 local BLOCK = f:read("a");
+local function BGD_LireTexte(p) local h = assert(io.open(p, "rb")); local s = h:read("a"); h:close(); return s; end
+local BGD_TEXTES_LUA = BGD_LireTexte(dir .. "/../../textes/bgd_textes.lua") .. BGD_LireTexte(dir .. "/../../textes/bgd_texte.lua");
+BLOCK = BGD_TEXTES_LUA .. BLOCK;
 f:close();
 
 local failures = 0;
@@ -39,6 +42,7 @@ local function NewMenu(options)
 
 	local env = {
 		string = string, type = type, pcall = pcall, error = error, tostring = tostring, table = table, ipairs = ipairs,
+		pairs = pairs, tonumber = tonumber,
 		g_PopupDialog = popup,
 		PopupDialog = { COMMAND_CONFIRM = "confirm", COMMAND_CANCEL = "cancel" },
 		Locale = { GetCurrentLanguage = function() return { Type = options.lang or "fr_FR" }; end },

@@ -9,7 +9,7 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   version et l'état de l'installation (pas installé, à jour, mise à jour disponible, à réparer), le
   détail par DLL sous « Détails », et propose installer, mettre à jour ou réparer, et désinstaller.
   Après une installation, elle donne l'option de lancement Steam, avec un bouton pour la copier.
-  Chaque fenêtre à choix propose aussi la langue (boutons radio, voir Langues).
+  Chaque fenêtre à choix propose aussi la langue (liens en bas de la fenêtre, voir Langues).
 - **Pré-release** : la case à cocher de la fenêtre principale choisit le canal. Cochée, l'installeur
   vise la release publiée au plus grand numéro, pré-releases comprises (liste de l'API GitHub) ;
   décochée, la dernière release (`releases/latest`, qui ne désigne jamais une pré-release). Décochée
@@ -72,14 +72,17 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
 
 ## Langues
 
-[src/lang.rs](src/lang.rs). Français et anglais ; chaque texte est un tableau à une entrée par
-langue de `LANGUAGES`, dans le même ordre, si bien qu'ajouter une langue fait échouer la compilation
-de chaque texte qui ne l'a pas encore. Le choix du joueur, fait par les boutons radio des fenêtres,
-réaffiche aussitôt la fenêtre et est gardé dans `%LOCALAPPDATA%\BetterGameDLLs\langue.txt` ; sans
-choix, la langue de Windows si elle est connue, sinon l'anglais.
+[src/lang.rs](src/lang.rs). Les 11 langues de Better Balanced Game. Les textes viennent de
+`textes/<langue>.xml` (clés `LOC_BGD_INST_*`), générés dans [src/textes.rs](src/textes.rs) par
+`textes/gen_textes.py` (voir [textes/README.md](../textes/README.md)) : un tableau `Texts` par texte,
+une entrée par langue de `LANGUAGES`, dans le même ordre. Les paramètres sont numérotés (`{1}`, `{2}`),
+qu'une traduction peut placer dans un autre ordre.
 
-- Les libellés portent un drapeau en emoji (🇫🇷, 🇬🇧), mais Windows n'a pas de glyphe pour les
-  drapeaux : il les montre en petites lettres (« FR », « GB »).
+- Le choix se fait par une ligne de liens en bas des fenêtres à choix (pied de page du TaskDialog,
+  `TDF_ENABLE_HYPERLINKS`), la langue actuelle sans lien : onze boutons radio prenaient trop de
+  place. Il réaffiche aussitôt la fenêtre et est gardé dans
+  `%LOCALAPPDATA%\BetterGameDLLs\langue.txt` ; sans choix, la langue de Windows si elle est connue,
+  sinon l'anglais.
 - Les boutons standard de Windows (« Fermer », « OK ») suivent la langue de Windows, pas ce choix.
 
 ## Tester sans GitHub

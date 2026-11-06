@@ -16,12 +16,6 @@
 -- ===========================================================================
 do
 	local BGD_UpdatePromotions_jeu = UnitFlag.UpdatePromotions;
-	local BGD_FR_Drapeaux = false;
-	do
-		local l = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-		BGD_FR_Drapeaux = l ~= nil and type(l.Type) == "string" and string.sub(string.lower(l.Type), 1, 2) == "fr";
-	end
-
 	local function BGD_Charges_De(unit)
 		if not BGD_Charges then return nil; end
 		local info = GameInfo.Units[unit:GetUnitType()];
@@ -85,12 +79,7 @@ do
 						route.DestinationCityPlayer, route.DestinationCityID, owner, unitID);
 					if fin == nil then return nil; end
 					local reste = BGD_ToursRestants(unit, route, depart or fin, fin, Game.GetCurrentGameTurn());
-					local aide;
-					if BGD_FR_Drapeaux then
-						aide = "Route commerciale : fin dans " .. reste .. " tour(s), au retour du négociant dans sa ville d'origine.";
-					else
-						aide = "Trade route: ends in " .. reste .. " turn(s), when the trader returns to its origin city.";
-					end
+					local aide = BGD_Txt("LOC_BGD_ROUTE_AIDE", reste);
 					return reste, aide;
 				end
 			end

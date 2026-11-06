@@ -39,16 +39,6 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		end
 	end
 
-	local function FR()
-		local language = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-		local code = language and language.Type;
-		return type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
-	end
-
-	local function T(fr, en)
-		return FR() and fr or en;
-	end
-
 	-- Ligne locale dans le chat, que ChatPanel.lua affiche sans l'envoyer.
 	local function Afficher(texte)
 		LuaEvents.BGD_DepartTexte("[COLOR_Civ6Yellow]BGD - " .. texte .. "[ENDCOLOR]");
@@ -179,8 +169,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 					D.attente = false;
 				elseif rejets > D.avisRejets then
 					if D.avisRejets == 0 then
-						Afficher(T("ordres retenus : le tour n'a pas encore commencé pour tous les joueurs.",
-							"orders held: the turn has not started for every player yet."));
+						Afficher(BGD_Txt("LOC_BGD_DEPART_ORDRES_RETENUS"));
 					end
 					D.avisRejets = rejets;
 				end
@@ -205,7 +194,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 				Civ6RolloverProxy_DepartPartir(raison);
 			end
 			if D.avisRejets > 0 then
-				Afficher(T("c'est parti !", "go!"));
+				Afficher(BGD_Txt("LOC_BGD_DEPART_PARTI"));
 			end
 		end
 	end
@@ -220,8 +209,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		if absents ~= nil and #absents > 0 then
 			local noms = {};
 			for _, id in ipairs(absents) do table.insert(noms, Nom(id)); end
-			Afficher(T("départ donné sans ", "started without ") .. table.concat(noms, ", ")
-				.. T(" (pas prêts après " .. DELAI_HOTE .. " s).", " (not ready after " .. DELAI_HOTE .. " s)."));
+			Afficher(BGD_Txt("LOC_BGD_DEPART_SANS", table.concat(noms, ", "), DELAI_HOTE));
 		end
 		J("tour " .. tour .. " lancé" .. ((absents and #absents > 0) and (", sans " .. #absents .. " joueur(s)") or ""));
 		Partir("départ de l'hôte, tour " .. tour);
@@ -325,7 +313,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		if Civ6RolloverProxy_FinForcer() == 1 then
 			D.finRecue = tour;
 			if Signaux() then
-				Afficher(T("fin du tour : le minuteur de l'hôte est écoulé.", "turn over: the host's turn timer ran out."));
+				Afficher(BGD_Txt("LOC_BGD_DEPART_FIN_HOTE"));
 			end
 			J("tour " .. tour .. " : fin reçue, tour terminé");
 		else
@@ -347,14 +335,11 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		D.annonce = true;
 		local texte;
 		if FinActif() then
-			texte = T("[COLOR_GREEN]BGD - No First/Last moves actif : tous les joueurs commencent leur tour ensemble, et le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.[ENDCOLOR]",
-				"[COLOR_GREEN]BGD - No First/Last moves enabled: every player starts their turn together, and the turn ends for everyone when the host's timer runs out.[ENDCOLOR]");
+			texte = "[COLOR_GREEN]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_ACTIF") .. "[ENDCOLOR]";
 		elseif Dispo() then
-			texte = T("[COLOR_GREEN]BGD - No First/Last moves : départ de tour simultané actif ; fin simultanée indisponible (minuteur de l'exe non détourné).[ENDCOLOR]",
-				"[COLOR_GREEN]BGD - No First/Last moves: simultaneous turn start enabled; simultaneous turn end unavailable (exe timer not hooked).[ENDCOLOR]");
+			texte = "[COLOR_GREEN]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_DEPART_SEUL") .. "[ENDCOLOR]";
 		else
-			texte = T("[COLOR_RED]BGD - No First/Last moves désactivé : il faut que tous les joueurs aient BetterGameDLLs, à la même version.[ENDCOLOR]",
-				"[COLOR_RED]BGD - No First/Last moves disabled: every player needs BetterGameDLLs, at the same version.[ENDCOLOR]");
+			texte = "[COLOR_RED]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_NFLM_DESACTIVE") .. "[ENDCOLOR]";
 		end
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		J("annonce : " .. texte);

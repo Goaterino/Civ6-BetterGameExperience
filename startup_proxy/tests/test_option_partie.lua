@@ -9,7 +9,7 @@ local function ReadFile(path)
 end
 
 local dir = (arg and arg[0] or ""):match("^(.*)[/\\]") or ".";
-local BLOC = ReadFile(dir .. "/../src/option_partie.lua");
+local BLOC = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/option_partie.lua");
 
 local failures = 0;
 local function Check(name, ok)

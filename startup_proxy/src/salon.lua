@@ -32,7 +32,8 @@
 --   client dont l'annonce a changé depuis l'ouverture du salon : une annonce restée d'une
 --   sauvegarde ne change pas. Un client arrivé après l'annonce d'un autre ne la voit pas changer :
 --   tous deux peuvent alors écrire, le même message. Il n'en manque jamais.
--- Textes en français si le jeu de l'émetteur l'est, en anglais sinon.
+-- Les messages partent en anglais (BGD_TxtAnglais), lisibles par ceux qui n'ont pas BetterGameDLLs ;
+-- chaque machine équipée les affiche dans sa langue (BGD_TxtChat, enveloppe d'OnChat en fin de bloc).
 -- On ne s'appuie que sur les événements du jeu et sur StartLaunchCountdown, présents dans
 -- StagingRoom.lua et dans ses remplaçants connus. Une erreur ici est journalisée, jamais propagée.
 -- ===========================================================================
@@ -49,19 +50,6 @@ local BGD = {
 	message = nil,     -- dernier message envoyé dans le chat
 	ouvert = false,    -- salon ouvert : de l'ouverture au chargement de la partie (ou au départ)
 };
-
-local BGD_FR = false;
-do
-	local language = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-	local code = language and language.Type;
-	BGD_FR = type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
-end
-
--- Le texte dans la langue du jeu : { français, anglais }.
-local function BGD_T(t)
-	if BGD_FR then return t[1]; end
-	return t[2];
-end
 
 local function BGD_Journal(texte)
 	if Civ6Proxy_Journal ~= nil then
@@ -212,28 +200,18 @@ end
 -- Hôte : le bilan.
 local function BGD_MessageDeLHote()
 	local sans, autres = BGD_Bilan();
+	local texte;
 	if #sans == 0 and #autres == 0 then
-		BGD_Dire("[COLOR_GREEN]BGD - " .. BGD_T({
-			"Tous les joueurs ont BetterGameDLLs " .. BGD.version .. " : correctifs POL actifs.",
-			"All players have BetterGameDLLs " .. BGD.version .. ": POL fixes enabled.",
-		}) .. "[ENDCOLOR]");
+		BGD_Dire("[COLOR_GREEN]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_TOUS", BGD.version) .. "[ENDCOLOR]");
 		return;
+	elseif #autres == 0 then
+		texte = BGD_TxtAnglais("LOC_BGD_CHAT_SANS", table.concat(sans, ", "));
+	elseif #sans == 0 then
+		texte = BGD_TxtAnglais("LOC_BGD_CHAT_AUTRES", BGD.version, table.concat(autres, ", "));
+	else
+		texte = BGD_TxtAnglais("LOC_BGD_CHAT_SANS_AUTRES", table.concat(sans, ", "), BGD.version, table.concat(autres, ", "));
 	end
-	local parties = {};
-	if #sans > 0 then
-		table.insert(parties, BGD_T({ "Sans BetterGameDLLs : ", "Without BetterGameDLLs: " }) .. table.concat(sans, ", ") .. ".");
-	end
-	if #autres > 0 then
-		table.insert(parties, BGD_T({
-			"BetterGameDLLs d'une autre version que " .. BGD.version .. " : ",
-			"BetterGameDLLs version other than " .. BGD.version .. ": ",
-		}) .. table.concat(autres, ", ") .. ".");
-	end
-	table.insert(parties, BGD_T({
-		"Correctifs POL désactivés pour cette partie.",
-		"POL fixes disabled for this game.",
-	}));
-	BGD_Dire("[COLOR_RED]BGD - " .. table.concat(parties, " ") .. "[ENDCOLOR]");
+	BGD_Dire("[COLOR_RED]BGD - " .. texte .. "[ENDCOLOR]");
 end
 
 -- Client : si l'hôte ne nous voit pas, le premier client équipé le dit. Équipé : son annonce a
@@ -248,10 +226,7 @@ local function BGD_MessageDUnClient()
 			return;  -- un client équipé avant nous s'en charge
 		end
 	end
-	BGD_Dire("[COLOR_RED]BGD - " .. BGD_T({
-		"L'hôte n'a pas BetterGameDLLs, ou pas une version compatible : correctifs POL désactivés pour cette partie.",
-		"The host does not have BetterGameDLLs, or not a compatible version: POL fixes disabled for this game.",
-	}) .. "[ENDCOLOR]");
+	BGD_Dire("[COLOR_RED]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_HOTE_SANS") .. "[ENDCOLOR]");
 end
 
 -- Au démarrage du compte à rebours, sur chaque machine : annonce et verdict à jour, message, et la
@@ -428,4 +403,18 @@ else
 		end
 	end));
 	BGD_Journal("bloc chargé");
+end
+
+-- Messages de BetterGameDLLs reçus en anglais, affichés dans la langue du jeu. OnChat est la globale
+-- de StagingRoom.lua (et de ses remplaçants), qu'OnMultiplayerChat appelle par son nom.
+if OnChat ~= nil and BGD_TxtChat ~= nil and BGD_SalonChat == nil then
+	BGD_SalonChat = true;
+	local BGD_OnChatBase = OnChat;
+	OnChat = function(fromPlayer, toPlayer, text, ...)
+		local ok, traduit = pcall(BGD_TxtChat, text);
+		if ok and traduit ~= nil then
+			text = traduit;
+		end
+		return BGD_OnChatBase(fromPlayer, toPlayer, text, ...);
+	end
 end

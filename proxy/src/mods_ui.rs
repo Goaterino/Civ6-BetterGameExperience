@@ -101,8 +101,8 @@ const EMBARQUES: [(&str, &[u8]); 12] = [
     ("BRSPage_Cities2", include_bytes!("mods/rapports/BRSPage_Cities2.lua")),
 ];
 
-const DRAPEAUX: &str = include_str!("mods/drapeaux.lua");
-const NOTIFS: &str = include_str!("mods/notifications.lua");
+const DRAPEAUX: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/drapeaux.lua"));
+const NOTIFS: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/notifications.lua"));
 const BANDEAU_LUA: &str = include_str!("mods/bandeau.lua");
 const BANDEAU_XML: &str = include_str!("mods/bandeau.xml");
 const POL_ENTETE: &str = include_str!("mods/politiques_entete.lua");

@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textes de BetterGameDLLs en it_IT : voir textes/README.md. -->
+<GameData>
+	<LocalizedText>
+		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="it_IT">
+			<Text>Attivato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_DESACTIVE" Language="it_IT">
+			<Text>Disattivato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_JOURNAL" Language="it_IT">
+			<Text>Attivato, con registro</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_MESURE" Language="it_IT">
+			<Text>Solo misurazione (diagnostica)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_VERIFICATION" Language="it_IT">
+			<Text>Verifica (diagnostica, più lenta)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_OUI" Language="it_IT">
+			<Text>Sì</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_NON" Language="it_IT">
+			<Text>No</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CASCADES" Language="it_IT">
+			<Text>Solo cascate di guerra</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="it_IT">
+			<Text>Ogni messaggio del gioco</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="it_IT">
+			<Text>Generale</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_PERFORMANCES" Language="it_IT">
+			<Text>Prestazioni del cambio di turno</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_INTERFACE" Language="it_IT">
+			<Text>Interfaccia</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_CORRECTIFS" Language="it_IT">
+			<Text>Correzioni</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_MODS" Language="it_IT">
+			<Text>Mod dell'interfaccia integrate</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_DIAGNOSTIC" Language="it_IT">
+			<Text>Diagnostica</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_CREDITS" Language="it_IT">
+			<Text>Riconoscimenti</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="it_IT">
+			<Text>Proxy di BetterGameDLLs</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="it_IT">
+			<Text>Disattiva in un colpo solo tutte le modifiche del proxy di GameCore, senza disinstallarlo: il gioco si comporta come senza proxy. Le altre impostazioni vengono conservate, e questa scheda resta disponibile per riattivarlo.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_NOM" Language="it_IT">
+			<Text>Cerca aggiornamenti</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="it_IT">
+			<Text>All'avvio del gioco, cerca su GitHub una nuova versione di BetterGameDLLs e la propone nel menu principale. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="it_IT">
+			<Text>Aggiornamenti delle città raggruppati</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MODE_AIDE" Language="it_IT">
+			<Text>Durante una cascata di dichiarazioni di guerra, i dati delle città e della diplomazia vengono aggiornati una sola volta, alla fine: oltre 2 s risparmiati in un turno pesante. Non cambia nulla della partita: sicuro in multigiocatore, anche contro giocatori senza il proxy.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PORTEE_NOM" Language="it_IT">
+			<Text>Portata del raggruppamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PORTEE_AIDE" Language="it_IT">
+			<Text>"Ogni messaggio del gioco" raggruppa anche gli aggiornamenti fuori dalle guerre (governatori, risorse, accordi). L'interfaccia può allora mostrare un dato di città con un attimo di ritardo.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AMELIORATIONS_NOM" Language="it_IT">
+			<Text>Cache dei miglioramenti costruibili</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AMELIORATIONS_AIDE" Language="it_IT">
+			<Text>Accelera la domanda "questo giocatore può costruire questo miglioramento?", posta milioni di volte per turno dall'IA. Stesso risultato del gioco, verificato senza alcuna differenza.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RENDEMENTS_NOM" Language="it_IT">
+			<Text>Memoria delle rese delle caselle per l'IA</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="it_IT">
+			<Text>Memorizza la resa delle caselle durante i calcoli paralleli dell'IA, mentre la mappa non può cambiare.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="it_IT">
+			<Text>Animazione accelerata degli attacchi nucleari</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_AIDE" Language="it_IT">
+			<Text>Solo con il combattimento rapido attivato (scheda Gioco). Accelera la visualizzazione durante l'attacco, senza effetti sulla partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BOUTONS_NOM" Language="it_IT">
+			<Text>Pulsanti di attacco sopra le bandiere delle unità</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BOUTONS_AIDE" Language="it_IT">
+			<Text>I pulsanti di attacco delle città e degli accampamenti, e quelli di attacco nucleare dei silos, vengono disegnati sopra le bandiere delle unità, dove restano cliccabili.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RECENTRAGE_NOM" Language="it_IT">
+			<Text>Centra la visuale al clic su questi pulsanti</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RECENTRAGE_AIDE" Language="it_IT">
+			<Text>Comportamento originale del gioco: la visuale si centra sulla città al clic su un pulsante di attacco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_NOM" Language="it_IT">
+			<Text>Segnalini della mappa più leggeri</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="it_IT">
+			<Text>I segnalini e il loro elenco non vengono più ricostruiti quando nulla è cambiato: meno rallentamenti in multigiocatore.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="it_IT">
+			<Text>Contatore dei turni di produzione corretto</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_AIDE" Language="it_IT">
+			<Text>Il numero di turni mostrato tiene conto dei bonus di governo (fascismo, autocrazia, repubblica mercantile), come la produzione reale. Solo visualizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_NOM" Language="it_IT">
+			<Text>Meraviglia mantenuta in coda dopo uno scambio</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="it_IT">
+			<Text>Una meraviglia tolta dalla coda di produzione da uno scambio viene rimessa, tramite normali comandi del gioco: nessuna desincronizzazione, anche contro giocatori senza il proxy.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="it_IT">
+			<Text>Rese dell'impero aggiornate dopo un governatore o un grande personaggio</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="it_IT">
+			<Text>La barra superiore si aggiorna dopo un titolo di governatore, uno spostamento di governatore o un grande personaggio, senza spostare un cittadino. Solo visualizzazione: nessuna desincronizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="it_IT">
+			<Text>Cariche dei costruttori sulla loro bandiera</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="it_IT">
+			<Text>Basato su Better Builder Charges Tracking (wltk). La bandiera di un'unità con cariche (costruttore, ingegnere militare, legione…) le mostra al posto delle promozioni. Sostituisce la mod se è attiva.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="it_IT">
+			<Text>Turni rimanenti delle rotte commerciali</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ROUTES_AIDE" Language="it_IT">
+			<Text>La bandiera di ciascuno dei tuoi commercianti in viaggio mostra il numero di turni prima della fine della sua rotta commerciale. Il commerciante la conclude poi tornando alla sua città d'origine. Solo visualizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_NOM" Language="it_IT">
+			<Text>Pulsante per cancellare le notifiche</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="it_IT">
+			<Text>Basato su NotificationClear (336tarot). Un pulsante del pannello delle notifiche chiude con un clic quelle che puoi chiudere da solo. Sostituisce la mod se è attiva.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="it_IT">
+			<Text>Barra superiore estesa</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="it_IT">
+			<Text>Basato su TopPanel Extension Pro (号码菌 / Azukii). Cibo, produzione, popolazione e risorse di lusso nella barra superiore, con il dettaglio per città; risorse dei compagni di squadra. Sostituisce la mod se è attiva. Senza la mod, la barra superiore di Better Spectator Mod viene mantenuta.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="it_IT">
+			<Text>Effetto delle carte politica</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_AIDE" Language="it_IT">
+			<Text>Basato su Extended Policy Cards (Aristos). Ogni carta mostra il suo guadagno in cifre per il tuo impero, calcolato da Real Modifier Analysis (Infixo), corretto (Raj, Quartiere della Medina, Monachesimo, Prestigio civile, carte di mantenimento, cibo delle carte dei grandi personaggi). Non richiede più Better Report Screen. Sostituisce la mod se è attiva.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_NOM" Language="it_IT">
+			<Text>Schermata dei rapporti migliorata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="it_IT">
+			<Text>Basato su Better Report Screen (Infixo). Schermata dei rapporti rifatta, con le schede Accordi, Unità, Politiche, Città-stato e Città, e l'effetto di ogni politica e città-stato, corretto come le carte. Sostituisce la mod se è attiva.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="it_IT">
+			<Text>Registra script e XML caricati</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_AIDE" Language="it_IT">
+			<Text>Annota ogni file d'interfaccia letto nel registro del proxy.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_NOM" Language="it_IT">
+			<Text>Misura il costo dei segnalini</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_AIDE" Language="it_IT">
+			<Text>Scrive in Lua.log quanto durano le ricostruzioni dei segnalini della mappa e della barra dei leader.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_NOM" Language="it_IT">
+			<Text>Diagnostica degli accordi tra giocatori</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="it_IT">
+			<Text>Scrive in Lua.log le proposte di accordo inviate e ricevute, e ciò che mostra la schermata degli accordi, per capire gli accordi incrociati tra umani.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="it_IT">
+			<Text>Mostra i segnali dell'inizio e della fine simultanei</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="it_IT">
+			<Text>Con l'opzione di partita "No First/Last moves (BGD)", i computer si scambiano messaggi di chat nascosti (.bgd_pret, .bgd_depart, .bgd_fin). Se attivato, restano visibili nella tua chat, con una riga quando l'host termina il turno, per seguire l'inizio e la fine di ogni turno. Solo visualizzazione, su questo computer.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="it_IT">
+			<Text>Profilo delle zone cronometrate del gioco</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="it_IT">
+			<Text>Registra la durata di ogni zona cronometrata dal gioco (immagine, interfaccia, script, eventi) in %LOCALAPPDATA%\Civ6RolloverProxy\zones, per l'analisi delle prestazioni. Circa 1 MB per secondo di gioco. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="it_IT">
+			<Text>Queste sono le impostazioni dei proxy di BetterGameDLLs (rollover_proxy.cfg). Avranno effetto all'avvio della prossima partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="it_IT">
+			<Text>Queste sono le impostazioni dei proxy di BetterGameDLLs (rollover_proxy.cfg). Una partita è già stata avviata: avranno effetto solo dopo il riavvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="it_IT">
+			<Text>Funzioni del proxy di avvio mancanti: le impostazioni non possono essere né lette né salvate.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_LECTURE_IMPOSSIBLE" Language="it_IT">
+			<Text>Impossibile leggere le impostazioni: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_INSTALLE" Language="it_IT">
+			<Text>Proxy di GameCore installato.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_NON_INSTALLE" Language="it_IT">
+			<Text>Proxy di GameCore non installato: queste impostazioni avranno effetto solo una volta installato.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_NON_ENREGISTRES" Language="it_IT">
+			<Text>Impostazioni non salvate: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VALEUR_FICHIER" Language="it_IT">
+			<Text>{1} (valore del file)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AFFICHER_AVANCEES" Language="it_IT">
+			<Text>Mostra le opzioni avanzate</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="it_IT">
+			<Text>Nascondi le opzioni avanzate</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="it_IT">
+			<Text>Le mod dell'interfaccia integrate riprendono il lavoro dei loro autori, che BetterGameDLLs ringrazia:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="it_IT">
+			<Text>{1} (Workshop {2}): {3}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_AUTEURS_MERCI" Language="it_IT">
+			<Text>{1}; ringraziamenti: {2}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_AUTEURS_BRS" Language="it_IT">
+			<Text>{1}; schede originali Unità e Accordi: {2}; ringraziamenti: {3}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="it_IT">
+			<Text>BetterGameDLLs: nuova versione</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="it_IT">
+			<Text>BetterGameDLLs: nuova versione di prova</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="it_IT">
+			<Text>La versione {1} di BetterGameDLLs è disponibile (installata: {2}).[NEWLINE][NEWLINE]"Aggiorna" chiude il gioco e avvia il programma di installazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="it_IT">
+			<Text>La versione di prova {1} di BetterGameDLLs è disponibile (installata: {2}).[NEWLINE][NEWLINE]È una versione di test: la ricevi perché la casella "Versione di prova" è spuntata nel programma di installazione.[NEWLINE][NEWLINE]"Aggiorna" chiude il gioco e avvia il programma di installazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="it_IT">
+			<Text>Aggiorna</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_BOUTON_PLUS_TARD" Language="it_IT">
+			<Text>Più tardi</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_PAGE" Language="it_IT">
+			<Text>Programma di installazione di BetterGameDLLs non trovato: la pagina dell'ultima versione è stata aperta nel browser.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="it_IT">
+			<Text>Tutti i giocatori iniziano e finiscono il turno nello stesso istante. All'inizio del turno, ciascuno aspetta che tutti abbiano finito di caricare: si può guardare la mappa, ma gli ordini vengono trattenuti e il timer non scorre. Alla fine, quando il timer dell'host arriva a zero, il turno finisce per tutti, anche se il proprio timer mostra ancora del tempo. Tutti i giocatori devono avere BetterGameDLLs, nella stessa versione. Sostituisce la sincronizzazione del turno di MPH, che viene disattivata.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_TOUS" Language="it_IT">
+			<Text>Tutti i giocatori hanno BetterGameDLLs {1}: correzioni POL attive.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SANS" Language="it_IT">
+			<Text>Senza BetterGameDLLs: {1}. Correzioni POL disattivate per questa partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="it_IT">
+			<Text>BetterGameDLLs in una versione diversa dalla {1}: {2}. Correzioni POL disattivate per questa partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="it_IT">
+			<Text>Senza BetterGameDLLs: {1}. BetterGameDLLs in una versione diversa dalla {2}: {3}. Correzioni POL disattivate per questa partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="it_IT">
+			<Text>L'host non ha BetterGameDLLs, o non una versione compatibile: correzioni POL disattivate per questa partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="it_IT">
+			<Text>{1}: entrato senza BetterGameDLLs (o con un'altra versione) mentre le correzioni POL sono attive. La sua partita si desincronizzerà.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="it_IT">
+			<Text>No First/Last moves attivo: tutti i giocatori iniziano il turno insieme, e il turno finisce per tutti quando il timer dell'host arriva a zero.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="it_IT">
+			<Text>No First/Last moves: inizio del turno simultaneo attivo; fine simultanea non disponibile (timer del gioco non intercettato).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="it_IT">
+			<Text>No First/Last moves disattivato: tutti i giocatori devono avere BetterGameDLLs, nella stessa versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="it_IT">
+			<Text>ordini trattenuti: il turno non è ancora iniziato per tutti i giocatori.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_PARTI" Language="it_IT">
+			<Text>via!</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS" Language="it_IT">
+			<Text>turno avviato senza {1} (non pronti dopo {2} s).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="it_IT">
+			<Text>fine del turno: il timer dell'host è scaduto.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="it_IT">
+			<Text>Spettatore: sola consultazione, i tuoi voti non contano.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="it_IT">
+			<Text>Chiudi</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="it_IT">
+			<Text>Rotta commerciale: termina tra {1} turno/i, quando il commerciante torna alla sua città d'origine.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="it_IT">
+			<Text>Cancella le notifiche che puoi chiudere da solo (gli accordi e le scelte da fare restano).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="it_IT">
+			<Text>L'operazione non è riuscita</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_NOT_THE_CIVILIZATION_VI" Language="it_IT">
+			<Text>{1} non è la cartella di Civilization VI (Gathering Storm).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="it_IT">
+			<Text>Civilization VI non è stato trovato nelle librerie di Steam.\n\nAvvia di nuovo il programma di installazione con --game-dir "&lt;cartella del gioco&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="it_IT">
+			<Text>Ricerca dell'ultima versione…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CLOSE_CIVILIZATION_VI_THEN_RUN_THE" Language="it_IT">
+			<Text>Chiudi Civilization VI, poi avvia di nuovo il programma di installazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="it_IT">
+			<Text>Disinstallazione di BetterGameDLLs…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="it_IT">
+			<Text>BetterGameDLLs è disinstallato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="it_IT">
+			<Text>Il gioco ha di nuovo i suoi file originali.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_GAME_X" Language="it_IT">
+			<Text>Gioco: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CHANNEL_PRE_RELEASE_TEST_VERSIONS_AHEAD" Language="it_IT">
+			<Text>\nCanale: versione di prova (versioni di test, prima della loro pubblicazione)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_COULD_NOT_READ_THE_LATEST_VERSION" Language="it_IT">
+			<Text>\n\nImpossibile leggere l'ultima versione: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LATEST_VERSION_UNKNOWN" Language="it_IT">
+			<Text>Ultima versione sconosciuta</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="it_IT">
+			<Text>BetterGameDLLs {1} è installato e aggiornato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="it_IT">
+			<Text>BetterGameDLLs non è installato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="it_IT">
+			<Text>Installa\nScarica e installa la versione {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="it_IT">
+			<Text>La versione {1} di BetterGameDLLs è disponibile</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="it_IT">
+			<Text>Aggiorna\nInstalla la versione {1}, che non sostituisce più alcun file del gioco: Steam non la rimuove più.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="it_IT">
+			<Text>BetterGameDLLs deve essere riparato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="it_IT">
+			<Text>Ripara\nReinstalla la versione {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="it_IT">
+			<Text>La versione {1} di BetterGameDLLs è installata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="it_IT">
+			<Text>Torna alla versione {1}\nSostituisce la versione di prova con l'ultima versione pubblicata.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X" Language="it_IT">
+			<Text>Aggiorna\nInstalla la versione {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_NOT_INSTALLED" Language="it_IT">
+			<Text>non installato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_FILE_FROM_ANOTHER_PROGRAM" Language="it_IT">
+			<Text>file di un altro programma</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_OLD_PROXY_IN_PLACE_OF_THE" Language="it_IT">
+			<Text>vecchio proxy al posto dell'originale</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PROXY_INSTALLED_OTHER_VERSION" Language="it_IT">
+			<Text>proxy installato, altra versione</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PROXY_UP_TO_DATE" Language="it_IT">
+			<Text>proxy aggiornato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_VERSION_INSTALLED_BY_THE_INSTALLER_X" Language="it_IT">
+			<Text>Versione installata dal programma di installazione: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNINSTALL_RESTORES_THE_GAME_S_ORIGINAL" Language="it_IT">
+			<Text>Disinstalla\nRipristina i file originali del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PRE_RELEASE_INSTALL_TEST_VERSIONS" Language="it_IT">
+			<Text>Versione di prova: installa le versioni di test</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="it_IT">
+			<Text>Installazione di BetterGameDLLs {1}…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="it_IT">
+			<Text>Perché si aggiorni e si ripari da solo, aggiungi questa opzione di avvio a Civilization VI in Steam (Proprietà &gt; Generale &gt; Opzioni di avvio):\n\n{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="it_IT">
+			<Text>BetterGameDLLs {1} è installato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="it_IT">
+			<Text>Riavvia Civilization VI\nTramite Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="it_IT">
+			<Text>Copia l'opzione di avvio\nDa incollare nelle opzioni di avvio di Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="it_IT">
+			<Text>Civilization VI non si è chiuso. Chiudilo, poi avvia di nuovo il programma di installazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="it_IT">
+			<Text>BetterGameDLLs non è riuscito ad aggiornarsi</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="it_IT">
+			<Text>{1}\n\nIl gioco si avvierà senza l'aggiornamento.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_NOT_FOUND" Language="it_IT">
+			<Text>Civilization VI non trovato.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="it_IT">
+			<Text>Aggiornamento di BetterGameDLLs alla versione {1}…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="it_IT">
+			<Text>errore (codice {1})</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_MISSING_VERIFY_THE_GAME" Language="it_IT">
+			<Text>{1} manca: verifica i file del gioco in Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="it_IT">
+			<Text>{1} non è un file di BetterGameDLLs (un'altra mod?): rimuovilo, poi avvia di nuovo il programma di installazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="it_IT">
+			<Text>la versione {1} richiede un programma di installazione più recente: scaricalo dalla pagina della versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_RELEASE_LIST_X" Language="it_IT">
+			<Text>elenco delle versioni illeggibile: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_NO_PUBLISHED_RELEASE" Language="it_IT">
+			<Text>nessuna versione pubblicata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_MANIFEST_SIGNATURE" Language="it_IT">
+			<Text>firma del manifesto illeggibile</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INVALID_MANIFEST_SIGNATURE" Language="it_IT">
+			<Text>firma del manifesto non valida</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_MANIFEST_X" Language="it_IT">
+			<Text>manifesto illeggibile: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_SHA_256_DIFFERS_FROM_THE" Language="it_IT">
+			<Text>{1}: SHA-256 diverso da quello del manifesto</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_DOWNLOAD_OF_X_X" Language="it_IT">
+			<Text>download di {1}: {2}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_HIDE_DETAILS" Language="it_IT">
+			<Text>Nascondi dettagli</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_DETAILS" Language="it_IT">
+			<Text>Dettagli</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PLEASE_WAIT" Language="it_IT">
+			<Text>Attendere prego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CLOSE" Language="it_IT">
+			<Text>Chiudi</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="it_IT">
+			<Text>diritti di amministratore negati</Text>
+		</Row>
+	</LocalizedText>
+</GameData>

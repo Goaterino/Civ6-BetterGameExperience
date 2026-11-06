@@ -8,14 +8,7 @@
 -- Chaque fermeture est celle d'un clic droit sur la notification.
 -- ===========================================================================
 do
-	local BGD_FR_Notif = false;
-	do
-		local l = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-		BGD_FR_Notif = l ~= nil and type(l.Type) == "string" and string.sub(string.lower(l.Type), 1, 2) == "fr";
-	end
-	local BGD_AIDE = BGD_FR_Notif
-		and "Efface les notifications qu'on peut fermer soi-même (les accords et les choix à faire restent)."
-		or "Clears the notifications you can dismiss yourself (deals and pending choices stay).";
+	local BGD_AIDE = BGD_Txt("LOC_BGD_NOTIF_AIDE");
 
 	local BGD_Add_jeu = OnDefaultAddNotification;
 	local BGD_Release_jeu = ReleaseNotificationEntry;

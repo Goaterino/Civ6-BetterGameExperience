@@ -12,6 +12,7 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
 use crate::lang::{self, t};
+use crate::textes as tx;
 
 /// Pas de fenêtre de console pour curl.exe : l'installeur n'en a pas.
 pub const CREATE_NO_WINDOW: u32 = 0x0800_0000;
@@ -111,8 +112,8 @@ fn newest_tag(work: &Path) -> Result<String, String> {
     download(API_RELEASES, &path)?;
     let data = fs::read(&path).map_err(|e| format!("releases.json : {e}"))?;
     let list: Vec<ReleaseInfo> =
-        serde_json::from_slice(&data).map_err(|e| lang::f(["liste des releases illisible : {}", "unreadable release list: {}"], &[&e]))?;
-    pick_newest(&list).ok_or_else(|| t(["aucune release publiée", "no published release"]).to_string())
+        serde_json::from_slice(&data).map_err(|e| lang::f(tx::UNREADABLE_RELEASE_LIST_X, &[&e]))?;
+    pick_newest(&list).ok_or_else(|| t(tx::NO_PUBLISHED_RELEASE).to_string())
 }
 
 fn pick_newest(list: &[ReleaseInfo]) -> Option<String> {
@@ -156,16 +157,16 @@ fn verify_manifest(work: &Path) -> Result<Manifest, String> {
     let data = fs::read(work.join("manifest.json")).map_err(|e| format!("manifest.json : {e}"))?;
     let sig = fs::read_to_string(work.join("manifest.json.sig")).map_err(|e| format!("manifest.json.sig : {e}"))?;
     let sig = b64.decode(sig.trim()).ok().and_then(|s| <[u8; 64]>::try_from(s).ok());
-    let sig = sig.ok_or(t(["signature du manifeste illisible", "unreadable manifest signature"]))?;
-    key.verify_strict(&data, &Signature::from_bytes(&sig)).map_err(|_| t(["signature du manifeste invalide", "invalid manifest signature"]))?;
-    serde_json::from_slice(&data).map_err(|e| lang::f(["manifeste illisible : {}", "unreadable manifest: {}"], &[&e]))
+    let sig = sig.ok_or(t(tx::UNREADABLE_MANIFEST_SIGNATURE))?;
+    key.verify_strict(&data, &Signature::from_bytes(&sig)).map_err(|_| t(tx::INVALID_MANIFEST_SIGNATURE))?;
+    serde_json::from_slice(&data).map_err(|e| lang::f(tx::UNREADABLE_MANIFEST_X, &[&e]))
 }
 
 fn check_file(work: &Path, f: &File) -> Result<(), String> {
     if sha256(&work.join(&f.name))? == f.sha256 {
         Ok(())
     } else {
-        Err(lang::f(["{} : SHA-256 différent de celui du manifeste", "{}: SHA-256 differs from the manifest"], &[&f.name]))
+        Err(lang::f(tx::X_SHA_256_DIFFERS_FROM_THE, &[&f.name]))
     }
 }
 
@@ -191,7 +192,7 @@ fn download(url: &str, dest: &Path) -> Result<(), String> {
     if out.status.success() {
         Ok(())
     } else {
-        Err(lang::f(["téléchargement de {} : {}", "download of {}: {}"], &[&url, &String::from_utf8_lossy(&out.stderr).trim()]))
+        Err(lang::f(tx::DOWNLOAD_OF_X_X, &[&url, &String::from_utf8_lossy(&out.stderr).trim()]))
     }
 }
 

@@ -26,18 +26,11 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		end
 	end
 
-	local function FR()
-		local language = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-		local code = language and language.Type;
-		return type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
-	end
-
 	-- Une seule option pour le départ et la fin simultanés (ui_depart.lua).
 	local OPTIONS = {
 		{
 			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGD)", ordre = 43,
-			fr = "Tous les joueurs commencent et finissent leur tour au même instant. Au début du tour, chacun attend que tous aient fini de charger : on peut regarder la carte, mais les ordres sont retenus et le minuteur ne tourne pas. À la fin, quand le minuteur de l'hôte arrive à zéro, le tour se termine pour tout le monde, même si son minuteur affiche encore du temps. Il faut que tous les joueurs aient BetterGameDLLs, à la même version. Remplace la synchronisation du tour de MPH, qui est coupée.",
-			en = "Every player starts and ends their turn at the same moment. At the start of the turn, everyone waits until all players have finished loading: you can look at the map, but orders are held and the turn timer does not run. At the end, when the host's turn timer runs out, the turn ends for everyone, even if their own timer still shows time left. Every player needs BetterGameDLLs, at the same version. Replaces MPH's turn synchronisation, which is turned off.",
+			aide = "LOC_BGD_OPTION_PARTIE_AIDE",
 		},
 	};
 
@@ -56,7 +49,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
 			.. "VALUES (?1, ?2, ?3, 'bool', 0, 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
-			o.id, o.nom, FR() and o.fr or o.en, o.ordre);
+			o.id, o.nom, BGD_Txt(o.aide), o.ordre);
 		local ok = Presente(o.id);
 		if ok then
 			-- Le cache de CachedQuery ne voit pas forcément l'écriture : on le vide.

@@ -4,8 +4,9 @@ Objectif : quand tous les joueurs ont le proxy, tous les humains commencent leur
 instant, et le finissent donc au même instant. Plus de *first move* pour la machine rapide, plus de
 *last move* pour la lente. L'écart est reporté sur le temps de chargement ; seul le ping reste.
 
-État (2026-11-05) : implémenté, testé hors jeu, **pas encore essayé en partie**. Voir
-[Implémentation](#implémentation) et [Reste à vérifier en partie](#reste-à-vérifier-en-partie).
+État (2026-11-06) : implémenté, testé hors jeu, **départ et fin simultanés essayés en partie :
+ils fonctionnent**. Voir [Implémentation](#implémentation) et
+[Reste à vérifier en partie](#reste-à-vérifier-en-partie).
 
 ## Le problème, dans les journaux
 

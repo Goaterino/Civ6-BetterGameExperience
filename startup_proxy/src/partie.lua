@@ -24,12 +24,6 @@ local function BGD_PartieJournal(texte)
 	end
 end
 
-local function BGD_PartieFR()
-	local language = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-	local code = language and language.Type;
-	return type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
-end
-
 local function BGD_PartieRelais()
 	if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud()
 		or not Network.IsGameHost() then
@@ -77,10 +71,8 @@ local function BGD_PartieRelais()
 		BGD_PartieJournal("verdict relayé : " .. nouveau);
 	end
 	if #sans > 0 then
-		local texte = "[COLOR_RED]BGD - " .. table.concat(sans, ", ") .. (BGD_PartieFR()
-			and " : arrivée sans BetterGameDLLs (ou d'une autre version) alors que les correctifs POL sont actifs. Sa partie va se désynchroniser."
-			or ": joined without BetterGameDLLs (or with another version) while POL fixes are enabled. Their game will desync.")
-			.. "[ENDCOLOR]";
+		-- En anglais : chaque machine équipée l'affiche dans sa langue (ui_depart_chat.lua).
+		local texte = "[COLOR_RED]BGD - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ARRIVEE", table.concat(sans, ", ")) .. "[ENDCOLOR]";
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		BGD_PartieJournal("message : " .. texte);
 	end

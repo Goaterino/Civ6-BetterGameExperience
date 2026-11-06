@@ -1,75 +1,92 @@
-# Civ6BetterGameDLLs
+# BetterGameDLLs
 
-Modding de Civilization VI par DLL : un proxy de `GameCore_XP2_FinalRelease.dll` qui pose des
-détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Séparé de Civ6SimSolver
-(le solveur hors partie) le 2026-10-30, avec l'historique des fichiers concernés.
+Fixes and speed-ups for **Civilization VI: Gathering Storm**, delivered as two DLLs placed next to
+the game files. No game file is replaced, so Steam file checks and game updates leave it alone.
 
-Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
-- le proxy de démarrage est posé à côté de l'exe sous le nom `winmm.dll`, une DLL de Windows que
-  l'exe importe ;
-- il fait charger le proxy de GameCore, `BGD_GameCore_XP2.dll`, à la place de l'original.
+- Faster turns: the war-declaration cascades and AI checks that slow down big multiplayer turns are
+  batched and cached, with results identical to the base game.
+- Fixes for long-standing game bugs: worked tiles, attack buttons hidden behind unit flags, production
+  turn counter, wonders dropped from the queue, stale top bar, Envoys screen, Enter key, and more.
+- **No First/Last moves**: an optional game setting that makes every player start and end each turn
+  at the same moment.
+- Popular interface mods built in and fixed: Better Report Screen, Extended Policy Cards, TopPanel
+  Extension Pro, NotificationClear, Better Builder Charges Tracking.
+- Works with DirectX 11 and DirectX 12, [Better Balanced Game](https://steamcommunity.com/sharedfiles/filedetails/?id=2865001760),
+  Better Spectator Mod and MPH.
+- Available in the 11 languages of Better Balanced Game: English, Français, Deutsch, Español,
+  Italiano, 日本語, 한국어, Polski, Português (Brasil), Русский and 简体中文.
 
-- [proxy](proxy/README.md) : la DLL proxy (Rust), son installation et ses réglages
-  (`rollover_proxy.cfg`) ;
-- [startup_proxy](startup_proxy/README.md) : le proxy de démarrage (`winmm.dll`) : chargement du
-  proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour ;
-- [updater](updater/README.md) : l'installeur `BetterGameDLLs.exe`, et [release](release/README.md) :
-  le manifeste signé des releases ;
-- [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
-  [cascade d'une déclaration de guerre](rollover/cascade_guerre.md) ;
-- [nuke](nuke/README.md) : animation des WMD (trace Frida, mod artdef, accélération dans le proxy) ;
-- [ui_strike](ui_strike/README.md) : boutons d'attaque des bannières, patchés depuis le proxy ;
-- [production_turns](production_turns/README.md) : compteur de tours de production qui ignore les
-  bonus plats de gouvernement (fascisme), corrigé dans le proxy ;
-- [wonder_queue](wonder_queue/README.md) : merveille retirée de la file de production après deux
-  échanges, rattrapée par l'interface du proxy sans désynchro ;
-- [empire_yields](empire_yields/README.md) : rendements d'empire du bandeau figés après un gouverneur ou
-  un personnage illustre, rafraîchis par le proxy sans désynchro ;
-- [map_pins](map_pins/README.md) : lag des épingles de carte en multijoueur, reconstructions inutiles
-  retirées par l'interface du proxy ;
-- [citoyens](citoyens/README.md) : choix des cases travaillées qui préfère une 2/1 à une 2/2,
-  corrigé dans le proxy (premier correctif POL, actif si tous les joueurs ont le proxy) ;
-- [mods_ui](mods_ui/README.md) : mods d'interface du Workshop (Better Report Screen, Extended Policy
-  Cards, TopPanel Extension Pro, NotificationClear, Better Builder Charges Tracking) repris dans le
-  proxy, corrigés (RMA) et prioritaires sur le mod ; tours restants des routes commerciales ;
-- [pantheon](analyses/pantheon/README.md) : joueur désigné pour le panthéon, égalités et restriction d'un tour
-  (analyse statique) ;
-- [congres](analyses/congres/README.md) : congrès mondial en multijoueur, triplets divergents, tours passés et
-  votes ignorés (analyse préliminaire statique) ;
-- [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
-  succès avec fuite comptés comme des succès (analyse statique) ;
-- [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
-  réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
-  hook Frida et décodeur de config (analyse statique) ;
-- [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
-  illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
-- [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
-  pour une unité navale (correctif POL) ;
-- défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
-  partie ; raccourcis et colon encore à confirmer) :
-  [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
-  [Échap sur l'écran des émissaires](analyses/emissaires_echap/README.md),
-  [lentille du colon](analyses/filtre_colon/README.md) vidée par une ville fondée,
-  [Entrée](analyses/raccourci_entree/README.md) active une fois retirée des touches,
-  [zone de déplacement](analyses/quartier_capture_mouvements/README.md) sur un quartier ennemi ;
-- [unites_superposees](analyses/unites_superposees/README.md) : deux unités sur la même case après
-  un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ;
-- [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
-  qu'ils peuvent toujours consulter (correctif POL) ;
-- [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),
-  option de partie « No First/Last moves (BGD) » (départ simultané, fin de tour donnée par
-  l'hôte), synchro de tour de MPH coupée (fin de tour pas encore essayée en partie) ;
-- [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
-  [docs/netcode](docs/netcode/README.md) ;
-- [docs/gamecore_xp2](docs/gamecore_xp2/README.md) : carte des fichiers source de GameCore_XP2.
+The full list of changes is in the [changelog](CHANGELOG.md), also available in
+[Français](changelog/fr.md), [Deutsch](changelog/de.md), [Español](changelog/es.md),
+[Italiano](changelog/it.md), [日本語](changelog/ja.md), [한국어](changelog/ko.md),
+[Polski](changelog/pl.md), [Português (Brasil)](changelog/pt-BR.md), [Русский](changelog/ru.md) and
+[简体中文](changelog/zh-CN.md).
 
-## Installation
+## Install
 
-Prérequis : Rust (`stable-x86_64-pc-windows-gnu` suffit), Python 3.10+.
+1. Close Civilization VI.
+2. Download `BetterGameDLLs.exe` from the [latest release](https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest)
+   and run it.
+3. Click **Install**. The installer finds the game in your Steam libraries, downloads the release,
+   and checks its signature and the SHA-256 of every file before copying anything. Windows may ask
+   for administrator rights if the game is in `Program Files`.
 
-```bash
-python -m venv .venv
-.venv/Scripts/python.exe -m pip install frida capstone numpy
-```
+That's it: start the game as usual. A **BetterGameDLLs** tab now appears in the game Options.
 
-Les commandes des README se lancent depuis la racine du dépôt.
+**Updates.** When a new version is out, the game's main menu offers it. **Update** closes the game,
+installs it and offers to restart. You can also run the installer again at any time.
+
+**Optional:** the installer offers a Steam launch option
+(`"%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe" %command%`). With it, the installer checks for
+updates every time you start the game. It's not needed to keep the mod installed.
+
+**Uninstall.** Run the installer and click **Uninstall**. The game gets its original files back.
+
+## In multiplayer
+
+Most of BetterGameDLLs only affects your own machine: you can play with people who don't have it, and
+nothing desyncs.
+
+A few fixes change the game rules. They're marked **[all players]** in the changelog, and they only
+turn on when every human player has the same BetterGameDLLs version. The lobby checks this on its
+own. When the game starts, a `BGD -` message in the chat says whether these fixes are on, and who is
+missing the mod. Players without the mod read these messages in English. Players who have it see
+them in their own language.
+
+To use **No First/Last moves (BGD)**, the host ticks it in the game options before launching. Every
+player needs BetterGameDLLs, at the same version.
+
+## Settings
+
+Everything can be changed in **Options → BetterGameDLLs**: one setting per feature, and a master
+switch that turns the whole mod off without uninstalling it. Hover a setting to see what it does.
+The settings are stored in `rollover_proxy.cfg`, next to `BGD_GameCore_XP2.dll`.
+
+## Something went wrong?
+
+- The log is at `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`. Please attach it to any bug
+  report, with the game's `Lua.log` if the problem is in the interface.
+- After a game update, BetterGameDLLs turns off the affected features on its own until it is updated.
+  The log says so.
+- Report bugs and translation fixes in the [issues](https://github.com/Goaterino/Civ6BetterGameDLLs/issues).
+  How the translations work: [textes/README.md](textes/README.md).
+
+## Credits
+
+The built-in interface mods build on the work of their authors:
+
+- Better Report Screen, Real Modifier Analysis and ReportsList Loader: Infixo. Original Units and
+  Deals tabs: Greg Miller. Thanks: nightfearer, Tyolan, copysoul, RohBang, Gorlod, Zergus, Rac,
+  Aristos.
+- Extended Policy Cards: Aristos.
+- TopPanel Extension Pro: 号码菌 (Azukii). Thanks: JNNR.
+- NotificationClear: 336tarot.
+- Better Builder Charges Tracking: wltk. Thanks: DeepLogic, 小小雨10101.
+
+## For developers
+
+The technical index of the repository is in French: [README.fr.md](README.fr.md). It covers the
+proxies, how they hook the game, the analyses behind each fix, and how to build, test and release.
+Releases are built and signed by GitHub Actions only ([release/README.md](release/README.md)).
+
+License: [MIT](LICENSE).

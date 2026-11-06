@@ -9,34 +9,38 @@
 -- jeu : la confirmation lève _PromptRestartApp, et le jeu affiche son propre message « redémarrage
 -- nécessaire ». Sinon, la prochaine partie lira le nouveau fichier. Les réglages `demarrage`, lus
 -- par le proxy de démarrage au lancement du jeu, demandent toujours le redémarrage.
--- Textes en français si le jeu l'est, en anglais pour toutes les autres langues.
+-- Textes dans la langue du jeu : BGD_Txt (textes/bgd_texte.lua, placé devant ce bloc). Le nom et
+-- l'aide d'un réglage sont LOC_BGD_OPT_<CLÉ>_NOM et LOC_BGD_OPT_<CLÉ>_AIDE.
 -- m_tabs, OnSelectTab, OnConfirm, OnShow, PopulateComboBox et _PromptRestartApp sont ceux
 -- d'Options.lua.
 -- ===========================================================================
 
-local PROXY_FR = false;
-do
-	local language = Locale.GetCurrentLanguage and Locale.GetCurrentLanguage();
-	local code = language and language.Type;
-	PROXY_FR = type(code) == "string" and string.sub(string.lower(code), 1, 2) == "fr";
+-- Réécrite avec la version de BetterGameDLLs par le proxy de démarrage (src/options.rs), affichée
+-- dans le titre de l'écran quand l'onglet est ouvert (le bouton de l'onglet garde « BetterGameDLLs »).
+local PROXY_VERSION = nil;
+
+local function Proxy_T(cle, ...)
+	return BGD_Txt(cle, ...);
 end
 
--- Le texte dans la langue du jeu : { français, anglais }.
-local function Proxy_T(t)
-	if PROXY_FR then return t[1]; end
-	return t[2];
+local function Proxy_Nom(r)
+	return Proxy_T("LOC_BGD_OPT_" .. string.upper(r.cle) .. "_NOM");
+end
+
+local function Proxy_Aide(r)
+	return Proxy_T("LOC_BGD_OPT_" .. string.upper(r.cle) .. "_AIDE");
 end
 
 local PROXY_ON_OFF = {
-	{ "on", { "Activé", "Enabled" } },
-	{ "off", { "Désactivé", "Disabled" } },
+	{ "on", "LOC_BGD_OPT_CHOIX_ACTIVE" },
+	{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
 };
 local PROXY_CACHE = {
-	{ "quiet", { "Activé", "Enabled" } },
-	{ "off", { "Désactivé", "Disabled" } },
-	{ "fast", { "Activé, avec journal", "Enabled, with log" } },
-	{ "count", { "Mesure seulement (diagnostic)", "Measure only (diagnostic)" } },
-	{ "verify", { "Vérification (diagnostic, plus lent)", "Verification (diagnostic, slower)" } },
+	{ "quiet", "LOC_BGD_OPT_CHOIX_ACTIVE" },
+	{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+	{ "fast", "LOC_BGD_OPT_CHOIX_JOURNAL" },
+	{ "count", "LOC_BGD_OPT_CHOIX_MESURE" },
+	{ "verify", "LOC_BGD_OPT_CHOIX_VERIFICATION" },
 };
 
 -- Une entrée par réglage lu par le proxy de GameCore (read_config, proxy/src/lib.rs) ou par celui-ci
@@ -49,201 +53,81 @@ local PROXY_CACHE = {
 -- Restent visibles le confort et l'interface. `diag` : outil d'analyse, seulement dans les builds
 -- locaux (feature `diag` des proxys) ; la release ne le compile pas et l'onglet ne le montre pas.
 local PROXY_REGLAGES = {
-	{ titre = { "Général", "General" } },
+	{ titre = "LOC_BGD_OPT_TITRE_GENERAL" },
 	-- Interrupteur général : off, les autres réglages sont grisés (et gardés dans le fichier).
 	{ cle = "actif", defaut = "on", general = true,
-		nom = { "Proxys BetterGameDLLs", "BetterGameDLLs proxies" },
-		aide = {
-			"Désactive d'un coup tous les changements du proxy de GameCore, sans le désinstaller : le jeu se comporte comme sans proxy. Les autres réglages sont gardés, et cet onglet reste là pour le réactiver.",
-			"Turns off all GameCore proxy changes at once, without uninstalling it: the game behaves as without the proxy. The other settings are kept, and this tab stays available to turn it back on.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "verif_maj", defaut = "on", libre = true, demarrage = true,
-		nom = { "Recherche des mises à jour", "Check for updates" },
-		aide = {
-			"Au lancement du jeu, cherche sur GitHub une nouvelle version de BetterGameDLLs, et la propose au menu principal. Prend effet au prochain lancement du jeu.",
-			"When the game starts, looks on GitHub for a new version of BetterGameDLLs, and offers it in the main menu. Takes effect the next time the game starts.",
-		},
 		choix = PROXY_ON_OFF },
 
-	{ titre = { "Performances du passage de tour", "Turn processing performance" }, avance = true },
+	{ titre = "LOC_BGD_OPT_TITRE_PERFORMANCES", avance = true },
 	{ cle = "mode", defaut = "coalesce",
-		nom = { "Regroupement des mises à jour de villes", "Batched city updates" },
-		aide = {
-			"Pendant une cascade de déclarations de guerre, les données de villes et de diplomatie ne sont rafraîchies qu'une fois, à la fin : plus de 2 s gagnées sur un gros passage de tour. Ne change rien à la partie : sans risque en multijoueur, même face à des joueurs sans proxy.",
-			"During a cascade of war declarations, city and diplomacy data are refreshed only once, at the end: over 2 s saved on a heavy turn. Does not change the game: safe in multiplayer, even against players without the proxy.",
-		},
 		choix = {
-			{ "coalesce", { "Activé", "Enabled" } },
-			{ "off", { "Désactivé", "Disabled" } },
-			{ "count", { "Mesure seulement (diagnostic)", "Measure only (diagnostic)" } },
+			{ "coalesce", "LOC_BGD_OPT_CHOIX_ACTIVE" },
+			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+			{ "count", "LOC_BGD_OPT_CHOIX_MESURE" },
 		} },
 	{ cle = "portee", defaut = "message",
-		nom = { "Portée du regroupement", "Batching scope" },
-		aide = {
-			"« Chaque message du jeu » regroupe aussi les rafraîchissements hors guerre (gouverneurs, ressources, accords). L'interface peut alors montrer une donnée de ville en retard d'un instant.",
-			"\"Every game message\" also batches refreshes outside of wars (governors, resources, deals). The interface may then show city data a moment late.",
-		},
 		choix = {
-			{ "cascade", { "Cascades de guerre seulement", "War cascades only" } },
-			{ "message", { "Chaque message du jeu", "Every game message" } },
+			{ "cascade", "LOC_BGD_OPT_CHOIX_CASCADES" },
+			{ "message", "LOC_BGD_OPT_CHOIX_MESSAGES" },
 		} },
 	{ cle = "ameliorations", defaut = "quiet",
-		nom = { "Cache des améliorations constructibles", "Buildable improvements cache" },
-		aide = {
-			"Accélère la question « ce joueur peut-il construire cette amélioration ? », posée des millions de fois par passage de tour par l'IA. Même résultat que le jeu, vérifié sans aucun écart.",
-			"Speeds up the question \"can this player build this improvement?\", asked millions of times per turn by the AI. Same result as the game, verified with no difference.",
-		},
 		choix = PROXY_CACHE },
 	{ cle = "rendements", defaut = "quiet",
-		nom = { "Mémoire des rendements de cases pour l'IA", "Tile yield memory for the AI" },
-		aide = {
-			"Mémorise le rendement des cases pendant les calculs parallèles de l'IA, où la carte ne peut pas changer.",
-			"Remembers tile yields during the AI's parallel computations, while the map cannot change.",
-		},
 		choix = PROXY_CACHE },
 
-	{ titre = { "Interface", "Interface" } },
+	{ titre = "LOC_BGD_OPT_TITRE_INTERFACE" },
 	{ cle = "wmd_accel", defaut = "20",
-		nom = { "Accélération de l'animation des armes nucléaires", "Nuclear strike animation speed-up" },
-		aide = {
-			"Seulement si le combat rapide est activé (onglet Jeu). Accélère l'affichage pendant la frappe, sans effet sur la partie.",
-			"Only with quick combat enabled (Game tab). Speeds up the display during the strike, with no effect on the game.",
-		},
 		choix = {
-			{ "off", { "Désactivée", "Disabled" } },
-			{ "5", { "x5", "x5" } },
-			{ "10", { "x10", "x10" } },
-			{ "20", { "x20", "x20" } },
-			{ "40", { "x40", "x40" } },
+			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+			{ "5", "x5" },
+			{ "10", "x10" },
+			{ "20", "x20" },
+			{ "40", "x40" },
 		} },
 	{ cle = "ui_boutons", defaut = "on",
-		nom = { "Boutons d'attaque au-dessus des drapeaux d'unités", "Attack buttons above unit flags" },
-		aide = {
-			"Les boutons d'attaque des villes et des campements, et ceux de frappe nucléaire des silos, passent au-dessus des drapeaux d'unités, où ils restent cliquables.",
-			"City and encampment attack buttons, and silo nuclear strike buttons, are drawn above unit flags, where they stay clickable.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_recentrage", defaut = "off",
-		nom = { "Recentrer la caméra au clic sur ces boutons", "Recenter the camera when clicking these buttons" },
-		aide = {
-			"Comportement d'origine du jeu : la caméra se recentre sur la ville au clic sur un bouton d'attaque.",
-			"Original game behavior: the camera recenters on the city when an attack button is clicked.",
-		},
 		choix = {
-			{ "on", { "Oui", "Yes" } },
-			{ "off", { "Non", "No" } },
+			{ "on", "LOC_BGD_OPT_CHOIX_OUI" },
+			{ "off", "LOC_BGD_OPT_CHOIX_NON" },
 		} },
 	{ cle = "ui_epingles", defaut = "on",
-		nom = { "Épingles de carte allégées", "Lighter map pins" },
-		aide = {
-			"Les épingles et leur liste ne sont plus reconstruites quand rien n'a changé : moins de ralentissements en multijoueur.",
-			"Map pins and their list are no longer rebuilt when nothing changed: fewer slowdowns in multiplayer.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "tours_production", defaut = "on",
-		nom = { "Compteur de tours de production corrigé", "Fixed production turn counter" },
-		aide = {
-			"Le nombre de tours affiché tient compte des bonus de gouvernement (fascisme, autocratie, république marchande), comme la production réelle. Affichage seulement.",
-			"The displayed number of turns includes government bonuses (Fascism, Autocracy, Merchant Republic), like the actual production. Display only.",
-		},
 		choix = PROXY_ON_OFF },
 
-	{ titre = { "Correctifs", "Fixes" } },
+	{ titre = "LOC_BGD_OPT_TITRE_CORRECTIFS" },
 	{ cle = "ui_merveilles", defaut = "on",
-		nom = { "Merveille gardée dans la file après un échange", "Wonder kept in the queue after a swap" },
-		aide = {
-			"Une merveille retirée de la file de production par un échange y est remise, par des commandes normales du jeu : pas de désynchronisation, même face à des joueurs sans proxy.",
-			"A wonder removed from the production queue by a swap is put back, through normal game commands: no desync, even against players without the proxy.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rendements", defaut = "on",
-		nom = { "Rendements d'empire à jour après un gouverneur ou un personnage illustre", "Empire yields updated after a governor or great person" },
-		aide = {
-			"Le bandeau du haut se met à jour après un titre de gouverneur, un déplacement de gouverneur ou un personnage illustre, sans changer un citoyen. Affichage seulement : pas de désynchronisation.",
-			"The top bar updates after a governor title, a governor move or a great person, without changing a citizen. Display only: no desync.",
-		},
 		choix = PROXY_ON_OFF },
 
-	{ titre = { "Mods d'interface intégrés", "Built-in interface mods" } },
+	{ titre = "LOC_BGD_OPT_TITRE_MODS" },
 	{ cle = "ui_charges", defaut = "on",
-		nom = { "Charges des bâtisseurs sur leur drapeau", "Builder charges on their flag" },
-		aide = {
-			"D'après Better Builder Charges Tracking (wltk). Le drapeau d'une unité qui a des charges (bâtisseur, ingénieur militaire, légion romaine…) les montre à la place des promotions. Remplace le mod s'il est actif.",
-			"Based on Better Builder Charges Tracking (wltk). The flag of a unit with charges (builder, military engineer, Roman legion…) shows them instead of promotions. Replaces the mod if it is active.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_routes", defaut = "on",
-		nom = { "Tours restants des routes commerciales", "Trade route turns remaining" },
-		aide = {
-			"Le drapeau de chacun de vos négociants en route montre le nombre de tours avant la fin de sa route commerciale. Le négociant la termine ensuite en rentrant à sa ville d'origine. Affichage seulement.",
-			"The flag of each of your traders on a route shows the number of turns until its trade route ends. The trader then finishes it on returning to its origin city. Display only.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_notifications", defaut = "on",
-		nom = { "Bouton d'effacement des notifications", "Clear notifications button" },
-		aide = {
-			"D'après NotificationClear (336tarot). Un bouton du panneau des notifications ferme d'un clic celles qu'on peut fermer soi-même. Remplace le mod s'il est actif.",
-			"Based on NotificationClear (336tarot). A button in the notification panel dismisses in one click those you can dismiss yourself. Replaces the mod if it is active.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_bandeau", defaut = "on",
-		nom = { "Bandeau du haut étendu", "Extended top panel" },
-		aide = {
-			"D'après TopPanel Extension Pro (号码菌 / Azukii). Nourriture, production, population et ressources de luxe dans le bandeau, avec le détail par ville ; ressources des coéquipiers. Remplace le mod s'il est actif. Sans le mod, le bandeau de Better Spectator Mod est gardé.",
-			"Based on TopPanel Extension Pro (号码菌 / Azukii). Food, production, population and luxury resources in the top panel, with per-city details; teammates' resources. Replaces the mod if it is active. Without the mod, Better Spectator Mod's top panel is kept.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_politiques", defaut = "on",
-		nom = { "Effet des cartes de politique", "Policy card effects" },
-		aide = {
-			"D'après Extended Policy Cards (Aristos). Chaque carte montre son gain chiffré pour votre empire, calculé par Real Modifier Analysis (Infixo), corrigé (Raj, Médina, Monachisme, Prestige civil, cartes d'entretien, nourriture des cartes de personnages illustres). Ne demande plus Better Report Screen. Remplace le mod s'il est actif.",
-			"Based on Extended Policy Cards (Aristos). Each card shows its numeric gain for your empire, computed by Real Modifier Analysis (Infixo), fixed (Raj, Medina Quarter, Monasticism, Civil Prestige, maintenance cards, food on great person cards). No longer needs Better Report Screen. Replaces the mod if it is active.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rapports", defaut = "on",
-		nom = { "Écran des rapports amélioré", "Better report screen" },
-		aide = {
-			"D'après Better Report Screen (Infixo). Écran des rapports refait, avec les onglets Accords, Unités, Politiques, Cités-États et Villes, et l'effet de chaque politique et cité-État, corrigé comme les cartes. Remplace le mod s'il est actif.",
-			"Based on Better Report Screen (Infixo). Reworked report screen, with Deals, Units, Policies, City-States and Cities tabs, and the effect of each policy and city-state, fixed like the cards. Replaces the mod if it is active.",
-		},
 		choix = PROXY_ON_OFF },
 
-	{ titre = { "Diagnostic", "Diagnostics" }, avance = true },
+	{ titre = "LOC_BGD_OPT_TITRE_DIAGNOSTIC", avance = true },
 	{ cle = "ui_journal", defaut = "off", diag = true,
-		nom = { "Journal des scripts et XML chargés", "Log loaded scripts and XML" },
-		aide = {
-			"Note chaque fichier d'interface lu dans le journal du proxy.",
-			"Writes each interface file read to the proxy log.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_mesure_epingles", defaut = "off", diag = true,
-		nom = { "Mesure du coût des épingles", "Measure map pin cost" },
-		aide = {
-			"Écrit dans Lua.log la durée des reconstructions d'épingles et du bandeau des dirigeants.",
-			"Writes to Lua.log how long map pin and leader ribbon rebuilds take.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_diag_accords", defaut = "off", diag = true,
-		nom = { "Diagnostic des accords entre joueurs", "Diagnose deals between players" },
-		aide = {
-			"Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.",
-			"Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "depart_signaux", defaut = "off",
-		nom = { "Afficher les signaux du départ et de la fin simultanés", "Show simultaneous turn start and end signals" },
-		aide = {
-			"Avec l'option de partie « No First/Last moves (BGD) », les machines s'échangent des messages de chat cachés (.bgd_pret, .bgd_depart, .bgd_fin). Activé, ils restent visibles dans votre chat, avec une ligne quand l'hôte termine le tour, pour suivre le départ et la fin de chaque tour. Affichage seulement, sur cette machine.",
-			"With the \"No First/Last moves (BGD)\" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart, .bgd_fin). When on, they stay visible in your chat, with a line when the host ends the turn, to follow each turn start and end. Display only, on this machine.",
-		},
 		choix = PROXY_ON_OFF },
 	{ cle = "profil_zones", defaut = "off", libre = true, demarrage = true, diag = true,
-		nom = { "Profil des zones de l'exe", "Profile the game's timed zones" },
-		aide = {
-			"Note la durée de chaque zone chronométrée par le jeu (image, interface, scripts, événements) dans %LOCALAPPDATA%\\Civ6RolloverProxy\\zones, pour l'analyse des performances. Environ 1 Mo par seconde de jeu. Prend effet au prochain lancement du jeu.",
-			"Records the duration of every zone the game times (frame, interface, scripts, events) to %LOCALAPPDATA%\\Civ6RolloverProxy\\zones, for performance analysis. About 1 MB per second of play. Takes effect the next time the game starts.",
-		},
 		choix = PROXY_ON_OFF },
 };
 
@@ -255,50 +139,23 @@ if not PROXY_DIAG then
 	end
 end
 
-local PROXY_TEXTES = {
-	avertissement_partie = {
-		"Ces réglages sont ceux des proxys BetterGameDLLs (rollover_proxy.cfg). Ils prendront effet au lancement de la prochaine partie.",
-		"These are the settings of the BetterGameDLLs proxies (rollover_proxy.cfg). They will take effect when the next game starts.",
-	},
-	avertissement_redemarrage = {
-		"Ces réglages sont ceux des proxys BetterGameDLLs (rollover_proxy.cfg). Une partie a déjà été lancée : ils ne prendront effet qu'au prochain redémarrage du jeu.",
-		"These are the settings of the BetterGameDLLs proxies (rollover_proxy.cfg). A game has already been started: they will only take effect after restarting the game.",
-	},
-	sans_natives = {
-		"Fonctions du proxy de démarrage absentes : les réglages ne peuvent être ni lus ni enregistrés.",
-		"Startup proxy functions missing: settings can be neither read nor saved.",
-	},
-	lecture_impossible = { "Lecture des réglages impossible : ", "Cannot read the settings: " },
-	installe = { "Proxy de GameCore installé.", "GameCore proxy installed." },
-	non_installe = {
-		"Proxy de GameCore non installé : ces réglages n'auront d'effet qu'une fois installé.",
-		"GameCore proxy not installed: these settings will only take effect once it is installed.",
-	},
-	non_enregistres = { "Réglages non enregistrés : ", "Settings not saved: " },
-	valeur_du_fichier = { " (valeur du fichier)", " (value from file)" },
-	afficher_avancees = { "Afficher les options avancées", "Show advanced options" },
-	masquer_avancees = { "Masquer les options avancées", "Hide advanced options" },
-};
-
 -- Auteurs des mods repris dans le proxy (mods_ui/README.md) : affichés en bas de l'onglet, jamais
 -- grisés. { mod, Workshop, auteurs }.
-local PROXY_CREDITS = {
-	{ "Better Report Screen, Real Modifier Analysis, ReportsList Loader", "1312585482",
-		{ "Infixo ; onglets Unités et Accords d'origine : Greg Miller ; remerciements : nightfearer, Tyolan, copysoul, RohBang, Gorlod, Zergus, Rac, Aristos",
-		  "Infixo; original Units and Deals tabs: Greg Miller; thanks: nightfearer, Tyolan, copysoul, RohBang, Gorlod, Zergus, Rac, Aristos" } },
-	{ "Extended Policy Cards", "2266952591", { "Aristos", "Aristos" } },
-	{ "TopPanel Extension Pro", "2997927787", { "号码菌 (Azukii) ; remerciements : JNNR", "号码菌 (Azukii); thanks: JNNR" } },
-	{ "NotificationClear", "3063966792", { "336tarot", "336tarot" } },
-	{ "Better Builder Charges Tracking", "2409116842", { "wltk ; remerciements : DeepLogic, 小小雨10101", "wltk; thanks: DeepLogic, 小小雨10101" } },
-};
+local function Proxy_Credits()
+	return {
+		{ "Better Report Screen, Real Modifier Analysis, ReportsList Loader", "1312585482",
+			Proxy_T("LOC_BGD_OPT_CREDITS_AUTEURS_BRS", "Infixo", "Greg Miller", "nightfearer, Tyolan, copysoul, RohBang, Gorlod, Zergus, Rac, Aristos") },
+		{ "Extended Policy Cards", "2266952591", "Aristos" },
+		{ "TopPanel Extension Pro", "2997927787", Proxy_T("LOC_BGD_OPT_CREDITS_AUTEURS_MERCI", "号码菌 (Azukii)", "JNNR") },
+		{ "NotificationClear", "3063966792", "336tarot" },
+		{ "Better Builder Charges Tracking", "2409116842", Proxy_T("LOC_BGD_OPT_CREDITS_AUTEURS_MERCI", "wltk", "DeepLogic, 小小雨10101") },
+	};
+end
 
 local function Proxy_CreditsText()
-	local lines = { Proxy_T({
-		"Les mods d'interface intégrés reprennent le travail de leurs auteurs, que BetterGameDLLs remercie :",
-		"The built-in interface mods build on their authors' work, with BetterGameDLLs' thanks:",
-	}) };
-	for _, c in ipairs(PROXY_CREDITS) do
-		table.insert(lines, "[ICON_Bullet] " .. c[1] .. " (Workshop " .. c[2] .. ") : " .. Proxy_T(c[3]) .. ".");
+	local lines = { Proxy_T("LOC_BGD_OPT_CREDITS_INTRO") };
+	for _, c in ipairs(Proxy_Credits()) do
+		table.insert(lines, "[ICON_Bullet] " .. Proxy_T("LOC_BGD_OPT_CREDITS_LIGNE", c[1], c[2], c[3]));
 	end
 	return table.concat(lines, "[NEWLINE]");
 end
@@ -320,7 +177,7 @@ local function Proxy_ShowAdvanced(shown)
 	m_proxyAdvancedShown = shown;
 	Controls.ProxyAdvancedStack:SetHide(not shown);
 	Controls.ProxyAdvancedToggle:SetSelected(shown);
-	Controls.ProxyAdvancedToggle:SetText(Proxy_T(shown and PROXY_TEXTES.masquer_avancees or PROXY_TEXTES.afficher_avancees));
+	Controls.ProxyAdvancedToggle:SetText(Proxy_T(shown and "LOC_BGD_OPT_MASQUER_AVANCEES" or "LOC_BGD_OPT_AFFICHER_AVANCEES"));
 	Proxy_Resize();
 end
 
@@ -335,22 +192,22 @@ end
 local function Proxy_Read()
 	m_proxySaved = {};
 	if Civ6Proxy_LireReglages == nil then
-		return Proxy_T(PROXY_TEXTES.sans_natives), Proxy_T(PROXY_TEXTES.avertissement_redemarrage);
+		return Proxy_T("LOC_BGD_OPT_SANS_NATIVES"), Proxy_T("LOC_BGD_OPT_AVERT_REDEMARRAGE");
 	end
 	local text, installed, loaded = Civ6Proxy_LireReglages();
 	if text == nil then
-		return Proxy_T(PROXY_TEXTES.lecture_impossible) .. tostring(installed), Proxy_T(PROXY_TEXTES.avertissement_redemarrage);
+		return Proxy_T("LOC_BGD_OPT_LECTURE_IMPOSSIBLE", tostring(installed)), Proxy_T("LOC_BGD_OPT_AVERT_REDEMARRAGE");
 	end
 	-- Comme read_config : la dernière ligne d'une clé l'emporte.
 	for line in string.gmatch(text, "[^\r\n]+") do
 		local k, v = string.match(line, "^%s*([%w_]+)%s*=%s*(.-)%s*$");
 		if k ~= nil then m_proxySaved[k] = v; end
 	end
-	local warning = Proxy_T(loaded == 1 and PROXY_TEXTES.avertissement_redemarrage or PROXY_TEXTES.avertissement_partie);
+	local warning = Proxy_T(loaded == 1 and "LOC_BGD_OPT_AVERT_REDEMARRAGE" or "LOC_BGD_OPT_AVERT_PARTIE");
 	if installed == 1 then
-		return Proxy_T(PROXY_TEXTES.installe), warning;
+		return Proxy_T("LOC_BGD_OPT_INSTALLE"), warning;
 	end
-	return Proxy_T(PROXY_TEXTES.non_installe), warning;
+	return Proxy_T("LOC_BGD_OPT_NON_INSTALLE"), warning;
 end
 
 -- Remplit les listes avec les valeurs du fichier et les choix en attente. Interrupteur général
@@ -371,7 +228,7 @@ local function Proxy_Populate()
 			end
 			-- Une valeur écrite à la main, hors de la liste : on la montre telle quelle.
 			if not known then
-				table.insert(values, { current .. Proxy_T(PROXY_TEXTES.valeur_du_fichier), current });
+				table.insert(values, { Proxy_T("LOC_BGD_OPT_VALEUR_FICHIER", current), current });
 			end
 			local saved = m_proxySaved[r.cle] or r.defaut;
 			PopulateComboBox(m_proxyPullDowns[r.cle], values, current, function(value)
@@ -408,12 +265,12 @@ local function Proxy_Save()
 	end
 	if #lines == 0 then return false; end
 	if Civ6Proxy_EcrireReglages == nil then
-		Controls.ProxyStatus:SetText(Proxy_T(PROXY_TEXTES.non_enregistres) .. Proxy_T(PROXY_TEXTES.sans_natives));
+		Controls.ProxyStatus:SetText(Proxy_T("LOC_BGD_OPT_NON_ENREGISTRES", Proxy_T("LOC_BGD_OPT_SANS_NATIVES")));
 		return false;
 	end
 	local ok, loaded = Civ6Proxy_EcrireReglages(table.concat(lines, "\n"));
 	if ok == nil then
-		Controls.ProxyStatus:SetText(Proxy_T(PROXY_TEXTES.non_enregistres) .. tostring(loaded));
+		Controls.ProxyStatus:SetText(Proxy_T("LOC_BGD_OPT_NON_ENREGISTRES", tostring(loaded)));
 		return false;
 	end
 	for k, v in pairs(m_proxyPending) do
@@ -434,9 +291,9 @@ local function Proxy_Build()
 			inst.CategoryName:SetText(Proxy_T(r.titre));
 		else
 			ContextPtr:BuildInstanceForControl("PullDownParameterInstance", inst, stack);
-			inst.StringName:SetText(Proxy_T(r.nom));
-			inst.StringName:SetToolTipString(Proxy_T(r.aide));
-			inst.PullDown:GetButton():SetToolTipString(Proxy_T(r.aide));
+			inst.StringName:SetText(Proxy_Nom(r));
+			inst.StringName:SetToolTipString(Proxy_Aide(r));
+			inst.PullDown:GetButton():SetToolTipString(Proxy_Aide(r));
 			m_proxyPullDowns[r.cle] = inst.PullDown;
 		end
 	end
@@ -444,7 +301,7 @@ local function Proxy_Build()
 	if Controls.ProxyCredits ~= nil then
 		local inst = {};
 		ContextPtr:BuildInstanceForControl("KeyBindingCategory", inst, Controls.ProxyOptionsStack);
-		inst.CategoryName:SetText(Proxy_T({ "Crédits", "Credits" }));
+		inst.CategoryName:SetText(Proxy_T("LOC_BGD_OPT_TITRE_CREDITS"));
 		Controls.ProxyCredits:ChangeParent(Controls.ProxyOptionsStack);
 		Controls.ProxyCredits:SetText(Proxy_CreditsText());
 		Controls.ProxyCredits:SetHide(false);
@@ -457,7 +314,7 @@ end
 -- Si le XML n'a pas été modifié (Options.xml remplacé par un mod, par exemple), rien n'est ajouté.
 if Controls.ProxyTab ~= nil and Controls.ProxyOptions ~= nil and Controls.ProxyAdvancedStack ~= nil and m_tabs ~= nil then
 	-- 1 : pas de bouton « Restaurer les valeurs par défaut » sur cet onglet, comme pour les raccourcis.
-	local tab = { Controls.ProxyTab, Controls.ProxyOptions, "BetterGameDLLs", 1 };
+	local tab = { Controls.ProxyTab, Controls.ProxyOptions, PROXY_VERSION and ("BetterGameDLLs " .. PROXY_VERSION) or "BetterGameDLLs", 1 };
 	table.insert(m_tabs, tab);
 	Controls.ProxyTab:RegisterCallback(Mouse.eLClick, function() OnSelectTab(tab); end);
 	Controls.ProxyTab:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);

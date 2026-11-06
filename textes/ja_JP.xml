@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textes de BetterGameDLLs en ja_JP : voir textes/README.md. -->
+<GameData>
+	<LocalizedText>
+		<Row Tag="LOC_BGD_OPT_CHOIX_ACTIVE" Language="ja_JP">
+			<Text>有効</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_DESACTIVE" Language="ja_JP">
+			<Text>無効</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_JOURNAL" Language="ja_JP">
+			<Text>有効 (ログあり)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_MESURE" Language="ja_JP">
+			<Text>計測のみ (診断)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_VERIFICATION" Language="ja_JP">
+			<Text>検証 (診断、低速)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_OUI" Language="ja_JP">
+			<Text>はい</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_NON" Language="ja_JP">
+			<Text>いいえ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CASCADES" Language="ja_JP">
+			<Text>宣戦の連鎖のみ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ja_JP">
+			<Text>ゲームのすべてのメッセージ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ja_JP">
+			<Text>全般</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_PERFORMANCES" Language="ja_JP">
+			<Text>ターン処理のパフォーマンス</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_INTERFACE" Language="ja_JP">
+			<Text>インターフェース</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_CORRECTIFS" Language="ja_JP">
+			<Text>修正</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_MODS" Language="ja_JP">
+			<Text>組み込みインターフェースMOD</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_DIAGNOSTIC" Language="ja_JP">
+			<Text>診断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TITRE_CREDITS" Language="ja_JP">
+			<Text>クレジット</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ACTIF_NOM" Language="ja_JP">
+			<Text>BetterGameDLLs プロキシ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ACTIF_AIDE" Language="ja_JP">
+			<Text>GameCore プロキシによる変更を、アンインストールせずにすべて一度に無効にします。ゲームはプロキシがない場合と同じように動作します。他の設定は保持され、このタブから再び有効にできます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_NOM" Language="ja_JP">
+			<Text>アップデートを確認</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VERIF_MAJ_AIDE" Language="ja_JP">
+			<Text>ゲーム起動時に GitHub で BetterGameDLLs の新しいバージョンを探し、メインメニューで案内します。次回のゲーム起動時から有効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MODE_NOM" Language="ja_JP">
+			<Text>都市の更新をまとめる</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MODE_AIDE" Language="ja_JP">
+			<Text>宣戦布告が連鎖する間、都市と外交のデータは最後に一度だけ更新されます。重いターンで2秒以上短縮されます。ゲーム内容は変わらないため、プロキシを持たないプレイヤーとのマルチプレイでも安全です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PORTEE_NOM" Language="ja_JP">
+			<Text>まとめる範囲</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PORTEE_AIDE" Language="ja_JP">
+			<Text>「ゲームのすべてのメッセージ」を選ぶと、戦争以外の更新 (総督、資源、取引) もまとめます。その場合、インターフェースの都市データが一瞬遅れて表示されることがあります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AMELIORATIONS_NOM" Language="ja_JP">
+			<Text>建設可能な施設のキャッシュ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AMELIORATIONS_AIDE" Language="ja_JP">
+			<Text>AI が1ターンに何百万回も行う「このプレイヤーはこの施設を建設できるか?」という判定を高速化します。結果はゲームと同じで、差異がないことを検証済みです。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RENDEMENTS_NOM" Language="ja_JP">
+			<Text>AI 用のタイル産出量の記憶</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="ja_JP">
+			<Text>マップが変化しない AI の並列計算の間、タイルの産出量を記憶します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="ja_JP">
+			<Text>核攻撃アニメーションの高速化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_AIDE" Language="ja_JP">
+			<Text>クイック戦闘が有効な場合のみ (ゲームタブ)。攻撃中の表示を高速化します。ゲーム内容には影響しません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BOUTONS_NOM" Language="ja_JP">
+			<Text>ユニットの旗より手前に攻撃ボタン</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BOUTONS_AIDE" Language="ja_JP">
+			<Text>都市と兵営の攻撃ボタン、およびサイロの核攻撃ボタンをユニットの旗より手前に表示し、クリックできるようにします。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RECENTRAGE_NOM" Language="ja_JP">
+			<Text>これらのボタンのクリック時にカメラを移動</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RECENTRAGE_AIDE" Language="ja_JP">
+			<Text>ゲーム本来の動作: 攻撃ボタンをクリックするとカメラが都市に移動します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_NOM" Language="ja_JP">
+			<Text>マップピンの軽量化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="ja_JP">
+			<Text>変化がないときはマップピンとその一覧を再構築しません。マルチプレイでの引っかかりが減ります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="ja_JP">
+			<Text>生産ターン数の表示を修正</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_AIDE" Language="ja_JP">
+			<Text>表示されるターン数に、実際の生産と同じく政府のボーナス (ファシズム、独裁政治、商業共和制) を反映します。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_NOM" Language="ja_JP">
+			<Text>入れ替え後も遺産をキューに残す</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="ja_JP">
+			<Text>入れ替えによって生産キューから外れた遺産を、通常のゲームコマンドで戻します。プロキシを持たないプレイヤーとも同期ずれは起きません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="ja_JP">
+			<Text>総督や偉人の後に帝国の産出量を更新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ja_JP">
+			<Text>総督の称号、総督の移動、偉人の後に、市民を動かさなくても上部バーが更新されます。表示のみで、同期ずれは起きません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="ja_JP">
+			<Text>労働者の残り回数を旗に表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="ja_JP">
+			<Text>Better Builder Charges Tracking (wltk) に基づきます。残り回数を持つユニット (労働者、工兵、レギオンなど) の旗に、昇進の代わりにそれを表示します。MOD が有効な場合はそれに置き換わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="ja_JP">
+			<Text>交易路の残りターン</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ROUTES_AIDE" Language="ja_JP">
+			<Text>交易中の各交易商の旗に、交易路が終わるまでのターン数を表示します。交易商はその後、出発都市に戻った時点で交易路を終えます。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_NOM" Language="ja_JP">
+			<Text>通知を消去するボタン</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="ja_JP">
+			<Text>NotificationClear (336tarot) に基づきます。通知パネルのボタンで、自分で閉じられる通知をワンクリックで閉じます。MOD が有効な場合はそれに置き換わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="ja_JP">
+			<Text>拡張された上部バー</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="ja_JP">
+			<Text>TopPanel Extension Pro (号码菌 / Azukii) に基づきます。食料、生産力、人口、高級資源を都市ごとの詳細とともに上部バーに表示し、チームメイトの資源も表示します。MOD が有効な場合はそれに置き換わります。MOD がない場合は Better Spectator Mod の上部バーが維持されます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="ja_JP">
+			<Text>政策カードの効果</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_AIDE" Language="ja_JP">
+			<Text>Extended Policy Cards (Aristos) に基づきます。各カードに、帝国にとっての効果を数値で表示します。計算は Real Modifier Analysis (Infixo) を修正したもの (ラージ、メディナ地区、修道制、市民の威信、維持費カード、偉人カードの食料) です。Better Report Screen は不要になりました。MOD が有効な場合はそれに置き換わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_NOM" Language="ja_JP">
+			<Text>改良されたレポート画面</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ja_JP">
+			<Text>Better Report Screen (Infixo) に基づきます。取引、ユニット、政策、都市国家、都市のタブを持つ新しいレポート画面で、各政策と都市国家の効果をカードと同じく修正して表示します。MOD が有効な場合はそれに置き換わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ja_JP">
+			<Text>読み込んだスクリプトと XML を記録</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_AIDE" Language="ja_JP">
+			<Text>読み込まれた各インターフェースファイルをプロキシのログに記録します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_NOM" Language="ja_JP">
+			<Text>マップピンのコストを計測</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_AIDE" Language="ja_JP">
+			<Text>マップピンと指導者リボンの再構築にかかる時間を Lua.log に書き込みます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_NOM" Language="ja_JP">
+			<Text>プレイヤー間の取引の診断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ja_JP">
+			<Text>送受信した取引の提案と取引画面の表示内容を Lua.log に書き込み、人間同士の取引の行き違いを調べます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ja_JP">
+			<Text>同時開始・同時終了の信号を表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_AIDE" Language="ja_JP">
+			<Text>ゲームオプション「No First/Last moves (BGD)」では、各PCが非表示のチャットメッセージ (.bgd_pret、.bgd_depart、.bgd_fin) をやり取りします。有効にすると、それらがチャットに表示されたままになり、ホストがターンを終えたときにも1行表示されるので、各ターンの開始と終了を追えます。このPCでの表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_NOM" Language="ja_JP">
+			<Text>ゲームの計測区間のプロファイル</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="ja_JP">
+			<Text>ゲームが計測する各区間 (フレーム、インターフェース、スクリプト、イベント) の所要時間を、パフォーマンス分析のため %LOCALAPPDATA%\Civ6RolloverProxy\zones に記録します。プレイ1秒あたり約1MB。次回のゲーム起動時から有効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="ja_JP">
+			<Text>これは BetterGameDLLs プロキシの設定 (rollover_proxy.cfg) です。次のゲームの開始時に反映されます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AVERT_REDEMARRAGE" Language="ja_JP">
+			<Text>これは BetterGameDLLs プロキシの設定 (rollover_proxy.cfg) です。すでにゲームが開始されているため、ゲームを再起動するまで反映されません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_SANS_NATIVES" Language="ja_JP">
+			<Text>起動プロキシの機能が見つかりません。設定を読み込むことも保存することもできません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_LECTURE_IMPOSSIBLE" Language="ja_JP">
+			<Text>設定を読み込めません: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_INSTALLE" Language="ja_JP">
+			<Text>GameCore プロキシはインストール済みです。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_NON_INSTALLE" Language="ja_JP">
+			<Text>GameCore プロキシがインストールされていません。これらの設定はインストール後に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_NON_ENREGISTRES" Language="ja_JP">
+			<Text>設定を保存できませんでした: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VALEUR_FICHIER" Language="ja_JP">
+			<Text>{1} (ファイルの値)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_AFFICHER_AVANCEES" Language="ja_JP">
+			<Text>詳細オプションを表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="ja_JP">
+			<Text>詳細オプションを隠す</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="ja_JP">
+			<Text>組み込みインターフェースMODは作者の成果に基づいています。BetterGameDLLs より感謝します:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_LIGNE" Language="ja_JP">
+			<Text>{1} (Workshop {2}): {3}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_AUTEURS_MERCI" Language="ja_JP">
+			<Text>{1}、謝辞: {2}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CREDITS_AUTEURS_BRS" Language="ja_JP">
+			<Text>{1}、元のユニット・取引タブ: {2}、謝辞: {3}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TITRE_RELEASE" Language="ja_JP">
+			<Text>BetterGameDLLs: 新しいリリース</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TITRE_PRERELEASE" Language="ja_JP">
+			<Text>BetterGameDLLs: 新しいプレリリース</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TEXTE_RELEASE" Language="ja_JP">
+			<Text>BetterGameDLLs のリリース {1} が利用可能です (インストール済み: {2})。[NEWLINE][NEWLINE]「アップデート」を押すとゲームを終了し、インストーラーを起動します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_TEXTE_PRERELEASE" Language="ja_JP">
+			<Text>BetterGameDLLs のプレリリース {1} が利用可能です (インストール済み: {2})。[NEWLINE][NEWLINE]これはテスト版です。インストーラーで「プレリリース」にチェックが入っているため届いています。[NEWLINE][NEWLINE]「アップデート」を押すとゲームを終了し、インストーラーを起動します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_BOUTON_MAJ" Language="ja_JP">
+			<Text>アップデート</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_BOUTON_PLUS_TARD" Language="ja_JP">
+			<Text>後で</Text>
+		</Row>
+		<Row Tag="LOC_BGD_MAJ_PAGE" Language="ja_JP">
+			<Text>BetterGameDLLs のインストーラーが見つかりません。最新リリースのページをブラウザで開きました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="ja_JP">
+			<Text>全プレイヤーが同時にターンを開始し、同時に終了します。ターン開始時は全員の読み込みが終わるまで待機します。マップは見られますが、命令は保留され、ターンタイマーは進みません。終了時は、ホストのタイマーがゼロになると、自分のタイマーに時間が残っていても全員のターンが終わります。全プレイヤーが同じバージョンの BetterGameDLLs を持っている必要があります。MPH のターン同期は無効になり、これに置き換わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_TOUS" Language="ja_JP">
+			<Text>全プレイヤーが BetterGameDLLs {1} を使用中: POL 修正は有効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SANS" Language="ja_JP">
+			<Text>BetterGameDLLs なし: {1}。このゲームでは POL 修正は無効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_AUTRES" Language="ja_JP">
+			<Text>{1} 以外のバージョンの BetterGameDLLs: {2}。このゲームでは POL 修正は無効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SANS_AUTRES" Language="ja_JP">
+			<Text>BetterGameDLLs なし: {1}。{2} 以外のバージョンの BetterGameDLLs: {3}。このゲームでは POL 修正は無効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_HOTE_SANS" Language="ja_JP">
+			<Text>ホストが BetterGameDLLs を持っていないか、互換性のないバージョンです: このゲームでは POL 修正は無効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ARRIVEE" Language="ja_JP">
+			<Text>{1}: POL 修正が有効なのに、BetterGameDLLs なし (または別のバージョン) で参加しました。このプレイヤーのゲームは同期がずれます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ja_JP">
+			<Text>No First/Last moves 有効: 全プレイヤーが一緒にターンを開始し、ホストのタイマーがゼロになると全員のターンが終わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="ja_JP">
+			<Text>No First/Last moves: 同時開始は有効、同時終了は利用不可 (ゲームのタイマーをフックできません)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ja_JP">
+			<Text>No First/Last moves 無効: 全プレイヤーが同じバージョンの BetterGameDLLs を持っている必要があります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ja_JP">
+			<Text>命令を保留中: まだ全プレイヤーのターンが始まっていません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_PARTI" Language="ja_JP">
+			<Text>スタート!</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS" Language="ja_JP">
+			<Text>{1} を待たずに開始しました ({2} 秒経っても準備ができていません)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ja_JP">
+			<Text>ターン終了: ホストのタイマーが切れました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="ja_JP">
+			<Text>観戦者: 閲覧のみで、投票は数えられません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CONGRES_FERMER" Language="ja_JP">
+			<Text>閉じる</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ROUTE_AIDE" Language="ja_JP">
+			<Text>交易路: あと {1} ターンで、交易商が出発都市に戻ったときに終わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="ja_JP">
+			<Text>自分で閉じられる通知を消去します (取引と未決の選択は残ります)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="ja_JP">
+			<Text>操作に失敗しました</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_NOT_THE_CIVILIZATION_VI" Language="ja_JP">
+			<Text>{1} は Civilization VI (Gathering Storm) のフォルダーではありません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="ja_JP">
+			<Text>Steam ライブラリに Civilization VI が見つかりません。\n\n--game-dir "&lt;ゲームのフォルダー&gt;" を付けてインストーラーを再実行してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="ja_JP">
+			<Text>最新バージョンを確認中…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CLOSE_CIVILIZATION_VI_THEN_RUN_THE" Language="ja_JP">
+			<Text>Civilization VI を終了してから、インストーラーを再実行してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNINSTALLING_BETTERGAMEDLLS" Language="ja_JP">
+			<Text>BetterGameDLLs をアンインストール中…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_UNINSTALLED" Language="ja_JP">
+			<Text>BetterGameDLLs はアンインストールされました</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_THE_GAME_HAS_ITS_ORIGINAL_FILES" Language="ja_JP">
+			<Text>ゲームは元のファイルに戻りました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_GAME_X" Language="ja_JP">
+			<Text>ゲーム: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CHANNEL_PRE_RELEASE_TEST_VERSIONS_AHEAD" Language="ja_JP">
+			<Text>\nチャンネル: プレリリース (公開前のテスト版)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_COULD_NOT_READ_THE_LATEST_VERSION" Language="ja_JP">
+			<Text>\n\n最新バージョンを読み込めませんでした: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LATEST_VERSION_UNKNOWN" Language="ja_JP">
+			<Text>最新バージョン不明</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED_AND_UP" Language="ja_JP">
+			<Text>BetterGameDLLs {1} はインストール済みで最新です</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_IS_NOT_INSTALLED" Language="ja_JP">
+			<Text>BetterGameDLLs はインストールされていません</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INSTALL_DOWNLOADS_AND_INSTALLS_VERSION_X" Language="ja_JP">
+			<Text>インストール\nバージョン {1} をダウンロードしてインストールします。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_AVAILABLE" Language="ja_JP">
+			<Text>BetterGameDLLs のバージョン {1} が利用可能です</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X_WHICH_NO" Language="ja_JP">
+			<Text>アップデート\nバージョン {1} をインストールします。このバージョンはゲームのファイルを置き換えないため、Steam に削除されなくなります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_NEEDS_TO_BE_REPAIRED" Language="ja_JP">
+			<Text>BetterGameDLLs の修復が必要です</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_REPAIR_REINSTALLS_VERSION_X" Language="ja_JP">
+			<Text>修復\nバージョン {1} を再インストールします。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_VERSION_X_IS_INSTALLED" Language="ja_JP">
+			<Text>BetterGameDLLs のバージョン {1} がインストールされています</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_GO_BACK_TO_VERSION_X_REPLACES" Language="ja_JP">
+			<Text>バージョン {1} に戻す\nプレリリースを最新のリリースに置き換えます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATE_INSTALLS_VERSION_X" Language="ja_JP">
+			<Text>アップデート\nバージョン {1} をインストールします。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_NOT_INSTALLED" Language="ja_JP">
+			<Text>未インストール</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_FILE_FROM_ANOTHER_PROGRAM" Language="ja_JP">
+			<Text>別のプログラムのファイル</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_OLD_PROXY_IN_PLACE_OF_THE" Language="ja_JP">
+			<Text>元のファイルの代わりに古いプロキシ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PROXY_INSTALLED_OTHER_VERSION" Language="ja_JP">
+			<Text>プロキシはインストール済み (別のバージョン)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PROXY_UP_TO_DATE" Language="ja_JP">
+			<Text>プロキシは最新</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_VERSION_INSTALLED_BY_THE_INSTALLER_X" Language="ja_JP">
+			<Text>インストーラーが導入したバージョン: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNINSTALL_RESTORES_THE_GAME_S_ORIGINAL" Language="ja_JP">
+			<Text>アンインストール\nゲームの元のファイルに戻します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PRE_RELEASE_INSTALL_TEST_VERSIONS" Language="ja_JP">
+			<Text>プレリリース: テスト版をインストールする</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="ja_JP">
+			<Text>BetterGameDLLs {1} をインストール中…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="ja_JP">
+			<Text>自動で更新・修復されるようにするには、Steam で Civilization VI にこの起動オプションを追加してください (プロパティ &gt; 一般 &gt; 起動オプション):\n\n{1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="ja_JP">
+			<Text>BetterGameDLLs {1} がインストールされました</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="ja_JP">
+			<Text>Civilization VI を再起動\nSteam 経由で起動します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="ja_JP">
+			<Text>起動オプションをコピー\nSteam の起動オプションに貼り付けます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="ja_JP">
+			<Text>Civilization VI が終了しませんでした。終了してから、インストーラーを再実行してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_COULD_NOT_UPDATE" Language="ja_JP">
+			<Text>BetterGameDLLs をアップデートできませんでした</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_THE_GAME_WILL_START_WITHOUT" Language="ja_JP">
+			<Text>{1}\n\nアップデートせずにゲームを起動します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_NOT_FOUND" Language="ja_JP">
+			<Text>Civilization VI が見つかりません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UPDATING_BETTERGAMEDLLS_TO_VERSION_X" Language="ja_JP">
+			<Text>BetterGameDLLs をバージョン {1} にアップデート中…</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_FAILURE_CODE_X" Language="ja_JP">
+			<Text>失敗 (コード {1})</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_MISSING_VERIFY_THE_GAME" Language="ja_JP">
+			<Text>{1} がありません: Steam でゲームファイルの整合性を確認してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_IS_NOT_A_BETTERGAMEDLLS_FILE" Language="ja_JP">
+			<Text>{1} は BetterGameDLLs のファイルではありません (別の MOD?)。削除してから、インストーラーを再実行してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_VERSION_X_NEEDS_A_NEWER_INSTALLER" Language="ja_JP">
+			<Text>バージョン {1} にはより新しいインストーラーが必要です。リリースのページからダウンロードしてください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_RELEASE_LIST_X" Language="ja_JP">
+			<Text>リリース一覧を読み込めません: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_NO_PUBLISHED_RELEASE" Language="ja_JP">
+			<Text>公開されたリリースがありません</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_MANIFEST_SIGNATURE" Language="ja_JP">
+			<Text>マニフェストの署名を読み込めません</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_INVALID_MANIFEST_SIGNATURE" Language="ja_JP">
+			<Text>マニフェストの署名が無効です</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_UNREADABLE_MANIFEST_X" Language="ja_JP">
+			<Text>マニフェストを読み込めません: {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_X_SHA_256_DIFFERS_FROM_THE" Language="ja_JP">
+			<Text>{1}: SHA-256 がマニフェストと一致しません</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_DOWNLOAD_OF_X_X" Language="ja_JP">
+			<Text>{1} のダウンロード: {2}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_HIDE_DETAILS" Language="ja_JP">
+			<Text>詳細を隠す</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_DETAILS" Language="ja_JP">
+			<Text>詳細</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_PLEASE_WAIT" Language="ja_JP">
+			<Text>お待ちください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_CLOSE" Language="ja_JP">
+			<Text>閉じる</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ja_JP">
+			<Text>管理者権限が拒否されました</Text>
+		</Row>
+	</LocalizedText>
+</GameData>

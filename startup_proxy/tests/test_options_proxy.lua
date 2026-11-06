@@ -12,7 +12,7 @@ local function ReadFile(path)
 	f:close();
 	return s;
 end
-local BLOCK = ReadFile(dir .. "/../src/options_proxy.lua");
+local BLOCK = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/options_proxy.lua");
 local OPTIONS_PATH = arg[1]
 	or [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Assets\UI\Options.lua]];
 -- HavokScript accepte des annotations de type (`local x:number`) que Lua 5.4 refuse : on les retire.
@@ -193,7 +193,7 @@ do
 	local nuke = m.Row("Accélération de l'animation des armes nucléaires");
 	Check("valeur hors liste montrée telle quelle", nuke.PullDown.button.text == "7 (valeur du fichier)");
 	local amel = m.Row("Cache des améliorations constructibles");
-	Check("clé absente : valeur par défaut", amel.PullDown.button.text == "Désactivé");
+	Check("clé absente : valeur par défaut", amel.PullDown.button.text == "Activé");
 
 	-- Un changement, puis retour à la valeur d'origine : rien à écrire.
 	C.ConfirmButton.disabled = true;
@@ -205,10 +205,10 @@ do
 
 	-- Deux changements confirmés : écrits, et le message de redémarrage du jeu s'affiche.
 	m.Choose(boutons, "Désactivé");
-	m.Choose(amel, "Activé");
+	m.Choose(amel, "Désactivé");
 	C.ConfirmButton.callbacks.LClick();
 	local w = m.written[1] or "";
-	Check("écrit à la confirmation", #m.written == 1 and w:find("ui_boutons=off", 1, true) and w:find("ameliorations=quiet", 1, true));
+	Check("écrit à la confirmation", #m.written == 1 and w:find("ui_boutons=off", 1, true) and w:find("ameliorations=off", 1, true));
 	Check("redémarrage demandé", m.env._PromptRestartApp == true);
 	Check("message de redémarrage du jeu", m.RestartShown());
 
@@ -265,18 +265,24 @@ do
 end
 
 do
-	-- Jeu en anglais (comme toute autre langue que le français).
-	for _, lang in ipairs({ "en_US", "de_DE" }) do
+	-- Jeu en anglais, puis en allemand (textes/de_DE.xml), puis dans une langue sans traduction.
+	local LANGUES = {
+		{ "en_US", "Attack buttons above unit flags", "Enabled", "stay clickable", "General", "GameCore proxy installed.", "next game starts", "Nuclear strike animation speed-up", "7 (value from file)" },
+		{ "de_DE", "Angriffsschaltflächen über den Einheitenflaggen", "Aktiviert", "anklickbar", "Allgemein", "GameCore-Proxy installiert.", "nächsten Partie", "Beschleunigte Animation von Atomschlägen", "7 (Wert aus der Datei)" },
+		{ "xx_XX", "Attack buttons above unit flags", "Enabled", "stay clickable", "General", "GameCore proxy installed.", "next game starts", "Nuclear strike animation speed-up", "7 (value from file)" },
+	};
+	for _, l in ipairs(LANGUES) do
+		local lang = l[1];
 		local m = NewScreen("ui_boutons=on\r\nwmd_accel=7\r\n", 1, 0, lang);
 		local C = m.env.Controls;
-		local row = m.Row("Attack buttons above unit flags");
-		Check(lang .. " : libellés en anglais", row ~= nil and row.PullDown.button.text == "Enabled"
-			and (rawget(row.StringName, "tooltip") or ""):find("stay clickable", 1, true) ~= nil);
-		Check(lang .. " : titres en anglais", m.built[1].inst.CategoryName.text == "General");
-		Check(lang .. " : état et avertissement en anglais", C.ProxyStatus.text == "GameCore proxy installed."
-			and (C.ProxyWarning.text or ""):find("next game starts", 1, true) ~= nil);
-		local nuke = m.Row("Nuclear strike animation speed-up");
-		Check(lang .. " : valeur hors liste", nuke.PullDown.button.text == "7 (value from file)");
+		local row = m.Row(l[2]);
+		Check(lang .. " : libellés traduits", row ~= nil and row.PullDown.button.text == l[3]
+			and (rawget(row.StringName, "tooltip") or ""):find(l[4], 1, true) ~= nil);
+		Check(lang .. " : titres traduits", m.built[1].inst.CategoryName.text == l[5]);
+		Check(lang .. " : état et avertissement traduits", C.ProxyStatus.text == l[6]
+			and (C.ProxyWarning.text or ""):find(l[7], 1, true) ~= nil);
+		local nuke = m.Row(l[8]);
+		Check(lang .. " : valeur hors liste", nuke ~= nil and nuke.PullDown.button.text == l[9]);
 	end
 	local fr = NewScreen("", 1, 0, "fr_CA");
 	Check("fr_CA : en français", fr.Row("Épingles de carte allégées") ~= nil);

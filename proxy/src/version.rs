@@ -3,7 +3,7 @@
 //! changent la simulation, ne s'activeront que si tous les humains de la partie annoncent exactement
 //! la même : l'augmenter à chaque version qui change la simulation ou l'échange du salon.
 
-pub const VERSION: &str = "0.4.0";
+pub const VERSION: &str = "0.5.0";
 
 /// Numéro de la release GitHub qui a produit ces DLL : `BGD_RELEASE`, posé par le workflow de release
 /// (.github/workflows/release.yml). Aucun pour une compilation locale, qui ne cherche donc pas de

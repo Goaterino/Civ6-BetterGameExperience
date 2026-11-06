@@ -54,7 +54,7 @@ const MESURE_BLOCK: &str = include_str!("ui_epingles.lua");
 const OPTI_BLOCK: &str = include_str!("ui_epingles_opti.lua");
 const MERVEILLES_BLOCK: &str = include_str!("ui_merveilles.lua");
 const RENDEMENTS_BLOCK: &str = include_str!("ui_rendements.lua");
-const CONGRES_BLOCK: &str = include_str!("ui_congres.lua");
+const CONGRES_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres.lua"));
 const CIBLES_BLOCK: &str = include_str!("ui_congres_cibles.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 

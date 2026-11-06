@@ -22,14 +22,14 @@ use crate::options::{hks, publish_natives, push_str, Natives};
 use crate::version::VERSION;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-pub const LUA_BLOCK: &str = include_str!("salon.lua");
+pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("salon.lua"));
 pub const SCRIPT: &str = "stagingroom.lua";
 pub const CHARGEMENT_BLOCK: &str = include_str!("chargement.lua");
 pub const SCRIPT_CHARGEMENT: &str = "loadscreen.lua";
-pub const PARTIE_BLOCK: &str = include_str!("partie.lua");
+pub const PARTIE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("partie.lua"));
 pub const SCRIPT_PARTIE: &str = "ingame.lua";
 /// Option de partie « No First/Last moves (BGD) » (départ et fin de tour simultanés, depart_tour/README.md).
-pub const OPTION_BLOCK: &str = include_str!("option_partie.lua");
+pub const OPTION_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("option_partie.lua"));
 pub const SCRIPT_OPTION: &str = "setupparameters.lua";
 
 /// Correctifs POL actifs pour la partie en cours (voir l'en-tête). Désactivés tant que l'interface

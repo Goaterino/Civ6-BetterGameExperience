@@ -6,6 +6,9 @@
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
 local f = assert(io.open(dir .. "/../src/mods/drapeaux.lua", "rb"));
 local BLOCK = f:read("a");
+local function BGD_LireTexte(p) local h = assert(io.open(p, "rb")); local s = h:read("a"); h:close(); return s; end
+local BGD_TEXTES_LUA = BGD_LireTexte(dir .. "/../../textes/bgd_textes.lua") .. BGD_LireTexte(dir .. "/../../textes/bgd_texte.lua");
+BLOCK = BGD_TEXTES_LUA .. BLOCK;
 f:close();
 
 local LOCAL = 0;
