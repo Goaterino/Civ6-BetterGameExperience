@@ -410,17 +410,14 @@
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="ko_KR">
 			<Text>BetterGameExperience {1}을(를) 설치하는 중…</Text>
 		</Row>
-		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="ko_KR">
-			<Text>자동으로 업데이트하고 복구하려면 Steam에서 Civilization VI에 이 실행 옵션을 추가하세요(속성 &gt; 일반 &gt; 실행 옵션):\n\n{1}</Text>
+		<Row Tag="LOC_BGD_INST_YOU_CAN_CLOSE_THIS_WINDOW" Language="ko_KR">
+			<Text>모든 준비가 끝났습니다. 이 창을 닫고 Civilization VI를 실행하세요. 업데이트가 있으면 게임에서 알려 드립니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="ko_KR">
 			<Text>BetterGameExperience {1}이(가) 설치되었습니다</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="ko_KR">
 			<Text>Civilization VI 다시 시작\nSteam을 통해 실행합니다.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="ko_KR">
-			<Text>실행 옵션 복사\nSteam의 실행 옵션에 붙여 넣습니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="ko_KR">
 			<Text>Civilization VI가 닫히지 않았습니다. 닫은 뒤 설치 프로그램을 다시 실행하세요.</Text>

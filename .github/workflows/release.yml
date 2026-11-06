@@ -65,7 +65,10 @@ jobs:
           (cd updater && cargo build --release)
           mkdir dist
           cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
-          cp updater/target/release/BetterGameExperience.exe dist/
+          # Nom versionné : un joueur voit quelle version il a téléchargée. Lancé, l'installeur retire
+          # les plus anciens du même dossier et se copie sous le nom fixe BetterGameExperience.exe
+          # (updater/README.md).
+          cp updater/target/release/BetterGameExperience.exe "dist/BetterGameExperience_V$VERSION.exe"
 
       - name: Manifeste signé
         env:

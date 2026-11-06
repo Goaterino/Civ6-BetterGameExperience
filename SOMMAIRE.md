@@ -17,7 +17,7 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   (`rollover_proxy.cfg`) ;
 - [startup_proxy](startup_proxy/README.md) : le proxy de démarrage (`winmm.dll`) : chargement du
   proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour ;
-- [updater](updater/README.md) : l'installeur `BetterGameExperience.exe`, et [release](release/README.md) :
+- [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe`, et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
   [cascade d'une déclaration de guerre](rollover/cascade_guerre.md) ;

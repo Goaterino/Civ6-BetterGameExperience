@@ -410,17 +410,14 @@
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="ja_JP">
 			<Text>BetterGameExperience {1} をインストール中…</Text>
 		</Row>
-		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="ja_JP">
-			<Text>自動で更新・修復されるようにするには、Steam で Civilization VI にこの起動オプションを追加してください (プロパティ &gt; 一般 &gt; 起動オプション):\n\n{1}</Text>
+		<Row Tag="LOC_BGD_INST_YOU_CAN_CLOSE_THIS_WINDOW" Language="ja_JP">
+			<Text>準備が整いました。このウィンドウを閉じて Civilization VI を起動できます。アップデートがあるときはゲーム内でお知らせします。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="ja_JP">
 			<Text>BetterGameExperience {1} がインストールされました</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="ja_JP">
 			<Text>Civilization VI を再起動\nSteam 経由で起動します。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="ja_JP">
-			<Text>起動オプションをコピー\nSteam の起動オプションに貼り付けます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="ja_JP">
 			<Text>Civilization VI が終了しませんでした。終了してから、インストーラーを再実行してください。</Text>

@@ -410,17 +410,14 @@
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="zh_Hans_CN">
 			<Text>正在安装 BetterGameExperience {1}…</Text>
 		</Row>
-		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="zh_Hans_CN">
-			<Text>若要让它自动更新和修复，请在 Steam 中为 Civilization VI 添加此启动选项（属性 &gt; 通用 &gt; 启动选项）：\n\n{1}</Text>
+		<Row Tag="LOC_BGD_INST_YOU_CAN_CLOSE_THIS_WINDOW" Language="zh_Hans_CN">
+			<Text>一切就绪：你可以关闭此窗口并启动 Civilization VI。有可用更新时，游戏会通知你。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="zh_Hans_CN">
 			<Text>BetterGameExperience {1} 已安装</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="zh_Hans_CN">
 			<Text>重新启动 Civilization VI\n通过 Steam 启动。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="zh_Hans_CN">
-			<Text>复制启动选项\n粘贴到 Steam 的启动选项中。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="zh_Hans_CN">
 			<Text>Civilization VI 没有关闭。请关闭它，然后重新运行安装程序。</Text>

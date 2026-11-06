@@ -1,14 +1,16 @@
-# Installeur : BetterGameExperience.exe
+# Installeur : `BetterGameExperience_V<version>.exe`
 
 Installe, met à jour, répare ou retire les deux proxys à partir de la dernière release publiée sur
-GitHub (voir [release/README.md](../release/README.md)). Il est publié avec chaque release.
+GitHub (voir [release/README.md](../release/README.md)). Il est publié avec chaque release, sous
+le nom `BetterGameExperience_V<version>.exe` (`BetterGameExperience_V0.6.0.exe`) ; compilé, et à son
+emplacement fixe, il s'appelle `BetterGameExperience.exe`.
 
 ## Utilisation
 
 - **Double-clic** : une fenêtre (TaskDialog de Windows) affiche le dossier du jeu, la dernière
   version et l'état de l'installation (pas installé, à jour, mise à jour disponible, à réparer), le
   détail par DLL sous « Détails », et propose installer, mettre à jour ou réparer, et désinstaller.
-  Après une installation, elle donne l'option de lancement Steam, avec un bouton pour la copier.
+  Après une installation, elle dit que tout est en place et qu'on peut la fermer et lancer le jeu.
   Chaque fenêtre à choix propose aussi la langue (liens en bas de la fenêtre, voir Langues).
 - **Pré-release** : la case à cocher de la fenêtre principale choisit le canal. Cochée, l'installeur
   vise la release publiée au plus grand numéro, pré-releases comprises (liste de l'API GitHub) ;
@@ -20,7 +22,9 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)), qui dit si elle
   propose une release ou une pré-release. La version posée est gardée dans `installe.txt`, à côté.
 - **`--game-dir "<dossier>"`** : même fenêtre, pour un jeu hors des bibliothèques Steam.
-- **Options de lancement Steam** (Propriétés > Général) :
+- **Options de lancement Steam** (Propriétés > Général), que l'installeur ne propose plus depuis la
+  release qui suit la v0.5.0 (les joueurs croyaient l'installation inachevée ; la notification du
+  jeu suffit aux mises à jour), mais qui reste reconnue pour ceux qui l'ont posée :
   ```
   "%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" %command%
   ```
@@ -60,8 +64,15 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   de copier.
 - **Emplacement fixe** : à l'ouverture de sa fenêtre et après chaque installation, l'installeur se copie dans
   `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`, s'il n'y tourne pas déjà. La notification du
-  jeu le lance là, et l'option de lancement Steam proposée le désigne : peu importe où le joueur a
-  téléchargé l'exe, et la copie suit le dernier installeur lancé.
+  jeu le lance là, et l'option de lancement Steam le désigne : peu importe où le joueur a
+  téléchargé l'exe, et la copie suit le dernier installeur lancé. Elle garde ce nom fixe, sans
+  version : l'option de lancement d'un joueur la désigne encore.
+- **Anciens installeurs** : à l'ouverture de sa fenêtre, un installeur de release retire, dans son
+  propre dossier (d'habitude les téléchargements), ceux téléchargés avant lui :
+  `BetterGameExperience.exe` et `BetterGameDLLs.exe` (noms d'avant la version dans le nom), et les
+  `BetterGameExperience_V<version>.exe` de même version ou plus anciens, doublons « (1) » du
+  navigateur compris. Jamais un plus récent, ni rien à l'emplacement fixe ; une compilation locale
+  (sans `BGD_RELEASE`) ne retire rien.
 - **Pas de console** : l'exe est une application fenêtrée, et `curl.exe` et `tasklist` sont lancés
   sans fenêtre (`CREATE_NO_WINDOW`).
 - **Fenêtres** : le TaskDialog vient de comctl32 v6, qu'on active d'habitude par un manifeste

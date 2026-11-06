@@ -410,17 +410,14 @@
 		<Row Tag="LOC_BGD_INST_INSTALLING_BETTERGAMEDLLS_X" Language="ru_RU">
 			<Text>Установка BetterGameExperience {1}…</Text>
 		</Row>
-		<Row Tag="LOC_BGD_INST_TO_KEEP_IT_UPDATED_AND_REPAIRED" Language="ru_RU">
-			<Text>Чтобы он сам обновлялся и восстанавливался, добавьте этот параметр запуска для Civilization VI в Steam (Свойства &gt; Общие &gt; Параметры запуска):\n\n{1}</Text>
+		<Row Tag="LOC_BGD_INST_YOU_CAN_CLOSE_THIS_WINDOW" Language="ru_RU">
+			<Text>Всё готово: можно закрыть это окно и запустить Civilization VI. Игра сообщит, когда выйдет обновление.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_BETTERGAMEDLLS_X_IS_INSTALLED" Language="ru_RU">
 			<Text>BetterGameExperience {1} установлен</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_RESTART_CIVILIZATION_VI_THROUGH_STEAM" Language="ru_RU">
 			<Text>Перезапустить Civilization VI\nЧерез Steam.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_INST_COPY_THE_LAUNCH_OPTION_TO_PASTE" Language="ru_RU">
-			<Text>Скопировать параметр запуска\nДля вставки в параметры запуска Steam.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_DID_NOT_CLOSE_CLOSE" Language="ru_RU">
 			<Text>Civilization VI не закрылась. Закройте её, затем снова запустите установщик.</Text>
