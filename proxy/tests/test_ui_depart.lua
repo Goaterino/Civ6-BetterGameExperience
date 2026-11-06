@@ -47,7 +47,7 @@ local function NewGame(opts)
 		local P = G.players[id];
 		-- Événements du jeu seulement : un nom inconnu vaut nil, comme en partie (relevés dans l'UI du jeu).
 		local Events = {};
-		for _, k in ipairs({ "LocalPlayerTurnBegin", "GameCoreEventPublishComplete", "LoadScreenClose",
+		for _, k in ipairs({ "LocalPlayerTurnBegin", "TurnEnd", "GameCoreEventPublishComplete", "LoadScreenClose",
 			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated" }) do
 			Events[k] = NewEvent();
 		end
@@ -110,7 +110,14 @@ local function NewGame(opts)
 				SetUpdate = function(_, f) m.update = f; end,
 				ClearUpdate = function() m.update = nil; end,
 			},
-			Civ6RolloverProxy_DepartDispo = function() return opts.dispo == false and 0 or 1, opts.minuteur == false and 0 or 1; end,
+			Civ6RolloverProxy_DepartDispo = function()
+				return opts.dispo == false and 0 or 1, opts.minuteur == false and 0 or 1, opts.retenue and 1 or 0;
+			end,
+			Civ6RolloverProxy_DepartArmer = function(joueur, exec)
+				m.natives.arme = true;
+				m.natives.armer = (m.natives.armer or 0) + 1;
+				m.natives.joueur, m.natives.exec = joueur, exec;
+			end,
 			Civ6RolloverProxy_FinForcer = function() m.natives.forcer = (m.natives.forcer or 0) + 1; return 1; end,
 			Civ6RolloverProxy_FinLever = function() m.natives.lever = (m.natives.lever or 0) + 1; end,
 			Civ6RolloverProxy_DepartSignaux = function() return opts.signaux and 1 or 0; end,
@@ -120,12 +127,15 @@ local function NewGame(opts)
 				m.natives.joueur, m.natives.exec = joueur, exec;
 			end,
 			Civ6RolloverProxy_DepartPartir = function()
-				local was = m.natives.attente;
+				local was = m.natives.attente or m.natives.retenu;
 				m.natives.attente = false;
+				m.natives.retenu = false;
 				m.natives.partir = m.natives.partir + 1;
 				return was and 1 or 0;
 			end,
-			Civ6RolloverProxy_DepartEtat = function() return m.natives.attente and 1 or 0, m.natives.rejets or 0, 0; end,
+			Civ6RolloverProxy_DepartEtat = function()
+				return m.natives.attente and 1 or 0, m.natives.rejets or 0, 0, m.natives.retenu and 1 or 0;
+			end,
 			Civ6RolloverProxy_DepartJournal = function(t) table.insert(m.journal, t); end,
 		};
 		m.journal = {};
@@ -146,6 +156,24 @@ local function NewGame(opts)
 		end
 		function m.Publie()
 			m.Events.GameCoreEventPublishComplete();
+		end
+		-- Le proxy armé arrête la publication devant le début du tour : ordres retenus, et le Lua
+		-- le voit à l'image suivante.
+		function m.Retenir()
+			if m.natives.arme then
+				m.natives.arme = false;
+				m.natives.retenu = true;
+				m.natives.attente = true;
+				m.tourActif = true;
+			end
+			m.Tic(0);
+		end
+		-- Départ : la publication reprend, le début du tour arrive à l'interface.
+		function m.Relacher()
+			if not m.natives.retenu and m.tourActif then
+				m.Events.LocalPlayerTurnBegin();
+				m.Publie();
+			end
 		end
 		function m.Minuteur(ecoule, limite)
 			m.Events.TurnTimerUpdated(ecoule, limite);
@@ -340,6 +368,55 @@ do
 	Check("une seule ligne d'avertissement", #a.locaux == 1 and a.locaux[1]:find("ordres retenus") ~= nil);
 	h.Debut(); h.Publie();
 	Check("puis « c'est parti »", #a.locaux == 2 and a.locaux[2]:find("parti") ~= nil);
+end
+
+-- Début de tour retenu avant l'interface (publication détournée) ---------------------------------
+do
+	local G = NewGame({ option = true, retenue = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a, b = G.machines[0], G.machines[1], G.machines[2];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	Check("retenue : armé au chargement", h.natives.armer == 1 and a.natives.joueur == 1 and a.natives.exec == 3735928559);
+	G.sent = {};
+	G.tour = 11;
+	for _, m in pairs(G.machines) do m.Events.TurnEnd(); end
+	Check("retenue : réarmé à la fin du tour", a.natives.armer == 2 and a.update ~= nil);
+	a.Retenir();
+	Check("retenue : client prêt dès l'arrêt de la publication", #G.sent == 1 and G.sent[1].text == ".bgd_pret 11");
+	Check("retenue : pas d'attente posée par le Lua", a.natives.attendre == 0 and a.natives.retenu);
+	h.Retenir();
+	Check("retenue : l'hôte attend B", h.natives.retenu and #G.sent == 1);
+	b.Retenir();
+	Check("retenue : départ envoyé à A et B", #G.sent == 4 and G.sent[3].text == ".bgd_depart 11" and G.sent[4].text == ".bgd_depart 11");
+	Check("retenue : publication rendue partout", not h.natives.retenu and not a.natives.retenu and not b.natives.retenu);
+	Check("retenue : un seul départ par machine", h.natives.partir == 1 and a.natives.partir == 1 and b.natives.partir == 1);
+	for _, m in pairs(G.machines) do m.Relacher(); end
+	Check("retenue : le début du tour, arrivé après, ne remet pas en attente",
+		h.natives.attendre == 0 and a.natives.attendre == 0 and not a.natives.attente and #G.sent == 4);
+	for _, m in pairs(G.machines) do m.Tic(1); end
+	Check("retenue : mise à jour coupée une fois tout fini", a.update == nil and h.update == nil);
+
+	-- Tour suivant : un client retenu alors que l'hôte est déjà parti (retardataire) : relâché aussitôt.
+	G.tour = 12;
+	for _, m in pairs(G.machines) do m.Events.TurnEnd(); end
+	h.Retenir(); a.Retenir();
+	G.clock = 100; h.Tic(1);
+	Check("retenue : l'hôte part sans B après le délai", not h.natives.retenu and not a.natives.retenu);
+	b.Retenir();
+	Check("retenue : B, déjà lancé, relâché aussitôt", not b.natives.retenu and b.natives.partir == 2);
+end
+
+do
+	-- Spectateur, ou publication non détournée : pas armé ; l'attente garde l'ancien chemin.
+	local G = NewGame({ option = true, retenue = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true, spectateur = true },
+	} });
+	for _, m in pairs(G.machines) do m.Charger(); end
+	Check("retenue : spectateur pas armé", G.machines[1].natives.armer == nil and G.machines[0].natives.armer == 1);
+	local G2 = NewGame({ option = true, players = { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
+	for _, m in pairs(G2.machines) do m.Charger(); m.Events.TurnEnd(); end
+	Check("sans détour de la publication : pas armé", G2.machines[0].natives.armer == nil);
 end
 
 -- Fin simultanée (même option, « No First/Last moves (BGD) ») ------------------------------------

@@ -6,9 +6,13 @@
 --    synchronise rien (chaque machine se libère à son propre début de tour) et masque l'écran.
 -- 2. Si l'hôte a coché l'option de partie « No First/Last moves (BGD) » (BGD_DEPART_SIMULTANE) et
 --    que tous les humains ont BetterGameDLLs à la même version (correctifs POL actifs) :
---    - au début du tour local, le proxy retient les ordres du joueur et gèle son minuteur ;
---    - dès que l'interface a rattrapé la simulation (premier GameCoreEventPublishComplete qui
---      suit, ou fermeture de l'écran de chargement), la machine envoie `.bgd_pret <tour>` à l'hôte ;
+--    - à chaque fin de tour, le proxy est armé : il arrête la publication des événements GameCore
+--      juste avant l'activation du tour local (LocalPlayerTurnBegin, PlayerTurnActivated).
+--      L'interface reste dans le passage de tour, les ordres du joueur sont retenus et son
+--      minuteur gelé. Sans ce détour, l'attente commence à LocalPlayerTurnBegin, interface ouverte ;
+--    - dès que l'interface a rattrapé la simulation (publication arrêtée, ou premier
+--      GameCoreEventPublishComplete qui suit le début du tour, ou fermeture de l'écran de
+--      chargement), la machine envoie `.bgd_pret <tour>` à l'hôte ;
 --    - l'hôte, quand tous les humains équipés et connectés sont prêts (lui compris), envoie
 --      `.bgd_depart <tour>` à chacun et part ; chacun part à réception. Après DELAI_HOTE secondes,
 --      l'hôte part sans les retardataires ;
@@ -89,6 +93,15 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		return Reseau() and OptionCochee() and Dispo();
 	end
 
+	-- Le début du tour peut-il être retenu avant l'interface (publication des événements détournée) ?
+	local function Retenue()
+		if Civ6RolloverProxy_DepartDispo == nil or Civ6RolloverProxy_DepartArmer == nil then
+			return false;
+		end
+		local _, _, publication = Civ6RolloverProxy_DepartDispo();
+		return publication == 1;
+	end
+
 	-- La fin forcée passe par le minuteur de l'exe : il faut aussi son détour.
 	local function FinActif()
 		if not (Reseau() and OptionCochee()) or Civ6RolloverProxy_DepartDispo == nil then
@@ -150,12 +163,30 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	D.pretDepuis = nil;   -- hôte : os.clock() quand il a été prêt
 	D.avisRejets = 0;     -- ordres retenus déjà signalés au joueur pour ce tour
 	D.annonce = false;
+	D.arme = false;       -- la prochaine activation du tour local sera retenue avant l'interface
+	D.retenu = false;     -- activation retenue par le proxy, déjà prise en compte ici
 
-	local Partir, Evaluer;
+	local Partir, Evaluer, SurRetenue;
 
-	-- Tant qu'on attend : deux fois par seconde, ordres retenus à signaler et délai de l'hôte.
+	-- Armé, à chaque image : la publication s'est-elle arrêtée devant le début du tour ?
+	-- En attente, deux fois par seconde : ordres retenus à signaler et délai de l'hôte.
 	D.cumul = 0;
 	local function Tic(dt)
+		local okR, errR = pcall(function()
+			if (D.arme or D.retenu) and Civ6RolloverProxy_DepartEtat ~= nil then
+				local _, _, _, retenu = Civ6RolloverProxy_DepartEtat();
+				if retenu == 1 and not D.retenu then
+					D.retenu = true;
+					D.arme = false;
+					SurRetenue();
+				elseif retenu ~= 1 then
+					D.retenu = false;
+				end
+			end
+		end);
+		if not okR then
+			J("erreur : " .. tostring(errR));
+		end
 		D.cumul = D.cumul + (tonumber(dt) or 0);
 		if D.cumul < 0.5 then
 			return;
@@ -177,7 +208,8 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			if Network.IsGameHost() and D.pret and D.parti < D.tour then
 				Evaluer(D.tour);
 			end
-			if not D.attente and not (Network.IsGameHost() and D.pret and D.parti < D.tour) then
+			if not D.attente and not D.arme and not D.retenu
+				and not (Network.IsGameHost() and D.pret and D.parti < D.tour) then
 				ContextPtr:ClearUpdate();
 			end
 		end);
@@ -264,6 +296,37 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		D.attente = true;
 		D.aEnvoyer = true;
 		ContextPtr:SetUpdate(Tic);
+	end
+
+	-- Arme la retenue du prochain début de tour (à chaque fin de tour, et au chargement).
+	local function Armer()
+		if not Actif() or not Retenue() or Spectateur(Moi()) then
+			return;
+		end
+		local exec = PlayerOperations and PlayerOperations.EXECUTE_SCRIPT or 0;
+		Civ6RolloverProxy_DepartArmer(Moi(), exec);
+		D.arme = true;
+		ContextPtr:SetUpdate(Tic);
+	end
+
+	-- La publication s'est arrêtée devant le début du tour local : l'interface a rattrapé la
+	-- simulation, le proxy retient déjà les ordres et le minuteur. Prêt tout de suite.
+	SurRetenue = function()
+		local tour = Game.GetCurrentGameTurn();
+		if D.recu >= tour or D.parti >= tour or not Actif() then
+			Civ6RolloverProxy_DepartPartir("départ déjà donné, tour " .. tour);
+			return;
+		end
+		if D.tour ~= tour then
+			D.tour = tour;
+			D.pret = false;
+			D.pretDepuis = nil;
+			D.avisRejets = 0;
+		end
+		D.attente = true;
+		D.aEnvoyer = false;
+		J("tour " .. tour .. " : début du tour retenu avant l'interface");
+		EnvoyerPret();
 	end
 
 	local function OnLocalPlayerTurnBegin()
@@ -356,6 +419,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			D.aEnvoyer = false;
 			EnvoyerPret();
 		end
+		Armer();
 	end
 
 	local function OnChat(fromPlayer, toPlayer, text, eTargetType)
@@ -410,6 +474,9 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 
 	if Reseau() then
 		Events.LocalPlayerTurnBegin.Add(Protege(OnLocalPlayerTurnBegin));
+		-- Distribué par la publication détournée elle-même : armé à temps même si le début du tour
+		-- suit dans la même série d'événements.
+		Events.TurnEnd.Add(Protege(Armer));
 		Events.GameCoreEventPublishComplete.Add(Protege(OnPublishComplete));
 		Events.LoadScreenClose.Add(Protege(OnLoadScreenClose));
 		Events.MultiplayerChat.Add(Protege(OnChat));

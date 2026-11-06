@@ -40,16 +40,19 @@ rien : elle masque l'écran pendant le passage de tour local. Le proxy la **dés
 
 ## Conception
 
-1. **Prêt.** Quand le tour local a commencé et que l'interface a rattrapé la simulation (premier
-   `GameCoreEventPublishComplete` après `LocalPlayerTurnBegin`), la machine envoie à l'hôte un
-   message de chat caché `.bgd_pret <tour>`.
+1. **Prêt.** Quand le tour local a commencé dans la simulation et que l'interface a distribué tout
+   ce qui le précède, la machine envoie à l'hôte un message de chat caché `.bgd_pret <tour>`.
+   L'interface ne reçoit pas encore le début du tour (voir
+   [Retenir le début du tour avant l'interface](#retenir-le-début-du-tour-avant-linterface)) :
+   le joueur voit toujours le passage de tour.
 2. **Départ.** L'hôte, quand tous les humains connectés (lui compris) sont prêts pour ce tour,
    envoie à tous `.bgd_depart <tour>`. Délai maximal côté hôte ; un joueur déconnecté sort de la
    liste attendue.
-3. **Attente.** Entre l'activation locale et le départ, le joueur voit tout et peut tout consulter,
-   mais ses ordres sont **rejetés** (pas mis en file : une rafale au départ recréerait le first move)
-   et son minuteur est gelé. Un bandeau discret dit qui on attend.
-4. **Départ reçu.** Ordres débloqués, minuteur lancé à cet instant.
+3. **Attente.** Entre l'activation locale et le départ, l'interface reste dans le passage de tour.
+   Par sécurité, les ordres sont **rejetés** (pas mis en file : une rafale au départ recréerait le
+   first move) et le minuteur est gelé.
+4. **Départ reçu.** Le début du tour arrive à l'interface, ordres débloqués, minuteur lancé à cet
+   instant.
 
 Activation : il faut que l'option de partie « No First/Last moves (BGE) » soit cochée **et** que tous
 les humains aient le proxy (verdict de l'hôte, comme les correctifs POL), puisqu'un joueur sans proxy
@@ -152,6 +155,48 @@ répartiteur `180590880` (par exemple `0x2cc9a6b5` → `PlayerTurnComplete`, rai
 Le proxy de GameCore pose donc un détour sur `1800366b0` : en attente, si le type est dans la liste,
 il ne fait rien (et le journalise) ; sinon il appelle l'original.
 
+## Retenir le début du tour avant l'interface
+
+Demandé après la première partie d'essai (2026-11-06) : l'attente commençait à
+`LocalPlayerTurnBegin`, donc interface ouverte, unité sélectionnée, « à vous de jouer », ordres
+refusés. Elle doit avoir lieu avant, pendant que l'interface montre encore le passage de tour.
+
+**Publication des événements GameCore** (exe, adresses du projet Ghidra `civ6exe` ; l'exe installé
+est décalé : `14006e2c0` en DX12, `14006d2f0` en DX11, mêmes octets hors déplacements relatifs).
+`Civ6App_PublishEvents` (`14006e7e0`), à chaque image où le thread GameCore est libre, appelle
+`14006e5d0` sur le publieur `1412fde40` :
+
+- garde de réentrée en `+0x48c0` ; file `q = publieur + 0x20 + jeu * 0x90` (jeu en `+4`) ;
+- `14005f590(q)` **tasse** la file lue : efface tous les enregistrements dont `+0x44` est nul, puis
+  met le décalage distribué (`q + 0x3c`) à la nouvelle taille ;
+- `14006ea00(q)` **transfère**, sous section critique, la file écrite par GameCore vers la file lue ;
+- `1400603a0` **distribue** les enregistrements de `q + 0x3c` à la fin du tampon : pour chacun,
+  `table[type].+0x20(données, entrée)` (table en `publieur + 0xb0 + jeu * 0x4800`, 0x30 octets par
+  type) ; `140060450` fait de même avec un enregistreur (`q + 0x40`, nul en partie) ;
+- puis `q + 0x3c` = taille, et l'on recommence tant que quelque chose a été distribué.
+
+Enregistrement : taille en `+0`, type en `+4`, données en `+0x50`. Les types sont numérotés dans
+l'ordre d'enregistrement de `1400dc7c0`, à partir de 1 (table des noms en `141302758`) :
+`LocalPlayerTurnBegin` = 8, `PlayerTurnActivated` = 15 (joueur en `+4` des données, lu ainsi par
+le minuteur `1400f6300`). Ce sont deux événements distincts.
+
+**Détour** (`proxy/src/depart.rs`, `hook_publier`) : la fonction est refaite à l'identique, mais
+la distribution se fait un enregistrement à la fois (tampon réduit à cet enregistrement). Armée,
+elle s'arrête devant le premier `LocalPlayerTurnBegin` ou `PlayerTurnActivated` du joueur local :
+`q + 0x3c` pointe sur lui, la publication ne fait plus rien (ni tassement, qui l'effacerait, ni
+transfert), et le proxy retient les ordres et gèle le minuteur. Au départ, la publication suivante
+reprend à cet enregistrement sans tasser, puis repart normalement. Les événements écrits entre-temps
+attendent dans la file de GameCore, dans l'ordre. Comme le minuteur de l'exe part à
+`PlayerTurnActivated`, il part de lui-même au départ.
+
+- **Armement** : par le Lua, à chaque `TurnEnd` et à la fermeture de l'écran de chargement. La
+  distribution étant faite un enregistrement à la fois, un `TurnEnd` suivi du début du tour dans la
+  même série arme à temps. Désarmé à la retenue : une autre activation dans le même tour passe.
+- **Vérifications à la pose** : signature unique, appels attendus aux bons décalages, et table des
+  noms d'événements conforme (8 et 15). Sinon, ancien comportement (attente après
+  `LocalPlayerTurnBegin`).
+- **Garde-fou** : retenue levée d'elle-même après 120 s sans départ.
+
 ## Minuteur de tour (exe, `CivilizationVI_DX12.exe`)
 
 Projet Ghidra `~/Tools/ghidra-projects/civ6exe`. Complète
@@ -240,15 +285,17 @@ la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
 
 | où | quoi |
 |---|---|
-| [proxy/src/depart.rs](../proxy/src/depart.rs) | détours de l'envoi (`1800366b0`) et de la pause du minuteur (signature, DX12 et DX11) ; fonctions natives `Civ6RolloverProxy_Depart*`, `Civ6RolloverProxy_FinForcer` et `Civ6RolloverProxy_FinLever` ; réglage `depart_signaux` |
+| [proxy/src/depart.rs](../proxy/src/depart.rs) | détours de l'envoi (`1800366b0`), de la publication des événements GameCore et de la pause du minuteur (signatures, DX12 et DX11) ; fonctions natives `Civ6RolloverProxy_Depart*`, `Civ6RolloverProxy_FinForcer` et `Civ6RolloverProxy_FinLever` ; réglage `depart_signaux` |
 | [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ, fin envoyée par l'hôte |
 | [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGE - …` |
 | [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
 
 Choix faits à l'implémentation :
-- **Début de l'attente** : à `LocalPlayerTurnBegin`, quand le tour des IA est fini. Commencer plus
-  tôt retiendrait aussi les actions diplomatiques des IA envers le joueur, que sa machine envoie.
-  Au chargement d'une partie, le signal « prêt » attend la fermeture de l'écran de chargement.
+- **Début de l'attente** : à l'activation du tour local, quand le tour des IA est fini, mais avant
+  que l'interface la reçoive (publication retenue, voir plus haut ; sans ce détour, à
+  `LocalPlayerTurnBegin`). Commencer plus tôt retiendrait aussi les actions diplomatiques des IA
+  envers le joueur, que sa machine envoie. Au chargement d'une partie, le signal « prêt » attend
+  la fermeture de l'écran de chargement.
 - **Qui est attendu** : les humains vivants, connectés, pas spectateurs, et qui annoncent la même
   version dans leur config de joueur (`BGD_VERSION`). Un humain sans BetterGameExperience n'est pas
   attendu : il ne serait pas bloqué de toute façon.
@@ -261,6 +308,12 @@ Choix faits à l'implémentation :
   puis « c'est parti » au départ.
 
 ## Reste à vérifier en partie
+
+- Début de tour retenu avant l'interface (2026-11-06, pas encore essayé) : l'interface reste dans
+  le passage de tour jusqu'au départ, puis tout arrive d'un coup sans événement perdu ni en double
+  (journal `depart : interface retenue avant le début du tour`). GameCore n'attend pas que
+  l'interface ait consommé ses événements pendant ce temps. Le congrès : une seconde activation
+  dans le même tour passe sans retenue.
 
 - ~~`DB.ConfigurationQuery` accepte-t-il l'`INSERT` (approche n° 2) ?~~ Oui, vérifié en jeu le
   2026-11-05 : l'option apparaît dans les options de partie. Reste à voir sa valeur chez les clients.
