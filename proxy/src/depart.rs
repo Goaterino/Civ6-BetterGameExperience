@@ -1,4 +1,4 @@
-//! Départ de tour simultané (option de partie « No first moves (BGD) », voir
+//! Départ et fin de tour simultanés (option de partie « No First/Last moves (BGD) », voir
 //! depart_tour/README.md). Entre l'activation locale du tour et le départ donné par l'hôte, les
 //! ordres du joueur ne partent pas et son minuteur de tour est gelé. Rien ne touche la simulation :
 //! un ordre retenu n'existe nulle part, un minuteur est local.
@@ -199,7 +199,7 @@ unsafe fn attendre(joueur: i32, execute_script: u32) {
     log(&format!("depart : attente (joueur {joueur})"));
 }
 
-/// Fin de tour forcée par l'hôte (option « No last moves (BGD) ») : ce temps est ajouté au cumul
+/// Fin de tour forcée par l'hôte (option « No First/Last moves (BGD) ») : ce temps est ajouté au cumul
 /// des deux chronos. Le temps écoulé dépasse la limite, l'exe envoie lui-même le `TurnComplete` du
 /// joueur local à l'image suivante (`1400f8170`) et refuse d'annuler la fin de tour (`1401c9c10`).
 const FORCE_S: f64 = 1.0e6;

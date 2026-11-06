@@ -28,7 +28,7 @@ pub const CHARGEMENT_BLOCK: &str = include_str!("chargement.lua");
 pub const SCRIPT_CHARGEMENT: &str = "loadscreen.lua";
 pub const PARTIE_BLOCK: &str = include_str!("partie.lua");
 pub const SCRIPT_PARTIE: &str = "ingame.lua";
-/// Option de partie « No first moves (BGD) » (départ de tour simultané, depart_tour/README.md).
+/// Option de partie « No First/Last moves (BGD) » (départ et fin de tour simultanés, depart_tour/README.md).
 pub const OPTION_BLOCK: &str = include_str!("option_partie.lua");
 pub const SCRIPT_OPTION: &str = "setupparameters.lua";
 

@@ -517,7 +517,7 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   0x18067d315)`, puis les 20 premiers départs acceptés de chaque partie.
 - **Tests.** `check_hooks.py` vérifie la redirection et sa restauration.
 
-## Départ de tour simultané (option de partie « No first moves (BGD) »)
+## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGD) »)
 
 [src/depart.rs](src/depart.rs), [src/ui_depart.lua](src/ui_depart.lua),
 [src/ui_depart_chat.lua](src/ui_depart_chat.lua). Conception et reverse :
@@ -538,11 +538,12 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Garde-fous.** Sans départ reçu, le proxy lève l'attente au premier ordre tenté après 120 s.
   Un joueur qui se reconnecte en plein tour reçoit le départ aussitôt ; après une migration d'hôte,
   les signaux repartent vers le nouvel hôte.
-- **Fin simultanée** (option « No last moves (BGD) », `BGD_FIN_SIMULTANEE`). Quand le minuteur de
-  l'hôte arrive à zéro, il envoie `.bgd_fin <tour>` à chacun ; à réception, le proxy ajoute 10⁶ s
-  au cumul des chronos de l'exe, qui termine le tour du joueur à l'image suivante, puis les retire
-  au début du tour suivant. Mêmes conditions que le départ, plus le minuteur détourné.
-- **Réglage** `depart_signaux=on|off` (off) : les signaux restent visibles dans le chat.
+- **Fin simultanée** (même option). Quand le minuteur de l'hôte arrive à zéro, il envoie
+  `.bgd_fin <tour>` à chacun ; à réception, le proxy ajoute 10⁶ s au cumul des chronos de l'exe,
+  qui termine le tour du joueur à l'image suivante, puis les retire au début du tour suivant.
+  Mêmes conditions que le départ, plus le minuteur détourné.
+- **Réglage** `depart_signaux=on|off` (off) : les signaux restent visibles dans le chat, avec une
+  ligne locale quand la fin de l'hôte termine le tour.
 - **Le journal.** `depart : détours posés (envoi des ordres, minuteur en exe+0x…)`, puis
   `depart : attente`, `… retenu`, `depart : parti (…)`, et les lignes du bloc Lua (`prêt pour le
   tour N`, `tour N lancé`, `tour N : minuteur de l'hôte écoulé, fin envoyée`, `depart : fin du tour

@@ -4,7 +4,7 @@
 --
 -- 1. Synchro de tour de MPH (CPL_SYNCTURN) coupée sur cette machine, toujours : elle ne
 --    synchronise rien (chaque machine se libère à son propre début de tour) et masque l'écran.
--- 2. Si l'hôte a coché l'option de partie « No first moves (BGD) » (BGD_DEPART_SIMULTANE) et
+-- 2. Si l'hôte a coché l'option de partie « No First/Last moves (BGD) » (BGD_DEPART_SIMULTANE) et
 --    que tous les humains ont BetterGameDLLs à la même version (correctifs POL actifs) :
 --    - au début du tour local, le proxy retient les ordres du joueur et gèle son minuteur ;
 --    - dès que l'interface a rattrapé la simulation (premier GameCoreEventPublishComplete qui
@@ -15,7 +15,7 @@
 --    - un joueur qui se reconnecte en plein tour se déclare prêt et reçoit aussitôt le départ.
 --    Les signaux passent par le chat, en message privé, et ChatPanel.lua les cache
 --    (ui_depart_chat.lua). Le proxy lève lui-même l'attente au bout de 120 s.
--- 3. Si l'hôte a coché « No last moves (BGD) » (BGD_FIN_SIMULTANEE), mêmes conditions : quand le
+-- 3. Même option, mêmes conditions, et minuteur de l'exe détourné : quand le
 --    minuteur de l'hôte arrive à zéro, il envoie `.bgd_fin <tour>` à chacun ; à réception, le proxy
 --    pousse le minuteur local au-delà de sa limite et l'exe termine le tour du joueur à l'image
 --    suivante, même s'il lui restait du temps. Chacun garde aussi son propre minuteur.
@@ -30,7 +30,6 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	local D = BGD_Depart;
 
 	local CLE_OPTION = "BGD_DEPART_SIMULTANE";
-	local CLE_FIN = "BGD_FIN_SIMULTANEE";
 	local PRET, DEPART, FIN = ".bgd_pret ", ".bgd_depart ", ".bgd_fin ";
 	local DELAI_HOTE = 60;
 
@@ -53,6 +52,11 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	-- Ligne locale dans le chat, que ChatPanel.lua affiche sans l'envoyer.
 	local function Afficher(texte)
 		LuaEvents.BGD_DepartTexte("[COLOR_Civ6Yellow]BGD - " .. texte .. "[ENDCOLOR]");
+	end
+
+	-- Réglage depart_signaux : signaux `.bgd_` et lignes de diagnostic visibles dans le chat.
+	local function Signaux()
+		return Civ6RolloverProxy_DepartSignaux ~= nil and Civ6RolloverProxy_DepartSignaux() == 1;
 	end
 
 	local function Protege(f)
@@ -95,14 +99,9 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		return Reseau() and OptionCochee() and Dispo();
 	end
 
-	local function FinCochee()
-		local v = GameConfiguration.GetValue(CLE_FIN);
-		return v == true or v == 1;
-	end
-
 	-- La fin forcée passe par le minuteur de l'exe : il faut aussi son détour.
 	local function FinActif()
-		if not (Reseau() and FinCochee()) or Civ6RolloverProxy_DepartDispo == nil then
+		if not (Reseau() and OptionCochee()) or Civ6RolloverProxy_DepartDispo == nil then
 			return false;
 		end
 		local dispo, minuteur = Civ6RolloverProxy_DepartDispo();
@@ -325,7 +324,9 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		D.attente = false;
 		if Civ6RolloverProxy_FinForcer() == 1 then
 			D.finRecue = tour;
-			Afficher(T("fin du tour : le minuteur de l'hôte est écoulé.", "turn over: the host's turn timer ran out."));
+			if Signaux() then
+				Afficher(T("fin du tour : le minuteur de l'hôte est écoulé.", "turn over: the host's turn timer ran out."));
+			end
 			J("tour " .. tour .. " : fin reçue, tour terminé");
 		else
 			J("tour " .. tour .. " : fin reçue, minuteur introuvable");
@@ -345,29 +346,15 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		end
 		D.annonce = true;
 		local texte;
-		if Dispo() then
-			texte = T("[COLOR_GREEN]BGD - Départ de tour simultané actif : tous les joueurs commencent leur tour ensemble.[ENDCOLOR]",
-				"[COLOR_GREEN]BGD - Simultaneous turn start enabled: every player starts their turn together.[ENDCOLOR]");
-		else
-			texte = T("[COLOR_RED]BGD - Départ de tour simultané désactivé : il faut que tous les joueurs aient BetterGameDLLs, à la même version.[ENDCOLOR]",
-				"[COLOR_RED]BGD - Simultaneous turn start disabled: every player needs BetterGameDLLs, at the same version.[ENDCOLOR]");
-		end
-		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
-		J("annonce : " .. texte);
-	end
-
-	local function AnnoncerFin()
-		if D.annonceFin or not Network.IsGameHost() or not Reseau() or not FinCochee() then
-			return;
-		end
-		D.annonceFin = true;
-		local texte;
 		if FinActif() then
-			texte = T("[COLOR_GREEN]BGD - Fin de tour simultanée active : le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.[ENDCOLOR]",
-				"[COLOR_GREEN]BGD - Simultaneous turn end enabled: the turn ends for everyone when the host's timer runs out.[ENDCOLOR]");
+			texte = T("[COLOR_GREEN]BGD - No First/Last moves actif : tous les joueurs commencent leur tour ensemble, et le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.[ENDCOLOR]",
+				"[COLOR_GREEN]BGD - No First/Last moves enabled: every player starts their turn together, and the turn ends for everyone when the host's timer runs out.[ENDCOLOR]");
+		elseif Dispo() then
+			texte = T("[COLOR_GREEN]BGD - No First/Last moves : départ de tour simultané actif ; fin simultanée indisponible (minuteur de l'exe non détourné).[ENDCOLOR]",
+				"[COLOR_GREEN]BGD - No First/Last moves: simultaneous turn start enabled; simultaneous turn end unavailable (exe timer not hooked).[ENDCOLOR]");
 		else
-			texte = T("[COLOR_RED]BGD - Fin de tour simultanée désactivée : il faut que tous les joueurs aient BetterGameDLLs, à la même version.[ENDCOLOR]",
-				"[COLOR_RED]BGD - Simultaneous turn end disabled: every player needs BetterGameDLLs, at the same version.[ENDCOLOR]");
+			texte = T("[COLOR_RED]BGD - No First/Last moves désactivé : il faut que tous les joueurs aient BetterGameDLLs, à la même version.[ENDCOLOR]",
+				"[COLOR_RED]BGD - No First/Last moves disabled: every player needs BetterGameDLLs, at the same version.[ENDCOLOR]");
 		end
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		J("annonce : " .. texte);
@@ -376,7 +363,6 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	local function OnLoadScreenClose()
 		D.chargement = false;
 		Annoncer();
-		AnnoncerFin();
 		local p = Players[Moi()];
 		if p ~= nil and p:IsTurnActive() then
 			Entrer(Game.GetCurrentGameTurn());

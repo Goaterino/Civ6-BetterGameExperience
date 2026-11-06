@@ -232,10 +232,10 @@ local PROXY_REGLAGES = {
 		},
 		choix = PROXY_ON_OFF },
 	{ cle = "depart_signaux", defaut = "off",
-		nom = { "Afficher les signaux du départ simultané", "Show simultaneous turn start signals" },
+		nom = { "Afficher les signaux du départ et de la fin simultanés", "Show simultaneous turn start and end signals" },
 		aide = {
-			"Avec l'option de partie « No first moves (BGD) », les machines s'échangent des messages de chat cachés (.bgd_pret, .bgd_depart). Activé, ils restent visibles dans votre chat, pour suivre le départ de chaque tour. Affichage seulement, sur cette machine.",
-			"With the \"No first moves (BGD)\" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart). When on, they stay visible in your chat, to follow each turn start. Display only, on this machine.",
+			"Avec l'option de partie « No First/Last moves (BGD) », les machines s'échangent des messages de chat cachés (.bgd_pret, .bgd_depart, .bgd_fin). Activé, ils restent visibles dans votre chat, avec une ligne quand l'hôte termine le tour, pour suivre le départ et la fin de chaque tour. Affichage seulement, sur cette machine.",
+			"With the \"No First/Last moves (BGD)\" game option, machines exchange hidden chat messages (.bgd_pret, .bgd_depart, .bgd_fin). When on, they stay visible in your chat, with a line when the host ends the turn, to follow each turn start and end. Display only, on this machine.",
 		},
 		choix = PROXY_ON_OFF },
 	{ cle = "profil_zones", defaut = "off", libre = true, demarrage = true, diag = true,

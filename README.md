@@ -57,7 +57,7 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),
-  options de partie « No first moves (BGD) » et « No last moves (BGD) » (fin de tour donnée par
+  option de partie « No First/Last moves (BGD) » (départ simultané, fin de tour donnée par
   l'hôte), synchro de tour de MPH coupée (fin de tour pas encore essayée en partie) ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
   [docs/netcode](docs/netcode/README.md) ;

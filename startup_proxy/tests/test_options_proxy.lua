@@ -231,7 +231,7 @@ do
 	Check("release : réglages de diagnostic absents", m.Row("Journal des scripts et XML chargés") == nil
 		and m.Row("Mesure du coût des épingles") == nil and m.Row("Diagnostic des accords entre joueurs") == nil
 		and m.Row("Profil des zones de l'exe") == nil);
-	Check("release : signaux du départ simultané gardés", m.Row("Afficher les signaux du départ simultané") ~= nil);
+	Check("release : signaux du départ simultané gardés", m.Row("Afficher les signaux du départ et de la fin simultanés") ~= nil);
 end
 
 do

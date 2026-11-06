@@ -31,7 +31,7 @@ end
 -- connecté qui a le proxy (version non nulle).
 local function NewGame(opts)
 	local G = { machines = {}, host = opts.host or 0, clock = 0, sent = {}, options = opts };
-	G.config = { CPL_SYNCTURN = opts.syncturn, BGD_DEPART_SIMULTANE = opts.option, BGD_FIN_SIMULTANEE = opts.fin };
+	G.config = { CPL_SYNCTURN = opts.syncturn, BGD_DEPART_SIMULTANE = opts.option };
 	G.players = opts.players;
 
 	function G.Deliver(from, to, text)
@@ -113,6 +113,7 @@ local function NewGame(opts)
 			Civ6RolloverProxy_DepartDispo = function() return opts.dispo == false and 0 or 1, opts.minuteur == false and 0 or 1; end,
 			Civ6RolloverProxy_FinForcer = function() m.natives.forcer = (m.natives.forcer or 0) + 1; return 1; end,
 			Civ6RolloverProxy_FinLever = function() m.natives.lever = (m.natives.lever or 0) + 1; end,
+			Civ6RolloverProxy_DepartSignaux = function() return opts.signaux and 1 or 0; end,
 			Civ6RolloverProxy_DepartAttendre = function(joueur, exec)
 				m.natives.attente = true;
 				m.natives.attendre = m.natives.attendre + 1;
@@ -341,8 +342,10 @@ do
 	Check("puis « c'est parti »", #a.locaux == 2 and a.locaux[2]:find("parti") ~= nil);
 end
 
--- Fin simultanée (« No last moves (BGD) ») -----------------------------------------------------
+-- Fin simultanée (même option, « No First/Last moves (BGD) ») ------------------------------------
+-- `fin` : l'option est cochée (elle donne aussi le départ simultané : les machines attendent).
 local function FinGame(opts)
+	opts.option = opts.fin;
 	opts.players = opts.players or { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true },
 		[2] = { version = V, connecte = true } };
 	local G = NewGame(opts);
@@ -367,7 +370,9 @@ do
 	h.Minuteur(60, 60);
 	Check("fin : .bgd_fin 11 envoyé à A et B", Envoyes(G, ".bgd_fin 11") == 2);
 	Check("fin : tour terminé chez A et B", a.natives.forcer == 1 and b.natives.forcer == 1 and h.natives.forcer == nil);
-	Check("fin : ligne locale", a.locaux[#a.locaux]:find("minuteur de l'hôte") ~= nil);
+	local ligne = false;
+	for _, t in ipairs(a.locaux) do if t:find("minuteur de l'hôte") then ligne = true; end end
+	Check("fin : pas de ligne locale sans depart_signaux", not ligne);
 	h.Minuteur(61, 60);
 	Check("fin : une seule fois par échéance", Envoyes(G, ".bgd_fin 11") == 2);
 	-- Nouveau segment (congrès) : minuteur remis à zéro, réarmé.
@@ -409,13 +414,14 @@ do
 end
 
 do
-	-- Les deux options : la fin lève aussi une attente restée en place chez le client.
-	local G, h, a = FinGame({ option = true, fin = true, players = {
+	-- Départ donné, puis fin ; avec depart_signaux, la ligne locale de la fin s'affiche.
+	local G, h, a = FinGame({ fin = true, signaux = true, players = {
 		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
 	h.Publie(); a.Publie();
-	Check("deux options : départ donné", not a.natives.attente);
+	Check("départ puis fin : départ donné", not a.natives.attente);
 	h.Minuteur(5, 60); h.Minuteur(60, 60);
-	Check("deux options : fin reçue", a.natives.forcer == 1);
+	Check("départ puis fin : fin reçue", a.natives.forcer == 1);
+	Check("depart_signaux=on : ligne locale de la fin", a.locaux[#a.locaux]:find("minuteur de l'hôte") ~= nil);
 end
 
 do
