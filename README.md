@@ -45,6 +45,15 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
   pour une unité navale (correctif POL) ;
+- défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
+  partie ; raccourcis et colon encore à confirmer) :
+  [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
+  [Échap sur l'écran des émissaires](analyses/emissaires_echap/README.md),
+  [lentille du colon](analyses/filtre_colon/README.md) vidée par une ville fondée,
+  [Entrée](analyses/raccourci_entree/README.md) active une fois retirée des touches,
+  [zone de déplacement](analyses/quartier_capture_mouvements/README.md) sur un quartier ennemi ;
+- [unites_superposees](analyses/unites_superposees/README.md) : deux unités sur la même case après
+  un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),

@@ -671,6 +671,29 @@ plus les tours des routes commerciales.
   - NotificationClear : 336tarot ;
   - Better Builder Charges Tracking : wltk ; remerciements : DeepLogic, 小小雨10101.
 
+## Défauts d'interface corrigés (raccourcis, émissaires, colon, déplacements)
+
+Interface seule, rien ne part sur le réseau, pas de réglage (bugs purs). Ce sont des entrées de
+`FIXES` dans [src/ui.rs](src/ui.rs), appliquées dès que l'accroche Lua est posée. Émissaires, Entrée et
+zone de déplacement : confirmés en partie le 2026-11-06 ; raccourcis et lentille du colon : encore à
+confirmer.
+
+| fichier patché | défaut | correctif | analyse |
+|---|---|---|---|
+| `InGame.lua` (XP2 ou MPH) | raccourcis coupés en cours de partie : un contexte d'entrée (`GameOptions` du menu Échap fermé par une diplomatie, `Popup` du congrès empilé deux fois) reste en haut de la pile, et les actions du contexte `World` ne partent plus | [src/ui_raccourcis.lua](src/ui_raccourcis.lua), ajouté après le bloc du départ simultané : retire ce contexte quand son écran est fermé (au repos, à chaque touche, après une diplomatie), avec une ligne `BGD raccourcis : contexte d'entrée N retiré` dans `Lua.log` | [raccourcis](../analyses/raccourcis/README.md) |
+| `CityStates.lua` (copie de BSM) | Échap fait glisser l'écran des émissaires sans `Close()` : les émissaires en attente restent, le blocage de fin de tour aussi | `OnClose` remis dans le gestionnaire d'Échap, comme dans le fichier du jeu (laissé tel quel) | [emissaires_echap](../analyses/emissaires_echap/README.md) |
+| `MinimapPanel.lua` | lentille du colon vide sur les cases visibles : `OnCityAddedToMap` vide la couche à chaque ville fondée, par n'importe quel joueur, sans la recolorier (les cases du brouillard gardent leur ancienne couleur) ; défaut secondaire : les cases à 2 ou 3 d'une ville fondée hors des terres du joueur restent coloriées comme fondables (bit du cache de GameCore périmé) | `OnCityAddedToMap` redemande le coloriage, `OnFlushChanges` recolorie si la couche est allumée, [src/ui_colon_fin.lua](src/ui_colon_fin.lua) recolorie à la sélection d'une unité ; [src/ui_colon.lua](src/ui_colon.lua) passe les cases trop proches en interdites (villes révélées seulement, sous `pcall`) | [filtre_colon](../analyses/filtre_colon/README.md) |
+| `ActionPanel.lua` | Entrée fait « Action suivante » même retirée des touches : `OnInputHandler` la teste en dur | [src/ui_entree.lua](src/ui_entree.lua) : Entrée n'agit que si l'action `EndTurn` porte Entrée, Maj+Entrée (fin de tour forcée) reste toujours actif ; première lecture notée dans `Lua.log` (`Action suivante = […]`) | [raccourci_entree](../analyses/raccourci_entree/README.md) |
+| `SelectedUnit.lua` | pas de zone de déplacement sur un quartier défendable ennemi : le parcours de GameCore donne 0 PM à la case de départ | [src/ui_mouvements.lua](src/ui_mouvements.lua) enveloppe `RealizeMoveRadius` et refait la zone avec les chemins du survol (`GetMoveToPathEx`), dans ce cas seulement | [quartier_capture_mouvements](../analyses/quartier_capture_mouvements/README.md) |
+
+- **Journal :** `ui : …<fichier> : <correctif>, compilation réussie`, ou `laissé tel quel : <raison>`
+  si le texte attendu manque.
+- **Tests :** `cargo test` patche les vrais fichiers du jeu, de BSM et de MPH ; les blocs passent
+  `lua proxy/tests/check_havok.lua`.
+- **À vérifier en jeu :** que `Input.GetGestureDisplayString` rend bien le texte de
+  `LOC_OPTIONS_KEY_RETURN` (sinon Entrée serait coupée pour tous, la ligne du journal le dira) ; que
+  `Plot:GetArea()` existe côté interface (sinon repli sur le continent).
+
 ## Limites du prototype
 
 - **Un seul build du jeu.** Les adresses sont celles de GameCore_XP2 FinalRelease

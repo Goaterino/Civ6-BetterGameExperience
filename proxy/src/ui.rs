@@ -257,6 +257,149 @@ pub fn patch_production_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+const ENTREE_BLOCK: &str = include_str!("ui_entree.lua");
+
+/// `OnInputHandler` d'ActionPanel.lua lance « Action suivante » sur Entrée codée en dur, même quand
+/// le joueur a retiré Entrée de l'action `EndTurn`. Le test de la touche passe par
+/// `BGD_EntreeEstActionSuivante` (ui_entree.lua), inséré avant le gestionnaire. Octets laissés tels
+/// quels.
+pub fn patch_action_panel(src: &[u8]) -> Result<Vec<u8>, String> {
+    const KEY: &[u8] = b"if pInputStruct:GetKey() == Keys.VK_RETURN then";
+    const NEW_KEY: &[u8] = b"if pInputStruct:GetKey() == Keys.VK_RETURN and (pInputStruct:IsShiftDown() or BGD_EntreeEstActionSuivante()) then";
+    const HEADER: &[u8] = b"\nfunction OnInputHandler(";
+    let find = |pat: &[u8]| src.windows(pat.len()).position(|w| w == pat);
+    if find(b"BGD_EntreeEstActionSuivante").is_some() {
+        return Err("déjà corrigé".into());
+    }
+    let header = find(HEADER).ok_or("OnInputHandler introuvable")? + 1;
+    let key = find(KEY).ok_or("test d'Entrée introuvable")?;
+    if key < header || src[key + 1..].windows(KEY.len()).any(|w| w == KEY) {
+        return Err("test d'Entrée hors d'OnInputHandler ou en double".into());
+    }
+    let mut out = Vec::with_capacity(src.len() + ENTREE_BLOCK.len() + 64);
+    out.extend_from_slice(&src[..header]);
+    out.extend_from_slice(ENTREE_BLOCK.as_bytes());
+    out.extend_from_slice(&src[header..key]);
+    out.extend_from_slice(NEW_KEY);
+    out.extend_from_slice(&src[key + KEY.len()..]);
+    Ok(out)
+}
+
+/// La copie de CityStates.lua de Better Spectator Mod passe Échap à `OnInputHandler` de l'animation
+/// sans `OnClose` : le panneau glisse hors de l'écran sans `Close()`, qui vide les émissaires en
+/// attente et lève le blocage de fin de tour. On remet `OnClose`, comme dans le fichier du jeu
+/// (qui n'a pas besoin du patch). Voir analyses/emissaires_echap.
+pub fn patch_city_states(src: &[u8]) -> Result<Vec<u8>, String> {
+    const WRONG: &[u8] = b"m_kScreenSlideAnim.OnInputHandler( input );";
+    const RIGHT: &[u8] = b"m_kScreenSlideAnim.OnInputHandler( input, OnClose );";
+    let find = |pat: &[u8]| src.windows(pat.len()).position(|w| w == pat);
+    let at = find(WRONG).ok_or("Échap déjà relié à OnClose (fichier du jeu ?)")?;
+    if find(b"\nfunction OnClose(").is_none() {
+        return Err("OnClose introuvable".into());
+    }
+    let mut out = Vec::with_capacity(src.len() + 16);
+    out.extend_from_slice(&src[..at]);
+    out.extend_from_slice(RIGHT);
+    out.extend_from_slice(&src[at + WRONG.len()..]);
+    Ok(out)
+}
+
+const RACCOURCIS_BLOCK: &str = include_str!("ui_raccourcis.lua");
+const RACCOURCIS_DONE: &str = "contextes d'entrée orphelins retirés (raccourcis)";
+
+/// Raccourcis coupés en cours de partie : un contexte d'entrée (menu Échap, congrès) resté sur la
+/// pile après la fermeture de son écran bloque les actions du contexte World. `ui_raccourcis.lua`,
+/// ajouté à la fin d'InGame.lua (XP2 ou MPH), le retire. Voir analyses/raccourcis.
+pub fn patch_in_game(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if !has("local DefaultMessageHandler") {
+        return Err("local DefaultMessageHandler introuvable".into());
+    }
+    if has("Civ6RolloverProxy (src/ui_raccourcis.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(RACCOURCIS_BLOCK.as_bytes());
+    Ok(out)
+}
+
+const MOUVEMENTS_BLOCK: &str = include_str!("ui_mouvements.lua");
+
+/// Pas de zone de déplacement pour une unité posée sur un quartier défendable ennemi : le parcours de
+/// GameCore lui donne 0 PM au départ. `ui_mouvements.lua`, ajouté à la fin de SelectedUnit.lua,
+/// enveloppe `RealizeMoveRadius` et refait la zone avec les chemins du survol. Voir
+/// analyses/quartier_capture_mouvements.
+pub fn patch_selected_unit(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ["local m_MovementRange", "\nfunction RealizeMoveRadius("].iter().find(|n| !has(n)) {
+        return Err(format!("{} introuvable", missing.trim_start()));
+    }
+    if has("Civ6RolloverProxy (src/ui_mouvements.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(MOUVEMENTS_BLOCK.as_bytes());
+    Ok(out)
+}
+
+const COLON_BLOCK: &str = include_str!("ui_colon.lua");
+const COLON_FIN: &str = include_str!("ui_colon_fin.lua");
+
+/// Lentille du colon : les cases proches d'une ville fondée hors des terres du joueur restaient
+/// coloriées comme fondables (cache de GameCore périmé). `BGD_FiltrerColon` (ui_colon.lua), inséré
+/// avant `SetWaterHexes`, les repasse en interdites ; `OnCityAddedToMap` demande en plus un
+/// recoloriage au lieu de vider la couche. Octets laissés tels quels. Voir analyses/filtre_colon.
+pub fn patch_minimap_panel(src: &[u8]) -> Result<Vec<u8>, String> {
+    const HEADER: &[u8] = b"\nfunction SetWaterHexes()";
+    const CALL: &[u8] = b"= Map.GetContinentPlotsWaterAvailability();";
+    // Sous pcall : le filtre passe entre l'effacement de la couche et son coloriage, une erreur
+    // laisserait la lentille vide.
+    const FILTRE: &[u8] = b"\r\n\tdo local ok, a, b, c, d = pcall(BGD_FiltrerColon, FullWaterPlots, CoastalWaterPlots, NoWaterPlots, NoSettlePlots); if ok and a ~= nil then FullWaterPlots, CoastalWaterPlots, NoWaterPlots, NoSettlePlots = a, b, c, d; end end";
+    const CITY: &[u8] = b"\nfunction OnCityAddedToMap(";
+    const CLEAR: &[u8] = b"UILens.ClearLayerHexes(m_HexColoringWaterAvail);";
+    const REFRESH: &[u8] = b" m_refreshLens = true;";
+    const FLUSH: &[u8] = b"if(m_WaterAvailabilityLensOn)then";
+    const NEW_FLUSH: &[u8] = b"if(m_WaterAvailabilityLensOn or UILens.IsLayerOn(m_HexColoringWaterAvail))then";
+    let all = |pat: &[u8]| src.windows(pat.len()).enumerate().filter(|(_, w)| *w == pat).map(|(i, _)| i).collect::<Vec<_>>();
+    if !all(b"BGD_FiltrerColon").is_empty() {
+        return Err("déjà corrigé".into());
+    }
+    if all(b"local m_refreshLens").is_empty() {
+        return Err("m_refreshLens introuvable".into());
+    }
+    let one = |pat: &[u8], what: &str| match all(pat).as_slice() {
+        [i] => Ok(*i),
+        v => Err(format!("{what} : {} occurrences au lieu d'une", v.len())),
+    };
+    let header = one(HEADER, "SetWaterHexes")? + 1;
+    let call = one(CALL, "GetContinentPlotsWaterAvailability")? + CALL.len();
+    let city = one(CITY, "OnCityAddedToMap")?;
+    let clear = all(CLEAR).into_iter().find(|&i| i > city).ok_or("ClearLayerHexes d'OnCityAddedToMap introuvable")?;
+    let next = src[city + 1..].windows(10).position(|w| w == b"\nfunction ").map_or(src.len(), |i| city + 1 + i);
+    let flush = one(FLUSH, "test de m_WaterAvailabilityLensOn")?;
+    let flush_fn = one(b"\nfunction OnFlushChanges(", "OnFlushChanges")?;
+    if !(header < call && clear < next && flush_fn < flush) {
+        return Err("ancres dans un ordre inattendu".into());
+    }
+    let clear = clear + CLEAR.len();
+    // (position, texte inséré, octets remplacés), dans l'ordre du fichier.
+    let mut edits = vec![(header, COLON_BLOCK.as_bytes(), 0), (call, FILTRE, 0), (clear, REFRESH, 0), (flush, NEW_FLUSH, FLUSH.len())];
+    edits.sort_by_key(|e| e.0);
+    let mut out = Vec::with_capacity(src.len() + COLON_BLOCK.len() + COLON_FIN.len() + 512);
+    let mut pos = 0;
+    for (at, insert, skip) in edits {
+        out.extend_from_slice(&src[pos..at]);
+        out.extend_from_slice(insert);
+        pos = at + skip;
+    }
+    out.extend_from_slice(&src[pos..]);
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(COLON_FIN.as_bytes());
+    Ok(out)
+}
+
 /// Nom du fichier d'un script, en minuscules.
 fn script_name(chunk: &str) -> String {
     chunk.rsplit(['/', '\\']).next().unwrap_or("").trim_start_matches('@').to_ascii_lowercase()
@@ -495,7 +638,12 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 3] = [
+const FIXES: [(&str, Fix, &str); 8] = [
+    ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
+    ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
+    ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
+    ("CityStates.lua", patch_city_states, "Échap ferme l'écran des cités-États comme la croix"),
+    ("ActionPanel.lua", patch_action_panel, "Entrée suit la touche de « Action suivante »"),
     ("CityPanel.lua", patch_city_panel, "owningPlayerID corrigé"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
     ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville"),
@@ -610,6 +758,19 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     }
     if let Some((text, done)) = crate::depart::patch_lua(l, chunk, src) {
         what.push(done.into());
+        // InGame.lua reçoit toujours le bloc du départ : le correctif des raccourcis s'y ajoute.
+        if is_file(chunk, "InGame.lua") {
+            return match patch_in_game(&text) {
+                Ok(both) => {
+                    what.push(RACCOURCIS_DONE.into());
+                    Some(both)
+                }
+                Err(e) => {
+                    log(&format!("ui : {chunk} : raccourcis laissés tels quels : {e}"));
+                    Some(text)
+                }
+            };
+        }
         return Some(text);
     }
     for (file, patch, done) in FIXES {
@@ -951,6 +1112,75 @@ mod tests {
         // Le gestionnaire est défini avant OnUnitFlagClick, donc avant tout branchement.
         assert!(new.find("function Civ6RolloverProxy_OnUnitFlagLClick").unwrap() < new.find("\nfunction OnUnitFlagClick(").unwrap());
         assert!(patch_unit_flags(&bytes).is_err(), "pas deux fois");
+    }
+
+    #[test]
+    fn action_panel_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\ActionPanel.lua")) else { return };
+        let bytes = patch_action_panel(&src).unwrap();
+        let ajout = " and (pInputStruct:IsShiftDown() or BGD_EntreeEstActionSuivante())".len();
+        assert_eq!(bytes.len(), src.len() + ENTREE_BLOCK.len() + ajout);
+        let new = String::from_utf8_lossy(&bytes);
+        assert!(new.find("function BGD_EntreeEstActionSuivante").unwrap() < new.find("\nfunction OnInputHandler(").unwrap());
+        assert!(new.contains("Keys.VK_RETURN and (pInputStruct:IsShiftDown() or BGD_EntreeEstActionSuivante()) then"));
+        assert!(patch_action_panel(&bytes).is_err(), "pas deux fois");
+        assert!(is_file(r"C:\x\Base\Assets\UI\ActionPanel.lua", "ActionPanel.lua"));
+        assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua", "ActionPanel.lua"));
+    }
+
+    #[test]
+    fn cites_etats_de_bsm() {
+        if let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\PartialScreens\CityStates.lua")) {
+            assert!(patch_city_states(&src).is_err(), "le fichier du jeu est correct");
+        }
+        let Some(src) = read(format!(r"{BSM}\UI\CityStates.lua")) else { return };
+        let bytes = patch_city_states(&src).unwrap();
+        assert_eq!(bytes.len(), src.len() + ", OnClose".len());
+        assert!(String::from_utf8_lossy(&bytes).contains("m_kScreenSlideAnim.OnInputHandler( input, OnClose );"));
+        assert!(patch_city_states(&bytes).is_err(), "pas deux fois");
+        assert!(!is_file(r"C:\x\CityStates_Expansion2.lua", "CityStates.lua"));
+    }
+
+    #[test]
+    fn in_game_du_jeu_et_de_mph() {
+        const MPH: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\3307282026";
+        for path in [format!(r"{GAME}\DLC\Expansion2\UI\Replacements\InGame.lua"), format!(r"{MPH}\ui\ingame.lua")] {
+            let Some(src) = read(path) else { continue };
+            let bytes = patch_in_game(&src).unwrap();
+            assert!(bytes.starts_with(&src) && bytes.ends_with(RACCOURCIS_BLOCK.as_bytes()));
+            assert!(patch_in_game(&bytes).is_err(), "pas deux fois");
+            // Ce que patch_ui compile : le bloc du départ, puis celui des raccourcis.
+            let (depart, _) = crate::depart::patch(r"C:\x\InGame.lua", &src).unwrap();
+            let both = patch_in_game(&depart).unwrap();
+            assert!(both.starts_with(&depart) && both.ends_with(RACCOURCIS_BLOCK.as_bytes()));
+        }
+        assert!(is_file(r"C:\x\ui\ingame.lua", "InGame.lua"));
+        assert!(!is_file(r"C:\x\InGameTopOptionsMenu.lua", "InGame.lua"));
+    }
+
+    #[test]
+    fn selected_unit_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\WorldView\SelectedUnit.lua")) else { return };
+        let bytes = patch_selected_unit(&src).unwrap();
+        assert!(bytes.starts_with(&src) && bytes.ends_with(MOUVEMENTS_BLOCK.as_bytes()));
+        assert!(patch_selected_unit(&bytes).is_err(), "pas deux fois");
+        assert!(!is_file(r"C:\x\SelectedUnit_Expansion2.lua", "SelectedUnit.lua"));
+    }
+
+    #[test]
+    fn minimap_du_jeu() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\MinimapPanel.lua")) else { return };
+        let bytes = patch_minimap_panel(&src).unwrap();
+        let new = String::from_utf8_lossy(&bytes);
+        assert!(new.find("function BGD_FiltrerColon").unwrap() < new.find("\nfunction SetWaterHexes()").unwrap());
+        assert!(new.contains("GetContinentPlotsWaterAvailability();\r\n\tdo local ok, a, b, c, d = pcall(BGD_FiltrerColon,"));
+        let city = new.find("\nfunction OnCityAddedToMap(").unwrap();
+        assert!(new[city..].contains("UILens.ClearLayerHexes(m_HexColoringWaterAvail); m_refreshLens = true;"));
+        let flush = new.find("\nfunction OnFlushChanges(").unwrap();
+        assert!(new[flush..].contains("if(m_WaterAvailabilityLensOn or UILens.IsLayerOn(m_HexColoringWaterAvail))then"));
+        assert!(new.ends_with(COLON_FIN));
+        assert!(patch_minimap_panel(&bytes).is_err(), "pas deux fois");
+        assert!(!is_file(r"C:\x\MinimapPanel_Expansion2.lua", "MinimapPanel.lua"));
     }
 
     #[test]
