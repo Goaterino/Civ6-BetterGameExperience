@@ -1,5 +1,7 @@
 # BetterGameDLLs
 
+[Français](README.fr.md)
+
 Fixes and speed-ups for **Civilization VI: Gathering Storm**, delivered as two DLLs placed next to
 the game files. No game file is replaced, so Steam file checks and game updates leave it alone.
 
@@ -85,7 +87,7 @@ The built-in interface mods build on the work of their authors:
 
 ## For developers
 
-The technical index of the repository is in French: [README.fr.md](README.fr.md). It covers the
+The technical index of the repository is in French: [SOMMAIRE.md](SOMMAIRE.md). It covers the
 proxies, how they hook the game, the analyses behind each fix, and how to build, test and release.
 Releases are built and signed by GitHub Actions only ([release/README.md](release/README.md)).
 
