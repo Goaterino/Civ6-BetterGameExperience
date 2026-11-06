@@ -49,7 +49,7 @@ riesgo con jugadores que no tienen el mod.
   - Todos los jugadores empiezan su turno a la vez. Las órdenes se retienen, y el temporizador sigue
     parado, hasta que todos hayan terminado de cargar (60 s como máximo).
   - El turno termina para todos cuando se acaba el temporizador del anfitrión.
-  - Se desactiva la sincronización de turno de MPH, que no sincronizaba nada.
+  - Se desactiva la antigua sincronización de turno de MPH.
 - Partidas cargadas en la sala de MPH: las ciudades-estado ya no provocan «Opciones de jugador no
   válidas» ni el botón Listo en gris.
 
@@ -58,19 +58,22 @@ riesgo con jugadores que no tienen el mod.
   en comida y producción).
 - Los espectadores de Better Spectator Mod ya no cuentan en el turismo. No pueden votar en el Congreso
   Mundial ni ser objetivo de una resolución. Siguen pudiendo consultar la pantalla del Congreso.
-- Las unidades navales pueden teletransportarse a una ciudad desde cualquier distrito (puerto, parque
-  acuático, canal…), y no solo desde un centro urbano.
+- Las unidades navales pueden teletransportarse a una ciudad desde cualquier distrito naval (puerto,
+  parque acuático, canal…), y no solo desde un centro urbano, igual que ya podían teletransportarse
+  de una ciudad a cualquier distrito naval (se acabaron los almirantes atascados en un lago de una
+  casilla).
 
 ### Correcciones de la interfaz
 - Los botones de ataque (ciudad, campamento, ataque nuclear desde un silo) se dibujan sobre las
   banderas de unidades, donde se pueden pulsar.
 - El ataque a distancia desde una ciudad no seleccionada requiere un clic, no dos.
-- Al apuntar, pulsar la bandera de una unidad enemiga dispara contra ella.
+- Al apuntar un ataque a distancia de ciudad o de distrito, pulsar la bandera de una unidad enemiga
+  dispara contra ella.
 - La cámara ya no se centra al pulsar un botón de ataque (se puede volver a activar).
 - El contador de turnos de producción ya incluye las bonificaciones de gobierno: fascismo, autocracia
   y república mercantil.
 - Una maravilla que sale de la cola de producción tras dos intercambios se vuelve a poner.
-- La producción en curso sigue visible al pasar a otra ciudad.
+- La producción en curso se actualiza correctamente al pasar a otra ciudad.
 - Los rendimientos del imperio en la barra superior se actualizan tras una acción de gobernador o un
   gran personaje.
 - *(experimental)* Los atajos de teclado ya no dejan de funcionar cuando una pantalla de diplomacia
@@ -79,14 +82,15 @@ riesgo con jugadores que no tienen el mod.
   final del turno.
 - *(experimental)* La lente del colono se vuelve a dibujar tras fundar una ciudad, y las casillas
   demasiado cercanas a una ciudad aparecen como prohibidas.
-- Intro sigue tu atajo de «Siguiente acción». Mayús+Intro sigue forzando el final del turno.
+- Intro sigue tu atajo de «Siguiente acción»: puedes quitarlo de ahí para asignarlo a otro atajo.
+  Mayús+Intro sigue forzando el final del turno.
 - Se muestra el área de movimiento de una unidad situada en un distrito defendible enemigo.
-- Los marcadores de mapa ya no se reconstruyen cuando nada ha cambiado: menos ralentizaciones en
-  multijugador.
+- *(experimental)* Los marcadores de mapa ya no se reconstruyen cuando nada ha cambiado: menos
+  ralentizaciones en multijugador.
 
 ### Mods de interfaz integrados
 Cada uno se puede desactivar en la pestaña BetterGameDLLs. Si también tienes el mod del Workshop, la
-versión integrada lo sustituye.
+versión integrada en BGD lo sustituye.
 - **Cargas de los constructores** en las banderas de unidades (de Better Builder Charges Tracking, por
   wltk).
 - **Turnos restantes de las rutas comerciales** en las banderas de tus comerciantes (nuevo).
@@ -106,7 +110,8 @@ versión integrada lo sustituye.
 ### Rendimiento y comodidad
 - Cambio de turno más rápido:
   - Durante una cascada de declaraciones de guerra, los datos de ciudades y diplomacia solo se
-    actualizan una vez. El turno medido fue 2,4 s más rápido (−82 % en la cascada).
+    actualizan una vez. El turno medido fue 2,4 s más rápido (−82 % en la cascada): mucho menos lag
+    cuando las ciudades-estado cambian de bando en una guerra.
   - Dos cachés aceleran el turno de la IA: mejoras construibles y rendimientos de casillas.
   - Los resultados son idénticos a los del juego base: sin riesgo con jugadores que no tienen el mod.
 - La animación de los ataques nucleares es 20 veces más rápida con el combate rápido activado: unos
@@ -114,10 +119,11 @@ versión integrada lo sustituye.
 - El limitador de fotogramas ofrece 45, 75, 90 y 100 FPS.
 
 ### Limitaciones conocidas
-- El mod está hecho para la versión actual del juego. Tras una actualización del juego, las funciones
-  afectadas se desactivan solas hasta que BetterGameDLLs se actualice.
+- El mod está hecho para la versión oficial actual del juego. Tras una actualización del juego, las
+  funciones afectadas se desactivan solas hasta que BetterGameDLLs se actualice.
 - Un jugador que se une a mitad de partida sin el mod, mientras las correcciones **[todos los
   jugadores]** están activas, se desincroniza. El anfitrión recibe un aviso.
-- Las correcciones marcadas *(experimental)* aún no se han probado en una partida real.
+- Las correcciones marcadas *(experimental)* aún no se han probado en una partida real, o su efecto
+  aún no se ha medido del todo.
 - Las traducciones distintas del inglés y del francés aún no las ha revisado un hablante nativo. Las
   correcciones son bienvenidas.

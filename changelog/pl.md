@@ -49,7 +49,7 @@ które nie mają moda.
   - Wszyscy gracze zaczynają turę razem. Rozkazy są wstrzymane, a zegar stoi, dopóki wszyscy nie
     skończą wczytywania (najwyżej 60 s).
   - Tura kończy się dla wszystkich, gdy upłynie czas na zegarze hosta.
-  - Synchronizacja tury z MPH, która niczego nie synchronizowała, zostaje wyłączona.
+  - Stara synchronizacja tury z MPH zostaje wyłączona.
 - Wczytane gry w poczekalni MPH: miasta-państwa nie powodują już błędu „Nieprawidłowe opcje gracza”
   ani wyszarzonego przycisku Gotowy.
 
@@ -58,32 +58,35 @@ które nie mają moda.
   i produkcji).
 - Obserwatorzy z Better Spectator Mod nie są już liczeni w turystyce. Nie mogą głosować w Kongresie
   Światowym ani być celem rezolucji. Nadal mogą oglądać ekran Kongresu.
-- Jednostki morskie mogą teleportować się do miasta z dowolnej dzielnicy (port, park wodny, kanał…),
-  a nie tylko z centrum miasta.
+- Jednostki morskie mogą teleportować się do miasta z dowolnej dzielnicy morskiej (port, park wodny,
+  kanał…), a nie tylko z centrum miasta, tak jak już mogły teleportować się z miasta do dowolnej
+  dzielnicy morskiej (koniec z admirałem uwięzionym na jeziorze z jednego pola).
 
 ### Poprawki interfejsu
 - Przyciski ataku (miasto, dzielnica wojskowa, atak jądrowy z silosu) są rysowane nad flagami
   jednostek, gdzie można je kliknąć.
 - Atak dystansowy z niewybranego miasta wymaga jednego kliknięcia zamiast dwóch.
-- W trybie celowania kliknięcie flagi wrogiej jednostki atakuje ją.
+- W trybie celowania ataku dystansowego miasta lub dzielnicy kliknięcie flagi wrogiej jednostki
+  atakuje ją.
 - Kamera nie centruje się już po kliknięciu przycisku ataku (można to ponownie włączyć).
 - Licznik tur produkcji uwzględnia teraz premie ustroju: faszyzm, autokrację i republikę kupiecką.
 - Cud, który wypadł z kolejki produkcji po dwóch zamianach, wraca do niej.
-- Bieżąca produkcja pozostaje widoczna po przejściu do innego miasta.
+- Bieżąca produkcja poprawnie się odświeża po przejściu do innego miasta.
 - Plony imperium na górnym pasku odświeżają się po działaniu gubernatora lub wielkim człowieku.
 - *(eksperymentalne)* Skróty klawiszowe nie przestają działać, gdy ekran dyplomacji zamknie menu Esc,
   ani po podwójnym okienku Kongresu.
 - Esc poprawnie zamyka teraz ekran wysłanników: oczekujący wysłannicy nie blokują już końca tury.
 - *(eksperymentalne)* Soczewka osadnika jest odrysowywana po założeniu miasta, a pola zbyt bliskie
   miasta są pokazywane jako zabronione.
-- Enter działa zgodnie z twoim klawiszem „Następna akcja”. Shift+Enter nadal wymusza koniec tury.
+- Enter działa zgodnie z twoim klawiszem „Następna akcja”: można go więc stamtąd usunąć i przypisać
+  do innego skrótu. Shift+Enter nadal wymusza koniec tury.
 - Zasięg ruchu jest widoczny dla jednostki stojącej na wrogiej dzielnicy obronnej.
-- Znaczniki mapy nie są już przebudowywane, gdy nic się nie zmieniło: mniej spowolnień w trybie
-  wieloosobowym.
+- *(eksperymentalne)* Znaczniki mapy nie są już przebudowywane, gdy nic się nie zmieniło: mniej
+  spowolnień w trybie wieloosobowym.
 
 ### Wbudowane mody interfejsu
-Każdy można wyłączyć na karcie BetterGameDLLs. Jeśli masz też moda z Warsztatu, wbudowana wersja go
-zastępuje.
+Każdy można wyłączyć na karcie BetterGameDLLs. Jeśli masz też moda z Warsztatu, wersja wbudowana w
+BGD go zastępuje.
 - **Ładunki budowniczych** na flagach jednostek (na podstawie Better Builder Charges Tracking, autor:
   wltk).
 - **Pozostałe tury szlaków handlowych** na flagach twoich kupców (nowość).
@@ -102,8 +105,9 @@ zastępuje.
 
 ### Wydajność i wygoda
 - Szybsze przetwarzanie tury:
-  - Podczas kaskady wypowiedzeń wojny dane miast i dyplomacji są odświeżane tylko raz. Zmierzona tura
-    była szybsza o 2,4 s (−82 % na kaskadzie).
+  - Podczas kaskady wypowiedzeń wojny dane miast i dyplomacji są odświeżane tylko raz. Zmierzona
+    tura była szybsza o 2,4 s (−82 % na kaskadzie): znacznie mniej lagów, gdy miasta-państwa
+    zmieniają strony podczas wojny.
   - Dwie pamięci podręczne przyspieszają turę SI: możliwe ulepszenia i plony pól.
   - Wyniki są identyczne jak w podstawowej grze: bezpieczne z graczami bez moda.
 - Animacja ataków jądrowych jest 20 razy szybsza przy włączonej szybkiej walce: około 0,6 s zamiast
@@ -111,10 +115,11 @@ zastępuje.
 - Ogranicznik klatek oferuje 45, 75, 90 i 100 FPS.
 
 ### Znane ograniczenia
-- Mod jest przeznaczony dla obecnej wersji gry. Po aktualizacji gry odpowiednie funkcje same się
-  wyłączają, dopóki BetterGameDLLs nie zostanie zaktualizowane.
+- Mod jest przeznaczony dla obecnej oficjalnej wersji gry. Po aktualizacji gry odpowiednie funkcje
+  same się wyłączają, dopóki BetterGameDLLs nie zostanie zaktualizowane.
 - Gracz, który dołączy w trakcie rozgrywki bez moda, gdy poprawki **[wszyscy gracze]** są włączone,
   ulegnie desynchronizacji. Host dostaje ostrzeżenie.
-- Poprawki oznaczone *(eksperymentalne)* nie zostały jeszcze przetestowane w prawdziwej rozgrywce.
+- Poprawki oznaczone *(eksperymentalne)* nie zostały jeszcze przetestowane w prawdziwej rozgrywce
+  albo ich efekt nie został jeszcze w pełni zmierzony.
 - Tłumaczenia inne niż angielskie i francuskie nie zostały jeszcze sprawdzone przez rodzimych
   użytkowników języka. Poprawki są mile widziane.

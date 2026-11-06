@@ -49,7 +49,7 @@ sans risque avec des joueurs qui n'ont pas le mod.
   - Tous les joueurs commencent leur tour ensemble. Les ordres sont retenus et le minuteur reste
     arrêté jusqu'à ce que tout le monde ait fini de charger (60 s au plus).
   - Le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.
-  - La synchro de tour de MPH, qui ne synchronisait rien, est coupée.
+  - L'ancienne synchro de tour de MPH est coupée.
 - Parties chargées dans le salon de MPH : les cités-États ne provoquent plus « Opt. joueur
   invalides » ni le bouton Prêt grisé.
 
@@ -59,19 +59,22 @@ sans risque avec des joueurs qui n'ont pas le mod.
 - Les spectateurs de Better Spectator Mod ne comptent plus dans le tourisme. Ils ne votent plus au
   Congrès mondial et ne peuvent plus être la cible d'une résolution. Ils peuvent toujours consulter
   l'écran du Congrès.
-- Une unité navale peut se téléporter vers une ville depuis n'importe quel district (port, parc
-  aquatique, canal…), et plus seulement depuis un centre-ville.
+- Une unité navale peut se téléporter vers une ville depuis n'importe quel district naval (port,
+  parc aquatique, canal…), et plus seulement depuis un centre-ville, comme elle pouvait déjà se
+  téléporter d'une ville vers n'importe quel district naval (fini l'amiral coincé sur un lac d'une
+  case).
 
 ### Correctifs d'interface
 - Les boutons d'attaque (ville, campement, frappe nucléaire depuis un silo) passent au-dessus des
   drapeaux d'unités, où on peut cliquer dessus.
 - L'attaque à distance depuis une ville non sélectionnée se fait en un clic, et non plus deux.
-- En visée, un clic sur le drapeau d'une unité ennemie tire sur elle.
+- En visée d'une attaque à distance de ville ou de quartier, un clic sur le drapeau d'une unité
+  ennemie tire sur elle.
 - La caméra ne se recentre plus au clic sur un bouton d'attaque (on peut le réactiver).
 - Le compteur de tours de production compte désormais les bonus de gouvernement : fascisme,
   autocratie et république maritime.
 - Une merveille retirée de la file de production après deux échanges y est remise.
-- La production en cours reste affichée quand on passe à une autre ville.
+- La production en cours se met correctement à jour quand on passe à une autre ville.
 - Les rendements d'empire du bandeau se mettent à jour après une action de gouverneur ou un
   personnage illustre.
 - *(expérimental)* Les raccourcis clavier ne cessent plus de fonctionner quand une diplomatie ferme le menu Échap, ou
@@ -80,14 +83,15 @@ sans risque avec des joueurs qui n'ont pas le mod.
   bloquent plus la fin du tour.
 - *(expérimental)* La lentille du colon est redessinée après la fondation d'une ville, et les cases trop proches
   d'une ville apparaissent comme interdites.
-- Entrée suit la touche choisie pour « Action suivante ». Maj+Entrée force toujours la fin du tour.
+- Entrée suit la touche choisie pour « Action suivante » : on peut donc la retirer pour l'attribuer
+  à un autre raccourci. Maj+Entrée force toujours la fin du tour.
 - La zone de déplacement s'affiche pour une unité sur un quartier défendable ennemi.
-- Les épingles de carte ne sont plus reconstruites quand rien n'a changé : moins de lag en
-  multijoueur.
+- *(expérimental)* Les épingles de carte ne sont plus reconstruites quand rien n'a changé : moins de
+  lag en multijoueur.
 
 ### Mods d'interface intégrés
 Chacun peut être désactivé dans l'onglet BetterGameDLLs. Si vous avez aussi le mod du Workshop, la
-version intégrée le remplace.
+version intégrée à BGD le remplace.
 - **Charges des bâtisseurs** sur les drapeaux d'unités (d'après Better Builder Charges Tracking, par
   wltk).
 - **Tours restants des routes commerciales** sur les drapeaux de vos négociants (nouveau).
@@ -107,7 +111,8 @@ version intégrée le remplace.
 ### Performances et confort
 - Passage de tour plus rapide :
   - Pendant une cascade de déclarations de guerre, les mises à jour des villes et de la diplomatie
-    n'ont lieu qu'une fois. Le tour mesuré a été plus rapide de 2,4 s (−82 % sur la cascade).
+    n'ont lieu qu'une fois. Le tour mesuré a été plus rapide de 2,4 s (−82 % sur la cascade) :
+    beaucoup moins de lag quand des cités-États changent de camp pendant une guerre.
   - Deux caches accélèrent le tour de l'IA : améliorations constructibles et rendements des cases.
   - Les résultats sont identiques à ceux du jeu de base : sans risque face à des joueurs sans le mod.
 - L'animation des frappes nucléaires est 20 fois plus rapide avec le combat rapide : environ 0,6 s
@@ -115,10 +120,11 @@ version intégrée le remplace.
 - Le limiteur d'images propose 45, 75, 90 et 100 images/s.
 
 ### Limites connues
-- Le mod vise la version actuelle du jeu. Après une mise à jour du jeu, les fonctionnalités
-  concernées se coupent d'elles-mêmes jusqu'à la mise à jour de BetterGameDLLs.
+- Le mod vise la version officielle actuelle du jeu. Après une mise à jour du jeu, les
+  fonctionnalités concernées se coupent d'elles-mêmes jusqu'à la mise à jour de BetterGameDLLs.
 - Un joueur qui rejoint en cours de partie sans le mod, alors que les correctifs **[tous les
   joueurs]** sont actifs, se désynchronise. L'hôte est prévenu.
-- Les correctifs marqués *(expérimental)* n'ont pas encore été essayés en partie.
+- Les correctifs marqués *(expérimental)* n'ont pas encore été essayés en partie, ou leur effet n'a
+  pas encore été entièrement mesuré.
 - Les traductions autres que l'anglais et le français n'ont pas encore été relues par des locuteurs
   natifs. Les corrections sont bienvenues.
