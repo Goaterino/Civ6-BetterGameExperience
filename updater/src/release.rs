@@ -17,6 +17,9 @@ use crate::lang::{self, t};
 pub const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 const RELEASES: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases";
+/// Liste des releases publiées (les brouillons n'y sont pas sans jeton), pour le canal pré-release :
+/// `releases/latest` ne désigne jamais une pré-release.
+const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6BetterGameDLLs/releases?per_page=30";
 const PUBLIC_KEY: &str = include_str!("../../release/public_key.txt");
 
 #[derive(Deserialize)]
@@ -37,13 +40,92 @@ pub fn work_dir() -> PathBuf {
     std::env::temp_dir().join("BetterGameDLLs")
 }
 
-/// Télécharge le manifeste de la dernière release publiée dans `work`, et vérifie sa signature.
+/// Choix du canal, gardé dans `%LOCALAPPDATA%\BetterGameDLLs\canal.txt` : `prerelease`, sinon le
+/// canal release. L'option de lancement Steam et la notification du jeu le suivent aussi.
+fn channel_file() -> Option<PathBuf> {
+    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\canal.txt"))
+}
+
+/// Canal pré-release : la release publiée la plus récente, pré-release ou non.
+pub fn prerelease() -> bool {
+    channel_file().and_then(|p| fs::read_to_string(p).ok()).is_some_and(|c| c.trim() == "prerelease")
+}
+
+pub fn set_prerelease(on: bool) {
+    if let Some(path) = channel_file() {
+        let _ = fs::create_dir_all(path.parent().unwrap());
+        let _ = fs::write(path, if on { "prerelease" } else { "release" });
+    }
+}
+
+/// Version posée par la dernière installation, gardée dans `%LOCALAPPDATA%\BetterGameDLLs\installe.txt`
+/// (les DLL d'une compilation locale n'ont pas de numéro) : sert à reconnaître une pré-release posée.
+fn installed_file() -> Option<PathBuf> {
+    Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameDLLs\\installe.txt"))
+}
+
+pub fn installed_version() -> Option<String> {
+    installed_file().and_then(|p| fs::read_to_string(p).ok()).map(|v| v.trim().to_string()).filter(|v| !v.is_empty())
+}
+
+/// `Some(version)` après une installation, `None` après une désinstallation.
+pub fn remember_installed(version: Option<&str>) {
+    let Some(path) = installed_file() else { return };
+    let _ = match version {
+        Some(v) => fs::create_dir_all(path.parent().unwrap()).and_then(|_| fs::write(&path, v)),
+        None => fs::remove_file(&path),
+    };
+}
+
+/// Vrai si la version `a` (sans le `v`) est plus récente que `b`.
+pub fn is_newer(a: &str, b: &str) -> bool {
+    matches!((version_key(&format!("v{a}")), version_key(&format!("v{b}"))), (Some(a), Some(b)) if a > b)
+}
+
+/// Télécharge dans `work` le manifeste de la dernière release du canal choisi, et vérifie sa
+/// signature.
 pub fn fetch_manifest(work: &Path) -> Result<Manifest, String> {
     fs::create_dir_all(work).map_err(|e| format!("{}: {e}", work.display()))?;
+    // Avec BGD_DIST, le dossier local tient lieu de release, quel que soit le canal.
+    let base = if prerelease() && std::env::var_os("BGD_DIST").is_none() {
+        format!("{RELEASES}/download/{}", newest_tag(work)?)
+    } else {
+        format!("{RELEASES}/latest/download")
+    };
     for name in ["manifest.json", "manifest.json.sig"] {
-        download(&format!("{RELEASES}/latest/download/{name}"), &work.join(name))?;
+        download(&format!("{base}/{name}"), &work.join(name))?;
     }
     verify_manifest(work)
+}
+
+#[derive(Deserialize)]
+struct ReleaseInfo {
+    tag_name: String,
+    #[serde(default)]
+    draft: bool,
+}
+
+/// Tag de la release publiée au plus grand numéro, pré-releases comprises.
+fn newest_tag(work: &Path) -> Result<String, String> {
+    let path = work.join("releases.json");
+    download(API_RELEASES, &path)?;
+    let data = fs::read(&path).map_err(|e| format!("releases.json : {e}"))?;
+    let list: Vec<ReleaseInfo> =
+        serde_json::from_slice(&data).map_err(|e| lang::f(["liste des releases illisible : {}", "unreadable release list: {}"], &[&e]))?;
+    pick_newest(&list).ok_or_else(|| t(["aucune release publiée", "no published release"]).to_string())
+}
+
+fn pick_newest(list: &[ReleaseInfo]) -> Option<String> {
+    list.iter().filter(|r| !r.draft).filter_map(|r| Some((version_key(&r.tag_name)?, &r.tag_name))).max().map(|(_, tag)| tag.clone())
+}
+
+/// `v1.2.3` ou `v1.2.3-rc.1` : une pré-release passe avant la version finale du même numéro.
+fn version_key(tag: &str) -> Option<(u32, u32, u32, bool, String)> {
+    let v = tag.strip_prefix('v')?;
+    let (core, suffix) = v.split_once('-').map_or((v, None), |(c, s)| (c, Some(s)));
+    let mut it = core.split('.').map(|n| n.parse().ok());
+    let key = (it.next()??, it.next()??, it.next()??);
+    it.next().is_none().then(|| (key.0, key.1, key.2, suffix.is_none(), suffix.unwrap_or("").to_string()))
 }
 
 /// Télécharge dans `work` les fichiers du manifeste qui n'y sont pas déjà, et les contrôle.
@@ -110,5 +192,60 @@ fn download(url: &str, dest: &Path) -> Result<(), String> {
         Ok(())
     } else {
         Err(lang::f(["téléchargement de {} : {}", "download of {}: {}"], &[&url, &String::from_utf8_lossy(&out.stderr).trim()]))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rel(tag: &str, draft: bool) -> ReleaseInfo {
+        ReleaseInfo { tag_name: tag.into(), draft }
+    }
+
+    #[test]
+    fn derniere_release_du_canal_prerelease() {
+        let list = [rel("v0.4.0", false), rel("v0.5.0-rc.1", false), rel("v0.6.0", true), rel("essai", false), rel("v0.10.0-rc.2", false)];
+        assert_eq!(pick_newest(&list).as_deref(), Some("v0.10.0-rc.2"));
+        assert_eq!(pick_newest(&[rel("v0.5.0-rc.1", false), rel("v0.5.0", false)]).as_deref(), Some("v0.5.0"));
+        assert_eq!(pick_newest(&[rel("v0.5.0-rc.1", false), rel("v0.5.0-rc.2", false)]).as_deref(), Some("v0.5.0-rc.2"));
+        assert_eq!(pick_newest(&[rel("v1.0.0", true)]), None);
+    }
+
+    #[test]
+    fn comparaison() {
+        assert!(is_newer("0.4.1", "0.4.0"));
+        assert!(is_newer("0.5.0-rc.1", "0.4.0"));
+        assert!(is_newer("0.5.0", "0.5.0-rc.1"));
+        assert!(!is_newer("0.4.0", "0.4.0"));
+        assert!(!is_newer("0.4.0", "0.5.0-rc.1"));
+        assert!(!is_newer("dev", "0.4.0"));
+    }
+
+    #[test]
+    fn liste_de_l_api() {
+        let json = r#"[{"tag_name":"v0.4.1","draft":false,"prerelease":true,"assets":[]},{"tag_name":"v0.4.0","draft":false,"prerelease":false}]"#;
+        let list: Vec<ReleaseInfo> = serde_json::from_str(json).unwrap();
+        assert_eq!(pick_newest(&list).as_deref(), Some("v0.4.1"));
+    }
+}
+
+/// Réseau : `cargo test --release -- --ignored`. Les deux canaux, sur les releases publiées.
+#[cfg(test)]
+mod network {
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn deux_canaux_sur_github() {
+        let dir = std::env::temp_dir().join("bgd_test_canaux");
+        std::env::set_var("LOCALAPPDATA", &dir);
+        for on in [false, true] {
+            set_prerelease(on);
+            assert_eq!(prerelease(), on);
+            let work = dir.join(if on { "pre" } else { "rel" });
+            let m = fetch_manifest(&work).unwrap();
+            println!("prerelease={on} : {}", m.version);
+        }
     }
 }

@@ -53,6 +53,7 @@ type TaskDialogIndirect = unsafe extern "system" fn(*const TASKDIALOGCONFIG, *mu
 const TDF_USE_COMMAND_LINKS: i32 = 0x10;
 const TDF_SHOW_MARQUEE_PROGRESS_BAR: i32 = 0x400;
 const TDF_CALLBACK_TIMER: i32 = 0x800;
+const TDF_VERIFICATION_FLAG_CHECKED: i32 = 0x100;
 const TDCBF_OK_BUTTON: i32 = 0x1;
 const TDCBF_CLOSE_BUTTON: i32 = 0x20;
 const TDN_CREATED: u32 = 0;
@@ -60,6 +61,7 @@ const TDN_BUTTON_CLICKED: u32 = 2;
 const TDN_TIMER: u32 = 4;
 const TDN_DESTROYED: u32 = 5;
 const TDN_RADIO_BUTTON_CLICKED: u32 = 6;
+const TDN_VERIFICATION_CLICKED: u32 = 8;
 const IDCLOSE: usize = 8;
 const WM_USER: u32 = 0x400;
 const TDM_CLICK_BUTTON: u32 = WM_USER + 102;
@@ -75,6 +77,8 @@ const RADIO_BASE: i32 = 2000;
 
 /// Rendu par `ask` quand le joueur a changé de langue : la fenêtre est à reconstruire.
 pub const LANGUAGE_CHANGED: i32 = -1;
+/// Rendu par `ask` quand le joueur a coché ou décoché la case de la page.
+pub const TOGGLED: i32 = -2;
 
 const MANIFEST: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
@@ -102,6 +106,8 @@ pub struct Page<'a> {
     pub details: Option<&'a str>,
     /// Liens de commande : identifiant, puis titre et description séparés par `\n`.
     pub buttons: &'a [(i32, &'a str)],
+    /// Case à cocher sous les boutons, et son état : la cocher ou la décocher ferme la fenêtre.
+    pub checkbox: Option<(&'a str, bool)>,
 }
 
 struct Ctx<'a> {
@@ -111,6 +117,8 @@ struct Ctx<'a> {
     done: Option<&'a AtomicBool>,
     /// Le joueur a choisi une autre langue.
     relang: Cell<bool>,
+    /// Le joueur a coché ou décoché la case.
+    toggled: Cell<bool>,
 }
 
 fn load() -> Option<TaskDialogIndirect> {
@@ -163,6 +171,10 @@ unsafe extern "system" fn callback(hwnd: *mut c_void, msg: u32, wparam: usize, _
                 SendMessageW(hwnd, TDM_CLICK_BUTTON, IDCLOSE, 0);
             }
         }
+        TDN_VERIFICATION_CLICKED => {
+            ctx.toggled.set(true);
+            SendMessageW(hwnd, TDM_CLICK_BUTTON, IDCLOSE, 0);
+        }
         TDN_DESTROYED => win::OWNER.store(null_mut(), Ordering::Relaxed),
         _ => {}
     }
@@ -192,7 +204,11 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
         .collect();
     let mut cfg: TASKDIALOGCONFIG = unsafe { std::mem::zeroed() };
     cfg.cbSize = std::mem::size_of::<TASKDIALOGCONFIG>() as u32;
-    cfg.dwFlags = flags;
+    let checkbox = page.checkbox.map(|(text, _)| wide(text));
+    cfg.dwFlags = flags | if page.checkbox.is_some_and(|(_, on)| on) { TDF_VERIFICATION_FLAG_CHECKED } else { 0 };
+    if let Some(text) = &checkbox {
+        cfg.pszVerificationText = text.as_ptr();
+    }
     cfg.dwCommonButtons = common;
     cfg.pszWindowTitle = title.as_ptr();
     cfg.pszMainIcon = icon;
@@ -224,21 +240,23 @@ fn run(page: &Page, flags: i32, common: i32, radios: bool, ctx: &Ctx) -> i32 {
     unsafe { task_dialog(&cfg, &mut pressed, null_mut(), null_mut()) };
     if ctx.relang.get() {
         LANGUAGE_CHANGED
+    } else if ctx.toggled.get() {
+        TOGGLED
     } else {
         pressed
     }
 }
 
 /// Fenêtre à liens de commande, choix de la langue et bouton Fermer ; renvoie l'identifiant du
-/// bouton choisi, ou `LANGUAGE_CHANGED`.
+/// bouton choisi, `LANGUAGE_CHANGED` ou `TOGGLED`.
 pub fn ask(page: &Page, keep_open: &dyn Fn(i32) -> bool) -> i32 {
     let flags = if page.buttons.is_empty() { 0 } else { TDF_USE_COMMAND_LINKS };
-    run(page, flags, TDCBF_CLOSE_BUTTON, true, &Ctx { keep_open, done: None, relang: Cell::new(false) })
+    run(page, flags, TDCBF_CLOSE_BUTTON, true, &Ctx { keep_open, done: None, relang: Cell::new(false), toggled: Cell::new(false) })
 }
 
 pub fn message(icon: Icon, instruction: &str, content: &str) {
-    let page = Page { icon, instruction, content, details: None, buttons: &[] };
-    run(&page, 0, TDCBF_OK_BUTTON, false, &Ctx { keep_open: &|_| false, done: None, relang: Cell::new(false) });
+    let page = Page { icon, instruction, content, details: None, buttons: &[], checkbox: None };
+    run(&page, 0, TDCBF_OK_BUTTON, false, &Ctx { keep_open: &|_| false, done: None, relang: Cell::new(false), toggled: Cell::new(false) });
 }
 
 /// Fait `work` sur un autre thread, derrière une fenêtre de progression qui se ferme à la fin.
@@ -256,9 +274,10 @@ pub fn progress(instruction: &str, work: impl FnOnce() -> Result<(), String> + S
             content: t(["Merci de patienter.", "Please wait."]),
             details: None,
             buttons: &[(WAIT_BUTTON, t(["Fermer", "Close"]))],
+            checkbox: None,
         };
         let flags = TDF_SHOW_MARQUEE_PROGRESS_BAR | TDF_CALLBACK_TIMER;
-        run(&page, flags, 0, false, &Ctx { keep_open: &|_| false, done: Some(&done), relang: Cell::new(false) });
+        run(&page, flags, 0, false, &Ctx { keep_open: &|_| false, done: Some(&done), relang: Cell::new(false), toggled: Cell::new(false) });
         worker.join().unwrap()
     })
 }

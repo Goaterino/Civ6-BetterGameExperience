@@ -60,6 +60,9 @@ faut recompiler et réinstaller pour les retrouver.
    ```
 5. Le workflow teste, compile, signe et crée une release **en brouillon**. La relire sur GitHub, puis
    la publier : l'updater ne voit que les releases publiées.
+   Pour une version de test, cocher *Set as a pre-release* : seuls les joueurs qui ont coché
+   « Pré-release » dans l'installeur la reçoivent, par l'installeur comme par la notification du jeu.
+   Garder un tag `vX.Y.Z` simple : la notification du jeu ne compare que ces numéros-là.
 
 Lancé à la main (onglet Actions, *Run workflow*), le workflow compile et signe sans créer de release ;
 les fichiers sont dans l'artefact du run.

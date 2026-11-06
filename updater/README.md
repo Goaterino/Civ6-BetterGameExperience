@@ -10,6 +10,15 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   détail par DLL sous « Détails », et propose installer, mettre à jour ou réparer, et désinstaller.
   Après une installation, elle donne l'option de lancement Steam, avec un bouton pour la copier.
   Chaque fenêtre à choix propose aussi la langue (boutons radio, voir Langues).
+- **Pré-release** : la case à cocher de la fenêtre principale choisit le canal. Cochée, l'installeur
+  vise la release publiée au plus grand numéro, pré-releases comprises (liste de l'API GitHub) ;
+  décochée, la dernière release (`releases/latest`, qui ne désigne jamais une pré-release). Décochée
+  alors qu'une pré-release est posée, la fenêtre propose « Revenir à la version … », la dernière
+  release. Le choix est gardé dans `%LOCALAPPDATA%\BetterGameDLLs\canal.txt` : l'option de
+  lancement Steam et `--after-game` le suivent (en canal release, une pré-release posée y est
+  remplacée par la dernière release), tout comme la notification du jeu
+  ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)), qui dit si elle
+  propose une release ou une pré-release. La version posée est gardée dans `installe.txt`, à côté.
 - **`--game-dir "<dossier>"`** : même fenêtre, pour un jeu hors des bibliothèques Steam.
 - **Options de lancement Steam** (Propriétés > Général) :
   ```

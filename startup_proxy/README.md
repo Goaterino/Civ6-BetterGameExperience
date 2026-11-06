@@ -267,6 +267,11 @@ appliquent. Le journal le dit (`citoyens : version inattendue`).
   (`BGD_RELEASE`, `RELEASE` dans [proxy/src/version.rs](../proxy/src/version.rs)). Une compilation
   locale n'a pas de version de release : elle ne vérifie rien. Le manifeste n'est pas vérifié ici :
   il ne sert qu'à prévenir, et l'installeur vérifie sa signature avant d'installer.
+- **Le canal.** Elle suit la case « Pré-release » de l'installeur (`%LOCALAPPDATA%\BetterGameDLLs\canal.txt`).
+  Cochée, elle lit à la place la liste des releases de l'API GitHub et prend la release publiée au
+  plus grand numéro `vX.Y.Z`, pré-releases comprises. Le popup dit si la version proposée est une
+  release ou une pré-release (titre et texte), et rappelle pour une pré-release que c'est la case de
+  l'installeur qui la fait recevoir. Sans installeur, le bouton ouvre la page de cette version.
 - **Le réglage.** `verif_maj=on|off` (on par défaut), dans l'onglet BetterGameDLLs, jamais grisé
   par l'interrupteur général, qui ne concerne que le proxy de GameCore. Lu au lancement du jeu.
 - **L'accroche.** La même accroche `luaL_loadbuffer` ajoute `maj.lua` à la fin de `MainMenu.lua`,

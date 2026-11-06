@@ -1,8 +1,10 @@
 //! Notification de mise à jour au menu principal (voir `maj.lua`).
 //!
-//! Au premier script Lua chargé par l'exe, bien avant le menu principal, un thread lit le manifeste
-//! de la dernière release (`curl.exe` de Windows, sans fenêtre) et compare sa version à celle de ces
-//! DLL (`version::RELEASE`). Rien n'est cherché pour une compilation locale, ni avec `verif_maj=off`
+//! Au premier script Lua chargé par l'exe, bien avant le menu principal, un thread cherche la dernière
+//! version (`curl.exe` de Windows, sans fenêtre) et la compare à celle de ces DLL (`version::RELEASE`).
+//! Il suit le canal choisi dans l'installeur (`%LOCALAPPDATA%\BetterGameDLLs\canal.txt`) : en canal
+//! release, le manifeste de la dernière release ; en canal pré-release, la release publiée au plus
+//! grand numéro, pré-releases comprises (liste de l'API GitHub). Le popup dit laquelle des deux. Rien n'est cherché pour une compilation locale, ni avec `verif_maj=off`
 //! dans `rollover_proxy.cfg`. Le manifeste n'est pas vérifié ici : il ne sert qu'à prévenir, et
 //! l'installeur vérifie sa signature avant d'installer quoi que ce soit.
 //!
@@ -22,12 +24,22 @@ pub const SCRIPT: &str = "mainmenu.lua";
 
 const MANIFEST_URL: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest/download/manifest.json";
 const RELEASE_PAGE: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/latest";
+const TAG_PAGE: &str = "https://github.com/Goaterino/Civ6BetterGameDLLs/releases/tag/v";
+/// Releases publiées, les plus récentes d'abord (sans jeton, les brouillons n'y sont pas).
+const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6BetterGameDLLs/releases?per_page=30";
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+/// Dernière version trouvée, et si c'est une pré-release.
+#[derive(Clone, Debug, PartialEq)]
+struct Found {
+    version: String,
+    prerelease: bool,
+}
 
 enum Check {
     Pending,
     /// Version plus récente que celle installée, pas encore proposée ou remise à plus tard.
-    Newer(String),
+    Newer(Found),
     /// Rien à proposer : à jour, vérification désactivée ou en échec, ou joueur déjà sollicité.
     Done,
 }
@@ -50,13 +62,15 @@ pub fn start() {
             log("maj : vérification des mises à jour désactivée (verif_maj=off)");
             return set(Check::Done);
         }
-        std::thread::spawn(move || match fetch_latest() {
-            Ok(latest) if newer(&latest, current) => {
-                log(&format!("maj : version {latest} disponible (installée : {current})"));
+        let prerelease = prerelease_channel();
+        let channel = if prerelease { "pré-release" } else { "release" };
+        std::thread::spawn(move || match fetch_latest(prerelease) {
+            Ok(latest) if newer(&latest.version, current) => {
+                log(&format!("maj : version {} disponible (canal {channel}, installée : {current})", latest.version));
                 set(Check::Newer(latest));
             }
             Ok(latest) => {
-                log(&format!("maj : à jour ({current}, dernière : {latest})"));
+                log(&format!("maj : à jour ({current}, dernière du canal {channel} : {})", latest.version));
                 set(Check::Done);
             }
             Err(e) => {
@@ -77,24 +91,70 @@ fn config_enabled(text: &str) -> bool {
     text.lines().filter_map(|l| l.trim().strip_prefix("verif_maj=")).last().is_none_or(|v| v.trim() != "off")
 }
 
-fn fetch_latest() -> Result<String, String> {
+/// Canal choisi dans l'installeur (updater/src/release.rs) : `prerelease`, sinon release.
+fn prerelease_channel() -> bool {
+    let Some(dir) = std::env::var_os("LOCALAPPDATA") else { return false };
+    std::fs::read_to_string(PathBuf::from(dir).join("BetterGameDLLs\\canal.txt")).is_ok_and(|c| c.trim() == "prerelease")
+}
+
+fn fetch_latest(prerelease: bool) -> Result<Found, String> {
+    if prerelease {
+        let list = curl(API_RELEASES)?;
+        return parse_releases(&list).ok_or_else(|| "aucune release publiée dans la liste".into());
+    }
+    let version = parse_version(&curl(MANIFEST_URL)?).ok_or("manifeste sans version")?;
+    Ok(Found { version, prerelease: false })
+}
+
+fn curl(url: &str) -> Result<String, String> {
     let root = std::env::var_os("SystemRoot").unwrap_or("C:\\Windows".into());
     let out = Command::new(PathBuf::from(root).join("System32\\curl.exe"))
-        .args(["-fsSL", "--max-time", "20", MANIFEST_URL])
+        .args(["-fsSL", "--max-time", "20", url])
         .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("curl.exe : {e}"))?;
     if !out.status.success() {
         return Err(String::from_utf8_lossy(&out.stderr).trim().to_string());
     }
-    parse_version(&String::from_utf8_lossy(&out.stdout)).ok_or_else(|| "manifeste sans version".into())
+    Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+/// La release au plus grand numéro de la liste de l'API, sans analyseur JSON : chaque release y
+/// donne `tag_name`, puis `draft` et `prerelease`, avant le `tag_name` de la suivante.
+fn parse_releases(json: &str) -> Option<Found> {
+    json.split("\"tag_name\"")
+        .skip(1)
+        .filter_map(|entry| {
+            let tag = string_value(entry)?;
+            let version = tag.strip_prefix('v')?.to_string();
+            let key = numbers(&version)?;
+            (bool_field(entry, "draft") != Some(true)).then_some((key, Found { prerelease: bool_field(entry, "prerelease") == Some(true), version }))
+        })
+        .max_by_key(|(key, _)| *key)
+        .map(|(_, found)| found)
+}
+
+/// La chaîne qui suit `: ` au début de `rest`.
+fn string_value(rest: &str) -> Option<&str> {
+    let rest = rest.trim_start().strip_prefix(':')?.trim_start().strip_prefix('"')?;
+    Some(&rest[..rest.find('"')?])
+}
+
+fn bool_field(entry: &str, name: &str) -> Option<bool> {
+    let rest = &entry[entry.find(&format!("\"{name}\""))? + name.len() + 2..];
+    let rest = rest.trim_start().strip_prefix(':')?.trim_start();
+    if rest.starts_with("true") {
+        Some(true)
+    } else if rest.starts_with("false") {
+        Some(false)
+    } else {
+        None
+    }
 }
 
 /// Le champ `"version"` du manifeste (release/manifest.py), sans analyseur JSON.
 fn parse_version(json: &str) -> Option<String> {
-    let rest = &json[json.find("\"version\"")? + 9..];
-    let rest = rest.trim_start().strip_prefix(':')?.trim_start().strip_prefix('"')?;
-    Some(rest[..rest.find('"')?].to_string())
+    string_value(&json[json.find("\"version\"")? + 9..]).map(str::to_string)
 }
 
 fn numbers(v: &str) -> Option<(u32, u32, u32)> {
@@ -113,8 +173,9 @@ fn installer() -> Option<PathBuf> {
     path.is_file().then_some(path)
 }
 
-/// Lance l'installeur, qui attendra la fermeture du jeu ; sinon ouvre la page de la release.
-fn launch_installer() -> bool {
+/// Lance l'installeur, qui attendra la fermeture du jeu ; sinon ouvre la page de la release
+/// (`version`, celle proposée).
+fn launch_installer(version: Option<&str>) -> bool {
     if let Some(exe) = installer() {
         // Le dossier de l'exe : l'installeur y retrouve le jeu, même hors des bibliothèques Steam.
         let mut cmd = Command::new(&exe);
@@ -131,12 +192,13 @@ fn launch_installer() -> bool {
         }
     }
     log("maj : installeur introuvable, page de la release ouverte");
-    let _ = Command::new("explorer.exe").arg(RELEASE_PAGE).spawn();
+    let page = version.map_or(RELEASE_PAGE.to_string(), |v| format!("{TAG_PAGE}{v}"));
+    let _ = Command::new("explorer.exe").arg(page).spawn();
     false
 }
 
-/// `Civ6Proxy_MiseAJour()` → `""` tant que la vérification tourne, la nouvelle version et la version
-/// installée s'il y en a une, rien sinon. `Civ6Proxy_MiseAJour("plus_tard")` la retire jusqu'au
+/// `Civ6Proxy_MiseAJour()` → `""` tant que la vérification tourne ; s'il y a une nouvelle version, elle,
+/// la version installée, et `"prerelease"` ou `"release"` ; rien sinon. `Civ6Proxy_MiseAJour("plus_tard")` la retire jusqu'au
 /// prochain lancement du jeu. `Civ6Proxy_MiseAJour("installer")` → 1 si l'installeur est lancé (le
 /// bloc ferme alors le jeu), 0 si la page de la release a été ouverte à sa place.
 unsafe extern "C-unwind" fn lua_update(l: *mut std::ffi::c_void) -> i32 {
@@ -151,8 +213,12 @@ unsafe extern "C-unwind" fn lua_update(l: *mut std::ffi::c_void) -> i32 {
             0
         }
         "installer" => {
+            let version = match &*CHECK.lock().unwrap() {
+                Check::Newer(found) => Some(found.version.clone()),
+                _ => None,
+            };
             set(Check::Done);
-            (h.push_integer)(l, launch_installer() as i32);
+            (h.push_integer)(l, launch_installer(version.as_deref()) as i32);
             1
         }
         _ => match &*CHECK.lock().unwrap() {
@@ -160,10 +226,11 @@ unsafe extern "C-unwind" fn lua_update(l: *mut std::ffi::c_void) -> i32 {
                 push_str(h, l, "");
                 1
             }
-            Check::Newer(latest) => {
-                push_str(h, l, latest);
+            Check::Newer(found) => {
+                push_str(h, l, &found.version);
                 push_str(h, l, RELEASE.unwrap_or(""));
-                2
+                push_str(h, l, if found.prerelease { "prerelease" } else { "release" });
+                3
             }
             Check::Done => 0,
         },
@@ -217,6 +284,30 @@ mod tests {
         let json = "{\n  \"version\": \"0.1.2\",\n  \"lobby_version\": \"0.1.0\",\n  \"files\": []\n}\n";
         assert_eq!(parse_version(json).as_deref(), Some("0.1.2"));
         assert_eq!(parse_version("{}"), None);
+    }
+
+    #[test]
+    fn liste_des_releases() {
+        let found = |v: &str, prerelease| Some(Found { version: v.into(), prerelease });
+        let json = r#"[{"url":"x","tag_name":"v0.4.1","name":"BGD 0.4.1","draft":false,"prerelease":true,"assets":[{"name":"winmm.dll"}]},
+            {"tag_name": "v0.5.0", "draft": true, "prerelease": false},
+            {"tag_name": "essai", "draft": false, "prerelease": true},
+            {"tag_name": "v0.4.0", "draft": false, "prerelease": false}]"#;
+        assert_eq!(parse_releases(json), found("0.4.1", true));
+        let json = r#"[{"tag_name":"v0.4.1","draft":false,"prerelease":true},{"tag_name":"v0.10.0","draft":false,"prerelease":false}]"#;
+        assert_eq!(parse_releases(json), found("0.10.0", false));
+        assert_eq!(parse_releases("[]"), None);
+    }
+
+    /// Réseau : `cargo test --release maj -- --ignored`.
+    #[test]
+    #[ignore]
+    fn deux_canaux_sur_github() {
+        for prerelease in [false, true] {
+            let found = fetch_latest(prerelease).unwrap();
+            println!("canal pré-release={prerelease} : {found:?}");
+            assert!(numbers(&found.version).is_some());
+        }
     }
 
     #[test]

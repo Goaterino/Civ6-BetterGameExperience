@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 
-use gui::{Icon, Page, LANGUAGE_CHANGED};
+use gui::{Icon, Page, LANGUAGE_CHANGED, TOGGLED};
 use install::{Action, State};
 use lang::{f, t};
 
@@ -83,17 +83,80 @@ fn find_game(dir: Option<PathBuf>) -> Result<PathBuf, String> {
 fn menu(game: Option<PathBuf>) -> Result<(), String> {
     let game = find_game(game)?;
     let work = release::work_dir();
-    let manifest = release::fetch_manifest(&work);
-    let states = install::status(&game, manifest.as_ref().ok());
+    let mut manifest = release::fetch_manifest(&work);
+    // Refaite à chaque changement de canal (case « Pré-release »).
+    let action = loop {
+        match ask_action(&game, &manifest) {
+            Choice::Act(action) => break action,
+            Choice::Close => return Ok(()),
+            Choice::Toggle => {
+                release::set_prerelease(!release::prerelease());
+                let mut fetched = Err(String::new());
+                let _ = gui::progress(t(["Recherche de la dernière version…", "Looking for the latest version…"]), || {
+                    fetched = release::fetch_manifest(&work);
+                    Ok(())
+                });
+                manifest = fetched;
+            }
+        }
+    };
+    if game::running() {
+        return Err(t(["Ferme Civilization VI, puis relance l'installeur.", "Close Civilization VI, then run the installer again."]).into());
+    }
+    match action {
+        Action::Install => {
+            let m = manifest.unwrap();
+            install_release(&m, &game, &work)?;
+            installed(&m.version, false);
+        }
+        Action::Uninstall => {
+            gui::progress(t(["Désinstallation de BetterGameDLLs…", "Uninstalling BetterGameDLLs…"]), || {
+                install::run(action, &game, &work)
+            })?;
+            release::remember_installed(None);
+            gui::message(
+                Icon::Info,
+                t(["BetterGameDLLs est désinstallé", "BetterGameDLLs is uninstalled"]),
+                t(["Le jeu a retrouvé ses fichiers d'origine.", "The game has its original files back."]),
+            );
+        }
+    }
+    Ok(())
+}
+
+enum Choice {
+    Act(Action),
+    /// Case « Pré-release » cochée ou décochée : le manifeste est à relire.
+    Toggle,
+    Close,
+}
+
+/// Fenêtre principale, pour le manifeste du canal choisi.
+fn ask_action(game: &Path, manifest: &Result<release::Manifest, String>) -> Choice {
+    let states = install::status(game, manifest.as_ref().ok());
     // Proxys posés, et ancienne installation (proxys à la place des originaux) à remplacer.
     let ours = states.iter().filter(|(_, s)| matches!(s, State::Installed | State::UpToDate)).count();
     let old = states.iter().any(|(_, s)| *s == State::Old);
     let up_to_date = states.iter().all(|(_, s)| *s == State::UpToDate);
+    let prerelease = release::prerelease();
+    // Version posée plus récente que celle du canal : une pré-release, que le canal release
+    // remplace par la dernière release (retour en arrière).
+    let installed = release::installed_version();
+    let downgrade = match (manifest, &installed) {
+        (Ok(m), Some(v)) if ours > 0 && !up_to_date && release::is_newer(v, &m.version) => Some(v.clone()),
+        _ => None,
+    };
 
     // Reconstruite à chaque changement de langue.
-    let action = loop {
+    loop {
         let mut content = f(["Jeu : {}", "Game: {}"], &[&game.display()]);
-        let (icon, instruction, install_text) = match &manifest {
+        if prerelease {
+            content += t([
+                "\nCanal : pré-release (versions de test, avant leur publication)",
+                "\nChannel: pre-release (test versions, ahead of their release)",
+            ]);
+        }
+        let (icon, instruction, install_text) = match manifest {
             Err(e) => {
                 content += &f(["\n\nImpossible de lire la dernière version : {}", "\n\nCould not read the latest version: {}"], &[e]);
                 (Icon::Warning, t(["Dernière version inconnue", "Latest version unknown"]).to_string(), String::new())
@@ -125,13 +188,26 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
                 t(["BetterGameDLLs doit être réparé", "BetterGameDLLs needs to be repaired"]).to_string(),
                 f(["Réparer\nRéinstalle la version {}.", "Repair\nReinstalls version {}."], &[&m.version]),
             ),
-            Ok(m) => (
-                Icon::Info,
-                f(["La version {} de BetterGameDLLs est disponible", "BetterGameDLLs version {} is available"], &[&m.version]),
-                f(["Mettre à jour\nInstalle la version {}.", "Update\nInstalls version {}."], &[&m.version]),
-            ),
+            Ok(m) => match &downgrade {
+                Some(v) => (
+                    Icon::Info,
+                    f(["La version {} de BetterGameDLLs est installée", "BetterGameDLLs version {} is installed"], &[v]),
+                    f(
+                        [
+                            "Revenir à la version {}\nRemplace la pré-release par la dernière release.",
+                            "Go back to version {}\nReplaces the pre-release with the latest release.",
+                        ],
+                        &[&m.version],
+                    ),
+                ),
+                None => (
+                    Icon::Info,
+                    f(["La version {} de BetterGameDLLs est disponible", "BetterGameDLLs version {} is available"], &[&m.version]),
+                    f(["Mettre à jour\nInstalle la version {}.", "Update\nInstalls version {}."], &[&m.version]),
+                ),
+            },
         };
-        let details: Vec<String> = states
+        let mut details: Vec<String> = states
             .iter()
             .map(|(name, state)| {
                 let text = match state {
@@ -144,6 +220,9 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
                 format!("{name} : {text}")
             })
             .collect();
+        if let (Some(v), true) = (&installed, ours > 0) {
+            details.push(f(["Version posée par l'installeur : {}", "Version installed by the installer: {}"], &[v]));
+        }
         let mut buttons = Vec::new();
         if !install_text.is_empty() {
             buttons.push((INSTALL, install_text.as_str()));
@@ -152,35 +231,23 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
             buttons.push((UNINSTALL, t(["Désinstaller\nRemet les fichiers d'origine du jeu.", "Uninstall\nRestores the game's original files."])));
         }
         let details = details.join("\n");
-        let page = Page { icon, instruction: &instruction, content: &content, details: Some(&details), buttons: &buttons };
-        match gui::ask(&page, &|_| false) {
+        let checkbox = t(["Pré-release : installer les versions de test", "Pre-release: install test versions"]);
+        let page = Page {
+            icon,
+            instruction: &instruction,
+            content: &content,
+            details: Some(&details),
+            buttons: &buttons,
+            checkbox: Some((checkbox, prerelease)),
+        };
+        return match gui::ask(&page, &|_| false) {
             LANGUAGE_CHANGED => continue,
-            INSTALL => break Action::Install,
-            UNINSTALL => break Action::Uninstall,
-            _ => return Ok(()),
-        }
-    };
-    if game::running() {
-        return Err(t(["Ferme Civilization VI, puis relance l'installeur.", "Close Civilization VI, then run the installer again."]).into());
+            TOGGLED => Choice::Toggle,
+            INSTALL => Choice::Act(Action::Install),
+            UNINSTALL => Choice::Act(Action::Uninstall),
+            _ => Choice::Close,
+        };
     }
-    match action {
-        Action::Install => {
-            let m = manifest.unwrap();
-            install_release(&m, &game, &work)?;
-            installed(&m.version, false);
-        }
-        Action::Uninstall => {
-            gui::progress(t(["Désinstallation de BetterGameDLLs…", "Uninstalling BetterGameDLLs…"]), || {
-                install::run(action, &game, &work)
-            })?;
-            gui::message(
-                Icon::Info,
-                t(["BetterGameDLLs est désinstallé", "BetterGameDLLs is uninstalled"]),
-                t(["Le jeu a retrouvé ses fichiers d'origine.", "The game has its original files back."]),
-            );
-        }
-    }
-    Ok(())
 }
 
 fn install_release(m: &release::Manifest, game: &Path, work: &Path) -> Result<(), String> {
@@ -188,6 +255,7 @@ fn install_release(m: &release::Manifest, game: &Path, work: &Path) -> Result<()
         release::fetch_files(m, work)?;
         install::run(Action::Install, game, work)
     })?;
+    release::remember_installed(Some(&m.version));
     copy_self();
     Ok(())
 }
@@ -231,7 +299,7 @@ fn installed(version: &str, relaunch: bool) {
             COPY,
             t(["Copier l'option de lancement\nÀ coller dans les options de lancement de Steam.", "Copy the launch option\nTo paste into Steam's launch options."]),
         ));
-        let page = Page { icon: Icon::Info, instruction: &instruction, content: &content, details: None, buttons: &buttons };
+        let page = Page { icon: Icon::Info, instruction: &instruction, content: &content, details: None, buttons: &buttons, checkbox: None };
         match gui::ask(&page, &|id| id == COPY && win::copy_to_clipboard(&option)) {
             LANGUAGE_CHANGED => continue,
             RELAUNCH => {
@@ -303,5 +371,7 @@ fn update(exe: &Path) -> Result<(), String> {
     gui::progress(&f(["Mise à jour de BetterGameDLLs vers la version {}…", "Updating BetterGameDLLs to version {}…"], &[&m.version]), || {
         release::fetch_files(&m, &work)?;
         install::run(Action::Install, &game, &work)
-    })
+    })?;
+    release::remember_installed(Some(&m.version));
+    Ok(())
 }

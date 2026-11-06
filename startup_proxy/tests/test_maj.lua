@@ -17,7 +17,7 @@ local function check(cond, what)
 	end
 end
 
--- `etat` : "" (en cours), nil (rien), ou { "0.1.2", "0.1.1" } ; `installeur` : 1 ou 0.
+-- `etat` : "" (en cours), nil (rien), ou { "0.1.2", "0.1.1"[, "prerelease"] } ; `installeur` : 1 ou 0.
 local function NewMenu(options)
 	options = options or {};
 	local m = { etat = options.etat, calls = {}, journal = {}, includes = {}, shown = 0, updates = 0, exited = false };
@@ -71,7 +71,7 @@ local function NewMenu(options)
 			if options.erreur then error("boum"); end
 			if action == "plus_tard" then m.etat = nil; return; end
 			if action == "installer" then m.etat = nil; return options.installeur or 1; end
-			if type(m.etat) == "table" then return m.etat[1], m.etat[2]; end
+			if type(m.etat) == "table" then return m.etat[1], m.etat[2], m.etat[3] or "release"; end
 			return m.etat;
 		end
 	end
@@ -98,8 +98,9 @@ do
 	m.etat = { "0.1.2", "0.1.1" };
 	m.Frame();
 	check(m.popup.open and m.opened == 1, "nouvelle version : popup ouvert");
-	check(m.popup.title == "BetterGameDLLs", "titre");
-	check(m.popup.texts[1]:find("0.1.2", 1, true) and m.popup.texts[1]:find("installée : 0.1.1", 1, true), "texte en français avec les versions");
+	check(m.popup.title == "BetterGameDLLs : nouvelle release", "titre : release");
+	check(m.popup.texts[1]:find("La release 0.1.2", 1, true) and m.popup.texts[1]:find("installée : 0.1.1", 1, true), "texte en français avec les versions");
+	check(not m.popup.texts[1]:find("pré-release", 1, true), "release : pas de mention de pré-release");
 	check(#m.popup.buttons == 2 and m.popup.buttons[1].label == "Mettre à jour" and m.popup.buttons[2].label == "Plus tard", "deux boutons");
 	check(m.popup.buttons[2].cmd == "cancel", "Plus tard sur Échap");
 	m.Frame();
@@ -138,6 +139,20 @@ do
 	local m = NewMenu({ etat = nil });
 	m.Show(); m.Frame(); m.Frame();
 	check(m.opened == nil and #m.calls == 1, "à jour : rien, une seule question");
+end
+
+do
+	local m = NewMenu({ etat = { "0.1.3", "0.1.2", "prerelease" } });
+	m.Show(); m.Frame();
+	check(m.popup.title == "BetterGameDLLs : nouvelle pré-release", "titre : pré-release");
+	check(m.popup.texts[1]:find("La pré-release 0.1.3", 1, true) and m.popup.texts[1]:find("case « Pré-release »", 1, true), "pré-release : dite et expliquée");
+	check(m.journal[#m.journal]:find("pré-release 0.1.3", 1, true), "pré-release : au journal");
+end
+
+do
+	local m = NewMenu({ etat = { "0.1.3", "0.1.2", "prerelease" }, lang = "en_US" });
+	m.Show(); m.Frame();
+	check(m.popup.title == "BetterGameDLLs: new pre-release" and m.popup.texts[1]:find("pre-release 0.1.3", 1, true), "anglais : pré-release");
 end
 
 do
