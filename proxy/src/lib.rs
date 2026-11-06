@@ -6,12 +6,12 @@
 //!
 //! Réglage : fichier `rollover_proxy.cfg` à côté de la DLL, lignes `actif=on|off` (interrupteur
 //! général, on par défaut), `mode=coalesce|count|off`
-//! (coalesce par défaut), `portee=cascade|message` (cascade par défaut),
-//! `ameliorations=off|count|verify|fast|quiet` et `rendements=off|count|verify|fast|quiet` (off par
+//! (coalesce par défaut), `portee=cascade|message` (message par défaut),
+//! `ameliorations=off|count|verify|fast|quiet` et `rendements=off|count|verify|fast|quiet` (quiet par
 //! défaut), `wmd_accel=<facteur>|off` (20 par défaut, voir `wmd`), `ui_boutons`, `ui_recentrage` et
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
-//! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (off
+//! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
 //! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
@@ -116,8 +116,8 @@ pub(crate) fn read_config() {
         }
         if let Some(v) = line.trim().strip_prefix("portee=") {
             coalesce::set_scope(match v.trim() {
-                "message" => coalesce::Scope::Message,
-                _ => coalesce::Scope::Cascade,
+                "cascade" => coalesce::Scope::Cascade,
+                _ => coalesce::Scope::Message,
             });
         }
         if let Some(v) = line.trim().strip_prefix("ameliorations=") {
@@ -125,8 +125,8 @@ pub(crate) fn read_config() {
                 "count" => improvements::Mode::Count,
                 "verify" => improvements::Mode::Verify,
                 "fast" => improvements::Mode::Fast,
-                "quiet" => improvements::Mode::Quiet,
-                _ => improvements::Mode::Off,
+                "off" => improvements::Mode::Off,
+                _ => improvements::Mode::Quiet,
             });
         }
         if let Some(v) = line.trim().strip_prefix("rendements=") {
@@ -134,8 +134,8 @@ pub(crate) fn read_config() {
                 "count" => rendements::Mode::Count,
                 "verify" => rendements::Mode::Verify,
                 "fast" => rendements::Mode::Fast,
-                "quiet" => rendements::Mode::Quiet,
-                _ => rendements::Mode::Off,
+                "off" => rendements::Mode::Off,
+                _ => rendements::Mode::Quiet,
             });
         }
         if let Some(v) = line.trim().strip_prefix("wmd_accel=") {
@@ -173,22 +173,22 @@ pub(crate) fn read_config() {
             rendements_empire::set_enabled(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_charges=") {
-            mods_ui::set_charges(v.trim() == "on");
+            mods_ui::set_charges(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_routes=") {
-            mods_ui::set_routes(v.trim() == "on");
+            mods_ui::set_routes(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_notifications=") {
-            mods_ui::set_notifications(v.trim() == "on");
+            mods_ui::set_notifications(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_bandeau=") {
-            mods_ui::set_bandeau(v.trim() == "on");
+            mods_ui::set_bandeau(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_politiques=") {
-            mods_ui::set_politiques(v.trim() == "on");
+            mods_ui::set_politiques(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_rapports=") {
-            mods_ui::set_rapports(v.trim() == "on");
+            mods_ui::set_rapports(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");

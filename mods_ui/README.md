@@ -409,15 +409,15 @@ D'après la règle du dépôt, chaque fonctionnalité réglable a sa clé dans `
 ([proxy/src/lib.rs](../proxy/src/lib.rs)), son paramètre dans `install.ps1` et sa ligne dans l'onglet
 BetterGameDLLs (`PROXY_REGLAGES` de `options_proxy.lua`, que vérifie `cles_communes_avec_le_proxy`).
 
-| clé | `install.ps1` | défaut proposé |
+| clé | `install.ps1` | défaut |
 |---|---|---|
-| `ui_politiques=on\|off` | `-UiPolitiques` | off |
-| `ui_bandeau=on\|off` | `-UiBandeau` | off |
-| `ui_rapports=on\|off` | `-UiRapports` | off |
-| `ui_notifications=on\|off` | `-UiNotifications` | off |
-| `ui_charges=on\|off` | `-UiCharges` | off |
+| `ui_politiques=on\|off` | `-UiPolitiques` | on |
+| `ui_bandeau=on\|off` | `-UiBandeau` | on |
+| `ui_rapports=on\|off` | `-UiRapports` | on |
+| `ui_notifications=on\|off` | `-UiNotifications` | on |
+| `ui_charges=on\|off` | `-UiCharges` | on |
 
-Défaut off : ce sont des changements d'interface visibles, que chacun choisit. Un réglage actif prime
+Défaut on : les reprises corrigent les défauts des mods, et chacun peut couper celles qu'il ne veut pas. Un réglage actif prime
 sur le mod du même rôle ; inactif, il laisse le mod tel quel. Interface seule, donc sans effet sur la
 synchronisation, et sans rien à annoncer dans le salon.
 

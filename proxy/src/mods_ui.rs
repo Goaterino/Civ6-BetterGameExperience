@@ -1,5 +1,5 @@
 //! Mods d'interface du Workshop repris dans le proxy (analyse et plan : mods_ui/README.md). Chaque
-//! reprise a son réglage, off par défaut ; activée, elle **prime** sur le mod s'il est encore actif :
+//! reprise a son réglage, on par défaut ; activée, elle **prime** sur le mod s'il est encore actif :
 //! les fichiers du mod sont neutralisés au moment où l'exe les compile ou les lit.
 //!
 //! - `ui_charges` : charges des bâtisseurs sur leur drapeau (Better Builder Charges Tracking, wltk) ;
@@ -29,12 +29,12 @@ use std::ffi::{c_char, c_void, CStr};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::OnceLock;
 
-static CHARGES: AtomicBool = AtomicBool::new(false);
-static ROUTES: AtomicBool = AtomicBool::new(false);
-static NOTIFICATIONS: AtomicBool = AtomicBool::new(false);
-static BANDEAU: AtomicBool = AtomicBool::new(false);
-static POLITIQUES: AtomicBool = AtomicBool::new(false);
-static RAPPORTS: AtomicBool = AtomicBool::new(false);
+static CHARGES: AtomicBool = AtomicBool::new(true);
+static ROUTES: AtomicBool = AtomicBool::new(true);
+static NOTIFICATIONS: AtomicBool = AtomicBool::new(true);
+static BANDEAU: AtomicBool = AtomicBool::new(true);
+static POLITIQUES: AtomicBool = AtomicBool::new(true);
+static RAPPORTS: AtomicBool = AtomicBool::new(true);
 
 pub fn set_charges(on: bool) {
     CHARGES.store(on, Ordering::Relaxed);

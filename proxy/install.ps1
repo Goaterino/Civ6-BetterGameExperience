@@ -17,13 +17,13 @@ param(
     [string]$Mode = "coalesce",
     # Portée du regroupement des instantanés : cascade de guerres seulement, ou chaque passe de message.
     [ValidateSet("cascade", "message")]
-    [string]$Portee = "cascade",
+    [string]$Portee = "message",
     # Détour de 180260720 (amélioration constructible) : voir src/improvements.rs.
     [ValidateSet("off", "count", "verify", "fast", "quiet")]
-    [string]$Ameliorations = "off",
+    [string]$Ameliorations = "quiet",
     # Mémoire de 18037ec60 (rendement d'une case) pendant les attentes de l'IA : voir src/rendements.rs.
     [ValidateSet("off", "count", "verify", "fast", "quiet")]
-    [string]$Rendements = "off",
+    [string]$Rendements = "quiet",
     # Accélération de l'affichage pendant la visualisation d'un nuke, si le combat rapide est
     # activé : facteur, ou off. Voir src/wmd.rs.
     [string]$WmdAccel = "20",
@@ -63,17 +63,17 @@ param(
     # mods_ui/README.md) : charges des bâtisseurs et tours des routes commerciales sur les drapeaux,
     # effacement des notifications, bandeau étendu, effet des cartes de politique, écran des rapports.
     [ValidateSet("on", "off")]
-    [string]$UiCharges = "off",
+    [string]$UiCharges = "on",
     [ValidateSet("on", "off")]
-    [string]$UiRoutes = "off",
+    [string]$UiRoutes = "on",
     [ValidateSet("on", "off")]
-    [string]$UiNotifications = "off",
+    [string]$UiNotifications = "on",
     [ValidateSet("on", "off")]
-    [string]$UiBandeau = "off",
+    [string]$UiBandeau = "on",
     [ValidateSet("on", "off")]
-    [string]$UiPolitiques = "off",
+    [string]$UiPolitiques = "on",
     [ValidateSet("on", "off")]
-    [string]$UiRapports = "off",
+    [string]$UiRapports = "on",
     # Profil des zones chronométrées de l'exe (diagnostic, lu par le proxy de démarrage).
     [ValidateSet("on", "off")]
     [string]$ProfilZones = "off",

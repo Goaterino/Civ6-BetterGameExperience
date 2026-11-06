@@ -206,7 +206,7 @@ d'adresse ou de taille.
 Réglage : une ligne `ameliorations=off|count|verify|fast|quiet` dans `rollover_proxy.cfg`
 (`install.ps1 -Ameliorations …`). Le mode `verify` calcule les deux versions, rend celle de
 l'original et compte les écarts. `quiet` fait comme `fast`, mais sans compteur, sans chronomètre ni
-journal : c'est le mode pour jouer. Journal : une ligne `ameliorations …` par rafale d'appels, écrite au
+journal : c'est le mode pour jouer, et le défaut. Journal : une ligne `ameliorations …` par rafale d'appels, écrite au
 premier appel qui suit une seconde de pause.
 
 Mesures sur `AutoSave_0078` → tour 80, avec `mode=coalesce`. Les durées additionnent tous les
@@ -249,7 +249,7 @@ Trois chantiers menés ensemble, chacun avec son réglage et sa boucle count →
   référencée que par `Cache_Player_Diplomacy` et par l'initialisation statique.
 - Il est regroupé avec l'instantané des villes, dans la même liste, au même moment.
 
-**2. Portée `message`** (`portee=cascade|message`, `-Portee`).
+**2. Portée `message`** (`portee=cascade|message`, `-Portee`, `message` par défaut).
 - En plus de DeclareWar, une passe de `18004afc0` (Game_Processor, appelée par `18063e2e0` pour
   chaque message `GameUpdate`) ouvre une portée.
 - Les instantanés demandés hors cascade (gouverneurs, ressources, accords, fin de tour : ≈ 430 ms
@@ -259,7 +259,7 @@ Trois chantiers menés ensemble, chacun avec son réglage et sa boucle count →
 - Les autres passes forment une ligne `passes …` par rafale (une seconde sans passe).
 
 **3. Rendements des cases** (`18037ec60`, Rules_Yield, `rendements=off|count|verify|fast|quiet`,
-`-Rendements`) : [src/rendements.rs](src/rendements.rs).
+`-Rendements`, `quiet` par défaut) : [src/rendements.rs](src/rendements.rs).
 - **Ce que fait la fonction.** Elle lit la case, ses 6 voisines et des tables de règles, en entiers.
   C'est la feuille la plus chaude de l'évaluation des IA : ≈ 150 ms par passage, surtout dans les
   tâches parallèles de CityBuild et Homeland.
@@ -606,12 +606,12 @@ plus les tours des routes commerciales.
 
 | réglage | défaut | effet |
 |---|---|---|
-| `ui_charges=on\|off` (`-UiCharges`) | off | charges restantes sur le drapeau des unités qui en ont (Better Builder Charges Tracking, wltk) |
-| `ui_routes=on\|off` (`-UiRoutes`) | off | tours avant la fin de la route sur le drapeau des négociants du joueur |
-| `ui_notifications=on\|off` (`-UiNotifications`) | off | bouton « tout effacer » des notifications (NotificationClear, 336tarot) |
-| `ui_bandeau=on\|off` (`-UiBandeau`) | off | nourriture, production, population et luxes dans le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) |
-| `ui_politiques=on\|off` (`-UiPolitiques`) | off | effet chiffré des cartes de politique (Extended Policy Cards, Aristos), avec RMA corrigé |
-| `ui_rapports=on\|off` (`-UiRapports`) | off | écran des rapports de Better Report Screen (Infixo), avec RMA corrigé |
+| `ui_charges=on\|off` (`-UiCharges`) | on | charges restantes sur le drapeau des unités qui en ont (Better Builder Charges Tracking, wltk) |
+| `ui_routes=on\|off` (`-UiRoutes`) | on | tours avant la fin de la route sur le drapeau des négociants du joueur |
+| `ui_notifications=on\|off` (`-UiNotifications`) | on | bouton « tout effacer » des notifications (NotificationClear, 336tarot) |
+| `ui_bandeau=on\|off` (`-UiBandeau`) | on | nourriture, production, population et luxes dans le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) |
+| `ui_politiques=on\|off` (`-UiPolitiques`) | on | effet chiffré des cartes de politique (Extended Policy Cards, Aristos), avec RMA corrigé |
+| `ui_rapports=on\|off` (`-UiRapports`) | on | écran des rapports de Better Report Screen (Infixo), avec RMA corrigé |
 
 - **Le proxy prime.** Réglage actif, les fichiers du mod sont neutralisés quand l'exe les compile ou
   les lit, reconnus par leur nom et une marque de leur contenu. Réglage inactif, le mod reste tel quel.

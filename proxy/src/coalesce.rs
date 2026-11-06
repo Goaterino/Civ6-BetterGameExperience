@@ -86,7 +86,7 @@ pub enum Scope {
 }
 
 static MODE: AtomicU8 = AtomicU8::new(Mode::Coalesce as u8);
-static SCOPE: AtomicU8 = AtomicU8::new(Scope::Cascade as u8);
+static SCOPE: AtomicU8 = AtomicU8::new(Scope::Message as u8);
 static TRAMP_SNAPSHOT: AtomicUsize = AtomicUsize::new(0);
 static TRAMP_DIPLO: AtomicUsize = AtomicUsize::new(0);
 static TRAMP_DECLARE: AtomicUsize = AtomicUsize::new(0);

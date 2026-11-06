@@ -15,7 +15,7 @@
 //! Les mémoires sont lues sans verrou ni compteur de références : la fonction est appelée des
 //! millions de fois par passage de tour, depuis une douzaine de threads.
 //!
-//! Réglage `ameliorations=off|count|verify|fast` dans rollover_proxy.cfg :
+//! Réglage `ameliorations=off|count|verify|fast|quiet` dans rollover_proxy.cfg (quiet par défaut) :
 //! - `count` : détour posé, originale appelée, on compte et on chronomètre ;
 //! - `verify` : on calcule les deux versions, on rend celle de l'originale et on compte les écarts ;
 //! - `fast` : version précalculée seule, comptée et chronométrée ;
@@ -59,7 +59,7 @@ pub enum Mode {
     Quiet = 4,
 }
 
-static MODE: AtomicU8 = AtomicU8::new(Mode::Off as u8);
+static MODE: AtomicU8 = AtomicU8::new(Mode::Quiet as u8);
 static BASE: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static HOOKED_BASE: AtomicUsize = AtomicUsize::new(0);

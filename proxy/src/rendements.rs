@@ -16,7 +16,7 @@
 //! `1804a16e0` est remplacée entièrement (son prologue contient un `lea` relatif à RIP) : le détour
 //! refait ses quatre étapes, entourées de l'ouverture et de la fermeture de la génération.
 //!
-//! Réglage `rendements=off|count|verify|fast|quiet` dans rollover_proxy.cfg :
+//! Réglage `rendements=off|count|verify|fast|quiet` dans rollover_proxy.cfg (quiet par défaut) :
 //! - `count` : détours posés, originale appelée ; on compte les appels, dans et hors attente ;
 //! - `verify` : on mémorise, on rend toujours l'originale et on compte les écarts avec la mémoire ;
 //! - `fast` : la mémoire répond quand elle peut, comptée et chronométrée ;
@@ -61,7 +61,7 @@ pub enum Mode {
     Quiet = 4,
 }
 
-static MODE: AtomicU8 = AtomicU8::new(Mode::Off as u8);
+static MODE: AtomicU8 = AtomicU8::new(Mode::Quiet as u8);
 static BASE: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static HOOKED_BASE: AtomicUsize = AtomicUsize::new(0);
