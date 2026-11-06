@@ -4,6 +4,37 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.6.1
+
+Includes everything from the 0.6.0 pre-release. Multiplayer games need every human player on 0.6.0
+or 0.6.1 for the **[all players]** fixes: a lobby that mixes 0.5.0 and 0.6.x turns them off.
+
+### Installation and updates
+- The installer no longer shows the Steam launch option after installing: it just tells you
+  everything is in place, and you can close it. The game's update notice is enough to stay up to
+  date. A launch option you already added keeps working.
+- The installer is now named `BetterGameExperience_V<version>.exe`. When you run it, it deletes the
+  older installers from the same folder (usually Downloads).
+
+### Multiplayer
+- **"No First/Last moves (BGE)"** **[all players]**: you now stay on the turn processing screen,
+  End Turn button included, until the host starts the turn, instead of seeing your turn open with
+  your orders refused.
+
+### World Congress
+- *(experimental)* **[all players]** While you wait for the other players, a **Back to the vote**
+  button reopens the vote window with your votes and the right amount of Diplomatic Favor.
+- *(experimental)* The turn no longer ends against your will during the vote: no automatic end of
+  turn, no forced end of turn on an empty list of resolutions, and MPH's timer gives the planned
+  240 s for the vote.
+- *(experimental)* **[all players]** The luxuries affected by a ban are recalculated at each session.
+- The World Congress welcome screen and its sound show only once per session, instead of coming
+  back each time another player returns to the vote.
+
+### Interface fixes
+- With Better Spectator Mod, the top bar shows your teammates' strategic resources again, and the
+  resources a teammate unlocks.
+
 ## BetterGameExperience 0.6.0 (pre-release)
 
 Multiplayer games need every human player on 0.6.0 for the **[all players]** fixes: a lobby that

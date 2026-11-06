@@ -2,6 +2,39 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.6.1
+
+Include tutto della pre-release 0.6.0. In multigiocatore, le correzioni **[tutti i giocatori]**
+richiedono che tutti i giocatori umani abbiano la 0.6.0 o la 0.6.1: una lobby che mescola 0.5.0 e
+0.6.x le disattiva.
+
+### Installazione e aggiornamenti
+- Dopo l'installazione, l'installer non mostra più l'opzione di avvio di Steam: dice che è tutto
+  pronto e puoi chiuderlo. L'avviso di aggiornamento del gioco basta per restare aggiornati.
+  Un'opzione di avvio già aggiunta continua a funzionare.
+- L'installer ora si chiama `BetterGameExperience_V<version>.exe`. All'avvio elimina gli installer
+  più vecchi dalla stessa cartella (di solito Download).
+
+### Multigiocatore
+- **"No First/Last moves (BGE)"** **[tutti i giocatori]**: resti sulla schermata di passaggio del
+  turno, pulsante di fine turno compreso, finché l'host non avvia il turno, invece di vedere il tuo
+  turno aperto con gli ordini rifiutati.
+
+### Congresso Mondiale
+- *(sperimentale)* **[tutti i giocatori]** Mentre aspetti gli altri giocatori, un pulsante **Torna
+  al voto** riapre la finestra di voto con i tuoi voti e la giusta quantità di Favore Diplomatico.
+- *(sperimentale)* Il turno non termina più contro la tua volontà durante il voto: niente fine turno
+  automatica, niente fine turno forzata con un elenco di risoluzioni vuoto, e il timer di MPH dà i
+  240 s previsti per il voto.
+- *(sperimentale)* **[tutti i giocatori]** I lussi colpiti da un divieto vengono ricalcolati a ogni
+  sessione.
+- La schermata di benvenuto del Congresso Mondiale e il suo suono compaiono una sola volta per
+  sessione, invece di tornare ogni volta che un altro giocatore torna al voto.
+
+### Correzioni dell'interfaccia
+- Con Better Spectator Mod, la barra superiore mostra di nuovo le risorse strategiche dei tuoi
+  compagni di squadra e le risorse che un compagno sblocca.
+
 ## BetterGameExperience 0.5.0: prima versione pubblica
 
 BetterGameExperience (BGE) corregge e velocizza Civilization VI: Gathering Storm con due DLL posate accanto ai

@@ -2,6 +2,40 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.6.1
+
+Enthält alles aus der Vorabversion 0.6.0. Im Mehrspielermodus brauchen die Korrekturen **[alle
+Spieler]** alle menschlichen Spieler auf 0.6.0 oder 0.6.1: Eine Lobby, die 0.5.0 und 0.6.x mischt,
+schaltet sie ab.
+
+### Installation und Updates
+- Der Installer zeigt nach der Installation die Steam-Startoption nicht mehr an: Er meldet, dass
+  alles bereit ist, und Sie können ihn schließen. Der Update-Hinweis im Spiel genügt, um aktuell zu
+  bleiben. Eine bereits eingetragene Startoption funktioniert weiter.
+- Der Installer heißt jetzt `BetterGameExperience_V<version>.exe`. Beim Start löscht er ältere
+  Installer aus demselben Ordner (meist Downloads).
+
+### Mehrspieler
+- **„No First/Last moves (BGE)“** **[alle Spieler]**: Sie bleiben auf dem Rundenwechsel-Bildschirm,
+  die Schaltfläche „Runde beenden“ eingeschlossen, bis der Host die Runde startet, statt Ihre Runde
+  offen zu sehen und Ihre Befehle abgelehnt zu bekommen.
+
+### Weltkongress
+- *(experimentell)* **[alle Spieler]** Während Sie auf die anderen Spieler warten, öffnet die
+  Schaltfläche **Zurück zur Abstimmung** das Abstimmungsfenster erneut, mit Ihren Stimmen und der
+  richtigen Menge Diplomatischer Gunst.
+- *(experimentell)* Die Runde endet während der Abstimmung nicht mehr gegen Ihren Willen: kein
+  automatisches Rundenende, kein erzwungenes Rundenende bei leerer Resolutionsliste, und der Timer
+  von MPH gibt die vorgesehenen 240 s für die Abstimmung.
+- *(experimentell)* **[alle Spieler]** Die von einem Verbot betroffenen Luxusressourcen werden in
+  jeder Sitzung neu berechnet.
+- Der Begrüßungsbildschirm des Weltkongresses und sein Ton erscheinen nur noch einmal pro Sitzung,
+  statt jedes Mal zurückzukehren, wenn ein anderer Spieler zur Abstimmung zurückkehrt.
+
+### Korrekturen der Oberfläche
+- Mit Better Spectator Mod zeigt die obere Leiste wieder die strategischen Ressourcen Ihrer
+  Teamkameraden und die Ressourcen, die ein Teamkamerad freischaltet.
+
 ## BetterGameExperience 0.5.0: erste öffentliche Version
 
 BetterGameExperience (BGE) behebt Fehler in Civilization VI: Gathering Storm und beschleunigt es, mit zwei DLLs
