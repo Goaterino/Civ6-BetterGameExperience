@@ -36,7 +36,6 @@ const TAB_ANCHOR: &str = r#"<GridButton ID="AppTab""#;
 const PANEL_ANCHOR: &str = r#"<Container ID="KeyBindings""#;
 
 pub const CFG_NAME: &str = "rollover_proxy.cfg";
-const GAMECORE_ORIGINAL: &str = "GameCore_XP2_FinalRelease_orig.dll";
 
 static REAL_LOADBUFFER: AtomicUsize = AtomicUsize::new(0);
 static XML_TRAMP: AtomicUsize = AtomicUsize::new(0);
@@ -168,7 +167,7 @@ fn gamecore_dir() -> Option<std::path::PathBuf> {
 pub fn gamecore_config_read() -> bool {
     const ST_ORIGINAL: u32 = 2;
     unsafe {
-        let m = win::GetModuleHandleW(win::wide("GameCore_XP2_FinalRelease.dll").as_ptr());
+        let m = win::GetModuleHandleW(win::wide(crate::noms::GAMECORE_PROXY).as_ptr());
         if m.is_null() {
             return false;
         }
@@ -183,7 +182,7 @@ pub fn gamecore_config_read() -> bool {
 
 pub(crate) fn read_config() -> Result<(String, bool), String> {
     let dir = gamecore_dir().ok_or("dossier du jeu introuvable")?;
-    let installed = dir.join(GAMECORE_ORIGINAL).exists();
+    let installed = dir.join(crate::noms::GAMECORE_PROXY).exists();
     match std::fs::read_to_string(dir.join(CFG_NAME)) {
         Ok(text) => Ok((text, installed)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok((String::new(), installed)),

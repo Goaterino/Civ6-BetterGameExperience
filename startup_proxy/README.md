@@ -1,38 +1,68 @@
-# Proxy de démarrage : DatabaseDLL_FinalRelease.dll
+# Proxy de démarrage : winmm.dll
 
 Le proxy de GameCore ([proxy](../proxy/README.md)) n'est chargé qu'au lancement d'une partie
-Gathering Storm. Ce second proxy est chargé au démarrage de l'exe, avant le menu principal. Il
-ajoute à l'écran d'options du jeu un onglet **BetterGameDLLs**, qui édite les réglages du proxy de
-GameCore (`rollover_proxy.cfg`). Dans le salon multijoueur, il annonce sa version aux autres joueurs,
-et l'hôte établit si tous ont le proxy (voir [Le salon multijoueur](#le-salon-multijoueur--qui-a-le-proxy-)).
+Gathering Storm. Ce second proxy est chargé au démarrage de l'exe, avant le menu principal. C'est
+lui qui fait charger le proxy de GameCore à la place de l'original (voir
+[Le chargement du proxy de GameCore](#le-chargement-du-proxy-de-gamecore)). Il ajoute à l'écran
+d'options du jeu un onglet **BetterGameDLLs**, qui édite les réglages du proxy de GameCore
+(`rollover_proxy.cfg`). Dans le salon multijoueur, il annonce sa version aux autres joueurs, et
+l'hôte établit si tous ont le proxy (voir [Le salon multijoueur](#le-salon-multijoueur--qui-a-le-proxy-)).
 Au menu principal, il propose les nouvelles versions (voir
 [La notification de mise à jour](#la-notification-de-mise-à-jour)).
 
-## Pourquoi DatabaseDLL
+## Pourquoi winmm
 
-Les deux exe (DX11 et DX12) importent statiquement quatre DLL du jeu, posées à côté d'eux dans
-`Base\Binaries\Win64Steam` :
+Aucun fichier du dépôt Steam ne doit être remplacé : Steam remet les originaux à chaque
+vérification des fichiers ou mise à jour du jeu. Il en traite une avant de télécharger un mod du
+Workshop : rejoindre un salon qui demande un mod suffisait à désinstaller les proxys jusqu'à la
+version 0.3, qui remplaçaient `DatabaseDLL_FinalRelease.dll` et `GameCore_XP2_FinalRelease.dll`.
+Steam ne supprime pas, en revanche, les fichiers qui ne sont pas dans son dépôt.
 
-| DLL | exports |
-|---|---:|
-| `DatabaseDLL_FinalRelease.dll` | 5 |
-| `Localization_FinalRelease.dll` | 118 |
-| `HavokScript_FinalRelease.dll` | 728 |
-| `steam_api64.dll` | (Steam, écartée) |
+Les deux exe (DX11 et DX12) importent statiquement, depuis System32, des DLL de Windows qui ne sont
+pas des KnownDLLs et que le jeu ne livre pas : `WINMM.dll`, `WINHTTP.dll`, `IPHLPAPI.DLL`,
+`dbghelp.dll` et `VERSION.dll`. Le chargeur les cherche d'abord dans le dossier de l'exe.
+- `VERSION.dll` est écartée : le moteur de compatibilité la charge depuis System32 avant l'exe (voir
+  le README du proxy de GameCore, « Pistes écartées »).
+- `winmm.dll` est chargée depuis `Win64Steam` par les deux exe, lancés directement ou par Steam :
+  le moteur de compatibilité ne la précharge pas, et elle ne touche pas au graphisme.
 
-DatabaseDLL a le moins d'exports, et ce n'est pas une DLL de Windows : pas de conflit avec le moteur
-de compatibilité ni avec le graphisme, contrairement aux essais avec `version.dll` et `dxgi.dll`
-(voir le README du proxy de GameCore).
+Validé le 2026-11-05 avec un prototype qui ne faisait qu'écrire dans le journal : chargé par les
+deux exe et par un lancement Steam, et toujours en place, même SHA-256, après une vérification de
+l'intégrité des fichiers par Steam. La mise à jour du même jour (build 15296837 → 26407122) avait
+remis les originaux des deux anciens proxys.
 
 ## Principe
 
-- L'original est renommé `DatabaseDLL_FinalRelease_orig.dll`, et le proxy prend son nom.
-- Les 5 exports (`Database::Initialize`, `Shutdown`, `CreateConnection`…) sont des renvois PE
-  (*forwarders*) vers l'original : le chargeur de Windows les résout lui-même, sans code de relais.
-  La chaîne d'outils est GNU, donc les renvois passent par un fichier `.def` écrit par
-  [build.rs](build.rs).
-- Au chargement, le proxy écrit `démarrage : proxy DatabaseDLL chargé dans <exe>` dans le journal
-  commun, `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
+- Le proxy est posé dans `Base\Binaries\Win64Steam` sous le nom `winmm.dll`. Les noms des fichiers
+  posés sont dans [proxy/src/noms.rs](../proxy/src/noms.rs), communs aux proxys et à l'installeur.
+- **Les relais.** Les 180 exports nommés de la winmm de Windows (liste dans
+  [src/winmm_exports.txt](src/winmm_exports.txt)) et son ordinal 2, sans nom, sont des relais
+  `jmp [rip+case]` générés par [build.rs](build.rs). Au début de `DllMain`, [src/relais.rs](src/relais.rs)
+  charge la winmm de System32 par son chemin complet (`GetSystemDirectoryW` : le nom seul désignerait
+  ce proxy, déjà chargé) et remplit les cases. Les modules qui importent winmm sont initialisés après
+  elle. Un export absent de la winmm de cette version de Windows rend 0, et le journal le compte.
+- Des renvois PE (*forwarders*) n'ont pas suffi : leur cible est un nom de module ou un chemin figé
+  dans la DLL (`C:\Windows\System32\winmm`), faux si Windows est installé ailleurs.
+- Au chargement, le proxy écrit `démarrage : proxy winmm chargé dans <exe>` puis
+  `démarrage : exports relayés vers <winmm de System32>` dans le journal commun,
+  `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
+
+## Le chargement du proxy de GameCore
+
+[src/chargeur.rs](src/chargeur.rs). L'exe charge `GameCore_XP2_FinalRelease.dll` au lancement d'une
+partie Gathering Storm ; son nom vient de `Expansion2.modinfo`. Il n'importe que `LoadLibraryW` et
+`LoadLibraryA` pour charger des DLL.
+
+- Dès `DllMain`, le proxy remplace ces deux entrées de la table d'imports de l'exe.
+- Si le fichier demandé est `GameCore_XP2_FinalRelease.dll` (casse ignorée, avec ou sans `.dll`) et
+  que `BGD_GameCore_XP2.dll` est posé dans le même dossier, c'est lui qui est chargé. Le proxy de
+  GameCore charge ensuite l'original sous son vrai nom, par ses propres imports, qui ne passent pas
+  par ce détour.
+- Sans `BGD_GameCore_XP2.dll`, ou s'il ne se charge pas, l'original est chargé tel quel.
+- Le journal le dit : `chargeur : <chemin> demandée, BGD_GameCore_XP2.dll chargé à sa place`.
+- Les autres proxys cherchent celui de démarrage par son chemin complet, à côté de l'exe
+  (`proxy/src/pol.rs`) : la winmm de System32 porte le même nom de module. Celui de démarrage cherche
+  celui de GameCore sous le nom `BGD_GameCore_XP2.dll`.
 
 ## L'onglet BetterGameDLLs
 
@@ -300,15 +330,18 @@ cd startup_proxy && cargo build --release
   ```bash
   lua startup_proxy/tests/test_option_partie.lua
   ```
-- La DLL : elle se charge, chaque export aboutit à la même adresse que dans l'original, la ligne de
-  journal est écrite. Une fois le proxy installé, l'original est `DatabaseDLL_FinalRelease_orig.dll`.
+- La DLL : elle se charge, chaque export aboutit à la même adresse que dans la winmm de System32
+  (ordinal 2 compris), `timeGetTime` répond par le relais, les lignes de journal sont écrites, et
+  aucun détour n'est posé hors du jeu.
 
   ```bash
-  .venv/Scripts/python.exe -I startup_proxy/tests/check_forwarders.py startup_proxy/target/release/DatabaseDLL_FinalRelease.dll "<jeu>\Base\Binaries\Win64Steam\DatabaseDLL_FinalRelease.dll" <dossier temporaire>
+  .venv/Scripts/python.exe -I startup_proxy/tests/check_relais.py startup_proxy/target/release/winmm.dll <dossier temporaire>
   ```
 
-**Installation**, jeu fermé. Comme pour le proxy de GameCore, une vérification des fichiers par
-Steam ou une mise à jour du jeu remet l'original :
+**Installation**, jeu fermé. Le script remet d'abord en place une installation d'avant la version
+0.4 (l'original sous `DatabaseDLL_FinalRelease_orig.dll`), puis pose `winmm.dll`. Il refuse
+d'écraser une `winmm.dll` qui n'est pas la sienne (un autre mod). Une vérification des fichiers ou
+une mise à jour du jeu par Steam ne la retire pas.
 
 ```bash
 powershell -ExecutionPolicy Bypass -File startup_proxy/install.ps1

@@ -1,15 +1,14 @@
-//! Proxy de démarrage : DatabaseDLL_FinalRelease.dll pour Civilization VI.
+//! Proxy de démarrage : winmm.dll pour Civilization VI.
 //!
-//! L'exe importe statiquement cette DLL du jeu, posée à côté de lui dans `Base\Binaries\Win64Steam`.
-//! Elle est donc chargée au lancement, avant le menu principal, alors que le proxy de GameCore ne
-//! l'est qu'au lancement d'une partie. L'originale est renommée DatabaseDLL_FinalRelease_orig.dll ;
-//! ses 5 exports sont renvoyés vers elle par le chargeur (voir build.rs).
+//! L'exe importe `WINMM.dll` de Windows, qui n'est pas une KnownDLL et que le jeu ne livre pas : le
+//! chargeur la cherche d'abord dans le dossier de l'exe, `Base\Binaries\Win64Steam`, où ce proxy est
+//! posé. Il est donc chargé au lancement, avant le menu principal, sans remplacer aucun fichier de
+//! Steam. Ses exports sont relayés vers la winmm de System32 (voir build.rs et `relais`).
 //!
-//! Ce proxy ajoute à l'écran d'options un onglet qui édite les réglages du proxy de GameCore
-//! (`options`), et annonce sa version aux autres joueurs du salon multijoueur (`salon`). Journal
-//! commun aux deux proxys : `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
-
-#![allow(non_snake_case)] // le nom de la DLL produite, DatabaseDLL_FinalRelease, est imposé.
+//! Ce proxy charge le proxy de GameCore à la place de l'original (`chargeur`), ajoute à l'écran
+//! d'options un onglet qui édite ses réglages (`options`), et annonce sa version aux autres joueurs
+//! du salon multijoueur (`salon`). Journal commun aux deux proxys :
+//! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
 // Modules communs avec le proxy de GameCore, qui y trouvent `crate::win` et `crate::patch`.
 #[allow(dead_code)]
@@ -21,7 +20,11 @@ mod patch;
 #[allow(dead_code)]
 #[path = "../../proxy/src/win.rs"]
 mod win;
+#[path = "../../proxy/src/noms.rs"]
+mod noms;
 
+mod chargeur;
+mod relais;
 mod options;
 mod maj;
 mod salon;
@@ -77,12 +80,20 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         SELF_MODULE.store(module as usize, Ordering::Relaxed);
         STATUS.fetch_or(1, Ordering::Relaxed);
         win::DisableThreadLibraryCalls(module);
-        // Sous le verrou du chargeur : seulement des appels à kernel32, déjà initialisée. Hors de
-        // l'exe du jeu (tests), on ne pose rien.
+        // Sous le verrou du chargeur : des appels à kernel32, déjà initialisée, et le chargement de
+        // la winmm de System32, avant tout le reste (les modules qui importent winmm passent après).
+        let relais = relais::init();
         let exe = std::env::current_exe().map(|p| p.display().to_string()).unwrap_or_default();
-        log(&format!("démarrage : proxy DatabaseDLL chargé dans {exe}, BetterGameDLLs {}", version::VERSION));
+        log(&format!("démarrage : proxy winmm chargé dans {exe}, BetterGameDLLs {}", version::VERSION));
+        match relais {
+            Ok((path, 0)) => log(&format!("démarrage : exports relayés vers {path}")),
+            Ok((path, n)) => log(&format!("démarrage : exports relayés vers {path}, {n} absents de cette winmm (rendent 0)")),
+            Err(e) => log(&format!("démarrage : relais de winmm impossibles : {e}")),
+        }
+        // Hors de l'exe du jeu (tests), on ne pose rien.
         let name = exe.rsplit(['/', '\\']).next().unwrap_or("").to_ascii_lowercase();
         if name.starts_with("civilizationvi") {
+            chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
             options::install();
             #[cfg(feature = "diag")]
             zones::install();

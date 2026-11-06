@@ -4,8 +4,17 @@ Modding de Civilization VI par DLL : un proxy de `GameCore_XP2_FinalRelease.dll`
 détours dans GameCore et dans l'exe, et les analyses qui l'ont motivé. Séparé de Civ6SimSolver
 (le solveur hors partie) le 2026-10-30, avec l'historique des fichiers concernés.
 
+Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
+- le proxy de démarrage est posé à côté de l'exe sous le nom `winmm.dll`, une DLL de Windows que
+  l'exe importe ;
+- il fait charger le proxy de GameCore, `BGD_GameCore_XP2.dll`, à la place de l'original.
+
 - [proxy](proxy/README.md) : la DLL proxy (Rust), son installation et ses réglages
   (`rollover_proxy.cfg`) ;
+- [startup_proxy](startup_proxy/README.md) : le proxy de démarrage (`winmm.dll`) : chargement du
+  proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour ;
+- [updater](updater/README.md) : l'installeur `BetterGameDLLs.exe`, et [release](release/README.md) :
+  le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
   [cascade d'une déclaration de guerre](rollover/cascade_guerre.md) ;
 - [nuke](nuke/README.md) : animation des WMD (trace Frida, mod artdef, accélération dans le proxy) ;

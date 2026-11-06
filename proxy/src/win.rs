@@ -26,7 +26,19 @@ extern "system" {
     pub fn QueryPerformanceFrequency(freq: *mut i64) -> i32;
     pub fn DisableThreadLibraryCalls(module: HMODULE) -> i32;
     pub fn GetLastError() -> u32;
+    // Proxy de démarrage seulement : relais de winmm et chargement du proxy de GameCore.
+    #[allow(dead_code)]
+    pub fn GetSystemDirectoryW(buffer: *mut u16, size: u32) -> u32;
+    #[allow(dead_code)]
+    pub fn GetFileAttributesW(name: *const u16) -> u32;
+    #[allow(dead_code)]
+    pub fn MultiByteToWideChar(page: u32, flags: u32, src: *const u8, len: i32, dst: *mut u16, size: i32) -> i32;
 }
+
+#[allow(dead_code)]
+pub const INVALID_FILE_ATTRIBUTES: u32 = u32::MAX;
+#[allow(dead_code)]
+pub const CP_ACP: u32 = 0;
 
 pub fn wide(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()

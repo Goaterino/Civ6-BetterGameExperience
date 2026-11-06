@@ -7,8 +7,8 @@ jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui
 
 | fichier | rôle |
 |---|---|
-| `GameCore_XP2_FinalRelease.dll` | proxy de GameCore (`proxy/`), à poser dans `DLC/Expansion2/Binaries/Win64` |
-| `DatabaseDLL_FinalRelease.dll` | proxy de démarrage (`startup_proxy/`), à poser dans `Base/Binaries/Win64Steam` |
+| `BGD_GameCore_XP2.dll` | proxy de GameCore (`proxy/`), à poser dans `DLC/Expansion2/Binaries/Win64`, à côté de l'original |
+| `winmm.dll` | proxy de démarrage (`startup_proxy/`), à poser dans `Base/Binaries/Win64Steam`, à côté de l'exe |
 | `BetterGameDLLs.exe` | l'installeur ([updater/](../updater/README.md)), hors manifeste : c'est lui qui le lit |
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |

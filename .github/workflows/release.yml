@@ -40,6 +40,7 @@ jobs:
         run: |
           (cd proxy && cargo test --release && cargo test --release --no-default-features)
           (cd startup_proxy && cargo test --release && cargo test --release --no-default-features)
+          (cd updater && cargo test --release)
 
       # Sur un tag, la version de la release est gravée dans les DLL (proxy/src/version.rs, RELEASE) :
       # le proxy de démarrage s'en sert pour la notification de mise à jour. Sans la feature `diag` :
@@ -52,7 +53,7 @@ jobs:
           (cd startup_proxy && cargo build --release --no-default-features)
           (cd updater && cargo build --release)
           mkdir dist
-          cp proxy/target/release/GameCore_XP2_FinalRelease.dll startup_proxy/target/release/DatabaseDLL_FinalRelease.dll dist/
+          cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
           cp updater/target/release/BetterGameDLLs.exe dist/
 
       - uses: actions/setup-python@v7

@@ -16,9 +16,9 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   "%LOCALAPPDATA%\BetterGameDLLs\BetterGameDLLs.exe" %command%
   ```
   À chaque lancement, l'installeur vérifie la dernière release (environ 1 s, sans fenêtre si tout
-  est à jour), installe ou répare si besoin derrière une fenêtre de progression (après une
-  vérification des fichiers ou une mise à jour du jeu par Steam), puis lance le jeu et attend sa
-  fin, pour que Steam le voie en cours. Un échec (GitHub injoignable, droits refusés) est affiché,
+  est à jour), installe si besoin derrière une fenêtre de progression, puis lance le jeu et attend
+  sa fin, pour que Steam le voie en cours. Depuis la version 0.4, Steam ne retire plus les proxys :
+  cette option ne sert plus qu'aux mises à jour de BetterGameDLLs. Un échec (GitHub injoignable, droits refusés) est affiché,
   et le jeu se lance quand même.
 - **`--after-game [<dossier>]`** : lancé par la notification de mise à jour du jeu
   ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)), qui se ferme
@@ -33,10 +33,19 @@ GitHub (voir [release/README.md](../release/README.md)). Il est publié avec cha
   `steamapps/libraryfolders.vdf` (dossier de Steam lu dans `HKCU\Software\Valve\Steam`).
 - **Téléchargement** : par le `curl.exe` de Windows, dans `%TEMP%\BetterGameDLLs`. Le manifeste doit
   porter une signature valide pour la clé publique embarquée, et chaque DLL le SHA-256 du manifeste.
-- **Pose**, comme les `install.ps1` : l'original devient `<nom>_orig.dll`, jamais supprimé, et le
-  proxy prend son nom. Un proxy se reconnaît à une chaîne qu'il contient (`RolloverProxyStatus`,
-  `StartupProxyStatus`). Si Steam a remis l'original alors qu'un `_orig` existe, l'original remis
-  par Steam fait foi et remplace le `_orig`. `rollover_proxy.cfg` n'est jamais touché.
+- **Pose**, comme les `install.ps1` : à côté des fichiers du jeu, sans en remplacer aucun
+  ([proxy/src/noms.rs](../proxy/src/noms.rs)) : `winmm.dll` dans `Base/Binaries/Win64Steam`,
+  `BGD_GameCore_XP2.dll` dans `DLC/Expansion2/Binaries/Win64`. Une vérification des fichiers ou une
+  mise à jour du jeu par Steam ne les retire pas. Un proxy se reconnaît à une chaîne qu'il contient
+  (`StartupProxyStatus`, `RolloverProxyStatus`). Une `winmm.dll` qui n'est pas la nôtre (un autre
+  mod) n'est pas écrasée : l'installation s'arrête et le dit. `rollover_proxy.cfg` n'est jamais
+  touché.
+- **Anciennes installations** (jusqu'à la version 0.3, chaque proxy à la place d'un original,
+  renommé `<nom>_orig.dll`) : l'installation et la désinstallation remettent l'original en place.
+  Un `_orig` à côté d'un original remis par Steam est périmé : il est retiré. La fenêtre les montre
+  (« ancien proxy à la place de l'original ») et propose la mise à jour.
+- **Compatibilité** : un installeur d'avant la version 0.4 refuse une release 0.4 (fichiers
+  inconnus) et demande de télécharger le nouvel installeur depuis la page de la release.
 - **Droits** : si le dossier du jeu n'est pas modifiable (Program Files), seule la pose est relancée
   en administrateur (`--apply`, invite UAC, sans fenêtre), qui revérifie signature et SHA-256 avant
   de copier.

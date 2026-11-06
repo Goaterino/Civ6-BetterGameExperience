@@ -7,9 +7,18 @@ qu'un par couple (événement, joueur), à la fin de la cascade.
 
 ## Principe
 
-- **Substitution.** L'original `DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll` est
-  renommé `GameCore_XP2_FinalRelease_orig.dll`, et le proxy prend son nom. Le nom de la DLL vient de
-  `Expansion2.modinfo`, l'exe ne le contient pas.
+- **À côté de l'original.** Le proxy est posé dans `DLC\Expansion2\Binaries\Win64` sous le nom
+  `BGD_GameCore_XP2.dll`, à côté de `GameCore_XP2_FinalRelease.dll`, qui n'est pas touché. Le nom
+  de la DLL vient de `Expansion2.modinfo`, l'exe ne le contient pas. Quand l'exe la charge, par
+  `LoadLibraryW` ou `LoadLibraryA`, le proxy de démarrage (`winmm.dll`, voir
+  [startup_proxy](../startup_proxy/README.md#le-chargement-du-proxy-de-gamecore)) lui donne ce
+  proxy à la place. Aucun fichier du dépôt Steam n'est remplacé : une vérification des fichiers ou
+  une mise à jour du jeu ne retire pas le proxy. Les noms sont dans [src/noms.rs](src/noms.rs),
+  communs aux proxys et à l'installeur.
+- **Jusqu'à la version 0.3**, le proxy prenait le nom de l'original, renommé
+  `GameCore_XP2_FinalRelease_orig.dll`. Steam remettait l'original à chaque vérification des
+  fichiers ou mise à jour, y compris celle qu'il traite avant de télécharger un mod du Workshop en
+  rejoignant un salon. L'installeur et `install.ps1` remettent ces anciennes installations en place.
 - **Relais.** Le proxy relaie les 157 exports de l'original sous les mêmes noms, noms C++ décorés
   compris. La table `src/exports.rs` est générée par `gen_exports.py`. L'exe n'utilise que
   `DllCreateGameContext`, `DllDestroyGameContext` et `EXP_GetTelemetrySessionHash`, qu'il récupère
@@ -17,7 +26,8 @@ qu'un par couple (événement, joueur), à la fin de la cascade.
   générique à 8 entiers ne transmet pas les arguments flottants, ce qui est sans effet pour ces 3
   fonctions.
 - **Chargement de l'original.** Au premier appel relayé (`DllCreateGameContext`, hors du verrou du
-  chargeur), le proxy charge l'original et vérifie octet par octet les deux sites. S'ils
+  chargeur), le proxy charge l'original sous son vrai nom, à côté de lui (son propre chargement
+  ne passe pas par le détour de l'exe), et vérifie octet par octet les deux sites. S'ils
   correspondent, il pose ses détours ; sinon, il ne patche rien et le note dans le journal.
 - **Les deux détours :**
   - `1802a1f90` (DeclareWar) : un compteur de profondeur repère la cascade, rattachée au thread qui
@@ -44,8 +54,10 @@ importe :
   Le jeu a alors affiché « aucune carte graphique compatible » (`Renderer.log` :
   `Failed to create DXGI factory. Error: 0x80004001`).
 
-Se substituer à GameCore évite toute interaction avec Windows et le graphisme. Et un échec reste
-limité au lancement d'une partie Gathering Storm : le menu principal utilise `GameCore_Base`.
+Le proxy de GameCore évite toute interaction avec Windows et le graphisme. Et un échec reste
+limité au lancement d'une partie Gathering Storm : le menu principal utilise `GameCore_Base`. Le
+point d'entrée à côté de l'exe est désormais `winmm.dll`, que le moteur de compatibilité ne
+précharge pas, et qui ne touche pas au graphisme.
 
 ## Modes
 
@@ -106,13 +118,14 @@ et le proxy récupère ce module tel quel.
 ```
 
 **Installation**, jeu fermé. Le script :
-- renomme l'original en `_orig`, sans jamais le supprimer ;
-- copie le proxy et `rollover_proxy.cfg` ;
+- remet en place une installation d'avant la version 0.4 (l'original sous `_orig`), et retire un
+  `_orig` périmé à côté d'un original remis par Steam ;
+- copie le proxy sous le nom `BGD_GameCore_XP2.dll`, et `rollover_proxy.cfg` ;
 - retire les anciens prototypes posés à côté de l'exe.
 
-`-Uninstall` remet l'original à sa place. Une vérification des fichiers par Steam ou une mise à jour
-du jeu remet aussi l'original : il faut alors réinstaller. Si l'original est en place alors qu'un
-`_orig` existe déjà, le script s'arrête plutôt que de choisir lequel garder.
+Le proxy n'est chargé que si le proxy de démarrage est installé aussi
+(`startup_proxy/install.ps1`). `-Uninstall` retire le proxy et ses réglages. Une vérification des
+fichiers ou une mise à jour du jeu par Steam ne touche à rien.
 
 ```bash
 powershell -ExecutionPolicy Bypass -File proxy/install.ps1 -Mode count

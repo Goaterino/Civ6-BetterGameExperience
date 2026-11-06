@@ -3,13 +3,13 @@ name = "startup-proxy"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Proxy de DatabaseDLL_FinalRelease.dll pour Civ6 : chargé au démarrage de l'exe, avant le menu principal"
+description = "Proxy de démarrage pour Civ6 : winmm.dll posée à côté de l'exe, chargée avant le menu principal"
 
 # Paquet autonome, comme proxy/ : il ne vise que Windows x64.
 [workspace]
 
 [lib]
-name = "DatabaseDLL_FinalRelease"
+name = "winmm"
 crate-type = ["cdylib"]
 path = "src/lib.rs"
 

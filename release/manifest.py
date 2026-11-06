@@ -27,8 +27,8 @@ PUBLIC_KEY = Path(__file__).resolve().parent / "public_key.txt"
 
 # Fichiers d'une release, avec leur dossier dans le jeu (relatif à la racine de Civ6).
 FILES = {
-    "GameCore_XP2_FinalRelease.dll": "DLC/Expansion2/Binaries/Win64",
-    "DatabaseDLL_FinalRelease.dll": "Base/Binaries/Win64Steam",
+    "BGD_GameCore_XP2.dll": "DLC/Expansion2/Binaries/Win64",
+    "winmm.dll": "Base/Binaries/Win64Steam",
 }
 
 

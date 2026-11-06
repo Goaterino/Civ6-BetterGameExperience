@@ -1,11 +1,13 @@
-﻿# Installe (ou retire avec -Uninstall) le proxy de GameCore_XP2_FinalRelease.dll.
+﻿# Installe (ou retire avec -Uninstall) le proxy de GameCore_XP2_FinalRelease.dll, posé à côté de
+# l'original sous le nom BGD_GameCore_XP2.dll, et écrit ses réglages (rollover_proxy.cfg).
 #   powershell -ExecutionPolicy Bypass -File proxy\install.ps1 -Mode count
 #   powershell -ExecutionPolicy Bypass -File proxy\install.ps1 -Ameliorations verify
 #   powershell -ExecutionPolicy Bypass -File proxy\install.ps1 -Actif off   (installé, mais inactif)
 #   powershell -ExecutionPolicy Bypass -File proxy\install.ps1 -Uninstall
-# L'original est renommé GameCore_XP2_FinalRelease_orig.dll, jamais supprimé ; le proxy prend son
-# nom. -Uninstall remet l'original en place. Une vérification des fichiers par Steam ou une mise à
-# jour du jeu remet aussi l'original : il faut alors réinstaller.
+# Aucun fichier du jeu n'est remplacé : une vérification des fichiers ou une mise à jour par Steam ne
+# retire pas le proxy. Il est chargé par le proxy de démarrage (startup_proxy\install.ps1), à
+# installer aussi. Une installation d'avant la version 0.4 (proxy à la place de l'original, original
+# sous GameCore_XP2_FinalRelease_orig.dll) est d'abord remise en place, comme le fait l'installeur.
 param(
     # Interrupteur général : off, le proxy reste installé mais ne pose aucun détour (GameCore
     # d'origine). Aussi réglable dans l'onglet BetterGameDLLs des options du jeu.
@@ -83,6 +85,7 @@ $ErrorActionPreference = "Stop"
 $bin = Join-Path $GameDir "DLC\Expansion2\Binaries\Win64"
 $dll = Join-Path $bin "GameCore_XP2_FinalRelease.dll"
 $orig = Join-Path $bin "GameCore_XP2_FinalRelease_orig.dll"
+$proxy = Join-Path $bin "BGD_GameCore_XP2.dll"
 $cfg = Join-Path $bin "rollover_proxy.cfg"
 if (-not (Test-Path $dll)) { throw "GameCore_XP2_FinalRelease.dll introuvable dans $bin" }
 if (Get-Process | Where-Object { $_.Name -like "CivilizationVI*" }) { throw "Ferme Civilization VI d'abord." }
@@ -100,26 +103,27 @@ foreach ($old in "version.dll", "dxgi.dll") {
 }
 Remove-Item (Join-Path $exeDir "rollover_proxy.cfg") -ErrorAction SilentlyContinue
 
+# Ancienne installation : l'original revient ; un _orig à côté d'un original remis par Steam est périmé.
+if (Test-Ours $dll) {
+    if (-not (Test-Path $orig)) { throw "Un ancien proxy est à la place de l'original mais $orig manque : vérifie les fichiers du jeu dans Steam." }
+    Remove-Item $dll
+    Rename-Item $orig (Split-Path $dll -Leaf)
+    Write-Host "Ancienne installation retirée : GameCore_XP2_FinalRelease.dll est de nouveau l'original."
+} elseif (Test-Path $orig) {
+    Remove-Item $orig
+    Write-Host "$orig périmé retiré."
+}
+
 if ($Uninstall) {
-    if (Test-Ours $dll) {
-        if (-not (Test-Path $orig)) { throw "Le proxy est en place mais $orig manque : vérifie les fichiers du jeu dans Steam." }
-        Remove-Item $dll
-        Rename-Item $orig (Split-Path $dll -Leaf)
-    }
+    if (Test-Ours $proxy) { Remove-Item $proxy }
     Remove-Item $cfg -ErrorAction SilentlyContinue
-    Write-Host "Proxy retiré : GameCore_XP2_FinalRelease.dll est de nouveau l'original."
+    Write-Host "Proxy retiré."
     return
 }
 
-$built = Join-Path $PSScriptRoot "target\release\GameCore_XP2_FinalRelease.dll"
+$built = Join-Path $PSScriptRoot "target\release\BGD_GameCore_XP2.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
-if (-not (Test-Ours $dll)) {
-    # L'original est en place. Un _orig déjà présent viendrait d'une installation précédente
-    # écrasée par Steam : il peut être d'une autre version, on ne choisit pas à la place de l'utilisateur.
-    if (Test-Path $orig) { throw "$orig existe déjà alors que l'original est en place (mise à jour Steam ?). Supprime ou renomme l'un des deux." }
-    Rename-Item $dll (Split-Path $orig -Leaf)
-}
-Copy-Item $built $dll -Force
+Copy-Item $built $proxy -Force
 Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_merveilles=$UiMerveilles", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones"
-Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones) ; original conservé sous GameCore_XP2_FinalRelease_orig.dll."
+Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

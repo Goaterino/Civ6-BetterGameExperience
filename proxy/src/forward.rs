@@ -1,5 +1,7 @@
-//! Relais des 157 exports de GameCore_XP2_FinalRelease.dll vers l'originale, renommée
-//! GameCore_XP2_FinalRelease_orig.dll dans le même dossier.
+//! Relais des 157 exports de GameCore_XP2_FinalRelease.dll vers l'originale, posée sous son vrai
+//! nom à côté de ce proxy (`BGD_GameCore_XP2.dll`). Le proxy de démarrage fait charger ce proxy à
+//! la place de l'originale (son module `chargeur`) ; notre propre chargement de l'originale passe
+//! par nos imports, pas par ce détour.
 //!
 //! Toutes les fonctions sont relayées par un relais générique à 8 `usize` : en convention x64, les
 //! arguments en trop sont lus dans la zone de pile de l'appelant et ignorés par la vraie fonction.
@@ -7,13 +9,22 @@
 //! utilise (DllCreateGameContext, DllDestroyGameContext, EXP_GetTelemetrySessionHash) comptent, et
 //! ils n'en ont pas. Les 154 autres (API Lua de Havok) ne sont importés par aucun binaire du jeu.
 
-use crate::{coalesce, log, win};
+use crate::{coalesce, log, noms, win};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::OnceLock;
 
-pub const ORIGINAL: &str = "GameCore_XP2_FinalRelease_orig.dll";
-
 static REAL: OnceLock<usize> = OnceLock::new();
+
+/// L'originale, à côté du proxy. Un proxy posé sous le nom de l'original (installation d'avant la
+/// version 0.4) se chargerait lui-même : il ne charge rien.
+fn original_path() -> Result<std::path::PathBuf, String> {
+    let module = crate::self_path().ok_or("chemin du proxy introuvable")?;
+    let name = module.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+    if name.eq_ignore_ascii_case(noms::GAMECORE) {
+        return Err(format!("proxy posé sous le nom de l'original ({name}) : relance l'installeur"));
+    }
+    Ok(module.with_file_name(noms::GAMECORE))
+}
 
 /// Chargée au premier appel relayé (DllCreateGameContext, appelée par l'exe hors du verrou du
 /// chargeur), puis détours posés sur l'originale avant qu'elle ne serve.
@@ -22,9 +33,12 @@ pub(crate) fn real_module() -> usize {
         let exe = std::env::current_exe().map(|p| p.display().to_string()).unwrap_or_default();
         log(&format!("proxy chargé dans {exe}"));
         crate::read_config();
-        let Some(path) = crate::self_dir().map(|d| d.join(ORIGINAL)) else {
-            log("dossier du proxy introuvable");
-            return 0;
+        let path = match original_path() {
+            Ok(p) => p,
+            Err(e) => {
+                log(&e);
+                return 0;
+            }
         };
         let h = win::LoadLibraryW(win::wide(&path.display().to_string()).as_ptr()) as usize;
         if h == 0 {

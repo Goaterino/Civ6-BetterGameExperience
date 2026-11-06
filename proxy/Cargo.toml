@@ -3,13 +3,13 @@ name = "rollover-proxy"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Proxy de GameCore_XP2_FinalRelease.dll pour Civ6 : regroupe les instantanés de villes pendant une cascade de guerre"
+description = "Proxy de GameCore_XP2_FinalRelease.dll pour Civ6, posé à côté sous le nom BGD_GameCore_XP2.dll"
 
 # Paquet autonome, hors de l'espace de travail du solveur : il ne vise que Windows x64.
 [workspace]
 
 [lib]
-name = "GameCore_XP2_FinalRelease"
+name = "BGD_GameCore_XP2"
 crate-type = ["cdylib"]
 path = "src/lib.rs"
 

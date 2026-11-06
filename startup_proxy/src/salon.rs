@@ -54,7 +54,7 @@ pub fn actif_off(cfg: &str) -> bool {
 /// de la partie, avec le fichier de réglages tel qu'il est.
 fn pol_indisponible() -> Option<String> {
     unsafe {
-        let m = crate::win::GetModuleHandleW(crate::win::wide("GameCore_XP2_FinalRelease.dll").as_ptr());
+        let m = crate::win::GetModuleHandleW(crate::win::wide(crate::noms::GAMECORE_PROXY).as_ptr());
         let p = if m.is_null() { std::ptr::null_mut() } else { crate::win::GetProcAddress(m, b"RolloverProxyStatus\0".as_ptr()) };
         if !p.is_null() {
             let status: extern "system" fn() -> u32 = std::mem::transmute(p);

@@ -12,6 +12,8 @@ mod game;
 mod gui;
 mod install;
 mod lang;
+#[path = "../../proxy/src/noms.rs"]
+mod noms;
 mod release;
 mod win;
 
@@ -83,16 +85,9 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
     let work = release::work_dir();
     let manifest = release::fetch_manifest(&work);
     let states = install::status(&game, manifest.as_ref().ok());
-    if let Some((name, _)) = states.iter().find(|(_, s)| *s == State::Missing) {
-        return Err(f(
-            [
-                "{} est introuvable dans {} : vérifie les fichiers du jeu dans Steam.",
-                "{} was not found in {}: verify the game files in Steam.",
-            ],
-            &[name, &game.display()],
-        ));
-    }
+    // Proxys posés, et ancienne installation (proxys à la place des originaux) à remplacer.
     let ours = states.iter().filter(|(_, s)| matches!(s, State::Installed | State::UpToDate)).count();
+    let old = states.iter().any(|(_, s)| *s == State::Old);
     let up_to_date = states.iter().all(|(_, s)| *s == State::UpToDate);
 
     // Reconstruite à chaque changement de langue.
@@ -108,13 +103,24 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
                 f(["BetterGameDLLs {} est installé et à jour", "BetterGameDLLs {} is installed and up to date"], &[&m.version]),
                 String::new(),
             ),
-            Ok(m) if ours == 0 => (
+            Ok(m) if ours == 0 && !old => (
                 Icon::Info,
                 t(["BetterGameDLLs n'est pas installé", "BetterGameDLLs is not installed"]).to_string(),
                 f(["Installer\nTélécharge et installe la version {}.", "Install\nDownloads and installs version {}."], &[&m.version]),
             ),
-            // Une partie seulement : Steam a remis un original (vérification des fichiers, mise à jour).
-            Ok(m) if ours < states.len() => (
+            Ok(m) if old => (
+                Icon::Info,
+                f(["La version {} de BetterGameDLLs est disponible", "BetterGameDLLs version {} is available"], &[&m.version]),
+                f(
+                    [
+                        "Mettre à jour\nInstalle la version {}, qui ne remplace plus aucun fichier du jeu : Steam ne la retire plus.",
+                        "Update\nInstalls version {}, which no longer replaces any game file: Steam no longer removes it.",
+                    ],
+                    &[&m.version],
+                ),
+            ),
+            // Une partie seulement : un fichier a été retiré à la main.
+            Ok(m) if ours < install::TARGETS.len() => (
                 Icon::Warning,
                 t(["BetterGameDLLs doit être réparé", "BetterGameDLLs needs to be repaired"]).to_string(),
                 f(["Réparer\nRéinstalle la version {}.", "Repair\nReinstalls version {}."], &[&m.version]),
@@ -129,8 +135,9 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
             .iter()
             .map(|(name, state)| {
                 let text = match state {
-                    State::Missing => t(["introuvable", "not found"]),
-                    State::Original => t(["original du jeu", "game original"]),
+                    State::Absent => t(["pas installé", "not installed"]),
+                    State::Foreign => t(["fichier d'un autre programme", "file from another program"]),
+                    State::Old => t(["ancien proxy à la place de l'original", "old proxy in place of the original"]),
                     State::Installed => t(["proxy installé, autre version", "proxy installed, other version"]),
                     State::UpToDate => t(["proxy à jour", "proxy up to date"]),
                 };
@@ -141,7 +148,7 @@ fn menu(game: Option<PathBuf>) -> Result<(), String> {
         if !install_text.is_empty() {
             buttons.push((INSTALL, install_text.as_str()));
         }
-        if ours > 0 {
+        if ours > 0 || old {
             buttons.push((UNINSTALL, t(["Désinstaller\nRemet les fichiers d'origine du jeu.", "Uninstall\nRestores the game's original files."])));
         }
         let details = details.join("\n");

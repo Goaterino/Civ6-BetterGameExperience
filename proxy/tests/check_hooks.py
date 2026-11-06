@@ -1,7 +1,7 @@
 """Test hors jeu du proxy de GameCore : exports, chargement de l'originale, détours.
 
-On reproduit l'installation dans un dossier temporaire : le proxy sous le nom
-GameCore_XP2_FinalRelease.dll, l'originale sous GameCore_XP2_FinalRelease_orig.dll.
+On reproduit l'installation dans un dossier temporaire : le proxy sous le nom BGD_GameCore_XP2.dll,
+à côté de l'originale sous son vrai nom, GameCore_XP2_FinalRelease.dll.
 
 L'originale refuse de s'initialiser hors du jeu (erreur 1114). On la projette donc d'abord avec
 DONT_RESOLVE_DLL_REFERENCES : le LoadLibraryW du proxy récupère alors ce module sans exécuter son
@@ -20,8 +20,8 @@ from ctypes import wintypes
 proxy_src, original_src, tmp = sys.argv[1:4]
 game = os.path.join(tmp, "Win64")
 os.makedirs(game, exist_ok=True)
-proxy = os.path.join(game, "GameCore_XP2_FinalRelease.dll")
-original = os.path.join(game, "GameCore_XP2_FinalRelease_orig.dll")
+proxy = os.path.join(game, "BGD_GameCore_XP2.dll")
+original = os.path.join(game, "GameCore_XP2_FinalRelease.dll")
 shutil.copyfile(proxy_src, proxy)
 shutil.copyfile(original_src, original)
 with open(os.path.join(game, "rollover_proxy.cfg"), "w") as f:

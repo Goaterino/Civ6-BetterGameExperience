@@ -1,41 +1,45 @@
-//! Pose et retrait des proxys, comme proxy/install.ps1 et startup_proxy/install.ps1 : l'original est
-//! renommé `<nom>_orig.dll`, jamais supprimé, et le proxy prend son nom. `rollover_proxy.cfg` n'est
-//! pas touché : sans lui, le proxy prend ses réglages par défaut.
+//! Pose et retrait des proxys, à côté des fichiers du jeu sans en remplacer aucun (voir
+//! proxy/src/noms.rs) : `winmm.dll` à côté de l'exe, `BGD_GameCore_XP2.dll` à côté de GameCore. Une
+//! vérification des fichiers ou une mise à jour du jeu par Steam ne les retire pas.
+//! `rollover_proxy.cfg` n'est pas touché : sans lui, le proxy prend ses réglages par défaut.
+//!
+//! Jusqu'à la version 0.3, chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
+//! L'installation et la désinstallation remettent ces originaux en place.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::lang::f;
+use crate::noms;
 use crate::release::{self, Manifest};
 use crate::win;
 
 pub struct Target {
     pub name: &'static str,
     dest: &'static str,
-    /// Chaîne présente dans le proxy et absente de l'original.
+    /// Chaîne présente dans le proxy, absente de tout autre fichier de ce nom.
     marker: &'static [u8],
 }
 
 pub const TARGETS: [Target; 2] = [
-    Target {
-        name: "GameCore_XP2_FinalRelease.dll",
-        dest: "DLC/Expansion2/Binaries/Win64",
-        marker: b"RolloverProxyStatus",
-    },
-    Target {
-        name: "DatabaseDLL_FinalRelease.dll",
-        dest: "Base/Binaries/Win64Steam",
-        marker: b"StartupProxyStatus",
-    },
+    Target { name: noms::GAMECORE_PROXY, dest: "DLC/Expansion2/Binaries/Win64", marker: b"RolloverProxyStatus" },
+    Target { name: noms::DEMARRAGE, dest: "Base/Binaries/Win64Steam", marker: b"StartupProxyStatus" },
 ];
+
+/// Marques des anciens proxys, posés sous le nom des originaux.
+const ANCIENNES_MARQUES: [&[u8]; 2] = [b"RolloverProxyStatus", b"StartupProxyStatus"];
 
 /// Fichier où le processus administrateur laisse son erreur.
 const ERROR_FILE: &str = "erreur.txt";
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum State {
-    Missing,
-    Original,
+    /// Proxy pas posé.
+    Absent,
+    /// Un fichier de ce nom qui n'est pas de BetterGameDLLs (une autre `winmm.dll`, d'un autre mod).
+    Foreign,
+    /// Ancien proxy posé à la place d'un original (installation d'avant la version 0.4).
+    Old,
     /// Proxy posé, d'une autre version que la release (ou release inconnue).
     Installed,
     UpToDate,
@@ -47,42 +51,61 @@ pub enum Action {
     Uninstall,
 }
 
+fn contains(path: &Path, marker: &[u8]) -> Result<bool, String> {
+    let data = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(data.windows(marker.len()).any(|w| w == marker))
+}
+
 impl Target {
-    fn dll(&self, game: &Path) -> PathBuf {
+    fn path(&self, game: &Path) -> PathBuf {
         game.join(self.dest).join(self.name)
     }
 
-    fn orig(&self, game: &Path) -> PathBuf {
-        game.join(self.dest).join(self.name.replace(".dll", "_orig.dll"))
-    }
-
-    fn is_ours(&self, game: &Path) -> Result<bool, String> {
-        let path = self.dll(game);
-        let data = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-        Ok(data.windows(self.marker.len()).any(|w| w == self.marker))
+    fn state(&self, game: &Path, m: Option<&Manifest>) -> Result<State, String> {
+        let path = self.path(game);
+        if !path.exists() {
+            return Ok(State::Absent);
+        }
+        if !contains(&path, self.marker)? {
+            return Ok(State::Foreign);
+        }
+        let expected = m.and_then(|m| m.files.iter().find(|f| f.name == self.name));
+        let current = release::sha256(&path).ok();
+        Ok(if expected.is_some_and(|f| Some(&f.sha256) == current.as_ref()) { State::UpToDate } else { State::Installed })
     }
 }
 
+/// Ancienne installation : (original, `_orig`) de chaque fichier concerné.
+fn old_files(game: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + '_ {
+    noms::ANCIENS.iter().map(move |(dest, name)| {
+        let dll = game.join(dest).join(name);
+        let orig = dll.with_file_name(name.replace(".dll", "_orig.dll"));
+        (dll, orig)
+    })
+}
+
+fn is_old_proxy(dll: &Path) -> Result<bool, String> {
+    if !dll.exists() {
+        return Ok(false);
+    }
+    for marker in ANCIENNES_MARQUES {
+        if contains(dll, marker)? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// État de chaque proxy, puis de chaque ancien proxy encore posé à la place d'un original.
 pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
-    TARGETS
-        .iter()
-        .map(|t| {
-            let state = match t.is_ours(game) {
-                Err(_) => State::Missing,
-                Ok(false) => State::Original,
-                Ok(true) => {
-                    let expected = m.and_then(|m| m.files.iter().find(|f| f.name == t.name));
-                    let current = release::sha256(&t.dll(game)).ok();
-                    if expected.is_some_and(|f| Some(&f.sha256) == current.as_ref()) {
-                        State::UpToDate
-                    } else {
-                        State::Installed
-                    }
-                }
-            };
-            (t.name, state)
-        })
-        .collect()
+    let mut out: Vec<(&'static str, State)> =
+        TARGETS.iter().map(|t| (t.name, t.state(game, m).unwrap_or(State::Foreign))).collect();
+    for ((_, name), (dll, _)) in noms::ANCIENS.iter().zip(old_files(game)) {
+        if is_old_proxy(&dll).unwrap_or(false) {
+            out.push((name, State::Old));
+        }
+    }
+    out
 }
 
 /// Installe la release téléchargée dans `work`, ou retire les proxys ; en administrateur si le
@@ -133,26 +156,50 @@ fn writable(game: &Path) -> bool {
     })
 }
 
+/// Remet les originaux d'une installation d'avant la version 0.4. Un `_orig` à côté d'un original
+/// en place vient d'une installation écrasée par Steam (vérification des fichiers, mise à jour) :
+/// l'original remis par Steam fait foi, le `_orig` est retiré.
+fn restore_old(game: &Path) -> Result<(), String> {
+    for (dll, orig) in old_files(game) {
+        if is_old_proxy(&dll)? {
+            if !orig.exists() {
+                return Err(f(["{} manque : vérifie les fichiers du jeu dans Steam.", "{} is missing: verify the game files in Steam."], &[&orig.display()]));
+            }
+            fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
+            fs::rename(&orig, &dll).map_err(|e| format!("{}: {e}", orig.display()))?;
+        } else if orig.exists() {
+            fs::remove_file(&orig).map_err(|e| format!("{}: {e}", orig.display()))?;
+        }
+    }
+    Ok(())
+}
+
+/// Refuse d'écraser un fichier qui n'est pas de BetterGameDLLs.
+fn check_foreign(game: &Path) -> Result<(), String> {
+    for t in &TARGETS {
+        if t.state(game, None)? == State::Foreign {
+            return Err(f(
+                [
+                    "{} n'est pas un fichier de BetterGameDLLs (un autre mod ?) : retire-le, puis relance l'installeur.",
+                    "{} is not a BetterGameDLLs file (another mod?): remove it, then run the installer again.",
+                ],
+                &[&t.path(game).display()],
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn install(game: &Path, work: &Path, m: &Manifest) -> Result<(), String> {
     // La release doit poser exactement nos cibles, aux mêmes endroits.
     let known = |f: &release::File| TARGETS.iter().any(|t| t.name == f.name && t.dest == f.dest);
     if m.files.len() != TARGETS.len() || !m.files.iter().all(known) {
         return Err(f(["la version {} demande un installeur plus récent : télécharge-le depuis la page de la release.", "version {} needs a newer installer: download it from the release page."], &[&m.version]));
     }
-    let mut ours = Vec::new();
+    check_foreign(game)?;
+    restore_old(game)?;
     for t in &TARGETS {
-        ours.push(t.is_ours(game)?);
-    }
-    for (t, ours) in TARGETS.iter().zip(ours) {
-        let (dll, orig) = (t.dll(game), t.orig(game));
-        if !ours {
-            // L'original est en place. Un _orig déjà présent vient d'une installation écrasée par
-            // Steam (vérification des fichiers, mise à jour) : l'original remis par Steam fait foi.
-            if orig.exists() {
-                fs::remove_file(&orig).map_err(|e| format!("{}: {e}", orig.display()))?;
-            }
-            fs::rename(&dll, &orig).map_err(|e| format!("{}: {e}", dll.display()))?;
-        }
+        let dll = t.path(game);
         let new = dll.with_extension("dll.new");
         fs::copy(work.join(t.name), &new).map_err(|e| format!("{}: {e}", new.display()))?;
         fs::rename(&new, &dll).map_err(|e| format!("{}: {e}", dll.display()))?;
@@ -161,18 +208,86 @@ fn install(game: &Path, work: &Path, m: &Manifest) -> Result<(), String> {
 }
 
 fn uninstall(game: &Path) -> Result<(), String> {
-    let mut ours = Vec::new();
+    restore_old(game)?;
     for t in &TARGETS {
-        let is = t.is_ours(game)?;
-        if is && !t.orig(game).exists() {
-            return Err(f(["{} manque : vérifie les fichiers du jeu dans Steam.", "{} is missing: verify the game files in Steam."], &[&t.orig(game).display()]));
+        if matches!(t.state(game, None)?, State::Installed | State::UpToDate) {
+            let dll = t.path(game);
+            fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
         }
-        ours.push(is);
-    }
-    for (t, _) in TARGETS.iter().zip(ours).filter(|(_, ours)| *ours) {
-        let (dll, orig) = (t.dll(game), t.orig(game));
-        fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
-        fs::rename(&orig, &dll).map_err(|e| format!("{}: {e}", orig.display()))?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Faux jeu : les deux originaux d'aujourd'hui, et le contenu donné à chaque chemin.
+    fn game(name: &str, files: &[(&str, &[u8])]) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("bgd_install_{name}_{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        for (path, data) in [("DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll", &b"original GameCore"[..]), ("Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease.dll", b"original DatabaseDLL")]
+            .iter()
+            .chain(files)
+        {
+            let p = dir.join(path);
+            fs::create_dir_all(p.parent().unwrap()).unwrap();
+            fs::write(p, data).unwrap();
+        }
+        dir
+    }
+
+    fn read(dir: &Path, path: &str) -> Option<Vec<u8>> {
+        fs::read(dir.join(path)).ok()
+    }
+
+    #[test]
+    fn ancienne_installation_remise() {
+        let dir = game(
+            "ancienne",
+            &[
+                ("DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll", b"proxy RolloverProxyStatus"),
+                ("DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease_orig.dll", b"vrai GameCore"),
+                ("Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease_orig.dll", b"vieil original"),
+            ],
+        );
+        let st = status(&dir, None);
+        assert!(st.iter().any(|(n, s)| *n == noms::GAMECORE && *s == State::Old));
+        assert!(!st.iter().any(|(n, _)| *n == "DatabaseDLL_FinalRelease.dll"), "original remis par Steam : pas un ancien proxy");
+        restore_old(&dir).unwrap();
+        assert_eq!(read(&dir, "DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll").unwrap(), b"vrai GameCore");
+        assert!(read(&dir, "DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease_orig.dll").is_none());
+        assert_eq!(read(&dir, "Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease.dll").unwrap(), b"original DatabaseDLL");
+        assert!(read(&dir, "Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease_orig.dll").is_none(), "_orig périmé retiré");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn ancien_proxy_sans_orig() {
+        let dir = game("sans_orig", &[("Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease.dll", b"proxy StartupProxyStatus")]);
+        assert!(restore_old(&dir).is_err());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn winmm_d_un_autre_mod() {
+        let dir = game("autre", &[("Base/Binaries/Win64Steam/winmm.dll", b"chargeur ASI")]);
+        let st = status(&dir, None);
+        assert!(st.iter().any(|(n, s)| *n == noms::DEMARRAGE && *s == State::Foreign));
+        assert!(st.iter().any(|(n, s)| *n == noms::GAMECORE_PROXY && *s == State::Absent));
+        assert!(check_foreign(&dir).is_err());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn desinstallation() {
+        let dir = game(
+            "desinstallation",
+            &[("Base/Binaries/Win64Steam/winmm.dll", b"StartupProxyStatus"), ("DLC/Expansion2/Binaries/Win64/BGD_GameCore_XP2.dll", b"RolloverProxyStatus")],
+        );
+        uninstall(&dir).unwrap();
+        assert!(status(&dir, None).iter().all(|(_, s)| *s == State::Absent));
+        assert!(read(&dir, "DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll").is_some());
+        fs::remove_dir_all(&dir).unwrap();
+    }
 }

@@ -1,7 +1,8 @@
-//! Proxy de GameCore_XP2_FinalRelease.dll pour Civilization VI (prototype).
+//! Proxy de GameCore_XP2_FinalRelease.dll pour Civilization VI.
 //!
-//! L'originale est renommée GameCore_XP2_FinalRelease_orig.dll ; ce proxy prend son nom, relaie ses
-//! 157 exports (`forward`) et, au premier appel, la charge puis pose les détours de `coalesce`.
+//! Posé à côté de l'originale sous le nom `BGD_GameCore_XP2.dll`, sans la remplacer : le proxy de
+//! démarrage (winmm.dll) le fait charger à sa place par l'exe. Il relaie ses 157 exports
+//! (`forward`) et, au premier appel, la charge sous son vrai nom puis pose ses détours.
 //!
 //! Réglage : fichier `rollover_proxy.cfg` à côté de la DLL, lignes `actif=on|off` (interrupteur
 //! général, on par défaut), `mode=coalesce|count|off`
@@ -16,7 +17,7 @@
 //! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
 
-#![allow(non_snake_case)] // le nom de la DLL produite, GameCore_XP2_FinalRelease, est imposé.
+#![allow(non_snake_case)] // le nom de la DLL produite, BGD_GameCore_XP2.
 
 mod citoyens;
 mod coalesce;
@@ -25,6 +26,7 @@ mod exe;
 mod forward;
 mod improvements;
 mod mods_ui;
+mod noms;
 mod patch;
 mod pol;
 mod ports;
@@ -85,12 +87,16 @@ pub(crate) fn log(msg: &str) {
 }
 
 pub(crate) fn self_dir() -> Option<std::path::PathBuf> {
+    self_path()?.parent().map(|p| p.to_path_buf())
+}
+
+/// Chemin complet du proxy.
+pub(crate) fn self_path() -> Option<std::path::PathBuf> {
     let mut buf = [0u16; 1024];
     let n = unsafe {
         win::GetModuleFileNameW(SELF_MODULE.load(Ordering::Relaxed) as win::HMODULE, buf.as_mut_ptr(), buf.len() as u32)
     } as usize;
-    let path = std::path::PathBuf::from(String::from_utf16_lossy(&buf[..n]));
-    path.parent().map(|p| p.to_path_buf())
+    (n > 0).then(|| std::path::PathBuf::from(String::from_utf16_lossy(&buf[..n])))
 }
 
 pub(crate) fn read_config() {
