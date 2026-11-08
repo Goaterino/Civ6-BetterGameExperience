@@ -403,6 +403,24 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
     applique aussi.
   - Interface seule : rien ne part sur le réseau.
   - Test hors jeu, sur le vrai fichier du jeu : `lua proxy/tests/test_ui_production.lua`.
+- **Bouton d'or de l'écran d'accord désactivé sans raison.** Faute du jeu, présente aussi sans mod.
+  Dans `DiplomacyDealView.lua`, les icônes de la colonne « disponible » viennent de deux réserves
+  partagées (`g_IconOnlyIM`, `g_IconAndTextIM`) que `ResetInstances` rend à chaque ouverture sans
+  remettre leur état à zéro. Une ressource stratégique sans place sous le plafond, ou l'icône
+  réduite d'un accord, d'une cité ou d'une œuvre non valide, désactive son bouton.
+  `PopulateAvailableGold` reprend ensuite une de ces instances pour l'or ponctuel ou par tour sans
+  appeler `SetDisabled(false)` (`PopulateAvailableFavor` le fait). Si la disposition change d'une
+  ouverture à l'autre (autre joueur, autres ressources), on ne peut plus demander ni offrir d'or :
+  le bouton paraît normal mais ne répond pas.
+  - Le proxy ajoute [src/ui_accord_or.lua](src/ui_accord_or.lua) à la fin du fichier
+    (`patch_accord_or`). Il enveloppe `PopulateAvailableGold` et réactive les boutons qu'elle vient
+    de prendre, ajoutés à la fin de `m_AllocatedInstances`.
+  - MPH (`diplomacydealview_MPH.lua`) remplace `PopulateAvailableGold` en rappelant celle du jeu ;
+    il est inclus par le joker `include("DiplomacyDealView_")` avant le bloc, qui l'enveloppe donc
+    aussi.
+  - Toujours actif, sans réglage. Interface seule : rien ne part sur le réseau, il suffit que le
+    joueur qui ouvre l'écran ait le proxy.
+  - Test hors jeu, avec le vrai `InstanceManager.lua` : `lua proxy/tests/test_ui_accord_or.lua`.
 - **Code commun avec le proxy de démarrage.** La table d'imports, la signature et le tampon de
   la lecture XML sont dans [src/exe.rs](src/exe.rs), que `startup_proxy` inclut aussi. Le proxy de
   démarrage détourne la lecture XML le premier : on y trouve alors son `jmp [rip+0]`, qu'on recopie
@@ -416,7 +434,8 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
   `ui : …CityBannerManager.lua modifié (…), compilation réussie`, et
   `ui : …CityPanel.lua : owningPlayerID corrigé, compilation réussie`, et
   `ui : …UnitFlagManager.lua : clic sur un drapeau en visée d'une ville ou d'un quartier, compilation réussie`, et
-  `ui : …ProductionPanel.lua : production en cours affichée au changement de ville, compilation réussie`.
+  `ui : …ProductionPanel.lua : production en cours affichée au changement de ville, compilation réussie`, et
+  `ui : …DiplomacyDealView.lua : bouton d'or disponible réactivé, compilation réussie`.
   `Lua.log` doit contenir
   `Civ6RolloverProxy : boutons d'attaque au-dessus des drapeaux d'unités`.
 - **Tests hors jeu** (`cargo test --release`) : les remplacements de texte sur les fichiers du jeu et

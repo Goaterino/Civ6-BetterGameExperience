@@ -41,6 +41,9 @@
 //! drapeau d'une unité ne tirait pas en visée d'une ville ou d'un quartier (`patch_unit_flags`), et
 //! la production en cours du panneau de production ne se montrait pas en passant d'une ville sans
 //! production à une ville qui en a une (`patch_production_panel`).
+//!
+//! Toujours aussi, sans accroche de plus : le bouton d'or disponible de l'écran d'accord, repris
+//! d'une icône désactivée, restait désactivé (`patch_accord_or`, `ui_accord_or.lua`).
 
 use crate::exe::{self, is_file, iat_slot, replace_buffer, write_slot, GameBuf, ReadXml, XmlHook};
 use crate::{log, win};
@@ -61,6 +64,7 @@ const ATTENTE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"),
 const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
 const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
+const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
 
 static BOUTONS: AtomicBool = AtomicBool::new(true);
 static RECENTRAGE: AtomicBool = AtomicBool::new(false);
@@ -607,6 +611,26 @@ pub fn patch_epingles(src: &[u8], ctx: &str, opti: bool, mesure: bool) -> Vec<u8
     out
 }
 
+/// Ce que `ui_accord_or.lua` attend de DiplomacyDealView.lua.
+const ACCORD_OR_NAMES: [&str; 3] = ["function PopulateAvailableGold(", "g_IconOnlyIM", "g_IconAndTextIM"];
+
+/// DiplomacyDealView.lua suivi de `ui_accord_or.lua` : le bouton d'or disponible, repris d'une
+/// icône désactivée, est réactivé.
+pub fn patch_accord_or(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ACCORD_OR_NAMES.iter().find(|n| !has(n)) {
+        return Err(format!("{missing} introuvable"));
+    }
+    if has("Civ6RolloverProxy (src/ui_accord_or.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"
+");
+    out.extend_from_slice(ACCORD_OR_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// DiplomacyDealView.lua suivi de `ui_diag_accords.lua`, qui ne fait qu'écrire dans Lua.log.
 pub fn patch_diag_accords(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
@@ -923,9 +947,22 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
             }
         };
     }
-    if DIAG_ACCORDS.load(Ordering::Relaxed) && is_file(chunk, "DiplomacyDealView.lua") {
-        what.push("diagnostic des accords ajouté".into());
-        return Some(patch_diag_accords(src));
+    if is_file(chunk, "DiplomacyDealView.lua") {
+        let fixed = match patch_accord_or(src) {
+            Ok(text) => {
+                what.push("bouton d'or disponible réactivé".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} : bouton d'or laissé tel quel : {e}"));
+                None
+            }
+        };
+        if DIAG_ACCORDS.load(Ordering::Relaxed) {
+            what.push("diagnostic des accords ajouté".into());
+            return Some(patch_diag_accords(fixed.as_deref().unwrap_or(src)));
+        }
+        return fixed;
     }
     if let Some((text, done)) = crate::depart::patch_lua(l, chunk, src) {
         what.push(done.into());
@@ -1162,6 +1199,16 @@ mod tests {
         assert!(is_file(r"..\..\DLC\citybannermanager.lua", "CityBannerManager.lua"));
         assert!(!is_file("C:/x/CityBannerManager_Expansion2.lua", "CityBannerManager.lua"));
         assert!(!is_file("C:/x/MyCityBannerManager.lua", "CityBannerManager.lua"));
+    }
+
+    #[test]
+    fn bouton_d_or_reactive_dans_l_ecran_d_accord() {
+        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua")) else { return };
+        let new = patch_accord_or(&src).unwrap();
+        assert!(new.starts_with(&src));
+        assert!(new.ends_with(ACCORD_OR_BLOCK.as_bytes()));
+        assert!(patch_accord_or(&new).is_err(), "pas deux fois");
+        assert!(patch_accord_or(b"function OnShow() end").is_err());
     }
 
     #[test]
