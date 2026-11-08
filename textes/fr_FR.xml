@@ -156,7 +156,7 @@
 			<Text>Bandeau du haut étendu</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="fr_FR">
-			<Text>D'après TopPanel Extension Pro (号码菌 / Azukii). Nourriture, production, population et ressources de luxe dans le bandeau, avec le détail par ville ; ressources des coéquipiers. Remplace le mod s'il est actif. Sans le mod, le bandeau de Better Spectator Mod est gardé.</Text>
+			<Text>D'après TopPanel Extension Pro (号码菌 / Azukii). Nourriture, production, activités moyennes par ville et ressources de luxe dans le bandeau, avec le détail par ville ; ressources des coéquipiers. Remplace le mod s'il est actif. Sans le mod, le bandeau de Better Spectator Mod est gardé.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="fr_FR">
 			<Text>Effet des cartes de politique</Text>

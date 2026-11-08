@@ -156,7 +156,7 @@
 			<Text>扩展顶部栏</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="zh_Hans_CN">
-			<Text>基于 TopPanel Extension Pro（号码菌 / Azukii）。在顶部栏显示食物、生产力、人口和奢侈品资源，并附各城市详情；还显示队友的资源。如果该模组已启用，则取代它。没有该模组时，保留 Better Spectator Mod 的顶部栏。</Text>
+			<Text>基于 TopPanel Extension Pro（号码菌 / Azukii）。在顶部栏显示食物、生产力、每座城市的平均宜居度和奢侈品资源，并附各城市详情；还显示队友的资源。如果该模组已启用，则取代它。没有该模组时，保留 Better Spectator Mod 的顶部栏。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="zh_Hans_CN">
 			<Text>政策卡效果</Text>
