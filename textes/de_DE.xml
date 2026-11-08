@@ -156,7 +156,7 @@
 			<Text>Erweiterte obere Leiste</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="de_DE">
-			<Text>Nach TopPanel Extension Pro (号码菌 / Azukii). Nahrung, Produktion, durchschnittliche Annehmlichkeiten pro Stadt und Luxusressourcen in der oberen Leiste, mit Details pro Stadt; Ressourcen der Teamkameraden. Ersetzt den Mod, wenn er aktiv ist. Ohne den Mod bleibt die obere Leiste von Better Spectator Mod erhalten.</Text>
+			<Text>Nach TopPanel Extension Pro (号码菌 / Azukii). Nahrung, Produktion, Bevölkerung, durchschnittliche Annehmlichkeiten pro Stadt und Luxusressourcen in der oberen Leiste, mit Details pro Stadt; Ressourcen der Teamkameraden. Ersetzt den Mod, wenn er aktiv ist. Ohne den Mod bleibt die obere Leiste von Better Spectator Mod erhalten.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="de_DE">
 			<Text>Wirkung der Politikkarten</Text>

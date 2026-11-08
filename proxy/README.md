@@ -686,7 +686,7 @@ plus les tours des routes commerciales.
 | `ui_charges=on\|off` (`-UiCharges`) | on | charges restantes sur le drapeau des unités qui en ont (Better Builder Charges Tracking, wltk) |
 | `ui_routes=on\|off` (`-UiRoutes`) | on | tours avant la fin de la route sur le drapeau des négociants du joueur |
 | `ui_notifications=on\|off` (`-UiNotifications`) | on | bouton « tout effacer » des notifications (NotificationClear, 336tarot) |
-| `ui_bandeau=on\|off` (`-UiBandeau`) | on | nourriture, production, activités moyennes par ville (population par ville en infobulle) et luxes dans le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) |
+| `ui_bandeau=on\|off` (`-UiBandeau`) | on | nourriture, production, population, activités moyennes par ville et luxes dans le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) |
 | `ui_politiques=on\|off` (`-UiPolitiques`) | on | effet chiffré des cartes de politique (Extended Policy Cards, Aristos), avec RMA corrigé |
 | `ui_rapports=on\|off` (`-UiRapports`) | on | écran des rapports de Better Report Screen (Infixo), avec RMA corrigé |
 

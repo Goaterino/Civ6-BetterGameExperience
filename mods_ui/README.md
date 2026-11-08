@@ -234,9 +234,10 @@ le mod fonctionne comme avant.
 - **Mieux que le mod** : sans TPE, le bloc est ajouté à `TopPanel_Spectator.lua`, et BSM garde son
   bandeau.
 - **Ajout : activités moyennes par ville** (novembre 2026, pas encore essayé en jeu). Le bouton de
-  la population montre, à la place de la population et de sa croissance, la moyenne des activités
-  nettes des villes (obtenues moins requises, la colonne des activités de son infobulle), arrondie à
-  l'entier inférieur : « +2 », « 0 », « −1 » ; vert dès +3 (ville en extase), rouge sous 0. Son
+  la population montre, après la population et sa croissance, la moyenne des activités nettes des
+  villes (obtenues moins requises, la colonne des activités de son infobulle), arrondie à l'entier
+  inférieur, à la taille de la population (ses propres libellés, `BGD_TopPanel_AmenitiesInstance`) :
+  « 25 +1.2 | [activités] +2 » ; vert dès +3 (ville en extase), rouge sous 0. Son
   infobulle ne change pas (population totale, puis chaque ville : population, logements, activités).
   Un luxe gagné ou perdu en cours de tour ne redessinait que les ressources : `PlayerResourceChanged`
   (joueur local) demande aussi les rendements. D'après un module séparé (`AmenitiesTopPanel_custom`),
@@ -470,9 +471,9 @@ drapeaux ont leurs tests Lua. Restent à voir en jeu :
    lancée en cours de partie et sur une partie rechargée.
 4. **Le bandeau** : le bloc doit atterrir dans le script du contexte. Le journal doit montrer
    `bandeau de TopPanel Extension Pro` sur `TopPanel_Expansion2.lua`, ou sur `TopPanel_Spectator.lua`
-   avec BSM. Le bouton de la population doit porter l'icône des activités et la moyenne (entière,
-   arrondie vers le bas) de la colonne des activités de son infobulle, elle-même inchangée, et
-   changer dès qu'un luxe est gagné ou perdu en cours de tour.
+   avec BSM. Le bouton de la population doit montrer, après la population et sa croissance, l'icône
+   des activités et la moyenne (entière, arrondie vers le bas) de la colonne des activités de son
+   infobulle, elle-même inchangée, et changer dès qu'un luxe est gagné ou perdu en cours de tour.
 5. **Les cartes signalées** : Raj, cartes de personnages illustres (hors Anacaona), Médina,
    Conscription et Levée en masse avec le Trône du seigneur de guerre, Prestige civil, Monachisme.
 6. **Avec les mods encore actifs** : la version du proxy doit s'afficher seule (un seul bouton de
