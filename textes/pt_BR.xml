@@ -156,7 +156,7 @@
 			<Text>Barra superior ampliada</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="pt_BR">
-			<Text>Baseado em TopPanel Extension Pro (号码菌 / Azukii). Comida, produção, população e recursos de luxo na barra superior, com o detalhe por cidade; recursos dos colegas de equipe. Substitui o mod se ele estiver ativo. Sem o mod, a barra superior do Better Spectator Mod é mantida.</Text>
+			<Text>Baseado em TopPanel Extension Pro (号码菌 / Azukii). Comida, produção, média de serviços por cidade e recursos de luxo na barra superior, com o detalhe por cidade; recursos dos colegas de equipe. Substitui o mod se ele estiver ativo. Sem o mod, a barra superior do Better Spectator Mod é mantida.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="pt_BR">
 			<Text>Efeito dos cartões de política</Text>

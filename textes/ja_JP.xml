@@ -156,7 +156,7 @@
 			<Text>拡張された上部バー</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="ja_JP">
-			<Text>TopPanel Extension Pro (号码菌 / Azukii) に基づきます。食料、生産力、人口、高級資源を都市ごとの詳細とともに上部バーに表示し、チームメイトの資源も表示します。MOD が有効な場合はそれに置き換わります。MOD がない場合は Better Spectator Mod の上部バーが維持されます。</Text>
+			<Text>TopPanel Extension Pro (号码菌 / Azukii) に基づきます。食料、生産力、都市あたりの平均快適性、高級資源を都市ごとの詳細とともに上部バーに表示し、チームメイトの資源も表示します。MOD が有効な場合はそれに置き換わります。MOD がない場合は Better Spectator Mod の上部バーが維持されます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="ja_JP">
 			<Text>政策カードの効果</Text>

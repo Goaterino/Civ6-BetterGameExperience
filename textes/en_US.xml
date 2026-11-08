@@ -156,7 +156,7 @@
 			<Text>Extended top panel</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="en_US">
-			<Text>Based on TopPanel Extension Pro (号码菌 / Azukii). Food, production, population and luxury resources in the top panel, with per-city details; teammates' resources. Replaces the mod if it is active. Without the mod, Better Spectator Mod's top panel is kept.</Text>
+			<Text>Based on TopPanel Extension Pro (号码菌 / Azukii). Food, production, average amenities per city and luxury resources in the top panel, with per-city details; teammates' resources. Replaces the mod if it is active. Without the mod, Better Spectator Mod's top panel is kept.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="en_US">
 			<Text>Policy card effects</Text>
