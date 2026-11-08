@@ -8,29 +8,29 @@ En multijoueur, les correctifs **[tous les joueurs]** demandent que tous les hum
 0.7.0 : un salon qui mélange 0.6.x et 0.7.0 les désactive.
 
 ### Correctifs de jeu [tous les joueurs]
-- Unités empilées : deux unités militaires de même classe peuvent se retrouver sur la même case
+- **Unités empilées** : deux unités militaires de même classe peuvent se retrouver sur la même case
   (unité achetée dans une ville occupée, déplacement interrompu, téléportation…). L'unité en trop ne
   compte plus dans les bonus de contournement et de soutien : deux unités empilées à côté de la cible
   donnent +2, pas +4. La défense des villes ne change pas.
 
 ### Congrès mondial
-- Retirés : les correctifs de la 0.6.x qui empêchaient la fin du tour pendant le vote (pas de fin de
+- **Retirés** : les correctifs de la 0.6.x qui empêchaient la fin du tour pendant le vote (pas de fin de
   tour automatique, pas de fin de tour forcée sur une liste de résolutions vide, 240 s au minuteur
   de MPH). Le minuteur et la fin de tour du jeu et de MPH s'appliquent de nouveau pendant le vote. Le
   bouton **Revenir au vote**, l'écran d'accueil une fois par session et le recalcul des luxes
   restent.
 
 ### Corrections de l'interface
-- Écran des cités-États : les émissaires placés mais pas encore confirmés ne sont plus perdus quand
+- **Écran des cités-États** : les émissaires placés mais pas encore confirmés ne sont plus perdus quand
   l'écran se rafraîchit (émissaire d'un autre joueur, quête, guerre ou paix). Ils ne sont retirés
   que si la cité-État est détruite ou si votre équipe lui déclare la guerre.
-- Écran d'accord : le bouton de l'or disponible fonctionne de nouveau. Il pouvait rester impossible
+- **Écran d'accord** : le bouton de l'or disponible fonctionne de nouveau. Il pouvait rester impossible
   à cliquer après un accord précédent (bug du jeu).
 - **Carte entière dès le début** (activé par défaut) : la minimap et la caméra couvrent toute la
   carte dès le premier tour, plus besoin d'épingles aux bords de la carte. Les zones inexplorées
   restent cachées. Purement local.
-- Zone de déplacement d'une unité sur un quartier ennemi : plus de pic de lag quand vous la
-  sélectionnez (campement ennemi non terminé, routes, chemins de fer), les zones de contrôle (cases
+- **Zone de déplacement d'une unité sur un quartier ennemi** : plus de pic de lag quand vous la
+  sélectionnez (campement ennemi non terminé), les zones de contrôle (cases
   rouges) sont affichées, et les cases d'eau où l'unité ne peut pas encore aller (côte avant
   l'embarquement, océan avant la Cartographie) ne sont plus proposées.
 
@@ -38,7 +38,7 @@ En multijoueur, les correctifs **[tous les joueurs]** demandent que tous les hum
 - Bouton **Réinitialiser BGE** dans l'onglet BetterGameExperience : remet tous les réglages à leur
   valeur par défaut.
 - Nouveau réglage avancé de diagnostic, désactivé par défaut : **Mesure du coût de la zone de
-  déplacement**.
+  déplacement (en temps)**.
 
 ## BetterGameExperience 0.6.1
 
