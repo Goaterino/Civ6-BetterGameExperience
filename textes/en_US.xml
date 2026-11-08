@@ -182,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_AIDE" Language="en_US">
 			<Text>Writes to Lua.log how long map pin and leader ribbon rebuilds take.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_MOUVEMENTS_NOM" Language="en_US">
+			<Text>Measure movement range cost</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_MOUVEMENTS_AIDE" Language="en_US">
+			<Text>Writes to Lua.log how long the movement range of a unit standing on an enemy district takes to compute (BGD mouvements lines). Diagnostic only, on this machine.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_NOM" Language="en_US">
 			<Text>Diagnose deals between players</Text>
 		</Row>

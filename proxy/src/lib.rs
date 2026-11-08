@@ -13,7 +13,7 @@
 //! (on par défaut, voir `carte`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
-//! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`). Les réglages de
+//! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
 //! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
@@ -163,14 +163,17 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_mesure_epingles=") {
             ui::set_mesure_epingles(v.trim() == "on");
         }
+        if let Some(v) = line.trim().strip_prefix("ui_mesure_mouvements=") {
+            ui::set_mesure_mouvements(v.trim() == "on");
+        }
         if let Some(v) = line.trim().strip_prefix("ui_epingles=") {
             ui::set_epingles(v.trim() != "off");
         }
-        if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
-            ui::set_merveilles(v.trim() != "off");
-        }
         if let Some(v) = line.trim().strip_prefix("ui_carte_entiere=") {
             carte::set_enabled(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
+            ui::set_merveilles(v.trim() != "off");
         }
         #[cfg(feature = "diag")]
         if let Some(v) = line.trim().strip_prefix("ui_diag_accords=") {
@@ -221,10 +224,10 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             ports::on_proxy_unload();
             empilement::on_proxy_unload();
             depart::on_proxy_unload();
+            carte::on_proxy_unload();
             improvements::on_proxy_unload();
             rendements::on_proxy_unload();
             rendements_empire::on_proxy_unload();
-            carte::on_proxy_unload();
             tours::on_proxy_unload();
             wmd::on_proxy_unload();
             ui::on_proxy_unload();

@@ -20,6 +20,8 @@
 //! - `ui_mesure_epingles=on|off` (off) : ajoute `ui_epingles.lua` à la fin des scripts que
 //!   recharge chaque `PlayerInfoChanged` (épingles, liste des épingles, bandeau des dirigeants, DMT).
 //!   Les durées vont dans Lua.log (voir map_pins/README.md) ;
+//! - `ui_mesure_mouvements=on|off` (off) : lignes « BGD mouvements: » dans Lua.log (coût de la
+//!   zone de déplacement sur un quartier ennemi, `ui_mouvements.lua`) ;
 //! - `ui_epingles=on|off` (on) : ajoute `ui_epingles_opti.lua` à MapPinManager.lua et
 //!   MapPinListPanel.lua. Plus de reconstruction quand aucune épingle n'a changé, une seule lecture
 //!   de GetMapPins par joueur et par reconstruction, liste fermée reconstruite à son ouverture ;
@@ -73,6 +75,7 @@ static MESURE: AtomicBool = AtomicBool::new(false);
 static OPTI: AtomicBool = AtomicBool::new(true);
 static MERVEILLES: AtomicBool = AtomicBool::new(true);
 static DIAG_ACCORDS: AtomicBool = AtomicBool::new(false);
+static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -98,6 +101,10 @@ pub fn set_journal(on: bool) {
 #[cfg(feature = "diag")]
 pub fn set_mesure_epingles(on: bool) {
     MESURE.store(on, Ordering::Relaxed);
+}
+
+pub fn set_mesure_mouvements(on: bool) {
+    MESURE_MOUVEMENTS.store(on, Ordering::Relaxed);
 }
 
 pub fn set_epingles(on: bool) {
@@ -352,8 +359,9 @@ const MOUVEMENTS_BLOCK: &str = include_str!("ui_mouvements.lua");
 
 /// Pas de zone de déplacement pour une unité posée sur un quartier défendable ennemi : le parcours de
 /// GameCore lui donne 0 PM au départ. `ui_mouvements.lua`, ajouté à la fin de SelectedUnit.lua,
-/// enveloppe `RealizeMoveRadius` et refait la zone avec les chemins du survol. Voir
-/// analyses/quartier_capture_mouvements.
+/// enveloppe `RealizeMoveRadius` et refait la zone avec les chemins du survol. Il est précédé de
+/// `local BGD_MOUV_MESURE = true|false;` (`ui_mesure_mouvements`) : les lignes « BGD mouvements: »
+/// de Lua.log ne sont écrites qu'avec true. Voir analyses/quartier_capture_mouvements.
 pub fn patch_selected_unit(src: &[u8]) -> Result<Vec<u8>, String> {
     let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
     if let Some(missing) = ["local m_MovementRange", "\nfunction RealizeMoveRadius("].iter().find(|n| !has(n)) {
@@ -363,7 +371,8 @@ pub fn patch_selected_unit(src: &[u8]) -> Result<Vec<u8>, String> {
         return Err("déjà corrigé".into());
     }
     let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
+    let mesure = MESURE_MOUVEMENTS.load(Ordering::Relaxed);
+    out.extend_from_slice(format!("\r\nlocal BGD_MOUV_MESURE = {mesure};\r\n").as_bytes());
     out.extend_from_slice(MOUVEMENTS_BLOCK.as_bytes());
     Ok(out)
 }
@@ -989,6 +998,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         if !is_file(chunk, file) {
             continue;
         }
+        if file == "SelectedUnit.lua" {
+            // Mesure de ui_mouvements.lua : horloge à la milliseconde (os.clock est à la seconde).
+            publish_clock(l);
+        }
         return match patch(src) {
             Ok(text) => {
                 what.push(done.into());
@@ -1408,6 +1421,7 @@ mod tests {
         let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\WorldView\SelectedUnit.lua")) else { return };
         let bytes = patch_selected_unit(&src).unwrap();
         assert!(bytes.starts_with(&src) && bytes.ends_with(MOUVEMENTS_BLOCK.as_bytes()));
+        assert!(String::from_utf8_lossy(&bytes).contains("\r\nlocal BGD_MOUV_MESURE = false;\r\n"), "mesure coupée par défaut");
         assert!(patch_selected_unit(&bytes).is_err(), "pas deux fois");
         assert!(!is_file(r"C:\x\SelectedUnit_Expansion2.lua", "SelectedUnit.lua"));
     }
