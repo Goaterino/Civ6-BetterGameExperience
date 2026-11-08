@@ -116,6 +116,22 @@ hook = struct.unpack("<Q", jump[9:])[0]
 assert h <= hook < h + 0x400000, f"ports : le relais ne mène pas au proxy ({hook:#x})"
 print(f"ports : call {base + PORT_RVA:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
+# Unités empilées (empilement.rs) : `call 1802c4360` du contournement et du soutien redirigés vers un
+# relais `mov r8,rsi ; mov r9,r14 ; jmp [rip+0]`.
+PILE_RVAS, PILE_CALLEE = (0x36C3E1, 0x36D301), 0x2C4360
+for rva in PILE_RVAS:
+    assert ctypes.string_at(base + rva - 10, 10).hex() == "8b5704488b88c8060000", f"empilement {rva:#x} : contexte inattendu"
+    assert ctypes.string_at(base + rva + 5, 6).hex() == "488bd84885c0", f"empilement {rva:#x} : suite inattendue"
+    code = ctypes.string_at(base + rva, 5)
+    assert code[0] == 0xE8, f"empilement {rva:#x} : pas de call ({code.hex()})"
+    stub = base + rva + 5 + struct.unpack("<i", code[1:])[0]
+    assert stub != base + PILE_CALLEE, f"empilement {rva:#x} : appel non redirigé"
+    jump = ctypes.string_at(stub, 20)
+    assert jump[:12] == bytes.fromhex("4989f04d89f1ff2500000000"), f"empilement {rva:#x} : relais inattendu ({jump.hex()})"
+    hook = struct.unpack("<Q", jump[12:])[0]
+    assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
+    print(f"empilement : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+
 # Le proxy n'exporte que les noms de l'originale, plus DllMain et les deux exports de diagnostic.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from gen_exports import exports  # noqa: E402
@@ -142,4 +158,8 @@ print("tours : appels d'origine restaurés après déchargement du proxy")
 code = ctypes.string_at(base + PORT_RVA, 5)
 assert base + PORT_RVA + 5 + struct.unpack("<i", code[1:])[0] == base + PORT_CALLEE, "ports : appel non restauré"
 print("ports : appel d'origine restauré après déchargement du proxy")
+for rva in PILE_RVAS:
+    code = ctypes.string_at(base + rva, 5)
+    assert base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + PILE_CALLEE, f"empilement {rva:#x} : appel non restauré"
+print("empilement : appels d'origine restaurés après déchargement du proxy")
 print("OK")

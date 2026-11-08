@@ -23,6 +23,7 @@ mod citoyens;
 mod coalesce;
 mod congres;
 mod depart;
+mod empilement;
 mod exe;
 mod forward;
 mod improvements;
@@ -213,6 +214,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             congres::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();
+            empilement::on_proxy_unload();
             depart::on_proxy_unload();
             improvements::on_proxy_unload();
             rendements::on_proxy_unload();
