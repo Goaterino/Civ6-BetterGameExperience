@@ -261,9 +261,6 @@ Aucun réglage : ce sont des corrections de bugs.
 |---|---|---|---|
 | bug 2, toutes causes | **retour au vote** : `18005b640` réécrite, annulation permise pendant `WORLDCONGRESS_1` et `_2` ; bouton « Revenir au vote » sur l'écran d'attente, fenêtre de vote rouverte avec les votes envoyés | `src/congres.rs`, `ui_congres_attente.lua` / `.xml`, `ui_congres_vote.lua` | POL |
 | revote | coût des voix déjà comptées rendu avant un second vote sur la même résolution ou proposition, repris si le jeu refuse ce vote ; faveur gagnée (`+0xd8`) inchangée | `src/congres.rs`, appelé par les détours de vote de `src/spectateurs.rs` | POL |
-| H2a | 240 s de MPH appliquées au début du segment de vote, si le minuteur est plus court | `ui_congres_minuteur.lua` (`TurnProcessing.lua` de MPH) | local |
-| H2b, H1a | en session ordinaire, pas de fin de tour sur une liste vide : attente des résolutions (10 s au plus, puis comportement du jeu) | `ui_congres_vote.lua` | local |
-| H2c | fin de tour automatique relue à chaque vérification, bloquée pendant le vote | `ui_congres_fin_auto.lua` (`ActionPanel_Expansion2.lua`) | local |
 | H1c, H3d | luxes de `WC_Validate_LuxuryBan` recalculés à chaque session | `ui_congres_cibles.lua` (`WorldCongress.lua`) | POL |
 | effet du retour au vote | l'annulation d'un autre joueur relançait l'intro (`WorldCongressStage1`) chez tous : une seule intro par tour et par session (essayé en partie, 2026-11-06) | `ui_congres_intro.lua` (`WorldCongressIntro.lua`) | local |
 
@@ -282,6 +279,11 @@ Choix faits :
 - **Autres chemins d'annulation.** `18005b640` sert aussi à `18005c98a`, qui remet un joueur en jeu
   dans une autre situation (non identifiée). Pendant le vote, ni commande stratégique ni diplomatie :
   sans effet attendu, à surveiller.
+- **Retirés le 2026-11-08** : les correctifs locaux de H2a (240 s de MPH appliquées au début du
+  segment de vote, `ui_congres_minuteur.lua`), H2b/H1a (attente des résolutions sur une liste vide,
+  dans `ui_congres_vote.lua`) et H2c (fin de tour automatique bloquée pendant le vote,
+  `ui_congres_fin_auto.lua`). Le minuteur et la fin de tour du jeu reprennent la main pendant le
+  vote ; le retour au vote reste le seul recours d'un joueur dont le tour est parti.
 - **Non traités** : H2d (`TurnComplete` en double au changement de segment) et H2e (raccourci de fin
   de tour sur l'intro) : le retour au vote en rattrape les effets tant que du temps reste. H1b
   (simulation divergente) et H3c (faveur rabotée) : à mesurer d'abord.
@@ -293,10 +295,7 @@ Choix faits :
   joueur N revote …`), pas de désynchro ;
 - l'événement `RemotePlayerTurnUnready` (nom supposé : l'écran d'attente remet l'autre joueur « en
   attente ») ;
-- le minuteur à 240 s pendant le vote (journal de l'exe `Turn Timer Sending TurnComplete,
-  turnTimeLimit: 240`), et la fin de tour simultanée de l'hôte (`depart_tour`) qui suit ;
-- les lignes `BGE congrès : aucune résolution dans le cache…` dans `Lua.log` : elles confirmeraient
-  H1a/H2b.
+- la fin de tour simultanée de l'hôte (`depart_tour`) pendant le vote.
 
 ## Mesures à faire
 

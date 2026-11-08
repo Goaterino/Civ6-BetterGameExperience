@@ -59,8 +59,6 @@ const CIBLES_BLOCK: &str = include_str!("ui_congres_cibles.lua");
 const VOTE_BLOCK: &str = include_str!("ui_congres_vote.lua");
 const ATTENTE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres_attente.lua"));
 const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
-const FIN_AUTO_BLOCK: &str = include_str!("ui_congres_fin_auto.lua");
-const MINUTEUR_BLOCK: &str = include_str!("ui_congres_minuteur.lua");
 const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 
@@ -642,8 +640,8 @@ pub fn patch_top_panel(src: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// WorldCongressPopup.lua suivi de `ui_congres.lua` si `spectateurs` (la fenêtre du congrès en
-/// lecture seule pour un spectateur), puis de `ui_congres_vote.lua` (pas de fin de tour sur un cache
-/// vide, retour au vote). Les blocs lisent les locales du fichier : on vérifie qu'elles y sont.
+/// lecture seule pour un spectateur), puis de `ui_congres_vote.lua` (retour au vote). Les blocs
+/// lisent les locales du fichier : on vérifie qu'elles y sont.
 pub fn patch_congres(src: &[u8], spectateurs: bool) -> Result<Vec<u8>, String> {
     let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
     if has("Civ6RolloverProxy (src/ui_congres") {
@@ -653,7 +651,6 @@ pub fn patch_congres(src: &[u8], spectateurs: bool) -> Result<Vec<u8>, String> {
         "local m_IsInSession",
         "local m_CurrentPhase",
         "local m_CurrentStage",
-        "local m_HasAccepted",
         "local m_StartingFavor",
         "local m_WorkingFavor",
         "local PHASE_STEP_MAX",
@@ -662,8 +659,6 @@ pub fn patch_congres(src: &[u8], spectateurs: bool) -> Result<Vec<u8>, String> {
         "local m_kResolutionVotes",
         "local m_kResolutionChoices",
         "local m_kProposalVotes",
-        "function SetPhase(",
-        "function HasChoices(",
         "function UpdateWorkingFavor(",
         "function OnAccept(",
         "function SetupWorldCongress(",
@@ -743,38 +738,6 @@ pub fn patch_congres_intro(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// ActionPanel_Expansion2.lua suivi de `ui_congres_fin_auto.lua` : pas de fin de tour automatique
-/// pendant le vote du congrès.
-pub fn patch_fin_auto(src: &[u8]) -> Result<Vec<u8>, String> {
-    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
-    if has("Civ6RolloverProxy (src/ui_congres_fin_auto.lua)") {
-        return Err("déjà corrigé".into());
-    }
-    if !has("function AllowAutoEndTurn_Expansion(") {
-        return Err("AllowAutoEndTurn_Expansion introuvable".into());
-    }
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(FIN_AUTO_BLOCK.as_bytes());
-    Ok(out)
-}
-
-/// TurnProcessing.lua de MPH suivi de `ui_congres_minuteur.lua` : les 240 s que SmartTimer prévoit
-/// pour le vote du congrès.
-pub fn patch_minuteur_mph(src: &[u8]) -> Result<Vec<u8>, String> {
-    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
-    if has("Civ6RolloverProxy (src/ui_congres_minuteur.lua)") {
-        return Err("déjà corrigé".into());
-    }
-    if !has("function SmartTimer(") || !has("CPL_SMARTTIMER") || !has("WORLD_CONGRESS_STAGE_1") {
-        return Err("pas le TurnProcessing.lua de MPH".into());
-    }
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(MINUTEUR_BLOCK.as_bytes());
-    Ok(out)
-}
-
 /// WorldCongress.lua (script de gameplay) précédé de `ui_congres_cibles.lua` : les cibles
 /// « joueur » des résolutions tirées de `BGD_MajorsCibles()`, sans les spectateurs, et la liste des
 /// luxes recalculée à chaque session (`BGD_LuxesARecalculer()`).
@@ -812,7 +775,7 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 10] = [
+const FIXES: [(&str, Fix, &str); 8] = [
     ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
     ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
     ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
@@ -821,8 +784,6 @@ const FIXES: [(&str, Fix, &str); 10] = [
     ("CityPanel.lua", patch_city_panel, "owningPlayerID corrigé"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
     ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville"),
-    ("ActionPanel_Expansion2.lua", patch_fin_auto, "pas de fin de tour automatique pendant le vote du congrès"),
-    ("TurnProcessing.lua", patch_minuteur_mph, "minuteur du vote du congrès de MPH appliqué (240 s)"),
 ];
 
 /// Les cadres que les calques de ui_boutons.xml reproduisent : sans eux, les boutons déplacés ne
@@ -903,7 +864,7 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 if spectateurs {
                     what.push("fenêtre du congrès en lecture seule pour les spectateurs".into());
                 }
-                what.push("pas de fin de tour sur un cache vide, retour au vote".into());
+                what.push("retour au vote".into());
                 Some(text)
             }
             Err(e) => {
@@ -1497,25 +1458,6 @@ mod tests {
         assert!(new.starts_with(&src) && new.ends_with(INTRO_BLOCK.as_bytes()));
         assert!(patch_congres_intro(&new).is_err(), "pas deux fois");
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressIntro.lua", "WorldCongressIntro.lua"));
-    }
-
-    #[test]
-    fn fin_auto_du_jeu() {
-        let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua")) else { return };
-        let new = patch_fin_auto(&src).unwrap();
-        assert!(new.starts_with(&src) && new.ends_with(FIN_AUTO_BLOCK.as_bytes()));
-        assert!(patch_fin_auto(&new).is_err(), "pas deux fois");
-        assert!(is_file(r"C:\x\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua", "ActionPanel_Expansion2.lua"));
-        assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Replacements\ActionPanel_Expansion2.lua", "ActionPanel.lua"));
-    }
-
-    #[test]
-    fn minuteur_de_mph() {
-        let Some(src) = read(format!(r"{MPH}\ui\Additions\TurnProcessing.lua")) else { return };
-        let new = patch_minuteur_mph(&src).unwrap();
-        assert!(new.starts_with(&src) && new.ends_with(MINUTEUR_BLOCK.as_bytes()));
-        assert!(patch_minuteur_mph(&new).is_err(), "pas deux fois");
-        assert!(patch_minuteur_mph(b"function OnTurnEnd() end").is_err(), "un autre TurnProcessing.lua");
     }
 
     #[test]

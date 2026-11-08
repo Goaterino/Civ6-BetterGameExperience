@@ -501,7 +501,7 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 
 ## Congrès mondial : tours passés, retour au vote
 
-[src/congres.rs](src/congres.rs) et cinq blocs d'interface. Analyse et liste des causes :
+[src/congres.rs](src/congres.rs) et quatre blocs d'interface. Analyse et liste des causes :
 [congres/README.md](../congres/README.md).
 
 - **Retour au vote (correctif POL).** `18005b640` (le segment permet-il d'annuler sa fin de tour ?)
@@ -515,13 +515,10 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   (`Civ6RolloverProxy_Revote()`, `CanUnreadyTurn`, minuteur) et remet en attente un joueur revenu
   au vote. `WorldCongressPopup.lua` se rouvre alors avec les votes envoyés, la faveur affichée
   comptant ce que GameCore rendra.
-- **Fin de tour sur un cache vide (local).** `WorldCongressPopup.lua` termine le tour d'office quand
-  il ne trouve aucun choix. En session ordinaire, il attend désormais les résolutions (10 s au plus)
-  au lieu de terminer le tour.
-- **Fin de tour automatique (local).** `ActionPanel_Expansion2.lua` : relue à chaque vérification,
-  bloquée pendant les segments de vote.
-- **Minuteur de MPH (local).** `TurnProcessing.lua` de MPH : les 240 s prévues pour le vote sont
-  appliquées au début du segment de vote (le script de MPH ne les applique jamais).
+- **Retirés le 2026-11-08** : l'attente des résolutions sur un cache vide (`WorldCongressPopup.lua`),
+  le blocage de la fin de tour automatique pendant le vote (`ActionPanel_Expansion2.lua`) et les 240 s
+  de MPH pendant le vote (`TurnProcessing.lua` de MPH). Le minuteur et la fin de tour du jeu (et de
+  MPH) reprennent la main pendant le vote.
 - **Luxes (correctif POL).** `WorldCongress.lua` : la liste des luxes de l'interdiction d'un luxe est
   recalculée à chaque session, au lieu d'être gardée depuis le premier appel de l'état Lua.
 - **Intro (local).** `WorldCongressIntro.lua` s'ouvrait à chaque `WorldCongressStage1` / `2` ;
@@ -530,10 +527,10 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Pas de réglage** : ce sont des corrections de bugs.
 - **Le journal.** `congrès : détour posé (…)`, `congrès : annulation de fin de tour permise pendant le
   vote`, `congrès : joueur N revote sur … : X voix déjà comptées, Y de faveur rendue`, et dans
-  `Lua.log` les lignes `BGE congrès : …` (attente des résolutions, retour au vote, minuteur).
+  `Lua.log` les lignes `BGE congrès : …` (retour au vote).
 - **Tests.** `cargo test` (décision d'annulation, hachages, blocs ajoutés aux vrais scripts),
-  `lua proxy/tests/test_congres.lua` (attente du cache, retour au vote et faveur, bouton, fin
-  automatique, minuteur, luxes), `check_hooks.py` (pose et restauration de `18005b640`).
+  `lua proxy/tests/test_congres.lua` (cache vide laissé au jeu, retour au vote et faveur, bouton,
+  luxes, intro), `check_hooks.py` (pose et restauration de `18005b640`).
 
 ## Téléportation au départ d'un district (correctif POL)
 
