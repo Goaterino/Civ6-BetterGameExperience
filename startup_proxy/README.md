@@ -86,10 +86,19 @@ partie Gathering Storm ; son nom vient de `Expansion2.modinfo`. Il n'importe que
   dans la pile `ProxyAdvancedStack`, qu'un bouton « Afficher les options avancées » montre ou cache.
   Restent visibles le confort et l'interface : général, interface, correctifs, mods d'interface
   intégrés, crédits. L'état du bouton est gardé d'une ouverture à l'autre de l'écran.
+- **Réinitialiser BGE.** Un bouton rouge `ProxyResetButton`, ajouté au XML juste après
+  `ConfirmButton`, n'apparaît que sur l'onglet BGE : `OnSelectTab` est enveloppé, et sur cet
+  onglet le bouton se place à gauche et Confirmer se décale à droite, côte à côte ; ailleurs,
+  Confirmer reste seul et centré. Le clic ouvre le pop-up du jeu (Oui / Non). Oui retire du
+  fichier les lignes de toutes les clés de l'onglet (`Civ6Proxy_ReinitialiserReglages`), qui
+  reprennent leur valeur par défaut ; commentaires et clés inconnues restent. Les choix en
+  attente sont abandonnés. Le message « redémarrage nécessaire » suit si une valeur change et que
+  le proxy de GameCore a déjà lu le fichier, ou qu'elle n'est lue qu'au lancement du jeu.
 - **Les fonctions natives**, posées dans la table globale du contexte avant sa compilation :
   `Civ6Proxy_LireReglages()` rend le texte du fichier, 1 si le proxy de GameCore est installé, et 1
   s'il a déjà lu le fichier ; `Civ6Proxy_EcrireReglages(lignes)` fusionne des lignes `clé=valeur`
-  dans le fichier, et rend aussi ce dernier indicateur. Seules les
+  dans le fichier, et rend aussi ce dernier indicateur, comme
+  `Civ6Proxy_ReinitialiserReglages(cles)`, qui en retire les lignes de ces clés. Seules les
   lignes changées sont réécrites, et les doublons d'une clé changée sont retirés : `read_config`
   garde la dernière occurrence. HavokScript n'exporte ni `lua_pushlstring` ni `lua_pushboolean` :
   les chaînes passent par `lua_pushfstring("%s")`, les booléens par `lua_pushinteger`.

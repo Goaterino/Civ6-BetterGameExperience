@@ -230,6 +230,18 @@
 		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="ja_JP">
 			<Text>詳細オプションを隠す</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_BOUTON" Language="ja_JP">
+			<Text>BGE をリセット</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_AIDE" Language="ja_JP">
+			<Text>BetterGameExperience のすべての設定を既定値に戻します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_TEXTE" Language="ja_JP">
+			<Text>BetterGameExperience のすべての設定を既定値に戻しますか?</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_FAIT" Language="ja_JP">
+			<Text>設定を既定値に戻しました。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="ja_JP">
 			<Text>組み込みインターフェースMODは作者の成果に基づいています。BetterGameExperience より感謝します:</Text>
 		</Row>

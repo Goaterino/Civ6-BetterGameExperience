@@ -34,6 +34,10 @@ const XML_PANEL: &str = include_str!("options_proxy_panel.xml");
 /// des raccourcis clavier, dans le conteneur des panneaux.
 const TAB_ANCHOR: &str = r#"<GridButton ID="AppTab""#;
 const PANEL_ANCHOR: &str = r#"<Container ID="KeyBindings""#;
+/// Bouton « Réinitialiser BGE », juste après le bouton Confirmer, sous les panneaux : caché, sauf sur
+/// l'onglet BGE, où options_proxy.lua place les deux côte à côte. Sans Confirmer, pas de bouton.
+const CONFIRM_ANCHOR: &str = r#"<GridButton ID="ConfirmButton""#;
+const XML_RESET: &str = r#"<GridButton ID="ProxyResetButton" Style="ButtonRed" AnchorSide="I,O" Anchor="c,b" Size="300,41" String="" Hidden="1"/>"#;
 
 pub const CFG_NAME: &str = "rollover_proxy.cfg";
 
@@ -59,14 +63,25 @@ pub fn patch_options_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     if panel < tab_end {
         return Err("panneau KeyBindings avant les onglets".into());
     }
-    let mut out = String::with_capacity(text.len() + XML_TAB.len() + XML_PANEL.len() + 8);
+    let confirm_end = text[panel..]
+        .find(CONFIRM_ANCHOR)
+        .and_then(|c| text[panel + c..].find("/>").map(|e| panel + c + e + 2));
+    let mut out = String::with_capacity(text.len() + XML_TAB.len() + XML_PANEL.len() + XML_RESET.len() + 16);
     out.push_str(&text[..tab_end]);
     out.push_str("\r\n");
     out.push_str(XML_TAB.trim_end());
     out.push_str(&text[tab_end..panel]);
     out.push_str(XML_PANEL.trim_end());
     out.push_str("\r\n");
-    out.push_str(&text[panel..]);
+    match confirm_end {
+        Some(end) => {
+            out.push_str(&text[panel..end]);
+            out.push_str("\r\n\t\t\t\t");
+            out.push_str(XML_RESET);
+            out.push_str(&text[end..]);
+        }
+        None => out.push_str(&text[panel..]),
+    }
     Ok(out.into_bytes())
 }
 
@@ -156,6 +171,25 @@ pub fn merge_config(existing: &str, changes: &str) -> Result<String, String> {
     Ok(text)
 }
 
+/// Le fichier de réglages sans les lignes des `keys` (une par ligne) : sans elles, le proxy prend
+/// leur valeur par défaut. Les autres lignes (commentaires, clés que l'onglet ne connaît pas) restent.
+pub fn reset_config(existing: &str, keys: &str) -> Result<String, String> {
+    let keys: Vec<&str> = keys.lines().map(str::trim).filter(|k| !k.is_empty()).collect();
+    if let Some(k) = keys.iter().find(|k| !k.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')) {
+        return Err(format!("clé invalide : {k}"));
+    }
+    let kept: Vec<&str> = existing
+        .lines()
+        .filter(|line| !line.split_once('=').is_some_and(|(k, _)| keys.contains(&k.trim())))
+        .collect();
+    if kept.iter().all(|l| l.trim().is_empty()) {
+        return Ok(String::new());
+    }
+    let mut text = kept.join("\r\n");
+    text.push_str("\r\n");
+    Ok(text)
+}
+
 // ---------------------------------------------------------------------------------------------
 // Fichiers.
 
@@ -206,6 +240,20 @@ fn write_config(changes: &str) -> Result<(), String> {
     let text = merge_config(&existing, changes)?;
     std::fs::write(&path, text).map_err(|e| format!("écriture de {} impossible : {e}", path.display()))?;
     log(&format!("options : {CFG_NAME} enregistré ({})", changes.lines().collect::<Vec<_>>().join(", ")));
+    Ok(())
+}
+
+/// Retire du fichier les lignes des `keys` ; un fichier qui n'existe pas est déjà par défaut.
+fn reset_config_file(keys: &str) -> Result<(), String> {
+    let path = gamecore_dir().ok_or("dossier du jeu introuvable")?.join(CFG_NAME);
+    let existing = match std::fs::read_to_string(&path) {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(e) => return Err(format!("lecture de {CFG_NAME} impossible : {e}")),
+    };
+    let text = reset_config(&existing, keys)?;
+    std::fs::write(&path, text).map_err(|e| format!("écriture de {} impossible : {e}", path.display()))?;
+    log(&format!("options : {CFG_NAME} réinitialisé ({})", keys.lines().collect::<Vec<_>>().join(", ")));
     Ok(())
 }
 
@@ -281,13 +329,24 @@ unsafe extern "C-unwind" fn lua_read(l: *mut c_void) -> i32 {
 /// `Civ6Proxy_EcrireReglages(lignes)`, lignes `clé=valeur` → 1 et 1|0 selon que le proxy de
 /// GameCore a déjà lu le fichier (redémarrage nécessaire) ; ou nil et le message d'erreur.
 unsafe extern "C-unwind" fn lua_write(l: *mut c_void) -> i32 {
+    lua_edit(l, write_config)
+}
+
+/// `Civ6Proxy_ReinitialiserReglages(cles)`, une clé par ligne → comme `Civ6Proxy_EcrireReglages`.
+unsafe extern "C-unwind" fn lua_reset(l: *mut c_void) -> i32 {
+    lua_edit(l, reset_config_file)
+}
+
+/// Applique `edit` à la chaîne en argument ; rend 1 et 1|0 selon que le proxy de GameCore a déjà
+/// lu le fichier, ou nil et le message d'erreur.
+unsafe fn lua_edit(l: *mut c_void, edit: fn(&str) -> Result<(), String>) -> i32 {
     let Some(h) = hks() else { return 0 };
     let mut len = 0usize;
     let p = (h.to_lstring)(l, 1, &mut len);
     let result = if p.is_null() {
         Err("argument attendu : une chaîne".to_string())
     } else {
-        write_config(&String::from_utf8_lossy(std::slice::from_raw_parts(p as *const u8, len)))
+        edit(&String::from_utf8_lossy(std::slice::from_raw_parts(p as *const u8, len)))
     };
     match result {
         Ok(()) => {
@@ -307,8 +366,11 @@ unsafe extern "C-unwind" fn lua_write(l: *mut c_void) -> i32 {
 /// Fonctions natives d'un contexte : la fonction et son nom global, terminé par un zéro.
 pub(crate) type Natives = &'static [(LuaCFn, &'static [u8])];
 
-const OPTIONS_NATIVES: Natives =
-    &[(lua_read, b"Civ6Proxy_LireReglages\0"), (lua_write, b"Civ6Proxy_EcrireReglages\0")];
+const OPTIONS_NATIVES: Natives = &[
+    (lua_read, b"Civ6Proxy_LireReglages\0"),
+    (lua_write, b"Civ6Proxy_EcrireReglages\0"),
+    (lua_reset, b"Civ6Proxy_ReinitialiserReglages\0"),
+];
 
 thread_local! {
     /// Les fonctions à poser, le temps d'un `lua_cpcall` : sa fonction ne reçoit que l'état Lua.
@@ -475,6 +537,10 @@ mod tests {
         let (app, tab, stack_end) = (new.find(TAB_ANCHOR).unwrap(), new.find(r#"ID="ProxyTab""#).unwrap(), new.find("</Stack>").unwrap());
         assert!(app < tab && tab < stack_end);
         assert!(new.find(r#"ID="ProxyOptions""#).unwrap() < new.find(PANEL_ANCHOR).unwrap());
+        // Le bouton de réinitialisation suit Confirmer, dans la même grille.
+        let (confirm, reset) = (new.find(CONFIRM_ANCHOR).unwrap(), new.find(XML_RESET).unwrap());
+        assert!(confirm < reset && new[confirm..reset].matches('<').count() == 1);
+        assert_eq!(new.matches(r#"ID="ProxyResetButton""#).count(), 1);
         for (open, close) in [("<Container", "</Container>"), ("<ScrollPanel", "</ScrollPanel>"), ("<Stack", "</Stack>")] {
             let old = String::from_utf8_lossy(&src);
             assert_eq!(new.matches(open).count() - old.matches(open).count(), new.matches(close).count() - old.matches(close).count(), "{open}");
@@ -524,6 +590,15 @@ mod tests {
         assert!(merge_config(old, "a b=1").is_err());
         assert!(merge_config(old, "a=1\nb=x;y").is_err());
         assert_eq!(merge_config(old, "").unwrap(), old);
+    }
+
+    #[test]
+    fn reinitialisation_du_fichier() {
+        let old = "mode=off\r\n# note\r\nui_boutons=off\r\nmerveilles_file=on\r\nmode=count\r\n";
+        assert_eq!(reset_config(old, "mode\nui_boutons\n").unwrap(), "# note\r\nmerveilles_file=on\r\n", "toutes les lignes d'une clé");
+        assert_eq!(reset_config("mode=off\r\n\r\n", "mode").unwrap(), "", "rien d'autre : fichier vide");
+        assert_eq!(reset_config(old, "").unwrap(), old);
+        assert!(reset_config(old, "a b").is_err());
     }
 
     /// Chaque clé de l'onglet est lue par le proxy de GameCore (`read_config`, dans proxy/src/lib.rs),

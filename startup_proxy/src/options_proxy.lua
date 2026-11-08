@@ -4,6 +4,8 @@
 -- réglages du proxy de GameCore, par deux fonctions natives posées par le proxy :
 --   Civ6Proxy_LireReglages()          -> texte, installé (1|0), déjà lu (1|0) ; ou nil, erreur
 --   Civ6Proxy_EcrireReglages(lignes)  -> 1, déjà lu (1|0) ; ou nil, erreur  (lignes « clé=valeur »)
+--   Civ6Proxy_ReinitialiserReglages(cles) -> idem ; retire du fichier les lignes de ces clés (une
+--                                        par ligne), qui reprennent leur valeur par défaut
 -- « Déjà lu » : le proxy de GameCore est chargé et a lu le fichier, ce qu'il ne fait qu'à son
 -- chargement, au lancement de la première partie. Alors un changement attend le redémarrage du
 -- jeu : la confirmation lève _PromptRestartApp, et le jeu affiche son propre message « redémarrage
@@ -11,8 +13,8 @@
 -- par le proxy de démarrage au lancement du jeu, demandent toujours le redémarrage.
 -- Textes dans la langue du jeu : BGD_Txt (textes/bgd_texte.lua, placé devant ce bloc). Le nom et
 -- l'aide d'un réglage sont LOC_BGD_OPT_<CLÉ>_NOM et LOC_BGD_OPT_<CLÉ>_AIDE.
--- m_tabs, OnSelectTab, OnConfirm, OnShow, PopulateComboBox et _PromptRestartApp sont ceux
--- d'Options.lua.
+-- m_tabs, OnSelectTab, OnConfirm, OnShow, PopulateComboBox, _kPopupDialog et _PromptRestartApp
+-- sont ceux d'Options.lua.
 -- ===========================================================================
 
 -- Réécrite avec la version de BetterGameDLLs par le proxy de démarrage (src/options.rs), affichée
@@ -132,6 +134,12 @@ local PROXY_REGLAGES = {
 	{ cle = "profil_zones", defaut = "off", libre = true, demarrage = true, diag = true,
 		choix = PROXY_ON_OFF },
 };
+
+-- Toutes les clés, réglages de diagnostic compris : la réinitialisation les retire toutes du fichier.
+local PROXY_CLES = {};
+for _, r in ipairs(PROXY_REGLAGES) do
+	if r.cle ~= nil then table.insert(PROXY_CLES, r.cle); end
+end
 
 -- Réécrite en `true` par le proxy de démarrage compilé avec la feature `diag` (src/options.rs).
 local PROXY_DIAG = false;
@@ -282,6 +290,59 @@ local function Proxy_Save()
 	return loaded == 1 or demarrage;
 end
 
+-- Réinitialisation, après confirmation : les clés de l'onglet sont retirées du fichier, et les
+-- choix en attente abandonnés. Le message « redémarrage nécessaire » du jeu suit si un réglage
+-- change et que le proxy de GameCore a déjà lu le fichier, ou qu'il n'est lu qu'au lancement du jeu.
+local function Proxy_Reset()
+	local function Rendre()
+		Controls.ProxyResetButton:SetDisabled(false);
+		Controls.WindowCloseButton:SetDisabled(false);
+	end
+	local function Reinitialiser()
+		Rendre();
+		local change, demarrage = false, false;
+		for _, r in ipairs(PROXY_REGLAGES) do
+			local v = m_proxySaved[r.cle];
+			if r.cle ~= nil and v ~= nil and v ~= r.defaut then
+				change = true;
+				if r.demarrage then demarrage = true; end
+			end
+		end
+		if Civ6Proxy_ReinitialiserReglages == nil then
+			Controls.ProxyStatus:SetText(Proxy_T("LOC_BGD_OPT_NON_ENREGISTRES", Proxy_T("LOC_BGD_OPT_SANS_NATIVES")));
+			return;
+		end
+		local ok, loaded = Civ6Proxy_ReinitialiserReglages(table.concat(PROXY_CLES, "\n"));
+		if ok == nil then
+			Controls.ProxyStatus:SetText(Proxy_T("LOC_BGD_OPT_NON_ENREGISTRES", tostring(loaded)));
+			return;
+		end
+		m_proxyPending = {};
+		Proxy_Refresh();
+		Controls.ProxyStatus:SetText(Proxy_T("LOC_BGD_OPT_REINIT_FAIT"));
+		if change and (loaded == 1 or demarrage) then
+			_kPopupDialog:AddText(Locale.Lookup("LOC_OPTIONS_CHANGES_REQUIRE_APP_RESTART"));
+			_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_OK"), function() end);
+			_kPopupDialog:Open();
+		end
+	end
+	_kPopupDialog:AddText(Proxy_T("LOC_BGD_OPT_REINIT_TEXTE"));
+	_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES"), Reinitialiser, nil, nil, "PopupButtonInstanceRed");
+	_kPopupDialog:AddButton(Locale.Lookup("LOC_OPTIONS_RESET_OPTIONS_POPUP_NO"), Rendre);
+	_kPopupDialog:Open();
+	Controls.ProxyResetButton:SetDisabled(true);
+	Controls.WindowCloseButton:SetDisabled(true);
+end
+
+-- Sur l'onglet BGE, « Réinitialiser BGE » à gauche et Confirmer à droite, côte à côte sous les
+-- panneaux ; sur les autres, Confirmer seul et centré, comme dans le jeu.
+local function Proxy_PlaceButtons(onTab)
+	if Controls.ProxyResetButton == nil then return; end
+	Controls.ProxyResetButton:SetHide(not onTab);
+	Controls.ProxyResetButton:SetOffsetX(onTab and -155 or 0);
+	Controls.ConfirmButton:SetOffsetX(onTab and 155 or 0);
+end
+
 local function Proxy_Build()
 	-- Chaque section va dans la pile visible ou dans celle des options avancées, selon son titre.
 	local stack = Controls.ProxyBasicStack;
@@ -324,6 +385,22 @@ if Controls.ProxyTab ~= nil and Controls.ProxyOptions ~= nil and Controls.ProxyA
 	Controls.TabStack:CalculateSize();
 	Proxy_Build();
 	Proxy_Refresh();
+
+	-- Bouton de réinitialisation (ajouté au XML après Confirmer) : visible sur cet onglet seul.
+	-- Les onglets du jeu appellent OnSelectTab par son nom global, au clic et à l'ouverture.
+	if Controls.ProxyResetButton ~= nil then
+		Controls.ProxyResetButton:SetText(Proxy_T("LOC_BGD_OPT_REINIT_BOUTON"));
+		Controls.ProxyResetButton:SetToolTipString(Proxy_T("LOC_BGD_OPT_REINIT_AIDE"));
+		Controls.ProxyResetButton:RegisterCallback(Mouse.eLClick, Proxy_Reset);
+		Controls.ProxyResetButton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		local Proxy_BaseOnSelectTab = OnSelectTab;
+		OnSelectTab = function(t)
+			Proxy_BaseOnSelectTab(t);
+			if type(t) == "number" then t = m_tabs[t]; end
+			Proxy_PlaceButtons(t == tab);
+		end
+		Proxy_PlaceButtons(not Controls.ProxyOptions:IsHidden());
+	end
 
 	-- À chaque ouverture : choix en attente abandonnés (Annuler ferme l'écran sans rien écrire),
 	-- fichier relu (il a pu changer depuis l'autre écran d'options, menu principal ou partie), et
