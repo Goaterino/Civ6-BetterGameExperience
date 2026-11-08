@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="it_IT">
 			<Text>I segnalini e il loro elenco non vengono più ricostruiti quando nulla è cambiato: meno rallentamenti in multigiocatore.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="it_IT">
+			<Text>Mappa intera fin dall'inizio</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="it_IT">
+			<Text>La minimappa e la telecamera coprono l'intera mappa dal primo turno, senza piazzare segnalini ai bordi. Le zone inesplorate restano nascoste. Solo locale: nessun effetto sugli altri giocatori in multigiocatore.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="it_IT">
 			<Text>Contatore dei turni di produzione corretto</Text>
 		</Row>

@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="de_DE">
 			<Text>Kartenmarkierungen und ihre Liste werden nicht mehr neu aufgebaut, wenn sich nichts geändert hat: weniger Ruckler im Mehrspielermodus.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="de_DE">
+			<Text>Ganze Karte von Anfang an</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="de_DE">
+			<Text>Minikarte und Kamera umfassen ab der ersten Runde die ganze Karte, ohne Kartenmarkierungen an den Rändern. Unerforschte Gebiete bleiben verborgen. Rein lokal: keine Auswirkung auf andere Spieler im Mehrspielermodus.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="de_DE">
 			<Text>Korrigierter Produktions-Rundenzähler</Text>
 		</Row>

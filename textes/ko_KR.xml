@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="ko_KR">
 			<Text>바뀐 것이 없으면 지도 핀과 그 목록을 다시 만들지 않습니다. 멀티플레이에서 끊김이 줄어듭니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="ko_KR">
+			<Text>처음부터 지도 전체</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="ko_KR">
+			<Text>미니맵과 카메라가 첫 턴부터 지도 전체를 다룹니다. 가장자리에 지도 핀을 놓을 필요가 없습니다. 탐험하지 않은 지역은 계속 가려집니다. 로컬 전용: 멀티플레이에서 다른 플레이어에게 영향이 없습니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="ko_KR">
 			<Text>생산 턴 수 표시 수정</Text>
 		</Row>

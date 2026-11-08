@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="zh_Hans_CN">
 			<Text>没有变化时不再重建地图标记及其列表：减少多人游戏中的卡顿。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="zh_Hans_CN">
+			<Text>从一开始显示整张地图</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="zh_Hans_CN">
+			<Text>小地图和镜头从第一回合起就覆盖整张地图，无需在边缘放置地图标记。未探索的区域仍然隐藏。仅限本地：在多人游戏中不影响其他玩家。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="zh_Hans_CN">
 			<Text>修正生产回合数</Text>
 		</Row>

@@ -9,7 +9,8 @@
 //! (coalesce par défaut), `portee=cascade|message` (message par défaut),
 //! `ameliorations=off|count|verify|fast|quiet` et `rendements=off|count|verify|fast|quiet` (quiet par
 //! défaut), `wmd_accel=<facteur>|off` (20 par défaut, voir `wmd`), `ui_boutons`, `ui_recentrage` et
-//! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_rendements=on|off`
+//! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_carte_entiere=on|off`
+//! (on par défaut, voir `carte`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`). Les réglages de
@@ -19,6 +20,7 @@
 
 #![allow(non_snake_case)] // le nom de la DLL produite, BGD_GameCore_XP2.
 
+mod carte;
 mod citoyens;
 mod coalesce;
 mod congres;
@@ -167,6 +169,9 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
             ui::set_merveilles(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("ui_carte_entiere=") {
+            carte::set_enabled(v.trim() != "off");
+        }
         #[cfg(feature = "diag")]
         if let Some(v) = line.trim().strip_prefix("ui_diag_accords=") {
             ui::set_diag_accords(v.trim() == "on");
@@ -219,6 +224,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             improvements::on_proxy_unload();
             rendements::on_proxy_unload();
             rendements_empire::on_proxy_unload();
+            carte::on_proxy_unload();
             tours::on_proxy_unload();
             wmd::on_proxy_unload();
             ui::on_proxy_unload();

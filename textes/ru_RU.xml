@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="ru_RU">
 			<Text>Метки и их список больше не перестраиваются, если ничего не изменилось: меньше подтормаживаний в сетевой игре.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="ru_RU">
+			<Text>Вся карта с самого начала</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="ru_RU">
+			<Text>Миникарта и камера охватывают всю карту с первого хода, без меток по краям. Неисследованные области остаются скрытыми. Только локально: не влияет на других игроков в сетевой игре.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="ru_RU">
 			<Text>Исправленный счётчик ходов производства</Text>
 		</Row>

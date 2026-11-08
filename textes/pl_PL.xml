@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="pl_PL">
 			<Text>Znaczniki i ich lista nie są już przebudowywane, gdy nic się nie zmieniło: mniej spowolnień w trybie wieloosobowym.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="pl_PL">
+			<Text>Cała mapa od początku</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="pl_PL">
+			<Text>Minimapa i kamera obejmują całą mapę od pierwszej tury, bez stawiania znaczników na krawędziach. Niezbadane obszary pozostają ukryte. Działa tylko lokalnie: bez wpływu na innych graczy w trybie wieloosobowym.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="pl_PL">
 			<Text>Poprawiony licznik tur produkcji</Text>
 		</Row>

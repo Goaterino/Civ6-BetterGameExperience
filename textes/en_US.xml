@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="en_US">
 			<Text>Map pins and their list are no longer rebuilt when nothing changed: fewer slowdowns in multiplayer.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="en_US">
+			<Text>Whole map from the start</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="en_US">
+			<Text>The minimap and the camera cover the whole map from the first turn, without placing map pins at the edges. Unexplored areas stay hidden. Purely local: no effect on other players in multiplayer.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="en_US">
 			<Text>Fixed production turn counter</Text>
 		</Row>
