@@ -8,29 +8,29 @@ In multigiocatore, le correzioni **[tutti i giocatori]** richiedono che tutti i 
 abbiano la 0.7.0: una lobby che mescola 0.6.x e 0.7.0 le disattiva.
 
 ### Correzioni di gioco [tutti i giocatori]
-- Unità impilate: due unità militari della stessa classe possono finire sulla stessa casella (unità
+- **Unità impilate**: due unità militari della stessa classe possono finire sulla stessa casella (unità
   acquistata in una città occupata, movimento interrotto, teletrasporto…). L'unità in eccesso non
   conta più nei bonus di fiancheggiamento e di supporto: due unità impilate accanto al bersaglio
   danno +2, non +4. La difesa delle città non cambia.
 
 ### Congresso Mondiale
-- Rimosse: le correzioni della 0.6.x che impedivano la fine del turno durante il voto (niente fine
+- **Rimosse**: le correzioni della 0.6.x che impedivano la fine del turno durante il voto (niente fine
   turno automatica, niente fine turno forzata con una lista di risoluzioni vuota, 240 s sul timer di
   MPH). Il timer e la fine del turno del gioco e di MPH tornano ad applicarsi durante il voto. Il
   pulsante **Torna al voto**, la schermata di benvenuto una volta per sessione e il ricalcolo dei
   lussi restano.
 
 ### Correzioni dell'interfaccia
-- Schermata delle città-stato: gli emissari piazzati ma non ancora confermati non vanno più persi
+- **Schermata delle città-stato**: gli emissari piazzati ma non ancora confermati non vanno più persi
   quando la schermata si aggiorna (emissario di un altro giocatore, missione, guerra o pace).
   Vengono tolti solo se la città-stato viene distrutta o se la tua squadra le dichiara guerra.
-- Schermata degli accordi: il pulsante dell'oro disponibile funziona di nuovo. Poteva restare non
+- **Schermata degli accordi**: il pulsante dell'oro disponibile funziona di nuovo. Poteva restare non
   cliccabile dopo un accordo precedente (bug del gioco).
 - **Mappa intera fin dall'inizio** (attiva di default): la minimappa e la telecamera coprono tutta
   la mappa dal primo turno, non servono più segnalini ai bordi della mappa. Le zone inesplorate
   restano nascoste. Puramente locale.
-- Area di movimento di un'unità su un distretto nemico: niente più scatti quando la selezioni
-  (accampamento nemico non finito, strade, ferrovie), le zone di controllo (caselle rosse) vengono
+- **Area di movimento di un'unità su un distretto nemico**: niente più scatti quando la selezioni
+  (accampamento nemico non finito), le zone di controllo (caselle rosse) vengono
   mostrate e le caselle d'acqua in cui l'unità non può ancora entrare (costa prima
   dell'imbarco, oceano prima della Cartografia) non vengono più proposte.
 
@@ -38,7 +38,7 @@ abbiano la 0.7.0: una lobby che mescola 0.6.x e 0.7.0 le disattiva.
 - Pulsante **Ripristina BGE** nella scheda BetterGameExperience: riporta tutte le impostazioni al
   loro valore predefinito.
 - Nuova impostazione avanzata di diagnostica, disattivata di default: **Misura il costo dell'area di
-  movimento**.
+  movimento (in tempo)**.
 
 ## BetterGameExperience 0.6.1
 

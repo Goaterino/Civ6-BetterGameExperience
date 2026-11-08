@@ -10,33 +10,33 @@ Multiplayer games need every human player on 0.7.0 for the **[all players]** fix
 mixes 0.6.x and 0.7.0 turns them off.
 
 ### Gameplay fixes [all players]
-- Stacked units: two military units of the same class can end up on the same tile (unit bought in
+- **Stacked units**: two military units of the same class can end up on the same tile (unit bought in
   an occupied city, interrupted move, teleport…). The extra unit no longer counts in flanking and
   support bonuses: two stacked units next to the target give +2, not +4. City defense is unchanged.
 
 ### World Congress
-- Removed: the 0.6.x fixes that kept the turn from ending during the vote (no automatic end of
+- **Removed**: the 0.6.x fixes that kept the turn from ending during the vote (no automatic end of
   turn, no forced end of turn on an empty list of resolutions, 240 s on MPH's timer). The game's
   and MPH's timer and end of turn apply again during the vote. The **Back to the vote** button,
   the welcome screen once per session and the luxuries recalculation stay.
 
 ### Interface fixes
-- City-States screen: envoys you have placed but not confirmed yet are no longer lost when the
+- **City-States screen**: envoys you have placed but not confirmed yet are no longer lost when the
   screen refreshes (another player's envoy, a quest, a war or a peace). They are only removed if
   the city-state is destroyed or your team declares war on it.
-- Deal screen: the available Gold button works again. It could stay unclickable after an earlier
+- **Deal screen**: the available Gold button works again. It could stay unclickable after an earlier
   deal (game bug).
 - **Whole map from the start** (on by default): the minimap and the camera cover the whole map
   from the first turn, so you no longer need map pins at the edges of the map. Unexplored areas stay
   hidden. Purely local.
-- Movement range of a unit on an enemy district: no more lag spike when you select it (unfinished
-  enemy encampment, roads, railroads), zones of control (red tiles) are shown, and water tiles the
+- **Movement range of a unit on an enemy district**: no more lag spike when you select it (unfinished
+  enemy encampment), zones of control (red tiles) are shown, and water tiles the
   unit can't enter yet (coast before embarkation, ocean before Cartography) are no longer offered.
 
 ### Settings
 - **Reset BGE** button in the BetterGameExperience tab: puts every setting back to its default
   value.
-- New advanced diagnostic setting, off by default: **Measure movement range cost**.
+- New advanced diagnostic setting, off by default: **Measure movement range cost (in time)**.
 
 ## BetterGameExperience 0.6.1
 
