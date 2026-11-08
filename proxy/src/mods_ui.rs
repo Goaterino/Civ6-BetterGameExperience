@@ -5,8 +5,8 @@
 //! - `ui_charges` : charges des bâtisseurs sur leur drapeau (Better Builder Charges Tracking, wltk) ;
 //! - `ui_routes` : tours avant la fin de la route d'un négociant, sur son drapeau ;
 //! - `ui_notifications` : bouton « tout effacer » des notifications (NotificationClear, 336tarot) ;
-//! - `ui_bandeau` : nourriture, production, activités moyennes par ville et luxes dans le bandeau
-//!   (TopPanel Extension Pro, 号码菌 / Azukii) ;
+//! - `ui_bandeau` : nourriture, production, population, activités moyennes par ville et luxes dans
+//!   le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) ;
 //! - `ui_politiques` : effet chiffré des cartes de politique (Extended Policy Cards, Aristos) ;
 //! - `ui_rapports` : écran des rapports de Better Report Screen (Infixo).
 //!
