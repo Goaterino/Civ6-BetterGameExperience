@@ -3,9 +3,8 @@
 -- On patche comme le proxy, puis on exécute avec des bouchons du jeu :
 -- - src/ui_congres_cibles.lua et src/ui_congres.lua : un spectateur (LEADER_SPECTATOR) et un votant,
 --   correctifs POL actifs ou non ; liste des luxes recalculée si POL ;
--- - src/ui_congres_vote.lua : pas de fin de tour sur un cache vide, retour au vote et faveur ;
+-- - src/ui_congres_vote.lua : retour au vote et faveur ;
 -- - src/ui_congres_attente.lua : bouton de retour au vote de l'écran d'attente ;
--- - src/ui_congres_fin_auto.lua et src/ui_congres_minuteur.lua ;
 -- - src/ui_congres_intro.lua : intro une seule fois par tour et par session.
 
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
@@ -269,29 +268,15 @@ local function NewVoter()
 end
 local function Ops(env) return table.concat(env.ops, " "); end
 
--- Cache vide à l'ouverture, résolutions arrivées ensuite.
+-- Cache vide à l'ouverture : comportement du jeu (le bloc n'attend plus les résolutions).
 local v = NewVoter();
 v.alloues = 0;
 v.resolutions = { Stage = 1 };
 v.SetupWorldCongress(1, true);
-Check(#v.ops == 0, "cache vide : pas de fin de tour automatique (" .. Ops(v) .. ")");
-Check(v.update ~= nil, "cache vide : attente des résolutions");
-v.update(1);
-Check(#v.ops == 0 and v.update ~= nil, "cache vide : on attend encore");
-v.alloues = 1;
-v.resolutions = { Stage = 1, [1] = { Type = "WC_RES_X", FavoredPlayerIDs = {}, DisfavoredPlayerIDs = {}, PossibleTargets = {} } };
-v.update(0.5);
-Check(#v.ops == 0 and v.update == nil, "résolutions arrivées : fenêtre remplie, toujours pas de fin de tour");
+Check(Ops(v) == "op:WORLD_CONGRESS_SUBMIT_TURN action:ACTION_ENDTURN" and v.update == nil,
+	"cache vide : comportement du jeu (" .. Ops(v) .. ")");
 
--- Cache toujours vide : comportement du jeu après l'attente.
-v = NewVoter();
-v.alloues = 0;
-v.resolutions = { Stage = 1 };
-v.SetupWorldCongress(1, true);
-v.update(11);
-Check(Ops(v) == "op:WORLD_CONGRESS_SUBMIT_TURN action:ACTION_ENDTURN", "cache vide 10 s : envoi automatique du jeu (" .. Ops(v) .. ")");
-
--- Session extraordinaire sans proposition : envoi automatique du jeu, sans attente.
+-- Session extraordinaire sans proposition : envoi automatique du jeu.
 v = NewVoter();
 v.alloues = 0;
 v.segment = Hash("TURNSEG_WORLDCONGRESS_2");
@@ -373,39 +358,6 @@ att.segment = Hash("TURNSEG_WORLDCONGRESS_RESOLUTION");
 att.Events.TurnTimerUpdated.Fire(10, 60);
 Check(att.bouton.hidden == true, "attente : caché hors du vote");
 Check(NewAttente(0).bouton.hidden == true, "attente : caché sans le détour ou sans POL");
-
--- ---------------------------------------------------------------------------------------------
--- Fin de tour automatique (ui_congres_fin_auto.lua) et minuteur de MPH (ui_congres_minuteur.lua).
-local finAuto = assert(load(Strip(ReadFile(dir .. "/../src/ui_congres_fin_auto.lua")), "@ActionPanel_Expansion2.lua", "t", (function()
-	local env = NewEnv(1, 0);
-	env.inSession = false;
-	env.Game.GetWorldCongress = function() return { IsInSession = function() return env.inSession; end }; end
-	env.XP1_AllowAutoEndTurn_Expansion = function() return true; end
-	_G.finAutoEnv = env;
-	return env;
-end)()));
-finAuto();
-local fa = _G.finAutoEnv;
-Check(fa.AllowAutoEndTurn_Expansion() == false, "fin auto : bloquée pendant le vote");
-fa.segment = Hash("TURNSEG_SINGLEPHASE");
-Check(fa.AllowAutoEndTurn_Expansion() == true, "fin auto : permise hors du congrès");
-fa.inSession = true;
-Check(fa.AllowAutoEndTurn_Expansion() == false, "fin auto : bloquée si le congrès est en session");
-
-local function Minuteur(valeur, smart, segment)
-	local env = NewEnv(1, 0);
-	env.segment = Hash(segment);
-	local conf = { TURN_TIMER_TIME = valeur, CPL_SMARTTIMER = smart };
-	env.GameConfiguration = { IsNetworkMultiplayer = function() return true; end,
-		GetValue = function(k) return conf[k]; end, SetValue = function(k, x) conf[k] = x; end };
-	assert(load(Strip(ReadFile(dir .. "/../src/ui_congres_minuteur.lua")), "@TurnProcessing.lua", "t", env))();
-	env.Events.LocalPlayerTurnBegin.Fire();
-	return conf.TURN_TIMER_TIME;
-end
-Check(Minuteur(90, 0, "TURNSEG_WORLDCONGRESS_1") == 240, "minuteur : 90 s portées à 240 s pendant le vote");
-Check(Minuteur(300, 0, "TURNSEG_WORLDCONGRESS_2") == 300, "minuteur : un minuteur plus long est gardé");
-Check(Minuteur(90, 0, "TURNSEG_SINGLEPHASE") == 90, "minuteur : rien hors du vote");
-Check(Minuteur(90, 1, "TURNSEG_WORLDCONGRESS_1") == 90, "minuteur : rien sans le minuteur intelligent de MPH");
 
 -- ---------------------------------------------------------------------------------------------
 -- Intro du congrès (ui_congres_intro.lua) : relancée par l'annulation de fin de tour d'un autre joueur.

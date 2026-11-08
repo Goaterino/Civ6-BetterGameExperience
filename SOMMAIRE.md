@@ -39,8 +39,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [pantheon](analyses/pantheon/README.md) : joueur désigné pour le panthéon, égalités et restriction d'un tour
   (analyse statique) ;
 - [congres](congres/README.md) : congrès mondial en multijoueur, triplets divergents, tours passés et
-  votes ignorés ; retour au vote après la fin de tour (correctif POL), fin de tour d'office et
-  minuteur de MPH corrigés (pas encore essayés en partie) ;
+  votes ignorés ; retour au vote après la fin de tour (correctif POL, pas encore essayé en
+  partie) ;
 - [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
   succès avec fuite comptés comme des succès (analyse statique) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
