@@ -553,6 +553,30 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   0x18067d315)`, puis les 20 premiers départs acceptés de chaque partie.
 - **Tests.** `check_hooks.py` vérifie la redirection et sa restauration.
 
+## Unités empilées hors du soutien et du contournement (correctif POL)
+
+[src/empilement.rs](src/empilement.rs). Analyse : [empilement_combat/README.md](../empilement_combat/README.md).
+
+- **La règle du jeu.** Le contournement (`18036c2a0`) et le soutien (`18036d1d0`) donnent +2 par
+  unité alliée voisine, sans regarder l'empilement : deux unités de même classe sur une case voisine
+  (unité achetée dans une ville occupée, déplacement interrompu…) donnent +4.
+- **Le détour.** Dans chacun, l'appel `call 1802c4360` qui retrouve l'unité de l'entrée courante
+  (`18036c3e1`, `18036d301`) est redirigé vers un relais (`mov r8,rsi ; mov r9,r14 ; jmp [rip+0]`)
+  qui ajoute le porteur du bonus (attaquant ou défenseur) et la liste d'unités de la case. Une unité
+  en excédent est rendue nulle et ignorée : même propriétaire et même classe (`LAND_COMBAT` ou
+  `NAVAL` seulement) qu'une unité vivante, avec une force, placée avant elle sur la case, ou que le
+  porteur s'il est sur sa case. Le calcul, la prévisualisation et la garnison ne changent pas.
+- **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`) ; `VERSION` à passer à 0.7.0
+  à la prochaine release.
+- **Garde-fou.** Chaque site doit être `mov edx,[rdi+4] ; mov rcx,[rax+0x6c8] ; call 1802c4360 ;
+  mov rbx,rax ; test rax,rax`, sinon aucun des deux n'est redirigé. Les appels d'origine reviennent
+  au déchargement du proxy.
+- **Le journal.** `empilement : unités en excédent ignorées par le soutien et le contournement
+  (appels redirigés en 0x18036c3e1 et 0x18036d301)`, puis les 20 premières unités ignorées de
+  chaque partie (prévisualisations comprises).
+- **Tests.** `cargo test` (règle d'excédent, hachages des classes) ; `check_hooks.py` vérifie les
+  octets des deux sites, la redirection et sa restauration.
+
 ## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGE) »)
 
 [src/depart.rs](src/depart.rs), [src/ui_depart.lua](src/ui_depart.lua),

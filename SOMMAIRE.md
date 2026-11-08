@@ -60,6 +60,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   [zone de déplacement](analyses/quartier_capture_mouvements/README.md) sur un quartier ennemi ;
 - [unites_superposees](analyses/unites_superposees/README.md) : deux unités sur la même case après
   un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ;
+- [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
+  et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),
