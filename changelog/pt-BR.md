@@ -2,6 +2,43 @@
 
 [English](../CHANGELOG.md) · outros idiomas: veja o [registro em inglês](../CHANGELOG.md).
 
+## BetterGameExperience 0.7.0
+
+No multijogador, as correções **[todos os jogadores]** exigem que todos os jogadores humanos
+estejam na 0.7.0: um saguão que mistura 0.6.x e 0.7.0 as desativa.
+
+### Correções de jogo [todos os jogadores]
+- Unidades empilhadas: duas unidades militares da mesma classe podem acabar no mesmo hexágono
+  (unidade comprada numa cidade ocupada, movimento interrompido, teletransporte…). A unidade
+  excedente não conta mais nos bônus de flanqueamento e de apoio: duas unidades empilhadas ao lado
+  do alvo dão +2, não +4. A defesa das cidades não muda.
+
+### Congresso Mundial
+- Removidas: as correções da 0.6.x que impediam o fim do turno durante a votação (sem fim de turno
+  automático, sem fim de turno forçado com uma lista de resoluções vazia, 240 s no cronômetro do
+  MPH). O cronômetro e o fim de turno do jogo e do MPH voltam a valer durante a votação. O botão
+  **Voltar à votação**, a tela de boas-vindas uma vez por sessão e o recálculo dos luxos continuam.
+
+### Correções da interface
+- Tela de cidades-estado: os emissários posicionados mas ainda não confirmados não se perdem mais
+  quando a tela é atualizada (emissário de outro jogador, missão, guerra ou paz). Eles só são
+  retirados se a cidade-estado for destruída ou se sua equipe declarar guerra a ela.
+- Tela de acordo: o botão do ouro disponível volta a funcionar. Ele podia ficar impossível de clicar
+  após um acordo anterior (bug do jogo).
+- **Mapa inteiro desde o início** (ativado por padrão): o minimapa e a câmera cobrem o mapa todo
+  desde o primeiro turno, sem precisar de marcadores nas bordas do mapa. As áreas inexploradas
+  continuam ocultas. Puramente local.
+- Área de movimento de uma unidade sobre um distrito inimigo: sem mais travadas ao selecioná-la
+  (acampamento inimigo não concluído, estradas, ferrovias), as zonas de controle (hexágonos
+  vermelhos) são exibidas e os hexágonos de água onde a unidade ainda não pode entrar (costa antes
+  do embarque, oceano antes da Cartografia) não são mais oferecidos.
+
+### Configurações
+- Botão **Redefinir BGE** na aba BetterGameExperience: volta todas as configurações ao valor
+  padrão.
+- Nova configuração avançada de diagnóstico, desativada por padrão: **Medir o custo da área de
+  movimento**.
+
 ## BetterGameExperience 0.6.1
 
 Inclui tudo da pré-versão 0.6.0. No multijogador, as correções **[todos os jogadores]** exigem que

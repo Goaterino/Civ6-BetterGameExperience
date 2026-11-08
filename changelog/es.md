@@ -2,6 +2,44 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.7.0
+
+En multijugador, las correcciones **[todos los jugadores]** requieren que todos los jugadores
+humanos tengan la 0.7.0: una sala que mezcla 0.6.x y 0.7.0 las desactiva.
+
+### Correcciones de juego [todos los jugadores]
+- Unidades apiladas: dos unidades militares de la misma clase pueden acabar en la misma casilla
+  (unidad comprada en una ciudad ocupada, movimiento interrumpido, teletransporte…). La unidad
+  sobrante ya no cuenta en las bonificaciones de flanqueo y apoyo: dos unidades apiladas junto al
+  objetivo dan +2, no +4. La defensa de las ciudades no cambia.
+
+### Congreso Mundial
+- Retiradas: las correcciones de la 0.6.x que impedían el fin del turno durante la votación (sin
+  fin de turno automático, sin fin de turno forzado con una lista de resoluciones vacía, 240 s en el
+  temporizador de MPH). El temporizador y el fin de turno del juego y de MPH vuelven a aplicarse
+  durante la votación. El botón **Volver a la votación**, la pantalla de bienvenida una vez por
+  sesión y el recálculo de los lujos se mantienen.
+
+### Correcciones de la interfaz
+- Pantalla de ciudades-estado: los emisarios colocados pero aún no confirmados ya no se pierden
+  cuando la pantalla se actualiza (emisario de otro jugador, misión, guerra o paz). Solo se retiran
+  si la ciudad-estado es destruida o si tu equipo le declara la guerra.
+- Pantalla de acuerdo: el botón del oro disponible vuelve a funcionar. Podía quedarse sin poder
+  pulsarse tras un acuerdo anterior (error del juego).
+- **Mapa completo desde el inicio** (activado por defecto): el minimapa y la cámara cubren todo el
+  mapa desde el primer turno, ya no hacen falta chinchetas en los bordes del mapa. Las zonas sin
+  explorar siguen ocultas. Puramente local.
+- Área de movimiento de una unidad sobre un distrito enemigo: se acabaron los tirones al
+  seleccionarla (campamento enemigo sin terminar, carreteras, ferrocarriles), se muestran las zonas
+  de control (casillas rojas) y ya no se proponen casillas de agua a las que la unidad aún no puede
+  ir (costa antes del embarque, océano antes de la Cartografía).
+
+### Ajustes
+- Botón **Restablecer BGE** en la pestaña BetterGameExperience: devuelve todos los ajustes a su
+  valor por defecto.
+- Nuevo ajuste avanzado de diagnóstico, desactivado por defecto: **Medir el coste del área de
+  movimiento**.
+
 ## BetterGameExperience 0.6.1
 
 Incluye todo lo de la versión preliminar 0.6.0. En multijugador, las correcciones **[todos los
