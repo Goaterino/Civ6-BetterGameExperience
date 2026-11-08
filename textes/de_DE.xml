@@ -182,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_MESURE_EPINGLES_AIDE" Language="de_DE">
 			<Text>Schreibt in Lua.log, wie lange der Neuaufbau der Kartenmarkierungen und der Anführerleiste dauert.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_MOUVEMENTS_NOM" Language="de_DE">
+			<Text>Kosten des Bewegungsbereichs messen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_MESURE_MOUVEMENTS_AIDE" Language="de_DE">
+			<Text>Schreibt in Lua.log, wie lange die Berechnung des Bewegungsbereichs einer Einheit auf einem feindlichen Bezirk dauert (Zeilen BGD mouvements). Nur zur Diagnose, auf diesem Rechner.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_NOM" Language="de_DE">
 			<Text>Diagnose der Abkommen zwischen Spielern</Text>
 		</Row>

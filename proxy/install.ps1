@@ -38,6 +38,10 @@ param(
     # Mesure du coût des épingles de carte dans Lua.log (voir map_pins/README.md).
     [ValidateSet("on", "off")]
     [string]$UiMesureEpingles = "off",
+    # Mesure du coût de la zone de déplacement sur un quartier ennemi dans Lua.log (voir
+    # analyses/quartier_capture_mouvements/README.md).
+    [ValidateSet("on", "off")]
+    [string]$UiMesureMouvements = "off",
     # Diagnostic des accords croisés entre humains dans Lua.log (voir docs/netcode/README.md).
     [ValidateSet("on", "off")]
     [string]$UiDiagAccords = "off",
@@ -127,6 +131,6 @@ if ($Uninstall) {
 $built = Join-Path $PSScriptRoot "target\release\BGD_GameCore_XP2.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
 Copy-Item $built $proxy -Force
-Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones"
-Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
+Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones"
+Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"
