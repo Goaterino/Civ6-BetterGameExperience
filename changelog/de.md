@@ -2,6 +2,44 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.7.0
+
+Im Mehrspielermodus brauchen die Korrekturen **[alle Spieler]** alle menschlichen Spieler auf
+0.7.0: Eine Lobby, die 0.6.x und 0.7.0 mischt, schaltet sie ab.
+
+### Spielkorrekturen [alle Spieler]
+- Gestapelte Einheiten: Zwei Militäreinheiten derselben Klasse können auf demselben Feld landen (in
+  einer besetzten Stadt gekaufte Einheit, unterbrochene Bewegung, Teleport…). Die überzählige
+  Einheit zählt nicht mehr für Flanken- und Unterstützungsboni: Zwei gestapelte Einheiten neben dem
+  Ziel geben +2, nicht +4. Die Stadtverteidigung bleibt unverändert.
+
+### Weltkongress
+- Entfernt: die Korrekturen aus 0.6.x, die das Rundenende während der Abstimmung verhinderten (kein
+  automatisches Rundenende, kein erzwungenes Rundenende bei leerer Resolutionsliste, 240 s auf dem
+  Timer von MPH). Timer und Rundenende des Spiels und von MPH gelten während der Abstimmung wieder.
+  Die Schaltfläche **Zurück zur Abstimmung**, der Begrüßungsbildschirm einmal pro Sitzung und die
+  Neuberechnung der Luxusgüter bleiben.
+
+### Korrekturen der Oberfläche
+- Stadtstaaten-Bildschirm: Platzierte, aber noch nicht bestätigte Gesandte gehen nicht mehr
+  verloren, wenn sich der Bildschirm aktualisiert (Gesandter eines anderen Spielers, Quest, Krieg
+  oder Frieden). Sie werden nur entfernt, wenn der Stadtstaat zerstört wird oder Ihr Team ihm den
+  Krieg erklärt.
+- Handelsbildschirm: Die Schaltfläche für verfügbares Gold funktioniert wieder. Sie konnte nach
+  einem früheren Handel nicht mehr anklickbar sein (Spielfehler).
+- **Ganze Karte von Anfang an** (standardmäßig an): Minikarte und Kamera decken ab der ersten Runde
+  die ganze Karte ab, Kartenmarkierungen an den Kartenrändern sind nicht mehr nötig. Unerforschte
+  Gebiete bleiben verborgen. Rein lokal.
+- Bewegungsbereich einer Einheit auf einem feindlichen Bezirk: keine Ruckler mehr beim Auswählen
+  (unfertiges feindliches Lager, Straßen, Eisenbahnen), Kontrollzonen (rote Felder) werden
+  angezeigt, und Wasserfelder, die die Einheit noch nicht betreten kann (Küste vor dem Einschiffen,
+  Ozean vor Kartografie), werden nicht mehr angeboten.
+
+### Einstellungen
+- Schaltfläche **BGE zurücksetzen** im Reiter BetterGameExperience: setzt alle Einstellungen auf
+  ihren Standardwert zurück.
+- Neue erweiterte Diagnose-Einstellung, standardmäßig aus: **Kosten des Bewegungsbereichs messen**.
+
 ## BetterGameExperience 0.6.1
 
 Enthält alles aus der Vorabversion 0.6.0. Im Mehrspielermodus brauchen die Korrekturen **[alle

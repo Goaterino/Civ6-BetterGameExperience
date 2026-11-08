@@ -2,6 +2,43 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.7.0
+
+W grze wieloosobowej poprawki **[wszyscy gracze]** wymagają, by wszyscy ludzcy gracze mieli 0.7.0:
+poczekalnia, w której są 0.6.x i 0.7.0, je wyłącza.
+
+### Poprawki rozgrywki [wszyscy gracze]
+- Jednostki w stosie: dwie jednostki wojskowe tej samej klasy mogą znaleźć się na tym samym polu
+  (jednostka kupiona w zajętym mieście, przerwany ruch, teleportacja…). Nadmiarowa jednostka nie
+  liczy się już do premii za oskrzydlenie i wsparcie: dwie jednostki w stosie obok celu dają +2, a
+  nie +4. Obrona miast się nie zmienia.
+
+### Kongres Światowy
+- Usunięte: poprawki z 0.6.x, które nie pozwalały zakończyć tury w trakcie głosowania (brak
+  automatycznego końca tury, brak wymuszonego końca tury przy pustej liście rezolucji, 240 s na
+  zegarze MPH). Zegar i koniec tury gry oraz MPH znów działają w trakcie głosowania. Przycisk
+  **Wróć do głosowania**, ekran powitalny raz na sesję i ponowne przeliczanie dóbr luksusowych
+  zostają.
+
+### Poprawki interfejsu
+- Ekran miast-państw: wysłannicy rozmieszczeni, ale jeszcze niepotwierdzeni, nie przepadają już przy
+  odświeżeniu ekranu (wysłannik innego gracza, misja, wojna lub pokój). Są usuwani tylko wtedy, gdy
+  miasto-państwo zostanie zniszczone albo twoja drużyna wypowie mu wojnę.
+- Ekran umowy: przycisk dostępnego złota znów działa. Po wcześniejszej umowie mógł pozostać
+  nieklikalny (błąd gry).
+- **Cała mapa od początku** (domyślnie włączone): minimapa i kamera obejmują całą mapę od pierwszej
+  tury, nie trzeba już znaczników na krawędziach mapy. Niezbadane obszary pozostają ukryte. Działa
+  tylko lokalnie.
+- Zasięg ruchu jednostki na wrogiej dzielnicy: koniec z przycięciami przy jej zaznaczaniu
+  (nieukończony wrogi obóz, drogi, koleje), strefy kontroli (czerwone pola) są widoczne, a pola wody,
+  na które jednostka nie może jeszcze wejść (wybrzeże przed zaokrętowaniem, ocean przed
+  Kartografią), nie są już proponowane.
+
+### Ustawienia
+- Przycisk **Zresetuj BGE** w zakładce BetterGameExperience: przywraca wszystkie ustawienia do
+  wartości domyślnych.
+- Nowe zaawansowane ustawienie diagnostyczne, domyślnie wyłączone: **Pomiar kosztu zasięgu ruchu**.
+
 ## BetterGameExperience 0.6.1
 
 Zawiera wszystko z wersji przedpremierowej 0.6.0. W grze wieloosobowej poprawki **[wszyscy gracze]**
