@@ -114,7 +114,10 @@ scénarios restent possibles :
 
 Il faut les `net_message_debug.log` **de l'hôte et du client** d'un vrai double chargement (dossier
 `%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VI\Logs`, à copier avant de relancer le jeu,
-qui les écrase). On y lira :
+qui les écrase). [capture_double_load.ps1](capture_double_load.ps1), lancé sur les deux machines
+avant la partie (`-Role hote` / `-Role client`), suit ces journaux à la milliseconde, relève l'état
+du processus (dont « ne répond pas », utile pour le scénario 1), copie `Logs` à chaque fermeture ou
+plantage et produit une archive sur le Bureau. On y lira :
 
 - chez le client, un `SEND … NetSnapshotRequest : PlayerID=<client>, Reason=0` après sa barrière,
   avec `Requesting full snapshot` : c'est le scénario 2 ;
