@@ -54,6 +54,7 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
   [Échap sur l'écran des émissaires](analyses/emissaires_echap/README.md),
+  [émissaires en attente](analyses/emissaires_reinit/README.md) effacés par un rafraîchissement,
   [lentille du colon](analyses/filtre_colon/README.md) vidée par une ville fondée,
   [Entrée](analyses/raccourci_entree/README.md) active une fois retirée des touches,
   [zone de déplacement](analyses/quartier_capture_mouvements/README.md) sur un quartier ennemi ;
