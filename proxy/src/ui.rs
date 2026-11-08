@@ -291,22 +291,38 @@ pub fn patch_action_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// La copie de CityStates.lua de Better Spectator Mod passe Échap à `OnInputHandler` de l'animation
-/// sans `OnClose` : le panneau glisse hors de l'écran sans `Close()`, qui vide les émissaires en
-/// attente et lève le blocage de fin de tour. On remet `OnClose`, comme dans le fichier du jeu
-/// (qui n'a pas besoin du patch). Voir analyses/emissaires_echap.
+const EMISSAIRES_BLOCK: &str = include_str!("ui_emissaires.lua");
+const EMISSAIRES_DONE: &str = "émissaires en attente gardés au rafraîchissement de l'écran des cités-États";
+
+/// Deux correctifs de CityStates.lua (jeu ou Better Spectator Mod) :
+/// - la copie de BSM passe Échap à `OnInputHandler` de l'animation sans `OnClose` : le panneau
+///   glisse hors de l'écran sans `Close()`, qui vide les émissaires en attente et lève le blocage de
+///   fin de tour. On remet `OnClose`, comme dans le fichier du jeu. Voir analyses/emissaires_echap ;
+/// - `ui_emissaires.lua`, ajouté à la fin : les émissaires en attente ne sont plus effacés à chaque
+///   rafraîchissement (émissaire, quête, guerre d'un autre joueur). Voir analyses/emissaires_reinit.
 pub fn patch_city_states(src: &[u8]) -> Result<Vec<u8>, String> {
     const WRONG: &[u8] = b"m_kScreenSlideAnim.OnInputHandler( input );";
     const RIGHT: &[u8] = b"m_kScreenSlideAnim.OnInputHandler( input, OnClose );";
     let find = |pat: &[u8]| src.windows(pat.len()).position(|w| w == pat);
-    let at = find(WRONG).ok_or("Échap déjà relié à OnClose (fichier du jeu ?)")?;
-    if find(b"\nfunction OnClose(").is_none() {
-        return Err("OnClose introuvable".into());
+    for needed in ["\nfunction OnClose(", "\nfunction GetData(", "\nfunction ViewList(", "\nfunction OnConfirmPlacement(", "\nInitialize();"] {
+        if find(needed.as_bytes()).is_none() {
+            return Err(format!("{} introuvable", needed.trim()));
+        }
     }
-    let mut out = Vec::with_capacity(src.len() + 16);
-    out.extend_from_slice(&src[..at]);
-    out.extend_from_slice(RIGHT);
-    out.extend_from_slice(&src[at + WRONG.len()..]);
+    if find(b"Civ6RolloverProxy (src/ui_emissaires.lua)").is_some() {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = Vec::with_capacity(src.len() + EMISSAIRES_BLOCK.len() + 16);
+    match find(WRONG) {
+        Some(at) => {
+            out.extend_from_slice(&src[..at]);
+            out.extend_from_slice(RIGHT);
+            out.extend_from_slice(&src[at + WRONG.len()..]);
+        }
+        None => out.extend_from_slice(src),
+    }
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(EMISSAIRES_BLOCK.as_bytes());
     Ok(out)
 }
 
@@ -800,7 +816,7 @@ const FIXES: [(&str, Fix, &str); 10] = [
     ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
     ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
     ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
-    ("CityStates.lua", patch_city_states, "Échap ferme l'écran des cités-États comme la croix"),
+    ("CityStates.lua", patch_city_states, EMISSAIRES_DONE),
     ("ActionPanel.lua", patch_action_panel, "Entrée suit la touche de « Action suivante »"),
     ("CityPanel.lua", patch_city_panel, "owningPlayerID corrigé"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
@@ -1339,12 +1355,16 @@ mod tests {
 
     #[test]
     fn cites_etats_de_bsm() {
+        let bloc = 2 + EMISSAIRES_BLOCK.len();
         if let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\PartialScreens\CityStates.lua")) {
-            assert!(patch_city_states(&src).is_err(), "le fichier du jeu est correct");
+            let bytes = patch_city_states(&src).unwrap();
+            assert_eq!(bytes.len(), src.len() + bloc, "Échap déjà correct dans le jeu : le bloc seul");
+            assert!(bytes.ends_with(EMISSAIRES_BLOCK.as_bytes()));
+            assert!(patch_city_states(&bytes).is_err(), "pas deux fois");
         }
         let Some(src) = read(format!(r"{BSM}\UI\CityStates.lua")) else { return };
         let bytes = patch_city_states(&src).unwrap();
-        assert_eq!(bytes.len(), src.len() + ", OnClose".len());
+        assert_eq!(bytes.len(), src.len() + ", OnClose".len() + bloc);
         assert!(String::from_utf8_lossy(&bytes).contains("m_kScreenSlideAnim.OnInputHandler( input, OnClose );"));
         assert!(patch_city_states(&bytes).is_err(), "pas deux fois");
         assert!(!is_file(r"C:\x\CityStates_Expansion2.lua", "CityStates.lua"));
