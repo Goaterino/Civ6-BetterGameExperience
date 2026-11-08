@@ -66,6 +66,7 @@ pub(crate) fn real_module() -> usize {
         crate::ports::on_gamecore_loaded(h);
         crate::empilement::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
+        crate::carte::on_gamecore_loaded();
         h
     })
 }

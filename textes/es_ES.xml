@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="es_ES">
 			<Text>Los marcadores y su lista ya no se reconstruyen cuando nada ha cambiado: menos ralentizaciones en multijugador.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="es_ES">
+			<Text>Mapa completo desde el inicio</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="es_ES">
+			<Text>El minimapa y la cámara abarcan todo el mapa desde el primer turno, sin colocar marcadores en los bordes. Las zonas inexploradas siguen ocultas. Solo local: sin efecto sobre los demás jugadores en multijugador.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="es_ES">
 			<Text>Contador de turnos de producción corregido</Text>
 		</Row>

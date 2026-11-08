@@ -238,6 +238,15 @@ chargement base puis mod, la liste fermée puis ouverte, et la mesure par-dessus
 doit montrer `EpinglesOpti <fichier> actif`, et le bloc de mesure doit voir moins de
 reconstructions et moins d'appels à `GetMapPins`.
 
+## Épingles aux bords de la carte : `ui_carte_entiere=on`
+
+Une partie des épingles, et donc des diffusions, n'a qu'un but : en début de partie, des joueurs en
+posent tout en haut et tout en bas de la carte pour débloquer la caméra et donner à la minimap sa
+taille finale. L'exe borne en effet la caméra et la minimap au rectangle des cases révélées,
+**épingles visibles du joueur comprises** (les siennes et celles qu'on lui partage). Le proxy étend
+ce rectangle à la carte entière dès le premier tour, ce qui rend ces épingles inutiles. Analyse et
+correctif : [minimap/README.md](../minimap/README.md).
+
 ## Tests en direct
 
 ### Les outils

@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="ja_JP">
 			<Text>変化がないときはマップピンとその一覧を再構築しません。マルチプレイでの引っかかりが減ります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="ja_JP">
+			<Text>最初からマップ全体</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="ja_JP">
+			<Text>ミニマップとカメラが最初のターンからマップ全体を範囲にします。端にマップピンを置く必要はありません。未探索の地域は隠れたままです。ローカルのみ：マルチプレイで他のプレイヤーには影響しません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="ja_JP">
 			<Text>生産ターン数の表示を修正</Text>
 		</Row>

@@ -110,6 +110,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_EPINGLES_AIDE" Language="fr_FR">
 			<Text>Les épingles et leur liste ne sont plus reconstruites quand rien n'a changé : moins de ralentissements en multijoueur.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_NOM" Language="fr_FR">
+			<Text>Carte entière dès le début</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_CARTE_ENTIERE_AIDE" Language="fr_FR">
+			<Text>La minimap et la caméra couvrent toute la carte dès le premier tour, sans poser d'épingles aux bords. Les zones inexplorées restent cachées. Purement local : sans effet sur les autres joueurs en multijoueur.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TOURS_PRODUCTION_NOM" Language="fr_FR">
 			<Text>Compteur de tours de production corrigé</Text>
 		</Row>

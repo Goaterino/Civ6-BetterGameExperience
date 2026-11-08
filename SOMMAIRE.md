@@ -31,6 +31,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   un personnage illustre, rafraîchis par le proxy sans désynchro ;
 - [map_pins](map_pins/README.md) : lag des épingles de carte en multijoueur, reconstructions inutiles
   retirées par l'interface du proxy ;
+- [minimap](minimap/README.md) : minimap et caméra bornées aux cases révélées (d'où les épingles aux
+  bords de la carte), étendues à la carte entière dès le début par le proxy ;
 - [citoyens](citoyens/README.md) : choix des cases travaillées qui préfère une 2/1 à une 2/2,
   corrigé dans le proxy (premier correctif POL, actif si tous les joueurs ont le proxy) ;
 - [mods_ui](mods_ui/README.md) : mods d'interface du Workshop (Better Report Screen, Extended Policy
