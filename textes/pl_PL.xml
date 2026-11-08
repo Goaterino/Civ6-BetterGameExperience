@@ -230,6 +230,18 @@
 		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="pl_PL">
 			<Text>Ukryj opcje zaawansowane</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_BOUTON" Language="pl_PL">
+			<Text>Zresetuj BGE</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_AIDE" Language="pl_PL">
+			<Text>Przywraca wszystkie ustawienia BetterGameExperience do wartości domyślnych.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_TEXTE" Language="pl_PL">
+			<Text>Przywrócić wszystkie ustawienia BetterGameExperience do wartości domyślnych?</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_FAIT" Language="pl_PL">
+			<Text>Ustawienia przywrócone do wartości domyślnych.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="pl_PL">
 			<Text>Wbudowane mody interfejsu opierają się na pracy ich autorów, którym BetterGameExperience dziękuje:</Text>
 		</Row>

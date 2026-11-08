@@ -230,6 +230,18 @@
 		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="zh_Hans_CN">
 			<Text>隐藏高级选项</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_BOUTON" Language="zh_Hans_CN">
+			<Text>重置 BGE</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_AIDE" Language="zh_Hans_CN">
+			<Text>将 BetterGameExperience 的所有设置恢复为默认值。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_TEXTE" Language="zh_Hans_CN">
+			<Text>要将 BetterGameExperience 的所有设置恢复为默认值吗？</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_FAIT" Language="zh_Hans_CN">
+			<Text>设置已恢复为默认值。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="zh_Hans_CN">
 			<Text>内置界面模组基于其作者的成果，BetterGameExperience 在此致谢：</Text>
 		</Row>

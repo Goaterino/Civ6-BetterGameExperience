@@ -43,6 +43,7 @@ local function NewControl()
 		if k == "SetText" or k == "LocalizeAndSetText" then return function(self, t) self.text = t; end; end
 		if k == "SetToolTipString" then return function(self, t) self.tooltip = t; end; end
 		if k == "SetDisabled" then return function(self, d) self.disabled = d; end; end
+		if k == "SetOffsetX" then return function(self, x) self.offsetX = x; end; end
 		if k == "RegisterCallback" then return function(self, ev, f) self.callbacks[ev] = f; end; end
 		if k == "RegisterSelectionCallback" then return function(self, f) self.selection = f; end; end
 		if k == "ClearEntries" then return function(self) self.entries = {}; end; end
@@ -64,7 +65,7 @@ end
 -- du jeu (fr_FR par défaut) ; `diag` : proxy compilé avec la feature `diag` (builds locaux), qui
 -- montre les réglages de diagnostic. Sans, l'onglet est celui de la release.
 local function NewScreen(cfgText, installed, loaded, lang, diag)
-	local m = { written = {}, popupTexts = {}, built = {}, loaded = loaded };
+	local m = { written = {}, popupTexts = {}, popupButtons = {}, built = {}, loaded = loaded, resets = {} };
 	local env = setmetatable({}, { __index = function(_, k) if _G[k] ~= nil then return _G[k]; end return Any; end });
 	env.include = function() end;
 	env.Controls = setmetatable({}, { __index = function(t, k) local c = NewControl(); rawset(t, k, c); return c; end });
@@ -90,6 +91,7 @@ local function NewScreen(cfgText, installed, loaded, lang, diag)
 	env.PopupDialog = { new = function()
 		return setmetatable({
 			AddText = function(_, t) table.insert(m.popupTexts, t); end,
+			AddButton = function(_, label, callback) table.insert(m.popupButtons, { label = label, callback = callback }); end,
 		}, { __index = function() return function() end; end });
 	end };
 	env.InstanceManager = { new = function() return Any; end };
@@ -108,6 +110,18 @@ local function NewScreen(cfgText, installed, loaded, lang, diag)
 		m.cfg = m.cfg .. "\n" .. lines .. "\n";
 		return 1, m.loaded;
 	end;
+	-- Comme reset_config (src/options.rs) : les lignes des clés données disparaissent.
+	env.Civ6Proxy_ReinitialiserReglages = function(keys)
+		local set = {};
+		for k in keys:gmatch("[^\n]+") do set[k] = true; end
+		table.insert(m.resets, set);
+		local kept = {};
+		for line in m.cfg:gmatch("[^\r\n]+") do
+			if not set[line:match("^%s*([%w_]+)%s*=")] then table.insert(kept, line); end
+		end
+		m.cfg = table.concat(kept, "\r\n");
+		return 1, m.loaded;
+	end;
 	-- IsInGame, Options, UserConfiguration… : Any.
 	-- Comme `lua_block` (src/options.rs).
 	local block = diag and BLOCK:gsub("local PROXY_DIAG = false;", "local PROXY_DIAG = true;", 1) or BLOCK;
@@ -124,6 +138,18 @@ local function NewScreen(cfgText, installed, loaded, lang, diag)
 	function m.RestartShown()
 		for _, t in ipairs(m.popupTexts) do
 			if t == "LOC_OPTIONS_CHANGES_REQUIRE_APP_RESTART" then return true; end
+		end
+		return false;
+	end
+	-- Clic sur le bouton `label` du pop-up ouvert : PopupDialog le ferme, puis appelle le rappel.
+	function m.Answer(label)
+		local buttons = m.popupButtons;
+		m.popupButtons = {};
+		for _, b in ipairs(buttons) do
+			if b.label == label then
+				if b.callback then b.callback(); end
+				return true;
+			end
 		end
 		return false;
 	end
@@ -310,6 +336,65 @@ do
 	Check("verif_maj=off écrit", m.written[#m.written] == "verif_maj=off");
 	m.Choose(actif, "Activé");
 	Check("général on : modifiables à nouveau", not boutons.PullDown.disabled);
+end
+
+do
+	-- Bouton « Réinitialiser BGE » : seulement sur l'onglet BGE, à gauche de Confirmer.
+	local m = NewScreen("ui_boutons=off\r\n# note\r\nwmd_accel=7\r\nverif_maj=off\r\n", 1, 1);
+	local C = m.env.Controls;
+	m.env.OnSelectTab(1);
+	Check("réinit : caché sur un onglet du jeu, Confirmer centré", C.ProxyResetButton.hidden == true and C.ConfirmButton.offsetX == 0);
+	C.ProxyTab.callbacks.LClick();
+	Check("réinit : visible sur l'onglet BGE, à côté de Confirmer", C.ProxyResetButton.hidden == false
+		and C.ProxyResetButton.offsetX == -155 and C.ConfirmButton.offsetX == 155
+		and C.ProxyResetButton.text == "Réinitialiser BGE");
+	C.GameTab.callbacks.LClick();
+	Check("réinit : caché à nouveau sur un autre onglet", C.ProxyResetButton.hidden == true and C.ConfirmButton.offsetX == 0);
+	C.ProxyTab.callbacks.LClick();
+
+	-- Non : rien ne change.
+	local boutons = m.Row("Boutons d'attaque au-dessus des drapeaux d'unités");
+	m.Choose(boutons, "Activé");
+	C.ProxyResetButton.callbacks.LClick();
+	Check("réinit : pop-up de confirmation", m.popupTexts[#m.popupTexts]:find("Réinitialiser tous les réglages", 1, true) ~= nil
+		and C.ProxyResetButton.disabled and C.WindowCloseButton.disabled);
+	Check("réinit : non", m.Answer("LOC_OPTIONS_RESET_OPTIONS_POPUP_NO"));
+	Check("réinit non : rien d'écrit, boutons rendus", #m.resets == 0 and #m.written == 0
+		and not C.ProxyResetButton.disabled and not C.WindowCloseButton.disabled);
+
+	-- Oui : toutes les clés retirées du fichier, diagnostic compris ; le reste gardé.
+	C.ProxyResetButton.callbacks.LClick();
+	Check("réinit : oui", m.Answer("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES"));
+	local set = m.resets[1] or {};
+	Check("réinit : toutes les clés, diagnostic compris", set.ui_boutons and set.wmd_accel and set.verif_maj and set.actif
+		and set.ui_diag_accords and set.profil_zones);
+	Check("réinit : fichier sans les réglages", m.cfg == "# note");
+	Check("réinit : valeurs par défaut affichées", boutons.PullDown.button.text == "Activé"
+		and m.Row("Accélération de l'animation des armes nucléaires").PullDown.button.text == "x20");
+	Check("réinit : état", C.ProxyStatus.text == "Réglages réinitialisés à leur valeur par défaut.");
+	Check("réinit : message de redémarrage du jeu", m.RestartShown());
+	Check("réinit : boutons rendus", not C.ProxyResetButton.disabled and not C.WindowCloseButton.disabled);
+	-- Le choix en attente avant la réinitialisation est abandonné.
+	C.ConfirmButton.callbacks.LClick();
+	Check("réinit : choix en attente abandonné", #m.written == 0);
+end
+
+do
+	-- Fichier déjà par défaut : pas de message de redémarrage.
+	local m = NewScreen("ui_boutons=on\r\n", 1, 1);
+	m.env.Controls.ProxyResetButton.callbacks.LClick();
+	m.Answer("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES");
+	Check("réinit sans changement : pas de redémarrage", #m.resets == 1 and not m.RestartShown());
+	-- Aucune partie lancée, mais un réglage lu au lancement du jeu : redémarrage.
+	local m2 = NewScreen("verif_maj=off\r\n", 1, 0);
+	m2.env.Controls.ProxyResetButton.callbacks.LClick();
+	m2.Answer("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES");
+	Check("réinit de verif_maj : redémarrage même sans partie", m2.RestartShown());
+	-- Sans partie lancée et sans réglage de lancement : la prochaine partie lira le fichier.
+	local m3 = NewScreen("ui_boutons=off\r\n", 1, 0);
+	m3.env.Controls.ProxyResetButton.callbacks.LClick();
+	m3.Answer("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES");
+	Check("réinit sans partie : pas de redémarrage", m3.cfg == "" and not m3.RestartShown());
 end
 
 do

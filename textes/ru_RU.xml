@@ -230,6 +230,18 @@
 		<Row Tag="LOC_BGD_OPT_MASQUER_AVANCEES" Language="ru_RU">
 			<Text>Скрыть дополнительные настройки</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_BOUTON" Language="ru_RU">
+			<Text>Сбросить BGE</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_AIDE" Language="ru_RU">
+			<Text>Возвращает все настройки BetterGameExperience к значениям по умолчанию.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_TEXTE" Language="ru_RU">
+			<Text>Вернуть все настройки BetterGameExperience к значениям по умолчанию?</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REINIT_FAIT" Language="ru_RU">
+			<Text>Настройки возвращены к значениям по умолчанию.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_CREDITS_INTRO" Language="ru_RU">
 			<Text>Встроенные моды интерфейса основаны на работе их авторов, которых BetterGameExperience благодарит:</Text>
 		</Row>
