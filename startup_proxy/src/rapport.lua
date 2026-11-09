@@ -13,9 +13,13 @@
 -- rapport annulé, envoi en cours, envoi terminé (ou en échec). Les messages partent en anglais, et
 -- chaque machine qui a BetterGameExperience les affiche dans sa langue (BGD_TxtChat). La pause
 -- n'est pas levée par le bloc : les messages disent quand elle peut l'être.
--- Le formulaire et le suivi de l'envoi passent par un popup du jeu (PopupDialog) ; l'envoi tourne
--- dans un thread du proxy, que le bloc interroge à chaque image tant que le menu est affiché, et à
--- chaque série d'événements du jeu sinon.
+-- Couleurs atténuées de la palette du jeu (COLOR_Civ6Green, COLOR_Civ6Red), propres à ce module.
+-- Le formulaire (BGD_RapportFond, ajouté au XML par le proxy) a un champ de texte pour décrire le
+-- problème, envoyé dans meta.json. Le suivi de l'envoi passe par un popup du jeu (PopupDialog) ; l'envoi tourne
+-- dans un thread du proxy. Le menu l'interroge à chaque image tant qu'il est affiché ; fermé, il n'a
+-- plus d'images (et la partie en pause n'a plus d'événements) : le bloc du suivi, dans InGame
+-- (rapport_suivi.lua), prend le relais. Le résultat revient par LuaEvents.BGD_RapportFini ; le menu
+-- se rouvre alors s'il était fermé, pour montrer le résultat tout de suite.
 -- ===========================================================================
 do
 local BGD_RapportOk, BGD_RapportErr = pcall(function()
@@ -88,7 +92,7 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 	end
 
 	-- Ce que le bloc sait de la partie, pour meta.json : une ligne « clé=valeur » par champ.
-	local function Meta()
+	local function Meta(description)
 		local champs = {};
 		local function Ajouter(cle, f)
 			local ok, v = pcall(f);
@@ -101,6 +105,13 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		Ajouter("tour", function() return Game.GetCurrentGameTurn(); end);
 		Ajouter("joueur", NomLocal);
 		Ajouter("joueur_id", function() return id; end);
+		-- Identifiant Steam 64 bits du joueur (celui que le salon ouvre en profil Steam) ; vide en
+		-- solo selon les cas, et le proxy lit alors le compte Steam connecté (steam_id_windows).
+		Ajouter("steam_id", function()
+			local sid = tostring(cfg:GetNetworkIdentifer() or "");
+			if string.match(sid, "^%d+$") and sid ~= "0" then return sid; end
+			return nil;
+		end);
 		Ajouter("civilisation", function() return Locale.Lookup(cfg:GetCivilizationShortDescription()); end);
 		Ajouter("dirigeant", function() return cfg:GetLeaderTypeName(); end);
 		Ajouter("multijoueur", function() return EnLigne() and 1 or 0; end);
@@ -108,6 +119,7 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		Ajouter("en_pause", function() return GameConfiguration.IsPaused() and 1 or 0; end);
 		Ajouter("humains", function() return #GameConfiguration.GetMultiplayerPlayerIDs(); end);
 		Ajouter("langue", function() return Locale.GetCurrentLanguage().Type; end);
+		Ajouter("description", function() return description; end);
 		return table.concat(champs, "\n");
 	end
 
@@ -151,23 +163,35 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 	local function Fin(statut, texte, archive)
 		R.etat = nil;
 		ArreterSuivi();
+		-- Menu fermé pendant l'envoi : on le rouvre (comme la touche Échap), pour que le popup du
+		-- résultat se voie tout de suite.
+		if ContextPtr:IsHidden() then
+			Journal("menu rouvert pour le résultat");
+			LuaEvents.InGame_OpenInGameOptionsMenu();
+		end
 		local fermer = { BGD_Txt("LOC_BGD_RAPPORT_FERMER"), function() end, PopupDialog.COMMAND_CONFIRM };
 		if statut == "ok" then
 			Journal("rapport envoyé, numéro " .. tostring(texte));
-			Chat("LOC_BGD_CHAT_RAPPORT_FIN", "COLOR_GREEN");
+			Chat("LOC_BGD_CHAT_RAPPORT_FIN", "COLOR_Civ6Green");
 			Afficher(BGD_Txt("LOC_BGD_RAPPORT_OK_TITRE"), BGD_Txt("LOC_BGD_RAPPORT_OK_TEXTE", texte), { fermer });
 		else
 			Journal("rapport non envoyé : " .. tostring(texte) .. ", archive : " .. tostring(archive));
-			Chat("LOC_BGD_CHAT_RAPPORT_ECHEC", "COLOR_RED");
+			Chat("LOC_BGD_CHAT_RAPPORT_ECHEC", "COLOR_Civ6Red");
 			Afficher(BGD_Txt("LOC_BGD_RAPPORT_ECHEC_TITRE"), BGD_Txt("LOC_BGD_RAPPORT_ECHEC_TEXTE", archive), { fermer });
 		end
 	end
+
+	-- Le résultat, qu'il vienne de ce menu ou du suivi d'InGame.
+	LuaEvents.BGD_RapportFini.Add(Protege(function(statut, texte, archive)
+		if R.etat ~= "envoi" then return; end
+		Fin(statut, texte, archive);
+	end));
 
 	Suivre = Protege(function()
 		if R.etat ~= "envoi" then return; end
 		local statut, texte, archive = Civ6Proxy_RapportEtat();
 		if statut == nil or statut == "" then return; end
-		Fin(statut, texte, archive);
+		LuaEvents.BGD_RapportFini(statut, texte, archive);
 	end);
 
 	local function AfficherEnvoi()
@@ -175,32 +199,55 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 			{ { BGD_Txt("LOC_BGD_RAPPORT_FERMER"), function() end, PopupDialog.COMMAND_CANCEL } });
 	end
 
+	-- Le cadre suit la hauteur de son contenu (explication plus ou moins longue selon la langue).
+	local function Ajuster()
+		pcall(function()
+			Controls.BGD_RapportPile:CalculateSize();
+			local h = Controls.BGD_RapportPile:GetSizeY() + 36;
+			Controls.BGD_RapportCadre:SetSizeY(h);
+			Controls.BGD_RapportBord:SetSizeY(h + 4);
+		end);
+	end
+
+	local function Formulaire(afficher)
+		if not afficher then
+			Controls.BGD_RapportFond:SetHide(true);
+			return;
+		end
+		Controls.BGD_RapportTitre:SetText(BGD_Txt("LOC_BGD_RAPPORT_TITRE"));
+		Controls.BGD_RapportExplication:SetText(BGD_Txt("LOC_BGD_RAPPORT_TEXTE"));
+		Controls.BGD_RapportConsigne:SetText(BGD_Txt("LOC_BGD_RAPPORT_DESCRIPTION"));
+		Controls.BGD_RapportConfirmer:SetText(BGD_Txt("LOC_BGD_RAPPORT_CONFIRMER"));
+		Controls.BGD_RapportAnnuler:SetText(BGD_Txt("LOC_BGD_RAPPORT_ANNULER"));
+		Controls.BGD_RapportFond:SetHide(false);
+		Ajuster();
+		pcall(function() Controls.BGD_RapportTexte:TakeFocus(); end);
+	end
+
 	local function Confirmer()
 		if R.etat ~= "formulaire" then return; end
+		local description = Controls.BGD_RapportTexte:GetText() or "";
+		Formulaire(false);
 		R.etat = "envoi";
-		Chat("LOC_BGD_CHAT_RAPPORT_ENVOI", "COLOR_GREEN");
+		Journal("description : " .. description);
+		Chat("LOC_BGD_CHAT_RAPPORT_ENVOI", "COLOR_Civ6Green");
 		Sauvegarder();
-		local ok, err = Civ6Proxy_RapportEnvoyer(Meta());
+		local ok, err = Civ6Proxy_RapportEnvoyer(Meta(description));
 		if ok ~= 1 then
 			Fin("echec", err, "");
 			return;
 		end
 		AfficherEnvoi();
 		ContextPtr:SetUpdate(Suivre);
+		LuaEvents.BGD_RapportSuivre();
 	end
 
 	local function Annuler()
 		if R.etat ~= "formulaire" then return; end
+		Formulaire(false);
 		R.etat = nil;
 		Journal("rapport annulé");
-		Chat("LOC_BGD_CHAT_RAPPORT_ANNULE", "COLOR_GREEN");
-	end
-
-	local function Formulaire()
-		Afficher(BGD_Txt("LOC_BGD_RAPPORT_TITRE"), BGD_Txt("LOC_BGD_RAPPORT_TEXTE"), {
-			{ BGD_Txt("LOC_BGD_RAPPORT_CONFIRMER"), Protege(Confirmer), PopupDialog.COMMAND_CONFIRM },
-			{ BGD_Txt("LOC_BGD_RAPPORT_ANNULER"), Protege(Annuler), PopupDialog.COMMAND_CANCEL },
-		});
+		Chat("LOC_BGD_CHAT_RAPPORT_ANNULE", "COLOR_Civ6Green");
 	end
 
 	local function Ouvrir()
@@ -211,26 +258,33 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 			return;
 		end
 		if R.etat == "formulaire" then
-			-- Popup fermé sans réponse (menu fermé par un écran diplomatique) : on le rouvre, sans
-			-- nouveau message.
-			Formulaire();
+			-- Formulaire resté ouvert (menu fermé par Échap ou un écran diplomatique) : on le rouvre,
+			-- texte compris, sans nouveau message.
+			Formulaire(true);
 			return;
 		end
 		R.etat = "formulaire";
 		Journal("formulaire ouvert");
 		Pauser();
-		Chat("LOC_BGD_CHAT_RAPPORT_DEBUT", "COLOR_RED");
-		Formulaire();
+		Chat("LOC_BGD_CHAT_RAPPORT_DEBUT", "COLOR_Civ6Red");
+		Controls.BGD_RapportTexte:SetText("");
+		Formulaire(true);
 	end
 
+	if Controls.BGD_RapportFond == nil or Controls.BGD_RapportTexte == nil then
+		Journal("formulaire absent du XML, pas de rapport");
+		bouton:SetHide(true);
+		return;
+	end
+	Controls.BGD_RapportConfirmer:RegisterCallback(Mouse.eLClick, Protege(Confirmer));
+	Controls.BGD_RapportAnnuler:RegisterCallback(Mouse.eLClick, Protege(Annuler));
 	bouton:SetText(BGD_Txt("LOC_BGD_RAPPORT_BOUTON"));
 	pcall(function() bouton:SetToolTipString(BGD_Txt("LOC_BGD_RAPPORT_INFOBULLE")); end);
 	bouton:RegisterCallback(Mouse.eLClick, Protege(Ouvrir));
 	pcall(function()
 		bouton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	end);
-	-- Menu fermé pendant l'envoi : le contexte caché n'a plus d'images, les événements du jeu
-	-- prennent le relais.
+	-- Menu fermé pendant l'envoi, partie pas en pause : les événements du jeu aident le suivi d'InGame.
 	Events.GameCoreEventPublishComplete.Add(Suivre);
 	Journal("bouton prêt");
 end);

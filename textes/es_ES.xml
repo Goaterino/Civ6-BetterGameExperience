@@ -516,7 +516,7 @@
 			<Text>Informar de un error</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="es_ES">
-			<Text>BetterGameExperience enviará a su equipo una partida guardada de este momento, los últimos autoguardados y los registros del juego. Tu nombre de usuario de Windows se elimina de los registros.[NEWLINE][NEWLINE]Después, describe el error en el Discord de BetterGameExperience, con el número de informe que recibirás.</Text>
+			<Text>BetterGameExperience enviará a su equipo una partida guardada de este momento, los últimos autoguardados y los registros del juego. Tu nombre de usuario de Windows se elimina de los registros.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="es_ES">
 			<Text>Enviar el informe</Text>
@@ -534,13 +534,13 @@
 			<Text>Informe enviado</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="es_ES">
-			<Text>Número de informe: {1}[NEWLINE][NEWLINE]Menciónalo en el Discord de BetterGameExperience al describir el error.</Text>
+			<Text>¡Gracias! El informe ha llegado al equipo de BetterGameExperience.[NEWLINE][NEWLINE]Número de informe: {1}[NEWLINE][NEWLINE]Para añadir detalles, envía este número a @goaterino por mensaje privado en Discord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="es_ES">
 			<Text>Informe no enviado</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="es_ES">
-			<Text>No se ha podido enviar el informe. El archivo se ha guardado aquí:[NEWLINE]{1}[NEWLINE][NEWLINE]Publícalo en el Discord de BetterGameExperience con una descripción del error.</Text>
+			<Text>No se ha podido enviar el informe. El archivo se ha guardado aquí:[NEWLINE]{1}[NEWLINE][NEWLINE]Envíalo a @goaterino por mensaje privado en Discord, con una descripción del problema.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="es_ES">
 			<Text>{1} está informando de un error, espera por favor.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="es_ES">
 			<Text>{1}: no se ha podido enviar el informe de error, se ha guardado en su ordenador. Se puede quitar la pausa.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="es_ES">
+			<Text>Describe el problema: qué ha pasado, cuándo y qué esperabas en su lugar.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

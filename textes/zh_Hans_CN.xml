@@ -516,7 +516,7 @@
 			<Text>报告错误</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="zh_Hans_CN">
-			<Text>BetterGameExperience 将向其团队发送此刻的存档、最近的自动存档和游戏日志。你的 Windows 用户名会从日志中删除。[NEWLINE][NEWLINE]之后，请在 BetterGameExperience 的 Discord 上描述该错误，并附上你将收到的报告编号。</Text>
+			<Text>BetterGameExperience 将向其团队发送此刻的存档、最近的自动存档和游戏日志。你的 Windows 用户名会从日志中删除。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="zh_Hans_CN">
 			<Text>发送报告</Text>
@@ -534,13 +534,13 @@
 			<Text>报告已发送</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="zh_Hans_CN">
-			<Text>报告编号：{1}[NEWLINE][NEWLINE]在 BetterGameExperience 的 Discord 上描述错误时请注明此编号。</Text>
+			<Text>谢谢！报告已送达 BetterGameExperience 团队。[NEWLINE][NEWLINE]报告编号：{1}[NEWLINE][NEWLINE]如需补充细节，请通过 Discord 私信将此编号发送给 @goaterino。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="zh_Hans_CN">
 			<Text>报告未发送</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="zh_Hans_CN">
-			<Text>无法发送报告。压缩包已保存到：[NEWLINE]{1}[NEWLINE][NEWLINE]请将其连同错误描述一起发布到 BetterGameExperience 的 Discord。</Text>
+			<Text>无法发送报告。压缩包已保存到：[NEWLINE]{1}[NEWLINE][NEWLINE]请通过 Discord 私信将其连同问题描述一起发送给 @goaterino。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="zh_Hans_CN">
 			<Text>{1} 正在报告错误，请稍候。</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="zh_Hans_CN">
 			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。可以解除暂停。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="zh_Hans_CN">
+			<Text>请描述问题：发生了什么、在什么时候，以及你原本期望的结果。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

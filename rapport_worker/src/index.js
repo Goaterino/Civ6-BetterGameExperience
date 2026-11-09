@@ -10,6 +10,11 @@
 // tag du forum, posé sur chaque fil), PLAFOND_OCTETS (taille maximale du bucket, 9,5 Go par défaut).
 
 export const MAX_OCTETS = 50 * 1024 * 1024;
+// Clé que chaque rapport doit porter (en-tête X-BGE-Cle), gravée dans winmm.dll
+// (startup_proxy/src/rapport.rs, CLE_CLIENT ; un test vérifie qu'elles concordent). Elle écarte les
+// envois qui ne viennent pas de la DLL ; elle se lit dans la DLL, ce n'est pas un secret. La variable
+// CLE_CLIENT la remplace, pour en changer sans republier le Worker.
+export const CLE_CLIENT = "16ea4c738b288eb2852868d2670e169e";
 // Plafond du bucket, sous les 10 Go gratuits de R2 (compté en Go décimaux, le plus prudent). Avant
 // de ranger un rapport, les plus anciens sont supprimés tant que le total, nouveau compris, le
 // dépasserait. PLAFOND_OCTETS (variable) le remplace.
@@ -59,19 +64,29 @@ export function brut(s, max = 100) {
 	return String(s ?? "?").replace(/[\r\n]+/g, " ").replace(/([\\`*_~|>#@<\[\]()-])/g, "\\$1").slice(0, max);
 }
 
+// Steam ID 64 bits du joueur : celui du jeu, sinon le compte Steam connecté sur la machine.
+export function steamId(m) {
+	return [m.steam_id, m.steam_id_windows].map((v) => String(v ?? "")).find((v) => /^7656\d{13}$/.test(v)) ?? null;
+}
+
 export function resume(id, meta, octets, lien) {
 	const m = meta ?? {};
+	const steam = steamId(m);
 	const fichiers = Array.isArray(m.fichiers) ? m.fichiers : [];
 	const saves = fichiers.filter((f) => String(f.nom).startsWith("saves/")).length;
 	const lignes = [
 		`**Rapport ${id}**`,
 		`Joueur : ${brut(m.joueur)} (${brut(m.civilisation)}), tour ${brut(m.tour, 10)}`,
+		steam ? `Steam : ${steam} <https://steamcommunity.com/profiles/${steam}>` : "Steam : inconnu",
 		`Partie : ${m.multijoueur === "1" ? "multijoueur" : "solo"}${m.hote === "1" ? ", hôte" : ""}${m.en_pause === "1" ? ", en pause" : ""}, ${brut(m.humains, 4)} humain(s)`,
 		`BGE : ${brut(m.bge_release, 20)} (${brut(m.bge_version, 20)}), ${brut(m.exe, 40)}, langue ${brut(m.langue, 12)}`,
 		`Archive : ${(octets / 1048576).toFixed(1)} Mo, ${fichiers.length} fichiers dont ${saves} sauvegarde(s)`,
 		`Télécharger : ${lien}`,
 	];
-	if (meta == null) lignes.splice(1, 4, "meta.json illisible");
+	if (meta == null) lignes.splice(1, 5, "meta.json illisible");
+	// Description du joueur, citée en dernier : le message Discord tient en 2 000 caractères.
+	const description = String(m.description ?? "").trim();
+	lignes.push(description ? `> ${brut(description, 1400)}` : "> (pas de description)");
 	return lignes.join("\n");
 }
 
@@ -118,6 +133,7 @@ async function publierDiscord(env, id, meta, octets, lien) {
 }
 
 async function recevoir(request, env) {
+	if ((request.headers.get("x-bge-cle") ?? "") !== (env.CLE_CLIENT || CLE_CLIENT)) return json({ erreur: "clé absente ou invalide" }, 403);
 	const ip = request.headers.get("cf-connecting-ip") ?? "?";
 	if (env.LIMITE) {
 		const { success } = await env.LIMITE.limit({ key: ip });

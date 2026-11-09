@@ -8,10 +8,12 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
                                   └─► webhook ──► forum Discord : un fil par rapport
 ```
 
-- **`POST /rapport`** : le zip arrive dans le champ `archive` d'un formulaire multipart. Le Worker
-  vérifie la limite par IP (3 rapports par minute), la taille (50 Mo au plus) et la signature du zip,
+- **`POST /rapport`** : le zip arrive dans le champ `archive` d'un formulaire multipart, avec
+  l'en-tête `X-BGE-Cle`. Sans la bonne clé, le Worker répond 403 avant toute autre chose. Il
+  vérifie ensuite la limite par IP (3 rapports par minute), la taille (50 Mo au plus) et la signature du zip,
   le range dans R2 sous `rapports/BGE-XXXXXX.zip`, lit son `meta.json` et ouvre un fil dans le salon
-  forum : titre `BGE-XXXXXX · joueur · tour N`, résumé de la partie, lien de téléchargement. Il rend
+  forum : titre `BGE-XXXXXX · joueur · tour N`, résumé de la partie, Steam ID du joueur et lien
+  vers son profil, lien de téléchargement, puis la description écrite par le joueur. Il rend
   `{"id": "BGE-XXXXXX"}`, que le jeu montre au joueur.
 - **`GET /rapport/BGE-XXXXXX?cle=…`** : le zip. La clé, tirée au hasard pour chaque rapport, n'est
   écrite que dans le fil Discord. Sans elle, le Worker répond 404.
@@ -26,6 +28,14 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
 
 Le texte écrit par le joueur (pseudo, civilisation…) passe sans mise en forme ni mention
 (`allowed_mentions` vide) : un pseudo `@everyone` ne notifie personne.
+
+## La clé des rapports
+
+`CLE_CLIENT`, dans [src/index.js](src/index.js) et dans `startup_proxy/src/rapport.rs` (un test du
+proxy vérifie qu'elles sont égales). Elle se lit dans la DLL : ce n'est pas un secret, elle écarte
+seulement les envois qui ne viennent pas du jeu. Pour la changer sans attendre une release, définir
+la variable `CLE_CLIENT` du Worker (elle remplace celle du code), ce qui refuse aussi les rapports
+des DLL déjà installées jusqu'à la release suivante.
 
 ## Mise en place
 

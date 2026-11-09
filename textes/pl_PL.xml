@@ -516,7 +516,7 @@
 			<Text>Zgłoś błąd</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="pl_PL">
-			<Text>BetterGameExperience wyśle swojemu zespołowi zapis z tej chwili, ostatnie autozapisy i dzienniki gry. Twoja nazwa użytkownika Windows zostaje usunięta z dzienników.[NEWLINE][NEWLINE]Następnie opisz błąd na Discordzie BetterGameExperience, podając numer zgłoszenia, który otrzymasz.</Text>
+			<Text>BetterGameExperience wyśle swojemu zespołowi zapis z tej chwili, ostatnie autozapisy i dzienniki gry. Twoja nazwa użytkownika Windows zostaje usunięta z dzienników.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="pl_PL">
 			<Text>Wyślij zgłoszenie</Text>
@@ -534,13 +534,13 @@
 			<Text>Zgłoszenie wysłane</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="pl_PL">
-			<Text>Numer zgłoszenia: {1}[NEWLINE][NEWLINE]Podaj go na Discordzie BetterGameExperience, opisując błąd.</Text>
+			<Text>Dziękujemy! Zgłoszenie dotarło do zespołu BetterGameExperience.[NEWLINE][NEWLINE]Numer zgłoszenia: {1}[NEWLINE][NEWLINE]Aby dodać szczegóły, wyślij ten numer do @goaterino w prywatnej wiadomości na Discordzie.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="pl_PL">
 			<Text>Zgłoszenie nie zostało wysłane</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="pl_PL">
-			<Text>Nie udało się wysłać zgłoszenia. Archiwum zapisano tutaj:[NEWLINE]{1}[NEWLINE][NEWLINE]Opublikuj je na Discordzie BetterGameExperience wraz z opisem błędu.</Text>
+			<Text>Nie udało się wysłać zgłoszenia. Archiwum zapisano tutaj:[NEWLINE]{1}[NEWLINE][NEWLINE]Wyślij je do @goaterino w prywatnej wiadomości na Discordzie wraz z opisem problemu.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="pl_PL">
 			<Text>{1} zgłasza błąd, proszę czekać.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pl_PL">
 			<Text>{1}: nie udało się wysłać zgłoszenia błędu, zostało zapisane na komputerze gracza. Można zdjąć pauzę.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pl_PL">
+			<Text>Opisz problem: co się stało, kiedy i czego oczekiwałeś zamiast tego.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
-import worker, { lireMeta, brut, faireDeLaPlace, MAX_OCTETS, PLAFOND_OCTETS } from "../src/index.js";
+import worker, { lireMeta, brut, steamId, faireDeLaPlace, CLE_CLIENT, MAX_OCTETS, PLAFOND_OCTETS } from "../src/index.js";
 
 // Un zip comme celui du proxy : meta.json en premier, en deflate.
 function zip(meta) {
@@ -21,6 +21,8 @@ function zip(meta) {
 }
 
 const META = { joueur: "Jean @everyone", tour: "87", civilisation: "France", multijoueur: "1", hote: "1", en_pause: "1", humains: "4",
+	description: "La partie se désynchronise *à chaque* tour après la guerre @here",
+	steam_id: "76561198000000042", steam_id_windows: "76561198000000099",
 	bge_release: "0.7.1", bge_version: "0.7.1", exe: "CivilizationVI_DX12.exe", langue: "fr_FR",
 	fichiers: [{ nom: "logs/Lua.log", octets: 10 }, { nom: "saves/BGE_rapport.Civ6Save", octets: 5 }] };
 
@@ -56,7 +58,7 @@ function env(options = {}) {
 	};
 }
 
-function envoi(corps, headers = {}) {
+function envoi(corps, headers = { "x-bge-cle": CLE_CLIENT }) {
 	const form = new FormData();
 	if (corps) form.append("archive", new Blob([corps], { type: "application/zip" }), "BGE_rapport_1.zip");
 	return new Request("https://bge-rapports.exemple.workers.dev/rapport", { method: "POST", body: form, headers });
@@ -69,7 +71,7 @@ test("meta.json lu dans le zip", async () => {
 
 test("rapport reçu, gardé, publié, téléchargeable", async () => {
 	const e = env({ tag: "42" });
-	const r = await worker.fetch(envoi(zip(META), { "x-bge-version": "0.7.1" }), e);
+	const r = await worker.fetch(envoi(zip(META), { "x-bge-version": "0.7.1", "x-bge-cle": CLE_CLIENT }), e);
 	assert.equal(r.status, 200);
 	const { id } = await r.json();
 	assert.match(id, /^BGE-[0-9A-F]{6}$/);
@@ -84,7 +86,10 @@ test("rapport reçu, gardé, publié, téléchargeable", async () => {
 	assert.deepEqual(corps.applied_tags, ["42"]);
 	assert.ok(corps.content.includes("Jean \\@everyone (France), tour 87"), corps.content);
 	assert.ok(corps.content.includes("multijoueur, hôte, en pause, 4 humain(s)"), corps.content);
+	assert.ok(corps.content.includes("Steam : 76561198000000042 <https://steamcommunity.com/profiles/76561198000000042>"), corps.content);
 	assert.ok(corps.content.includes("2 fichiers dont 1 sauvegarde(s)"), corps.content);
+	assert.ok(corps.content.endsWith("> La partie se désynchronise \\*à chaque\\* tour après la guerre \\@here"), corps.content);
+	assert.ok(corps.content.length < 2000);
 	const lien = corps.content.match(/Télécharger : (\S+)/)[1];
 	assert.ok(lien.startsWith(`https://bge-rapports.exemple.workers.dev/rapport/${id}?cle=`));
 	const d = await worker.fetch(new Request(lien), e);
@@ -92,7 +97,7 @@ test("rapport reçu, gardé, publié, téléchargeable", async () => {
 	assert.equal(d.headers.get("content-disposition"), `attachment; filename="${id}.zip"`);
 	assert.deepEqual(new Uint8Array(await d.arrayBuffer()), objet.data);
 	// Sans la bonne clé : inconnu.
-	assert.equal((await worker.fetch(new Request(lien.replace(/cle=./, "cle=0")), e)).status, 404);
+	assert.equal((await worker.fetch(new Request(lien.replace(/cle=\w+/, "cle=" + "0".repeat(32))), e)).status, 404);
 	assert.equal((await worker.fetch(new Request(`https://x/rapport/${id}`), e)).status, 404);
 });
 
@@ -104,6 +109,26 @@ test("Discord en panne : le joueur a quand même son numéro", async () => {
 	console.error = erreurs;
 	assert.equal(r.status, 200);
 	assert.equal(e.objets.size, 1);
+});
+
+test("refus : clé absente ou fausse, avant tout le reste", async () => {
+	const e = env();
+	assert.equal((await worker.fetch(envoi(zip(META), {}), e)).status, 403);
+	assert.equal((await worker.fetch(envoi(zip(META), { "x-bge-cle": "0".repeat(32) }), e)).status, 403);
+	assert.equal(e.objets.size, 0);
+	assert.equal(e.discord.length, 0);
+	// La variable CLE_CLIENT remplace la clé du code.
+	const e2 = { ...env(), CLE_CLIENT: "autre" };
+	assert.equal((await worker.fetch(envoi(zip(META)), e2)).status, 403);
+	assert.equal((await worker.fetch(envoi(zip(META), { "x-bge-cle": "autre" }), e2)).status, 200);
+});
+
+test("description longue coupée, absente signalée", async () => {
+	const e = env();
+	await worker.fetch(envoi(zip({ ...META, description: "x".repeat(5000) })), e);
+	await worker.fetch(envoi(zip({ ...META, description: "" })), e);
+	assert.ok(e.discord[0].corps.content.length < 2000, String(e.discord[0].corps.content.length));
+	assert.ok(e.discord[1].corps.content.endsWith("> (pas de description)"));
 });
 
 test("refus : limite, pas de zip, trop gros, mauvaise route", async () => {
@@ -149,4 +174,11 @@ test("plafond du bucket : les plus anciens partent d'abord", async () => {
 	const { id } = await r.json();
 	assert.ok(!e.objets.has("rapports/BGE-000004.zip"), "le plus ancien est parti");
 	assert.ok(e.objets.has(`rapports/${id}.zip`) && e.objets.has("autre/x"));
+});
+
+test("Steam ID : celui du jeu, sinon celui de Windows, sinon inconnu", () => {
+	assert.equal(steamId({ steam_id: "76561198000000042", steam_id_windows: "76561198000000099" }), "76561198000000042");
+	assert.equal(steamId({ steam_id: "", steam_id_windows: "76561198000000099" }), "76561198000000099");
+	assert.equal(steamId({ steam_id: "1234", steam_id_windows: "<@1>" }), null);
+	assert.equal(steamId({}), null);
 });

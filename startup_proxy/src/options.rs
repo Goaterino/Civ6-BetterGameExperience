@@ -430,7 +430,10 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
             (patch_options_lua(&src), "options : onglet des proxys et entrées du limiteur d'images ajoutés")
         }
         crate::salon::SCRIPT => (crate::salon::prepare(l, src), "salon : annonce de version ajoutée"),
-        crate::salon::SCRIPT_PARTIE => (crate::salon::prepare_partie(l, src), "partie : relais du verdict ajouté"),
+        crate::salon::SCRIPT_PARTIE => {
+            let text = crate::salon::prepare_partie(l, src);
+            (crate::rapport::prepare_suivi(l, text), "partie : relais du verdict et suivi des rapports de bug ajoutés")
+        }
         crate::salon::SCRIPT_CHARGEMENT => {
             (crate::salon::prepare_chargement(l, src), "chargement : correctifs POL des parties locales ajoutés")
         }
@@ -464,6 +467,16 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
             Ok(Some(text)) if replace_buffer(b, &text) => log(&format!("maj : {name} : popup du menu ajouté")),
             Ok(Some(_)) => log(&format!("maj : {name} : allocation impossible, laissé tel quel")),
             Err(e) => log(&format!("maj : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
+    if is_file(&name, crate::rapport::XML_PARTIE) {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match crate::rapport::patch_in_game_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("rapport : {name} : minuteur du suivi ajouté")),
+            Ok(_) => log(&format!("rapport : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("rapport : {name} laissé tel quel : {e}")),
         }
         return r;
     }

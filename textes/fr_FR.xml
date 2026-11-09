@@ -516,7 +516,7 @@
 			<Text>Signaler un bug</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="fr_FR">
-			<Text>BetterGameExperience va envoyer à son équipe une sauvegarde de ce moment, les derniers autosaves et les journaux du jeu. Votre nom d'utilisateur Windows est retiré des journaux.[NEWLINE][NEWLINE]Décrivez ensuite le bug sur le Discord de BetterGameExperience, avec le numéro de rapport que vous allez recevoir.</Text>
+			<Text>BetterGameExperience va envoyer à son équipe une sauvegarde de ce moment, les derniers autosaves et les journaux du jeu. Votre nom d'utilisateur Windows est retiré des journaux.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="fr_FR">
 			<Text>Envoyer le rapport</Text>
@@ -534,13 +534,13 @@
 			<Text>Rapport envoyé</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="fr_FR">
-			<Text>Numéro du rapport : {1}[NEWLINE][NEWLINE]Citez-le sur le Discord de BetterGameExperience en décrivant le bug.</Text>
+			<Text>Merci ! Le rapport est arrivé à l'équipe de BetterGameExperience.[NEWLINE][NEWLINE]Numéro du rapport : {1}[NEWLINE][NEWLINE]Pour ajouter des détails, envoyez ce numéro à @goaterino en message privé sur Discord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="fr_FR">
 			<Text>Rapport non envoyé</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="fr_FR">
-			<Text>Le rapport n'a pas pu être envoyé. L'archive est enregistrée ici :[NEWLINE]{1}[NEWLINE][NEWLINE]Postez-la sur le Discord de BetterGameExperience avec une description du bug.</Text>
+			<Text>Le rapport n'a pas pu être envoyé. L'archive est enregistrée ici :[NEWLINE]{1}[NEWLINE][NEWLINE]Envoyez-la à @goaterino en message privé sur Discord, avec une description du problème.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="fr_FR">
 			<Text>{1} signale un bug, merci de patienter.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="fr_FR">
 			<Text>{1} : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur. La pause peut être levée.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="fr_FR">
+			<Text>Décrivez le problème : ce qui s'est passé, à quel moment, et ce que vous attendiez à la place.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>
