@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
-import worker, { lireMeta, brut, MAX_OCTETS } from "../src/index.js";
+import worker, { lireMeta, brut, faireDeLaPlace, MAX_OCTETS, PLAFOND_OCTETS } from "../src/index.js";
 
 // Un zip comme celui du proxy : meta.json en premier, en deflate.
 function zip(meta) {
@@ -35,10 +35,19 @@ function env(options = {}) {
 		objets, discord,
 		DISCORD_WEBHOOK: "https://discord.example/api/webhooks/1/x",
 		DISCORD_TAG: options.tag,
+		PLAFOND_OCTETS: options.plafond,
 		LIMITE: { limit: async () => ({ success: !options.limite }) },
 		RAPPORTS: {
 			head: async (k) => (objets.has(k) ? {} : null),
-			put: async (k, v, o) => objets.set(k, { data: v, ...o }),
+			put: async (k, v, o) => objets.set(k, { data: v, size: v.byteLength, uploaded: new Date(Date.now() + objets.size), ...o }),
+			delete: async (ks) => { for (const k of [].concat(ks)) objets.delete(k); },
+			// Pages de 2 objets, pour essayer la pagination.
+			list: async ({ prefix, cursor }) => {
+				const tout = [...objets].filter(([k]) => k.startsWith(prefix)).map(([key, o]) => ({ key, size: o.size, uploaded: o.uploaded }));
+				const debut = Number(cursor ?? 0);
+				const page = tout.slice(debut, debut + 2);
+				return { objects: page, truncated: debut + 2 < tout.length, cursor: String(debut + 2) };
+			},
 			get: async (k) => {
 				const o = objets.get(k);
 				return o ? { body: o.data, customMetadata: o.customMetadata } : null;
@@ -111,4 +120,33 @@ test("refus : limite, pas de zip, trop gros, mauvaise route", async () => {
 test("texte des joueurs sans mise en forme", () => {
 	assert.equal(brut("**a**\n<@1>"), "\\*\\*a\\*\\* \\<\\@1\\>");
 	assert.equal(brut(undefined), "?");
+});
+
+test("plafond du bucket : les plus anciens partent d'abord", async () => {
+	assert.equal(PLAFOND_OCTETS, 9.5e9);
+	const e = env({ plafond: 1000 });
+	const ajouter = (id, size, jour) => e.objets.set(`rapports/${id}.zip`, { data: new Uint8Array(0), size, uploaded: new Date(`2026-11-0${jour}T00:00:00Z`) });
+	ajouter("BGE-000003", 300, 3);
+	ajouter("BGE-000001", 300, 1);
+	ajouter("BGE-000004", 300, 4);
+	ajouter("BGE-000002", 300, 2);
+	e.objets.set("autre/x", { data: new Uint8Array(0), size: 5000, uploaded: new Date(0) });
+	const logs = console.log;
+	console.log = () => {};
+	// 1 200 + 50 > 1 000 : le plus ancien part, et 900 + 50 tient.
+	assert.deepEqual(await faireDeLaPlace(e, 50), ["BGE-000001"]);
+	assert.deepEqual([...e.objets.keys()].sort(), ["autre/x", "rapports/BGE-000002.zip", "rapports/BGE-000003.zip", "rapports/BGE-000004.zip"]);
+	// Pile au plafond : rien ne part. Les objets hors de rapports/ ne comptent pas.
+	assert.deepEqual(await faireDeLaPlace(e, 100), []);
+	// 900 + 450 : deux rapports partent.
+	assert.deepEqual(await faireDeLaPlace(e, 450), ["BGE-000002", "BGE-000003"]);
+	// Par l'envoi : 300 + un zip de plus de 700 octets fait partir le dernier ancien.
+	const gros = zip({ ...META, bourrage: Array.from({ length: 400 }, (_, i) => (i * 7919) % 1000).join(",") });
+	assert.ok(gros.byteLength > 700, `zip de ${gros.byteLength} octets`);
+	const r = await worker.fetch(envoi(gros), e);
+	console.log = logs;
+	assert.equal(r.status, 200);
+	const { id } = await r.json();
+	assert.ok(!e.objets.has("rapports/BGE-000004.zip"), "le plus ancien est parti");
+	assert.ok(e.objets.has(`rapports/${id}.zip`) && e.objets.has("autre/x"));
 });

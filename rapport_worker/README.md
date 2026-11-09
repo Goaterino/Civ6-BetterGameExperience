@@ -18,6 +18,8 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
 - **Pourquoi un relais** plutôt que le webhook dans la DLL : une URL de webhook gravée dans la DLL
   se lit avec `strings` et servirait à spammer le salon, et un webhook n'accepte que 10 Mo de pièces
   jointes, moins qu'une sauvegarde tardive avec ses journaux. Le Worker garde le webhook secret.
+- Le bucket ne dépasse jamais 9,5 Go : les rapports les plus anciens sont supprimés d'abord (voir
+  [Plafond du bucket et rétention](#plafond-du-bucket-et-rétention)).
 - Si Discord ne répond pas, le zip reste dans R2 et le joueur a son numéro : on le retrouve dans le
   bucket. L'erreur va aux journaux du Worker (`npx wrangler tail`).
 
@@ -72,10 +74,26 @@ jusqu'à 100 000 requêtes par jour).
    Pour essayer avant une release, avec une DLL déjà installée : ajouter
    `rapport_url=https://bge-rapports.<compte>.workers.dev/rapport` à `rollover_proxy.cfg`.
 
-## Rétention
+## Plafond du bucket et rétention
 
-Les zips ne sont pas supprimés par le Worker. Pour les effacer après 90 jours, ajouter une règle
-de cycle de vie au bucket : tableau de bord, R2 > bge-rapports > Settings > Object lifecycle rules.
+Pour rester sous les 10 Go gratuits de R2, le Worker garde le bucket sous **9,5 Go** (9 500 000 000
+octets, le plus prudent des deux façons de compter un Go). Avant de ranger un nouveau zip, il liste
+les rapports et additionne leurs tailles. Si le total, nouveau zip compris, dépasse le plafond, il
+supprime les rapports les plus anciens jusqu'à repasser dessous. Les journaux du Worker
+(`npx wrangler tail`) disent lesquels sont partis. Les liens de leurs fils Discord ne marchent plus
+(404). Seul le préfixe `rapports/` est compté : n'y range rien d'autre à la main.
+
+- Le stockage gratuit de R2 se compte en moyenne sur le mois (10 Go-mois) : un bucket qui ne dépasse
+  jamais 9,5 Go reste dessous.
+- Deux rapports reçus à la même seconde peuvent passer le plafond d'une archive au plus (50 Mo) : la
+  marge de 0,5 Go la couvre.
+- Le décompte coûte une liste par rapport (une opération de classe A par tranche de 1 000 rapports),
+  très loin du million d'opérations gratuites par mois.
+- Pour changer le plafond, ajouter `PLAFOND_OCTETS = "5000000000"` sous `[vars]` dans
+  [wrangler.toml](wrangler.toml), puis redéployer.
+
+Pour effacer aussi les rapports par âge, par exemple après 90 jours, ajouter une règle de cycle de
+vie au bucket : tableau de bord, R2 > bge-rapports > Settings > Object lifecycle rules.
 Avec une version récente de wrangler, la même règle en ligne de commande (vérifier la syntaxe avec
 `npx wrangler r2 bucket lifecycle add --help`) :
 
@@ -91,6 +109,7 @@ Hors Cloudflare, R2, la limite par IP et Discord simulés (Node 20 ou plus) :
 node --test rapport_worker/test/index.test.js
 ```
 
-Ils couvrent la lecture de `meta.json` dans le zip, le rangement, le fil Discord (titre, résumé,
+Ils couvrent la lecture de `meta.json` dans le zip, le plafond du bucket (plus anciens supprimés
+d'abord, pagination de la liste), le rangement, le fil Discord (titre, résumé,
 tag, mentions coupées), le téléchargement avec et sans la clé, Discord en panne, et les refus
 (limite, pas un zip, trop gros, mauvaise route). Le workflow de release les lance.
