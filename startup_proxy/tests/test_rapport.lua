@@ -3,8 +3,8 @@
 -- Deux contextes simulés qui partagent leurs LuaEvents, comme dans le jeu : le menu Échap (bouton
 -- et formulaire ajoutés par le proxy, popup, ContextPtr) et InGame (minuteur du suivi). Natives
 -- pilotées par le test. On vérifie la pause, les messages du chat à chaque étape (couleurs et
--- traduction à l'arrivée), le formulaire et sa description, la sauvegarde, les champs envoyés, et le
--- suivi : menu ouvert, menu fermé et partie en pause (le menu se rouvre sur le résultat).
+-- traduction à l'arrivée), le formulaire et sa description, la sauvegarde, les champs envoyés, et la
+-- fin : message à tous et ligne locale du chat, menu ouvert, menu fermé et partie en pause.
 
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
 local function ReadFile(path)
@@ -14,8 +14,9 @@ local function ReadFile(path)
 	return s;
 end
 local TEXTES = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua");
-local BLOCK = TEXTES .. ReadFile(dir .. "/../src/rapport.lua");
-local SUIVI = ReadFile(dir .. "/../src/rapport_suivi.lua");
+local FIN = ReadFile(dir .. "/../src/rapport_fin.lua");
+local BLOCK = TEXTES .. FIN .. ReadFile(dir .. "/../src/rapport.lua");
+local SUIVI = TEXTES .. FIN .. ReadFile(dir .. "/../src/rapport_suivi.lua");
 
 local failures = 0;
 local function check(cond, what)
@@ -60,11 +61,11 @@ local IDS_FORMULAIRE = { "BGD_RapportFond", "BGD_RapportBord", "BGD_RapportCadre
 	"BGD_RapportExplication", "BGD_RapportConsigne", "BGD_RapportTexte", "BGD_RapportConfirmer", "BGD_RapportAnnuler" };
 
 -- options : multi (défaut vrai), pause (déjà en pause), sansNatives, sansBouton, sansFormulaire,
--- sansMinuteur, lang, refus, steam (identifiant rendu par le jeu).
+-- sansMinuteur, sansSuivi (InGame sans le bloc), lang, refus, steam (identifiant rendu par le jeu).
 local function NewJeu(options)
 	options = options or {};
 	local multi = options.multi ~= false;
-	local m = { chat = {}, journal = {}, envois = {}, saves = {}, broadcasts = 0, wantsPause = false, etat = "",
+	local m = { chat = {}, locales = {}, journal = {}, envois = {}, saves = {}, broadcasts = 0, wantsPause = false, etat = "",
 		paused = options.pause or false, ouvertures = 0, menuCache = false };
 	local luaEvents = NewLuaEvents();
 
@@ -74,6 +75,7 @@ local function NewJeu(options)
 	function popup:AddText(t) table.insert(self.texts, t); end
 	function popup:AddButton(label, cb, cmd) table.insert(self.buttons, { label = label, cb = cb, cmd = cmd }); end
 	function popup:Open() self.open = true; end
+	function popup:Close() self.open = false; end
 	function popup:Click(label)
 		for _, b in ipairs(self.buttons) do
 			if b.label == label then self.open = false; b.cb(); return true; end
@@ -98,8 +100,10 @@ local function NewJeu(options)
 	m.controls = controls;
 	m.bouton = controls.BGD_RapportButton;
 
-	-- Le menu se rouvre par l'événement que la touche Échap emploie.
+	-- Le menu se rouvre par l'événement que la touche Échap emploie : il ne doit plus s'en servir.
 	luaEvents.InGame_OpenInGameOptionsMenu.Add(function() m.ouvertures = m.ouvertures + 1; m.menuCache = false; end);
+	-- Lignes locales du chat (ChatPanel, ui_depart_chat.lua du proxy de GameCore).
+	luaEvents.BGD_DepartTexte.Add(function(t) table.insert(m.locales, t); end);
 
 	local function Env(extra)
 		local env = {
@@ -111,6 +115,23 @@ local function NewJeu(options)
 				Lookup = function(s) return s; end,
 			},
 			Civ6Proxy_Journal = function(t) table.insert(m.journal, t); end,
+			Events = { GameCoreEventPublishComplete = NewEvent() },
+			GameConfiguration = {
+				IsNetworkMultiplayer = function() return multi; end,
+				IsPlayByCloud = function() return false; end,
+				IsPaused = function() return m.paused; end,
+				GetMultiplayerPlayerIDs = function() return { 0, 1 }; end,
+			},
+			PlayerConfigurations = { [0] = cfg },
+			Network = {
+				GetLocalPlayerID = function() return 0; end,
+				IsGameHost = function() return true; end,
+				BroadcastPlayerInfo = function() m.broadcasts = m.broadcasts + 1; end,
+				SendChat = function(text, target, to) table.insert(m.chat, { text = text, target = target, to = to }); end,
+				GetGameConfigSaveType = function() return "multi"; end,
+				SaveGame = function(f) table.insert(m.saves, f); end,
+			},
+			ChatTargetTypes = { CHATTARGET_ALL = -1 },
 		};
 		if not options.sansNatives then
 			env.Civ6Proxy_RapportEtat = function()
@@ -131,23 +152,6 @@ local function NewJeu(options)
 		PopupDialog = { COMMAND_CONFIRM = "confirm", COMMAND_CANCEL = "cancel" },
 		Mouse = { eLClick = "clic", eMouseEnter = "survol" },
 		UI = { PlaySound = function() end },
-		Events = { GameCoreEventPublishComplete = NewEvent() },
-		GameConfiguration = {
-			IsNetworkMultiplayer = function() return multi; end,
-			IsPlayByCloud = function() return false; end,
-			IsPaused = function() return m.paused; end,
-			GetMultiplayerPlayerIDs = function() return { 0, 1 }; end,
-		},
-		PlayerConfigurations = { [0] = cfg },
-		Network = {
-			GetLocalPlayerID = function() return 0; end,
-			IsGameHost = function() return true; end,
-			BroadcastPlayerInfo = function() m.broadcasts = m.broadcasts + 1; end,
-			SendChat = function(text, target, to) table.insert(m.chat, { text = text, target = target, to = to }); end,
-			GetGameConfigSaveType = function() return "multi"; end,
-			SaveGame = function(f) table.insert(m.saves, f); end,
-		},
-		ChatTargetTypes = { CHATTARGET_ALL = -1 },
 		SaveLocations = { LOCAL_STORAGE = 0 },
 		Game = { GetCurrentGameTurn = function() return 87; end },
 		ContextPtr = {
@@ -172,7 +176,7 @@ local function NewJeu(options)
 	local minuteur = (not options.sansMinuteur) and Control() or nil;
 	m.minuteur = minuteur;
 	m.ingame = Env({ Controls = { BGD_RapportMinuteur = minuteur } });
-	assert(load(SUIVI, "rapport_suivi", "t", m.ingame))();
+	if not options.sansSuivi then assert(load(SUIVI, "rapport_suivi", "t", m.ingame))(); end
 
 	m.Clic = function() m.bouton.callbacks.clic(); end
 	m.Ecrire = function(t) controls.BGD_RapportTexte.text = t; end
@@ -188,6 +192,7 @@ local function NewJeu(options)
 end
 
 local function Dernier(m) return m.chat[#m.chat] and m.chat[#m.chat].text or ""; end
+local function Locale(m) return m.locales[#m.locales] or ""; end
 
 -- Traduction à l'arrivée, comme ChatPanel.lua (ui_depart_chat.lua) chez un joueur francophone.
 local function Traduit(texte)
@@ -267,18 +272,22 @@ do
 	m.Image();
 	check(Dernier(m) == "[COLOR_Civ6Green]BGE - Testeur: bug report sent. The pause can be lifted.[ENDCOLOR]", "message de fin : " .. Dernier(m));
 	check(Traduit(Dernier(m)) == "[COLOR_Civ6Green]BGE - Testeur : envoi du rapport terminé. La pause peut être levée.[ENDCOLOR]", "fin traduite");
+	check(#m.locales == 1 and Locale(m) == "[COLOR_Civ6Green]BGE - Rapport de bug envoyé, numéro BGE-7F3A2C. Pour ajouter des détails, envoyez ce numéro à @goaterino en message privé sur Discord.[ENDCOLOR]", "ligne locale : " .. Locale(m));
 	check(m.cleared and m.update == nil, "suivi par image arrêté");
-	check(m.popup.title == "Rapport envoyé" and string.find(m.popup.texts[1], "BGE-7F3A2C", 1, true), "numéro affiché");
-	check(string.find(m.popup.texts[1], "@goaterino", 1, true) ~= nil, "contact en MP indiqué");
-	check(m.ouvertures == 0, "menu déjà ouvert : pas rouvert");
+	check(not m.popup.open, "popup d'envoi fermé, pas de popup de résultat");
+	check(m.ouvertures == 0, "menu pas rouvert");
+	check(string.find(table.concat(m.journal, "\n"), "fin par le menu", 1, true) == nil, "fin passée par le suivi d'InGame");
 	local avant = m.interrogations;
 	m.Tic();
 	check(m.interrogations == avant and not m.minuteur.joue, "suivi d'InGame arrêté aussi");
-	check(#m.chat == 3, "un seul message de fin");
+	check(#m.chat == 3 and #m.locales == 1, "un seul message de fin");
+	-- Nouveau rapport possible.
+	m.Clic();
+	check(m.Formulaire() and #m.chat == 4, "nouveau rapport après la fin");
 end
 
 -- 5. Le cas du joueur : menu fermé juste après Envoyer, partie en pause (ni images ni événements).
---    Le suivi d'InGame trouve le résultat, le menu se rouvre et montre l'échec aussitôt.
+--    Le suivi d'InGame trouve le résultat aussitôt : message à tous et ligne locale, sans le menu.
 do
 	local m = NewJeu({ steam = "" });
 	m.Clic();
@@ -286,19 +295,21 @@ do
 	check(string.find(m.envois[1], "steam_id", 1, true) == nil, "pas de Steam ID vide envoyé");
 	m.paused = true;
 	m.menuCache = true;
-	m.popup.open = false;
 	m.Image(); m.Tic(); m.Tic();
-	check(#m.chat == 2, "rien tant que l'envoi tourne");
+	check(#m.chat == 2 and #m.locales == 0, "rien tant que l'envoi tourne");
 	m.etat = { "echec", "relais non configuré", "C:\\Users\\x\\Desktop\\BGE_rapport_1.zip" };
 	m.Tic();
-	check(m.ouvertures == 1 and not m.menuCache, "menu rouvert sur le résultat");
-	check(m.popup.open and m.popup.title == "Rapport non envoyé", "popup d'échec visible");
-	check(string.find(m.popup.texts[1], "BGE_rapport_1.zip", 1, true) ~= nil, "archive affichée");
-	check(string.find(m.popup.texts[1], "@goaterino", 1, true) ~= nil and not string.find(m.popup.texts[1], "Discord de", 1, true), "contact en MP, pas de serveur Discord");
 	check(Dernier(m) == "[COLOR_Civ6Red]BGE - Testeur: the bug report could not be sent, it was kept on their computer. The pause can be lifted.[ENDCOLOR]", "message d'échec : " .. Dernier(m));
 	check(Traduit(Dernier(m)) ~= nil, "échec traduit");
-	m.Tic();
-	check(#m.chat == 3 and m.ouvertures == 1, "une seule fois");
+	check(#m.locales == 1 and string.find(Locale(m), "BGE_rapport_1.zip", 1, true) and string.find(Locale(m), "@goaterino", 1, true)
+		and string.find(Locale(m), "[COLOR_Civ6Red]", 1, true) == 1, "ligne locale d'échec : " .. Locale(m));
+	check(m.ouvertures == 0 and m.menuCache, "menu laissé fermé");
+	check(string.find(table.concat(m.journal, "\n"), "minuteur du suivi actif", 1, true) ~= nil, "journal : minuteur actif");
+	m.Tic(); m.Image();
+	check(#m.chat == 3 and #m.locales == 1, "une seule fois");
+	-- Le menu rouvert ne montre plus « envoi en cours ».
+	m.menuCache = false;
+	check(not m.popup.open, "popup d'envoi fermé");
 end
 
 -- 6. Sans minuteur (InGame remplacé) : les événements du jeu suivent encore, partie pas en pause.
@@ -308,9 +319,21 @@ do
 	m.Confirmer();
 	m.menuCache = true;
 	m.etat = { "ok", "BGE-000001", "C:\\x.zip" };
-	m.menu.Events.GameCoreEventPublishComplete.Fire();
-	check(m.ouvertures == 1 and m.popup.title == "Rapport envoyé", "résultat par les événements du jeu");
+	m.ingame.Events.GameCoreEventPublishComplete.Fire();
+	check(#m.locales == 1 and string.find(Locale(m), "BGE-000001", 1, true), "résultat par les événements du jeu");
 	check(string.find(table.concat(m.journal, "\n"), "minuteur absent", 1, true) ~= nil, "journal : minuteur absent");
+end
+
+-- 6 bis. Sans le bloc du suivi dans InGame : le menu, affiché, termine lui-même.
+do
+	local m = NewJeu({ sansSuivi = true });
+	m.Clic();
+	m.Confirmer();
+	m.etat = { "ok", "BGE-000002", "C:\\x.zip" };
+	m.Image();
+	check(#m.locales == 1 and string.find(Locale(m), "BGE-000002", 1, true) and #m.chat == 3, "fin par le menu");
+	check(string.find(table.concat(m.journal, "\n"), "fin par le menu", 1, true) ~= nil, "journal : fin par le menu");
+	check(m.update == nil and not m.popup.open, "menu remis à zéro");
 end
 
 -- 7. Envoi refusé par le proxy (un autre en cours) : échec tout de suite.
@@ -319,6 +342,7 @@ do
 	m.Clic();
 	m.Confirmer();
 	check(string.find(Dernier(m), "could not be sent", 1, true) ~= nil, "refus : message d'échec");
+	check(#m.locales == 1, "refus : ligne locale");
 	check(m.update == nil and not m.minuteur.joue, "pas de suivi");
 end
 
@@ -329,6 +353,9 @@ do
 	check(#m.chat == 0 and m.wantsPause == false, "solo : ni chat ni pause");
 	m.Confirmer();
 	check(#m.envois == 1 and string.find(m.envois[1], "multijoueur=0", 1, true), "solo : envoi");
+	m.etat = { "ok", "BGE-000003", "C:\\x.zip" };
+	m.Tic();
+	check(#m.chat == 0 and #m.locales == 1, "solo : ligne locale seule");
 end
 
 -- 9. Anglais, natives, bouton ou formulaire absents.

@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="zh_Hans_CN">
 			<Text>正在发送报告...[NEWLINE]你可以关闭此窗口：发送会继续进行。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="zh_Hans_CN">
-			<Text>报告已发送</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="zh_Hans_CN">
-			<Text>谢谢！报告已送达 BetterGameExperience 团队。[NEWLINE][NEWLINE]报告编号：{1}[NEWLINE][NEWLINE]如需补充细节，请通过 Discord 私信将此编号发送给 @goaterino。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="zh_Hans_CN">
-			<Text>报告未发送</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="zh_Hans_CN">
-			<Text>无法发送报告。压缩包已保存到：[NEWLINE]{1}[NEWLINE][NEWLINE]请通过 Discord 私信将其连同问题描述一起发送给 @goaterino。</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="zh_Hans_CN">
 			<Text>{1} 正在报告错误，请稍候。</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="zh_Hans_CN">
 			<Text>请描述问题：发生了什么、在什么时候，以及你原本期望的结果。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="zh_Hans_CN">
+			<Text>错误报告已发送，编号 {1}。如需补充细节，请通过 Discord 私信将此编号发送给 @goaterino。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="zh_Hans_CN">
+			<Text>错误报告未能发送。压缩包已保存到：{1}。请通过 Discord 私信将其发送给 @goaterino。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

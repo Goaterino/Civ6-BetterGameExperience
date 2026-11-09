@@ -69,24 +69,38 @@ export function steamId(m) {
 	return [m.steam_id, m.steam_id_windows].map((v) => String(v ?? "")).find((v) => /^7656\d{13}$/.test(v)) ?? null;
 }
 
+// Message du fil Discord, en anglais : titre, description du joueur, puis le résumé de la partie.
+// Il tient sous les 2 000 caractères d'un message Discord (description coupée à 1 400).
 export function resume(id, meta, octets, lien) {
 	const m = meta ?? {};
 	const steam = steamId(m);
 	const fichiers = Array.isArray(m.fichiers) ? m.fichiers : [];
 	const saves = fichiers.filter((f) => String(f.nom).startsWith("saves/")).length;
-	const lignes = [
-		`**Rapport ${id}**`,
-		`Joueur : ${brut(m.joueur)} (${brut(m.civilisation)}), tour ${brut(m.tour, 10)}`,
-		steam ? `Steam : ${steam} <https://steamcommunity.com/profiles/${steam}>` : "Steam : inconnu",
-		`Partie : ${m.multijoueur === "1" ? "multijoueur" : "solo"}${m.hote === "1" ? ", hôte" : ""}${m.en_pause === "1" ? ", en pause" : ""}, ${brut(m.humains, 4)} humain(s)`,
-		`BGE : ${brut(m.bge_release, 20)} (${brut(m.bge_version, 20)}), ${brut(m.exe, 40)}, langue ${brut(m.langue, 12)}`,
-		`Archive : ${(octets / 1048576).toFixed(1)} Mo, ${fichiers.length} fichiers dont ${saves} sauvegarde(s)`,
-		`Télécharger : ${lien}`,
-	];
-	if (meta == null) lignes.splice(1, 5, "meta.json illisible");
-	// Description du joueur, citée en dernier : le message Discord tient en 2 000 caractères.
 	const description = String(m.description ?? "").trim();
-	lignes.push(description ? `> ${brut(description, 1400)}` : "> (pas de description)");
+	const lignes = [
+		`**Bug report ${id}**`,
+		"",
+		"**Description**",
+		description ? `> ${brut(description, 1400)}` : "> *(no description)*",
+		"",
+	];
+	if (meta == null) {
+		lignes.push("meta.json unreadable");
+	} else {
+		const partie = m.multijoueur === "1"
+			? `multiplayer${m.hote === "1" ? ", host" : ""}${m.en_pause === "1" ? ", paused" : ""}, ${brut(m.humains, 4)} human player(s)`
+			: "single player";
+		lignes.push(
+			`**Player:** ${brut(m.joueur)} (${brut(m.civilisation)}), turn ${brut(m.tour, 10)}`,
+			steam ? `**Steam:** ${steam} <https://steamcommunity.com/profiles/${steam}>` : "**Steam:** unknown",
+			`**Game:** ${partie}`,
+			`**BGE:** ${brut(m.bge_release, 20)} (${brut(m.bge_version, 20)}), ${brut(m.exe, 40)}, language ${brut(m.langue, 12)}`,
+		);
+	}
+	lignes.push(
+		`**Archive:** ${(octets / 1048576).toFixed(1)} MB, ${fichiers.length} file(s) including ${saves} save(s)`,
+		`**Download:** ${lien}`,
+	);
 	return lignes.join("\n");
 }
 
@@ -117,7 +131,7 @@ export async function faireDeLaPlace(env, entrant) {
 }
 
 async function publierDiscord(env, id, meta, octets, lien) {
-	const titre = `${id} · ${String(meta?.joueur ?? "?").slice(0, 40)} · tour ${String(meta?.tour ?? "?").slice(0, 6)}`;
+	const titre = `${id} · ${String(meta?.joueur ?? "?").slice(0, 40)} · turn ${String(meta?.tour ?? "?").slice(0, 6)}`;
 	const corps = {
 		thread_name: titre.replace(/[\r\n]+/g, " "),
 		content: resume(id, meta, octets, lien),

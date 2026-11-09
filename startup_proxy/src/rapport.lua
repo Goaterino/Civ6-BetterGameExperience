@@ -15,11 +15,12 @@
 -- n'est pas levée par le bloc : les messages disent quand elle peut l'être.
 -- Couleurs atténuées de la palette du jeu (COLOR_Civ6Green, COLOR_Civ6Red), propres à ce module.
 -- Le formulaire (BGD_RapportFond, ajouté au XML par le proxy) a un champ de texte pour décrire le
--- problème, envoyé dans meta.json. Le suivi de l'envoi passe par un popup du jeu (PopupDialog) ; l'envoi tourne
--- dans un thread du proxy. Le menu l'interroge à chaque image tant qu'il est affiché ; fermé, il n'a
--- plus d'images (et la partie en pause n'a plus d'événements) : le bloc du suivi, dans InGame
--- (rapport_suivi.lua), prend le relais. Le résultat revient par LuaEvents.BGD_RapportFini ; le menu
--- se rouvre alors s'il était fermé, pour montrer le résultat tout de suite.
+-- problème, envoyé dans meta.json. L'envoi tourne dans un thread du proxy ; un popup du jeu
+-- (PopupDialog) dit qu'il est en cours. Le menu l'interroge à chaque image tant qu'il est affiché ;
+-- fermé, il n'a plus d'images (et la partie en pause n'a plus d'événements) : le bloc du suivi, dans
+-- InGame (rapport_suivi.lua), toujours affiché, prend le relais. La fin (rapport_fin.lua, placé
+-- devant ce bloc) ne passe pas par un popup, que le joueur ne verrait qu'en rouvrant le menu : un
+-- message à tous, et une ligne du chat que seul le joueur local voit (numéro ou chemin du zip).
 -- ===========================================================================
 do
 local BGD_RapportOk, BGD_RapportErr = pcall(function()
@@ -160,38 +161,29 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		end
 	end
 
-	local function Fin(statut, texte, archive)
+	-- Fin du rapport (rapport_fin.lua), par le suivi d'InGame ou, à défaut, par ce menu : il remet
+	-- son état à zéro et ferme le popup « envoi en cours » s'il est resté ouvert.
+	LuaEvents.BGD_RapportFini.Add(Protege(function()
+		if R.etat ~= "envoi" then return; end
 		R.etat = nil;
 		ArreterSuivi();
-		-- Menu fermé pendant l'envoi : on le rouvre (comme la touche Échap), pour que le popup du
-		-- résultat se voie tout de suite.
-		if ContextPtr:IsHidden() then
-			Journal("menu rouvert pour le résultat");
-			LuaEvents.InGame_OpenInGameOptionsMenu();
-		end
-		local fermer = { BGD_Txt("LOC_BGD_RAPPORT_FERMER"), function() end, PopupDialog.COMMAND_CONFIRM };
-		if statut == "ok" then
-			Journal("rapport envoyé, numéro " .. tostring(texte));
-			Chat("LOC_BGD_CHAT_RAPPORT_FIN", "COLOR_Civ6Green");
-			Afficher(BGD_Txt("LOC_BGD_RAPPORT_OK_TITRE"), BGD_Txt("LOC_BGD_RAPPORT_OK_TEXTE", texte), { fermer });
-		else
-			Journal("rapport non envoyé : " .. tostring(texte) .. ", archive : " .. tostring(archive));
-			Chat("LOC_BGD_CHAT_RAPPORT_ECHEC", "COLOR_Civ6Red");
-			Afficher(BGD_Txt("LOC_BGD_RAPPORT_ECHEC_TITRE"), BGD_Txt("LOC_BGD_RAPPORT_ECHEC_TEXTE", archive), { fermer });
+		if R.popup ~= nil then pcall(function() R.popup:Close(); end); end
+	end));
+
+	local function Terminer(statut, texte, archive)
+		-- Le suivi d'InGame termine le rapport (il est toujours chargé en partie) ; sinon, ce menu.
+		LuaEvents.BGD_RapportResultat(statut, texte, archive);
+		if R.etat == "envoi" then
+			Journal("pas de suivi dans InGame : fin par le menu");
+			BGD_RapportTerminer(statut, texte, archive, Journal);
 		end
 	end
-
-	-- Le résultat, qu'il vienne de ce menu ou du suivi d'InGame.
-	LuaEvents.BGD_RapportFini.Add(Protege(function(statut, texte, archive)
-		if R.etat ~= "envoi" then return; end
-		Fin(statut, texte, archive);
-	end));
 
 	Suivre = Protege(function()
 		if R.etat ~= "envoi" then return; end
 		local statut, texte, archive = Civ6Proxy_RapportEtat();
 		if statut == nil or statut == "" then return; end
-		LuaEvents.BGD_RapportFini(statut, texte, archive);
+		Terminer(statut, texte, archive);
 	end);
 
 	local function AfficherEnvoi()
@@ -234,7 +226,8 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		Sauvegarder();
 		local ok, err = Civ6Proxy_RapportEnvoyer(Meta(description));
 		if ok ~= 1 then
-			Fin("echec", err, "");
+			Journal("envoi refusé par le proxy : " .. tostring(err));
+			BGD_RapportTerminer("echec", err, "", Journal);
 			return;
 		end
 		AfficherEnvoi();
@@ -284,8 +277,6 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 	pcall(function()
 		bouton:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
 	end);
-	-- Menu fermé pendant l'envoi, partie pas en pause : les événements du jeu aident le suivi d'InGame.
-	Events.GameCoreEventPublishComplete.Add(Suivre);
 	Journal("bouton prêt");
 end);
 if not BGD_RapportOk then

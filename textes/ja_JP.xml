@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ja_JP">
 			<Text>レポートを送信中...[NEWLINE]このウィンドウを閉じても送信は続きます。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="ja_JP">
-			<Text>レポートを送信しました</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ja_JP">
-			<Text>ありがとうございます。レポートは BetterGameExperience チームに届きました。[NEWLINE][NEWLINE]レポート番号: {1}[NEWLINE][NEWLINE]詳細を追加するには、この番号を Discord の個人メッセージで @goaterino に送ってください。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ja_JP">
-			<Text>レポートを送信できませんでした</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ja_JP">
-			<Text>レポートを送信できませんでした。アーカイブは次の場所に保存されました:[NEWLINE]{1}[NEWLINE][NEWLINE]問題の説明を添えて、Discord の個人メッセージで @goaterino に送ってください。</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ja_JP">
 			<Text>{1} がバグを報告しています。しばらくお待ちください。</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ja_JP">
 			<Text>問題を説明してください：何が起きたか、いつ起きたか、本来どうなるはずだったか。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="ja_JP">
+			<Text>バグレポートを送信しました（番号 {1}）。詳細を追加するには、この番号を Discord の個人メッセージで @goaterino に送ってください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ja_JP">
+			<Text>バグレポートを送信できませんでした。アーカイブの保存先: {1}。Discord の個人メッセージで @goaterino に送ってください。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

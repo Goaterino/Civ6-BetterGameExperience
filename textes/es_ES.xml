@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="es_ES">
 			<Text>Enviando el informe...[NEWLINE]Puedes cerrar esta ventana: el envío continúa.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="es_ES">
-			<Text>Informe enviado</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="es_ES">
-			<Text>¡Gracias! El informe ha llegado al equipo de BetterGameExperience.[NEWLINE][NEWLINE]Número de informe: {1}[NEWLINE][NEWLINE]Para añadir detalles, envía este número a @goaterino por mensaje privado en Discord.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="es_ES">
-			<Text>Informe no enviado</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="es_ES">
-			<Text>No se ha podido enviar el informe. El archivo se ha guardado aquí:[NEWLINE]{1}[NEWLINE][NEWLINE]Envíalo a @goaterino por mensaje privado en Discord, con una descripción del problema.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="es_ES">
 			<Text>{1} está informando de un error, espera por favor.</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="es_ES">
 			<Text>Describe el problema: qué ha pasado, cuándo y qué esperabas en su lugar.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="es_ES">
+			<Text>Informe de error enviado, número {1}. Para añadir detalles, envía este número a @goaterino por mensaje privado en Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="es_ES">
+			<Text>No se ha podido enviar el informe de error. El archivo se ha guardado aquí: {1}. Envíalo a @goaterino por mensaje privado en Discord.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

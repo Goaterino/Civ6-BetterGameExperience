@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="de_DE">
 			<Text>Bericht wird gesendet ...[NEWLINE]Sie können dieses Fenster schließen: Das Senden läuft weiter.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="de_DE">
-			<Text>Bericht gesendet</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="de_DE">
-			<Text>Danke! Der Bericht ist beim Team von BetterGameExperience angekommen.[NEWLINE][NEWLINE]Berichtsnummer: {1}[NEWLINE][NEWLINE]Um Details zu ergänzen, senden Sie diese Nummer per Privatnachricht auf Discord an @goaterino.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="de_DE">
-			<Text>Bericht nicht gesendet</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="de_DE">
-			<Text>Der Bericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert:[NEWLINE]{1}[NEWLINE][NEWLINE]Senden Sie es per Privatnachricht auf Discord an @goaterino, mit einer Beschreibung des Problems.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="de_DE">
 			<Text>{1} meldet einen Fehler, bitte warten.</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="de_DE">
 			<Text>Beschreiben Sie das Problem: was passiert ist, wann, und was Sie stattdessen erwartet haben.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="de_DE">
+			<Text>Fehlerbericht gesendet, Nummer {1}. Um Details zu ergänzen, senden Sie diese Nummer per Privatnachricht auf Discord an @goaterino.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="de_DE">
+			<Text>Der Fehlerbericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert: {1}. Senden Sie es per Privatnachricht auf Discord an @goaterino.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

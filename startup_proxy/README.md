@@ -339,16 +339,20 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
      levée. »
 
   Le bloc ne lève jamais la pause lui-même. En solo, ni pause ni message : le rapport part seul.
-- **Le suivi.** Le popup montre l'envoi en cours ; on peut le fermer, et fermer le menu, l'envoi
-  continue. Le menu interroge `Civ6Proxy_RapportEtat()` à chaque image tant qu'il est affiché.
-  Fermé, il n'a plus d'images, et la partie en pause n'a plus d'événements : le suivi passe par le
-  contexte `InGame`, toujours affiché. `InGame.xml` reçoit un minuteur (`BGD_RapportMinuteur`, une
-  `SlideAnim` d'une demi-seconde, comme le minuteur de la minimap du jeu) et `InGame.lua` le bloc
-  [src/rapport_suivi.lua](src/rapport_suivi.lua), lancé par `LuaEvents.BGD_RapportSuivre`. Le
-  résultat revient au menu par `LuaEvents.BGD_RapportFini` ; fermé, le menu se rouvre
-  (`LuaEvents.InGame_OpenInGameOptionsMenu`, comme la touche Échap), pour montrer le résultat tout
-  de suite. Le popup final donne le numéro du rapport (`BGE-7F3A2C`), ou le chemin du zip en cas
-  d'échec, et invite à écrire en message privé Discord à @goaterino.
+- **Le suivi.** Un popup dit que l'envoi est en cours ; on peut le fermer, et fermer le menu,
+  l'envoi continue. Le menu interroge `Civ6Proxy_RapportEtat()` à chaque image tant qu'il est
+  affiché. Fermé, il n'a plus d'images, et la partie en pause n'a plus d'événements : le suivi passe
+  par le contexte `InGame`, toujours affiché. `InGame.xml` reçoit un minuteur
+  (`BGD_RapportMinuteur`, une `SlideAnim` d'une demi-seconde, comme le minuteur de la minimap du
+  jeu) et `InGame.lua` le bloc [src/rapport_suivi.lua](src/rapport_suivi.lua), lancé par
+  `LuaEvents.BGD_RapportSuivre`, aidé hors pause par `GameCoreEventPublishComplete`.
+- **La fin** ([src/rapport_fin.lua](src/rapport_fin.lua), `BGD_RapportTerminer`), par le suivi
+  d'InGame, ou par le menu s'il n'y a pas de suivi : le message à tous, puis une ligne du chat que
+  seul le joueur local voit (`LuaEvents.BGD_DepartTexte`, le canal des lignes locales du proxy de
+  GameCore) : le numéro du rapport (`BGE-7F3A2C`), ou le chemin du zip en cas d'échec, et le contact
+  (@goaterino en message privé Discord). Pas de popup : celui du menu ne se voyait qu'en le
+  rouvrant. Le menu remet son état à zéro et ferme le popup « envoi en cours »
+  (`LuaEvents.BGD_RapportFini`).
 - **Le zip**, préparé dans le thread : il attend la sauvegarde `BGE_rapport.Civ6Save` (20 s au
   plus, taille stable), puis réunit :
   - `meta.json` : ce que dit le bloc (tour, pseudo, Steam ID, civilisation, dirigeant,
@@ -420,8 +424,8 @@ cd startup_proxy && cargo build --release
 - Le signalement d'un bug, dans un menu Échap et un contexte InGame simulés qui partagent leurs
   `LuaEvents` : pause demandée ou déjà en place, messages du chat à chaque étape (couleurs,
   traduction à l'arrivée), formulaire, description et Steam ID envoyés, annulation, sauvegarde,
-  suivi menu ouvert, menu fermé et partie en pause (le menu se rouvre sur le résultat), sans
-  minuteur, échec, solo, natives, bouton ou formulaire absents.
+  fin (message à tous et ligne locale) menu ouvert, menu fermé et partie en pause, sans minuteur,
+  sans le bloc du suivi, échec, refus, solo, natives, bouton ou formulaire absents.
 
   ```bash
   lua startup_proxy/tests/test_rapport.lua
