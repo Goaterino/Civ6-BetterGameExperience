@@ -557,5 +557,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="es_ES">
 			<Text>No se ha podido enviar el informe de error. El archivo se ha guardado aquí: {1}. Envíalo a @goaterino por mensaje privado en Discord.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="es_ES">
+			<Text>Otorga {1} de [ICON_Production] producción para la construcción de maravillas, {2} si la maravilla es de la Era Antigua o Clásica.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
