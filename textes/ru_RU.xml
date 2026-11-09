@@ -557,5 +557,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ru_RU">
 			<Text>Не удалось отправить отчёт об ошибке. Архив сохранён здесь: {1}. Отправьте его @goaterino в личном сообщении в Discord.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ru_RU">
+			<Text>Дает {1} ед. [ICON_Production] производства для строительства чуда, {2}, если чудо относится к Древнему миру или Античности.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
