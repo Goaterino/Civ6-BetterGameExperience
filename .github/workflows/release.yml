@@ -52,12 +52,18 @@ jobs:
           (cd proxy && cargo test --release && cargo test --release --no-default-features)
           (cd startup_proxy && cargo test --release && cargo test --release --no-default-features)
           (cd updater && cargo test --release)
+          (cd rapport_worker && node --test test/index.test.js)
 
       # Sur un tag, la version de la release est gravée dans les DLL (proxy/src/version.rs, RELEASE) :
       # le proxy de démarrage s'en sert pour la notification de mise à jour. Sans la feature `diag` :
       # ni profil des zones, ni journal des scripts, ni mesure des épingles, ni diagnostic des accords
       # (release/README.md, « Diagnostic »).
+      # BGE_RAPPORT_URL : adresse du relais des rapports de bug (rapport_worker/README.md), variable
+      # du dépôt (Settings > Secrets and variables > Actions > Variables). Vide : les rapports restent
+      # sur le Bureau du joueur.
       - name: Compilation
+        env:
+          BGE_RAPPORT_URL: ${{ vars.BGE_RAPPORT_URL }}
         run: |
           if [ "$GITHUB_REF_TYPE" = tag ]; then export BGD_RELEASE="$VERSION"; fi
           (cd proxy && cargo build --release --no-default-features)
