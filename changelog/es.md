@@ -33,6 +33,8 @@ humanos tengan la 0.7.0: una sala que mezcla 0.6.x y 0.7.0 las desactiva.
   seleccionarla (campamento enemigo sin terminar), se muestran las zonas
   de control (casillas rojas) y ya no se proponen casillas de agua a las que la unidad aún no puede
   ir (costa antes del embarque, océano antes de la Cartografía).
+- **Menú principal**: un pequeño indicador abajo a la derecha muestra la versión instalada de
+  BetterGameExperience, como el de MPH.
 
 ### Ajustes
 - Botón **Restablecer BGE** en la pestaña BetterGameExperience: devuelve todos los ajustes a su

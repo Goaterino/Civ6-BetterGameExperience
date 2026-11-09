@@ -462,10 +462,9 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
     if is_file(&name, crate::maj::XML) {
         let b = &mut *buf;
         let Some(src) = b.text() else { return r };
-        match crate::maj::patch_main_menu_xml(src) {
-            Ok(None) => {}
-            Ok(Some(text)) if replace_buffer(b, &text) => log(&format!("maj : {name} : popup du menu ajouté")),
-            Ok(Some(_)) => log(&format!("maj : {name} : allocation impossible, laissé tel quel")),
+        match crate::maj::patch_main_menu_xml_current(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("maj : {name} : indicateur de version (et popup du menu s'il manquait) ajouté")),
+            Ok(_) => log(&format!("maj : {name} : allocation impossible, laissé tel quel")),
             Err(e) => log(&format!("maj : {name} laissé tel quel : {e}")),
         }
         return r;
