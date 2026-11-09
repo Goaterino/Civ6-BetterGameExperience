@@ -9,6 +9,19 @@
 -- dit si la version proposée est une release ou une pré-release (canal choisi dans l'installeur,
 -- case « Pré-release »).
 
+-- Indicateur de version, comme celui de MPH : Initialize() du menu (jeu ou MPH) vient d'écrire la
+-- version du jeu dans VersionLabel, en bas à gauche (MPH y ajoute « - MPH / <version> ») ; on ajoute
+-- la nôtre à la suite. Version réécrite par le proxy (maj.rs) ; sans elle, rien.
+local BGD_VERSION = nil;
+
+local function BGD_Version_Afficher()
+	local label = Controls and Controls.VersionLabel;
+	if BGD_VERSION == nil or label == nil then return; end
+	local texte = tostring(label:GetText() or "");
+	local ajout = "[COLOR_LIGHTBLUE]BGE / " .. BGD_VERSION .. "[ENDCOLOR]";
+	label:SetText(texte == "" and ajout or (texte .. " - " .. ajout));
+end
+
 -- Plus rien à faire : pas de proxy, vérification finie, ou notification déjà montrée.
 local bgd_majFinie = Civ6Proxy_MiseAJour == nil;
 
@@ -70,6 +83,11 @@ local function BGD_Maj_Proteger(f, ...)
 		bgd_majFinie = true;
 		BGD_Maj_Journal("erreur : " .. tostring(err));
 	end
+end
+
+do
+	local ok, err = pcall(BGD_Version_Afficher);
+	if not ok then BGD_Maj_Journal("indicateur de version : " .. tostring(err)); end
 end
 
 if not bgd_majFinie and ContextPtr ~= nil then

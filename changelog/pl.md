@@ -33,8 +33,8 @@ poczekalnia, w której są 0.6.x i 0.7.0, je wyłącza.
   (nieukończony wrogi obóz), strefy kontroli (czerwone pola) są widoczne, a pola wody,
   na które jednostka nie może jeszcze wejść (wybrzeże przed zaokrętowaniem, ocean przed
   Kartografią), nie są już proponowane.
-- **Menu główne**: mały wskaźnik w prawym dolnym rogu pokazuje zainstalowaną wersję
-  BetterGameExperience, tak jak w MPH.
+- **Menu główne**: wersja BetterGameExperience jest wyświetlana w lewym dolnym rogu, po wersji gry
+  i MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Ustawienia
 - Przycisk **Zresetuj BGE** w zakładce BetterGameExperience: przywraca wszystkie ustawienia do

@@ -248,64 +248,37 @@ pub const NATIVES: Natives = &[(lua_update, b"Civ6Proxy_MiseAJour\0"), (crate::s
 
 pub const XML: &str = "MainMenu.xml";
 
-/// Indicateur de version du menu principal, en bas à droite, petit et pâle, comme celui de MPH.
-const VERSION_LABEL: &str = concat!(
-    r#"  <Label ID="BGD_VersionLabel" Anchor="R,B" Offset="10,6" Style="FontNormal12" Color="255,255,255,150" ConsumeMouse="0" String="BetterGameExperience v{version}" />"#,
-    "\r\n"
-);
-
-/// La version affichée : celle de la release, ou celle du salon pour une compilation locale.
-fn shown_version() -> &'static str {
-    RELEASE.unwrap_or(crate::version::VERSION)
-}
-
-/// MainMenu.xml avec l'indicateur de version et l'instance du popup du menu, s'il ne l'a pas.
-///
-/// - **Le popup.** Celui de MPH inclut le modèle `PopupDialog` sans l'instancier, et son Lua ne crée
-///   pas `g_PopupDialog`. On ajoute, comme le XML du jeu, `<MakeInstance Name="PopupDialog" />` à la
-///   fin du contexte (et le modèle s'il manque) : le bloc Lua crée alors son popup sur ces contrôles.
-/// - **La version** (`BGD_VersionLabel`), juste avant l'instance du popup : par-dessus le menu, mais
-///   sous le popup et son fond.
-pub fn patch_main_menu_xml(src: &[u8], version: &str) -> Result<Vec<u8>, String> {
+/// MainMenu.xml avec l'instance du popup du menu, s'il ne l'a pas : celui de MPH inclut le modèle
+/// `PopupDialog` sans l'instancier, et son Lua ne crée pas `g_PopupDialog`. On ajoute, comme le XML du
+/// jeu, `<MakeInstance Name="PopupDialog" />` à la fin du contexte (et le modèle s'il manque) : le bloc
+/// Lua crée alors son popup sur ces contrôles. `None` si le menu a déjà le sien.
+pub fn patch_main_menu_xml(src: &[u8]) -> Result<Option<Vec<u8>>, String> {
     let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
-    let end = text.rfind("</ContextDefaults>").ok_or("fin du contexte introuvable")?;
-    let label = VERSION_LABEL.replace("{version}", &xml_escape(version));
-    let mut out = String::with_capacity(text.len() + 300);
-    match text.find(r#"<MakeInstance Name="PopupDialog""#) {
-        Some(popup) => {
-            // Au début de la ligne de l'instance, pour garder l'indentation.
-            let at = text[..popup].rfind('\n').map_or(popup, |i| i + 1);
-            out.push_str(&text[..at]);
-            out.push_str(&label);
-            out.push_str(&text[at..]);
-        }
-        None => {
-            out.push_str(&text[..end]);
-            if !text.contains(r#"<Include File="PopupDialog""#) {
-                out.push_str("  <Include File=\"PopupDialog\" />\r\n");
-            }
-            out.push_str(&label);
-            out.push_str("  <MakeInstance Name=\"PopupDialog\" />\r\n");
-            out.push_str(&text[end..]);
-        }
+    if text.contains(r#"<MakeInstance Name="PopupDialog""#) {
+        return Ok(None);
     }
-    Ok(out.into_bytes())
+    let end = text.rfind("</ContextDefaults>").ok_or("fin du contexte introuvable")?;
+    let mut out = String::with_capacity(text.len() + 100);
+    out.push_str(&text[..end]);
+    if !text.contains(r#"<Include File="PopupDialog""#) {
+        out.push_str("  <Include File=\"PopupDialog\" />\r\n");
+    }
+    out.push_str("  <MakeInstance Name=\"PopupDialog\" />\r\n");
+    out.push_str(&text[end..]);
+    Ok(Some(out.into_bytes()))
 }
 
-fn xml_escape(s: &str) -> String {
-    s.replace('&', "&amp;").replace('"', "&quot;").replace('<', "&lt;").replace('>', "&gt;")
-}
+/// Ligne du bloc qui porte la version de l'indicateur du menu : réécrite avec celle de la release
+/// (`RELEASE`), ou celle du salon (`version::VERSION`) pour une compilation locale.
+const VERSION_LINE: &str = "local BGD_VERSION = nil;";
 
-/// MainMenu.xml du jeu (`src`) modifié, avec la version de ces DLL.
-pub fn patch_main_menu_xml_current(src: &[u8]) -> Result<Vec<u8>, String> {
-    patch_main_menu_xml(src, shown_version())
-}
-
-/// MainMenu.lua suivi du bloc de la notification.
+/// MainMenu.lua suivi du bloc de la notification et de l'indicateur de version.
 pub fn patch_main_menu_lua(src: &[u8]) -> Vec<u8> {
+    let version = RELEASE.unwrap_or(crate::version::VERSION);
+    let block = LUA_BLOCK.replacen(VERSION_LINE, &format!("local BGD_VERSION = \"{version}\";"), 1);
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(LUA_BLOCK.as_bytes());
+    out.extend_from_slice(block.as_bytes());
     out
 }
 
@@ -370,29 +343,17 @@ mod tests {
     }
 
     #[test]
-    fn popup_et_version_ajoutes_au_menu() {
-        let label = |out: &str| out.matches("ID=\"BGD_VersionLabel\"").count();
-        // Menu du jeu : popup déjà là, la version passe juste avant son instance.
+    fn popup_ajoute_au_menu_sans_popup() {
         let base = "<ContextDefaults>\r\n  <Include File=\"PopupDialog\" />\r\n  <MakeInstance Name=\"PopupDialog\" />\r\n</ContextDefaults>";
-        let out = String::from_utf8(patch_main_menu_xml(base.as_bytes(), "0.7.0").unwrap()).unwrap();
-        assert_eq!(label(&out), 1, "{out}");
-        assert!(out.contains("String=\"BetterGameExperience v0.7.0\" />\r\n  <MakeInstance Name=\"PopupDialog\" />\r\n</ContextDefaults>"), "{out}");
-        assert_eq!(out.matches("<MakeInstance Name=\"PopupDialog\"").count(), 1);
-        // Menu de MPH : modèle inclus sans instance.
+        assert_eq!(patch_main_menu_xml(base.as_bytes()), Ok(None));
         let mph = "<ContextDefaults>\r\n  <Include File=\"PopupDialog\" />\r\n  <Stack ID=\"A\" />\r\n</ContextDefaults>";
-        let out = String::from_utf8(patch_main_menu_xml(mph.as_bytes(), "0.7.0").unwrap()).unwrap();
-        assert!(out.contains("<Stack ID=\"A\" />\r\n  <Label ID=\"BGD_VersionLabel\""), "{out}");
-        assert!(out.ends_with("/>\r\n  <MakeInstance Name=\"PopupDialog\" />\r\n</ContextDefaults>"), "{out}");
+        let out = String::from_utf8(patch_main_menu_xml(mph.as_bytes()).unwrap().unwrap()).unwrap();
+        assert!(out.ends_with("<Stack ID=\"A\" />\r\n  <MakeInstance Name=\"PopupDialog\" />\r\n</ContextDefaults>"), "{out}");
         assert_eq!(out.matches("<Include File=\"PopupDialog\"").count(), 1);
-        assert_eq!(label(&out), 1);
-        // Ni modèle ni instance.
         let nu = "<ContextDefaults>\r\n</ContextDefaults>";
-        let out = String::from_utf8(patch_main_menu_xml(nu.as_bytes(), "0.7.0").unwrap()).unwrap();
-        assert!(out.contains("<Include File=\"PopupDialog\" />\r\n  <Label ID=\"BGD_VersionLabel\""), "{out}");
-        assert!(patch_main_menu_xml(b"<Context>", "0.7.0").is_err());
-        // Une version qui casserait l'attribut est échappée.
-        let out = String::from_utf8(patch_main_menu_xml(nu.as_bytes(), "1\"<&").unwrap()).unwrap();
-        assert!(out.contains("v1&quot;&lt;&amp;\""), "{out}");
+        let out = String::from_utf8(patch_main_menu_xml(nu.as_bytes()).unwrap().unwrap()).unwrap();
+        assert!(out.contains("<Include File=\"PopupDialog\" />\r\n  <MakeInstance"), "{out}");
+        assert!(patch_main_menu_xml(b"<Context>").is_err());
     }
 
     /// Les vrais fichiers du jeu et de MPH, s'ils sont là.
@@ -401,15 +362,12 @@ mod tests {
         let steam = r"C:\Program Files (x86)\Steam\steamapps";
         let base = format!(r"{steam}\common\Sid Meier's Civilization VI\Base\Assets\UI\FrontEnd\MainMenu.xml");
         if let Ok(src) = std::fs::read(&base) {
-            let out = String::from_utf8(patch_main_menu_xml_current(&src).unwrap()).unwrap();
-            assert_eq!(out.matches("<MakeInstance Name=\"PopupDialog\"").count(), 1, "le menu du jeu a déjà son popup");
-            assert_eq!(out.matches("BGD_VersionLabel").count(), 1);
+            assert_eq!(patch_main_menu_xml(&src), Ok(None), "le menu du jeu a déjà son popup");
         }
         let mph = format!(r"{steam}\workshop\content\289070\3307282026\ui\mainmenu.xml");
         if let Ok(src) = std::fs::read(&mph) {
-            let out = String::from_utf8(patch_main_menu_xml_current(&src).unwrap()).unwrap();
+            let out = String::from_utf8(patch_main_menu_xml(&src).unwrap().unwrap()).unwrap();
             assert!(out.trim_end().ends_with("<MakeInstance Name=\"PopupDialog\" />\r\n</ContextDefaults>"));
-            assert_eq!(out.matches("BGD_VersionLabel").count(), 1);
         }
     }
 
@@ -417,6 +375,10 @@ mod tests {
     fn bloc_ajoute() {
         let out = patch_main_menu_lua(b"Initialize();");
         assert!(out.starts_with(b"Initialize();\r\n-- "));
+        assert_eq!(LUA_BLOCK.matches(VERSION_LINE).count(), 1);
+        let version = RELEASE.unwrap_or(crate::version::VERSION);
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains(&format!("local BGD_VERSION = \"{version}\";")), "version de l'indicateur non posée");
         for &(_, name) in NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(LUA_BLOCK.contains(name), "{name} posée mais pas utilisée par le bloc");

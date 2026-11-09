@@ -55,6 +55,14 @@ local function NewMenu(options)
 		Civ6Proxy_Journal = function(t) table.insert(m.journal, t); end,
 		Controls = {},
 	};
+	-- VersionLabel du menu : texte posé par Initialize() (jeu, ou MPH qui y ajoute la sienne).
+	if options.versionLabel ~= nil then
+		local label = { text = options.versionLabel };
+		function label:GetText() return self.text; end
+		function label:SetText(t) self.text = t; end
+		env.Controls.VersionLabel = label;
+		m.versionLabel = label;
+	end
 	-- MainMenu de MPH : ni g_PopupDialog, ni PopupDialog, ni OnUpdate ; le XML a l'instance du popup
 	-- (ajoutée par le proxy), et include("PopupDialog") définit la classe.
 	if options.mph then
@@ -86,7 +94,11 @@ local function NewMenu(options)
 	m.env = env;
 	-- Le menu du jeu pose OnShow comme gestionnaire, puis le bloc est exécuté à la suite.
 	m.showHandler = env.OnShow;
-	assert(load(BLOCK, "maj.lua", "t", env))();
+	local block = BLOCK;
+	if not options.sansVersion then
+		block = block:gsub("local BGD_VERSION = nil;", 'local BGD_VERSION = "0.7.0";', 1);
+	end
+	assert(load(block, "maj.lua", "t", env))();
 	m.Show = function() m.showHandler(); end
 	m.Frame = function() if m.update then m.update(0.016); end end
 	return m;
@@ -197,6 +209,25 @@ do
 	local m = NewMenu({ etat = { "0.1.2", "0.1.1" }, mph = true, sansInstance = true });
 	m.Show(); m.Frame();
 	check(m.opened == nil and m.journal[#m.journal]:find("pas de popup", 1, true), "sans instance : erreur au journal");
+end
+
+do
+	-- Indicateur de version, à la suite de celle du jeu et de MPH, comme MPH le fait.
+	local m = NewMenu({ etat = "", mph = true, versionLabel = "1.0.12.58 - [COLOR_LIGHTBLUE]MPH / 13X[ENDCOLOR]" });
+	check(m.versionLabel.text == "1.0.12.58 - [COLOR_LIGHTBLUE]MPH / 13X[ENDCOLOR] - [COLOR_LIGHTBLUE]BGE / 0.7.0[ENDCOLOR]", "version après celle de MPH : " .. m.versionLabel.text);
+	m = NewMenu({ etat = "", versionLabel = "1.0.12.58" });
+	check(m.versionLabel.text == "1.0.12.58 - [COLOR_LIGHTBLUE]BGE / 0.7.0[ENDCOLOR]", "version après celle du jeu");
+	m = NewMenu({ etat = "", versionLabel = "" });
+	check(m.versionLabel.text == "[COLOR_LIGHTBLUE]BGE / 0.7.0[ENDCOLOR]", "label vide : notre version seule");
+	-- Même sans proxy de notification (vérification coupée), l'indicateur est là.
+	m = NewMenu({ sansProxy = true, versionLabel = "1.0.12.58" });
+	check(m.versionLabel.text:find("BGE / 0.7.0", 1, true), "sans vérification : version affichée");
+	-- Version non réécrite (bloc lu tel quel) : rien.
+	m = NewMenu({ etat = "", versionLabel = "1.0.12.58", sansVersion = true });
+	check(m.versionLabel.text == "1.0.12.58", "sans version : label intact");
+	-- Menu sans VersionLabel : rien, pas d'erreur.
+	m = NewMenu({ etat = "" });
+	check(#m.journal == 1 and m.journal[1]:find("bloc chargé", 1, true), "sans label : pas d'erreur");
 end
 
 if failures == 0 then
