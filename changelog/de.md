@@ -27,7 +27,8 @@ hat, und eine Lobby, die 0.7.x und 0.8.0 mischt, schaltet die Korrekturen **[all
 ### Korrekturen der Oberfläche
 - **Wirkung der Politikkarten**: Rationalismus, Große Oper, Simultaneum und Freie Marktwirtschaft
   zählen jetzt auch die festen Erträge, die den verstärkten Gebäuden hinzugefügt werden
-  (Stadtstaaten, Gouverneure…), nicht nur deren Grundertrag.
+  (Gouverneure…), nicht nur deren Grundertrag. Boni von Stadtstaaten auf diese Gebäude bleiben wie
+  im Spiel außen vor, da das Spiel sie nicht vervielfacht.
 - **Auswahl der Handelswege**: Bei einem Inlandshandelsweg wird jetzt das Gold angezeigt, das
   Poundmakers Fähigkeit der Zielstadt gibt (+1 pro Lager und pro Weide), mit einer Tooltip-Zeile, die
   die Stadt nennt.

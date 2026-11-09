@@ -1643,8 +1643,9 @@ end
 
 -- BGD : rendements des bâtiments pour les cartes en % des bâtiments (Rationalisme, Grand opéra,
 -- Simultaneum, Libre marché…). RMA prenait le seul rendement de base de la base de données
--- (Building_YieldChanges) et oubliait les bonus fixes ajoutés au bâtiment : cités-États,
--- gouverneurs, personnages illustres, chefs (tombeau d'Ahiram : 0 de base, +x par amiral)…
+-- (Building_YieldChanges) et oubliait les bonus fixes ajoutés au bâtiment : gouverneurs,
+-- personnages illustres, chefs (tombeau d'Ahiram : 0 de base, +x par amiral)… Les bonus des
+-- cités-États, eux, restent hors des % dans le jeu : retirés (BGD_CityStateBuildingBonus).
 -- pCity:GetBuildingYield les donne, mais avec les % déjà appliqués (la carte elle-même si elle est
 -- posée, d'où le double compte qu'Infixo voulait éviter) : on retire ces % en divisant par
 -- (100 + somme des % actifs) / 100, le jeu les additionnant sur le rendement du bâtiment.
@@ -1767,6 +1768,121 @@ function BGD_BuildingPercentActive(tCity:table, sDistrictType:string, sBuildingT
 	return iSum;
 end
 
+-- BGD : bonus des cités-États sur les bâtiments (émissaires : +2 science à la bibliothèque, +2
+-- culture à l'amphithéâtre, +2 foi au temple…). Gathering Storm les marque CityStatesOnly : le jeu
+-- les compte à part et ne leur applique pas les % des cartes (Rationalisme, Grand opéra,
+-- Simultaneum…), mais pCity:GetBuildingYield les inclut. On les retrouve par cité-État vivante :
+-- traits de son dirigeant (et de ceux dont il hérite), modificateur attaché au joueur local si
+-- ses prérequis (émissaires, paix, Primauté papale) sont remplis. Somme par bâtiment de base et
+-- rendement, en cache comme tBGDBuildingPercentMods.
+local tBGDCityStateBonus:table = nil;
+
+local function BGD_CityStateReqMet(tReqSet:table, pMinor:table, ePlayer:number, iDepth:number)
+	if tReqSet == nil or tReqSet.Reqs == nil then return true; end
+	local pPlayer:table = Players[ ePlayer ];
+	local eMinor:number = pMinor:GetID();
+	local bAny:boolean, bDecided:boolean = false, false;
+	for _,req in ipairs(tReqSet.Reqs) do
+		local bValid = nil;
+		local tArgs:table = req.Arguments or {};
+		if req.ReqType == "REQUIREMENT_REQUIREMENTSET_IS_MET" and tArgs.RequirementSetId and iDepth < 3 then
+			bValid = BGD_CityStateReqMet(FetchAndCacheDataReqSet(tArgs.RequirementSetId), pMinor, ePlayer, iDepth + 1);
+		elseif req.ReqType == "REQUIREMENT_PLAYER_HAS_GIVEN_INFLUENCE_TOKENS" then
+			bValid = pMinor:GetInfluence():GetTokensReceived(ePlayer) >= (tonumber(tArgs.MinimumTokens) or 1);
+		elseif req.ReqType == "REQUIREMENT_PLAYER_AT_PEACE" then
+			bValid = not pPlayer:GetDiplomacy():IsAtWarWith(eMinor);
+		elseif req.ReqType == "REQUIREMENT_PLAYER_FOUNDED_OUR_RELIGION" then
+			local eReligion:number = pPlayer:GetReligion():GetReligionTypeCreated();
+			bValid = eReligion ~= nil and eReligion >= 0 and pMinor:GetReligion():GetReligionInMajorityOfCities() == eReligion;
+		elseif req.ReqType == "REQUIREMENT_PLAYER_FOUNDED_RELIGION_WITH_BELIEF" then
+			local belief = GameInfo.Beliefs[ tArgs.BeliefType ];
+			local eReligion:number = pPlayer:GetReligion():GetReligionTypeCreated();
+			bValid = false;
+			if belief and eReligion ~= nil and eReligion >= 0 then
+				for _,religion in ipairs(Game.GetReligion():GetAllReligions()) do
+					if religion.Religion == eReligion then
+						for _,eBelief in ipairs(religion.Beliefs or {}) do
+							if eBelief == belief.Index then bValid = true; end
+						end
+					end
+				end
+			end
+		end
+		if bValid ~= nil then
+			if req.Inverse then bValid = not bValid; end
+			bDecided = true;
+			if tReqSet.TestAny and bValid then return true; end
+			if not tReqSet.TestAny and not bValid then return false; end
+			bAny = bAny or bValid;
+		end
+	end
+	if tReqSet.TestAny and bDecided then return bAny; end
+	return true;
+end
+
+function BGD_CityStateBuildingBonuses()
+	if tBGDCityStateBonus ~= nil then return tBGDCityStateBonus; end
+	local tBonus:table = {};
+	tBGDCityStateBonus = tBonus;
+	-- modificateurs marqués CityStatesOnly qui changent un rendement de bâtiment
+	local tCSOnly:table = {};
+	local okQ, tRows = pcall(function() return DB.Query("SELECT ModifierId FROM ModifierArguments WHERE Name = 'CityStatesOnly'"); end);
+	if not okQ or type(tRows) ~= "table" then return tBonus; end
+	for _,row in ipairs(tRows) do
+		local tMod:table = FetchAndCacheData(row.ModifierId);
+		if tMod and tMod.EffectType == "EFFECT_ADJUST_BUILDING_YIELD_CHANGE" then
+			local v = tMod.Arguments.CityStatesOnly;
+			if v == true or v == 1 or v == "1" or (type(v) == "string" and string.lower(v) == "true") then
+				tCSOnly[ row.ModifierId ] = tMod;
+			end
+		end
+	end
+	if next(tCSOnly) == nil then return tBonus; end
+	local ePlayer:number = Game.GetLocalPlayer();
+	if Players[ ePlayer ] == nil then return tBonus; end
+	for _,pMinor in ipairs(PlayerManager.GetAliveMinors()) do
+		pcall(function()
+			-- cités libres : mineures aussi, sans bonus
+			if not pMinor:IsMinor() then return; end
+			local tLeaders:table = {};
+			local sLeader:string = PlayerConfigurations[ pMinor:GetID() ]:GetLeaderTypeName();
+			for _ = 1, 5 do
+				if sLeader == nil or tLeaders[ sLeader ] then break; end
+				tLeaders[ sLeader ] = true;
+				local leader = GameInfo.Leaders[ sLeader ];
+				sLeader = leader and leader.InheritFrom;
+			end
+			local tTraits:table = {};
+			for row in GameInfo.LeaderTraits() do if tLeaders[ row.LeaderType ] then tTraits[ row.TraitType ] = true; end end
+			local function Add(sModifierId:string, tReqSets:table, iDepth:number)
+				local tMod:table = sModifierId and FetchAndCacheData(sModifierId);
+				if tMod == nil or iDepth > 3 then return; end
+				local tSets:table = {};
+				for _,tSet in ipairs(tReqSets) do table.insert(tSets, tSet); end
+				if tMod.SubjectReqSet then table.insert(tSets, tMod.SubjectReqSet); end
+				if tCSOnly[ sModifierId ] then
+					for _,tSet in ipairs(tSets) do
+						if not BGD_CityStateReqMet(tSet, pMinor, ePlayer, 0) then return; end
+					end
+					local tArgs:table = tMod.Arguments;
+					local sKey:string = BGD_BaseBuildingType(tArgs.BuildingType).."|"..tostring(tArgs.YieldType);
+					tBonus[ sKey ] = (tBonus[ sKey ] or 0) + (tonumber(tArgs.Amount) or 0);
+				elseif tMod.EffectType == "EFFECT_ATTACH_MODIFIER" then
+					Add(tMod.Arguments.ModifierId, tSets, iDepth + 1);
+				end
+			end
+			for row in GameInfo.TraitModifiers() do
+				if tTraits[ row.TraitType ] then Add(row.ModifierId, {}, 0); end
+			end
+		end);
+	end
+	return tBonus;
+end
+
+function BGD_CityStateBuildingBonus(sBuildingType:string, sYieldType:string)
+	return BGD_CityStateBuildingBonuses()[ BGD_BaseBuildingType(sBuildingType).."|"..tostring(sYieldType) ] or 0;
+end
+
 -- Rendement du bâtiment avant les % (base + bonus fixes), sur lequel s'applique un % de plus.
 function BGD_BuildingYieldBeforePercent(tCity:table, sDistrictType:string, building:table, sYieldType:string)
 	if building.isPillaged then return 0; end -- un bâtiment pillé ne rapporte rien
@@ -1774,6 +1890,8 @@ function BGD_BuildingYieldBeforePercent(tCity:table, sDistrictType:string, build
 		return YieldTableGetYield(building.Yields, sYieldType) or 0;
 	end
 	local fTotal:number = YieldTableGetYield(building.YieldsTotal, sYieldType) or 0;
+	-- bonus des cités-États : hors des % dans le jeu
+	fTotal = math.max(0, fTotal - BGD_CityStateBuildingBonus(building.BuildingType, sYieldType));
 	local iPercent:number = BGD_BuildingPercentActive(tCity, BGD_BaseDistrictType(sDistrictType), BGD_BaseBuildingType(building.BuildingType), sYieldType);
 	if 100 + iPercent <= 0 then return 0; end
 	return fTotal * 100 / (100 + iPercent);
@@ -3056,6 +3174,7 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 	local sSubjectFilter:string = ( sInfluence and "PLAYER_HAS_"..sInfluence.."_INFLUENCE" or nil );
 	sBGDCurrentPolicy = ( sObject == "Policy" and sObjectType or nil );
 	tBGDBuildingPercentMods = nil; -- BGD : les cartes posées changent dans l'écran du gouvernement
+	tBGDCityStateBonus = nil; -- BGD : émissaires
 	for mod in GameInfo[sModifiersTable]() do
 		if mod[sObjectTypeField] == sObjectType then
 			-- stupid Firaxis, some fields are named ModifierId and some ModifierID (sic!)
@@ -3136,6 +3255,7 @@ function RefreshBaseData(ePlayerID:number)
 
 	tCities = {}; -- clear old values
 	tBGDBuildingPercentMods = nil; -- BGD : cartes, gouvernement ou traits ont pu changer
+	tBGDCityStateBonus = nil; -- BGD : émissaires
 
 	for _,pCity in pCities:Members() do	
 		local cityName:string = pCity:GetName();

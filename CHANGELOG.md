@@ -26,8 +26,8 @@ turns the **[all players]** fixes off.
 
 ### Interface fixes
 - **Policy card effects**: Rationalism, Grand Opera, Simultaneum and Free Market now also count the
-  flat yields added to the buildings they boost (city-states, governors…), not only the buildings'
-  base yield.
+  flat yields added to the buildings they boost (governors…), not only the buildings' base yield.
+  City-state bonuses on these buildings stay out, as in the game, which does not multiply them.
 - **Trade route chooser**: for a domestic route, the Gold that Poundmaker's ability gives the
   destination city (+1 per Camp and per Pasture) is now shown, with a tooltip line naming the city.
 - **Top panel**: the population button also shows the average net amenities per city (green from
