@@ -428,8 +428,8 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
   - Le proxy ajoute [src/ui_accord_fin.lua](src/ui_accord_fin.lua) à la fin du fichier, après le
     bouton d'or (`patch_accord_fin`). Il remplace la globale `DealManager` de ce contexte par une
     table dont seule `SendWorkingDeal` change, le reste venant du jeu. Vers un humain, en
-    multijoueur en réseau, l'accord ne part pas à moins de 3 s de la fin du minuteur local, minuteur
-    écoulé, ou quand plus aucun humain n'a son tour actif ; une ligne locale le dit au joueur.
+    multijoueur en réseau, l'accord ne part pas minuteur local écoulé (fin forcée comprise), ou
+    quand plus aucun humain n'a son tour actif ; une ligne locale le dit au joueur.
   - Toujours actif, sans réglage. Interface seule : rien ne part sur le réseau, il suffit que le
     joueur qui envoie l'accord ait le proxy.
   - Test hors jeu : `lua proxy/tests/test_ui_accord_fin.lua`.
