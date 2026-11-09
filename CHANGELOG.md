@@ -4,6 +4,40 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.8.0
+
+Multiplayer games need every human player on 0.8.0. The end-of-turn deal fix only protects the
+players who have it: a single player still on 0.7.x can bring the stuck turn back for everyone. In
+the lobby, the host sees in red who has another version, and a lobby that mixes 0.7.x and 0.8.0
+turns the **[all players]** fixes off.
+
+### Multiplayer fixes [all players]
+- **Turn stuck in a loop after a deal between humans**: a deal proposed or accepted just as your
+  turn ended could reach the host after the end of the turn. The next turn then kept restarting for
+  some players, a return to the lobby was needed, and the game often desynced. Such a deal is no
+  longer sent once your timer has run out, or when no human still has their turn active: a line in
+  your chat tells you so. Deals with AIs are unchanged.
+
+### New
+- **Report a bug (BGE)** button in the Esc menu, under Options. Describe the problem: BGE sends a
+  save, the latest autosaves and the game logs (your Windows user name removed), and a line in your
+  chat gives the report number. The other players see in the chat that a report is being sent. If
+  sending fails, the zip is copied to your Desktop.
+
+### Interface fixes
+- **Policy card effects**: Rationalism, Grand Opera, Simultaneum and Free Market now also count the
+  flat yields added to the buildings they boost (city-states, governors…), not only the buildings'
+  base yield.
+- **Trade route chooser**: for a domestic route, the Gold that Poundmaker's ability gives the
+  destination city (+1 per Camp and per Pasture) is now shown, with a tooltip line naming the city.
+- **Top panel**: the population button also shows the average net amenities per city (green from
+  +3, red below 0).
+- **Main menu**: the version of BetterGameExperience is shown in the bottom-left corner, after the
+  game's and MPH's (`… - MPH / … - BGE / 0.8.0`).
+
+### Settings
+- **"No First/Last moves (BGE)"** game option: now checked by default. The host can still uncheck it.
+
 ## BetterGameExperience 0.7.0
 
 Multiplayer games need every human player on 0.7.0 for the **[all players]** fixes: a lobby that
@@ -32,8 +66,6 @@ mixes 0.6.x and 0.7.0 turns them off.
 - **Movement range of a unit on an enemy district**: no more lag spike when you select it (unfinished
   enemy encampment), zones of control (red tiles) are shown, and water tiles the
   unit can't enter yet (coast before embarkation, ocean before Cartography) are no longer offered.
-- **Main menu**: the version of BetterGameExperience is shown in the bottom-left corner, after the
-  game's and MPH's (`… - MPH / … - BGE / 0.7.0`).
 
 ### Settings
 - **Reset BGE** button in the BetterGameExperience tab: puts every setting back to its default
