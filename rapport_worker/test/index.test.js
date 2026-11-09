@@ -81,16 +81,16 @@ test("rapport reçu, gardé, publié, téléchargeable", async () => {
 	assert.equal(e.discord.length, 1);
 	const { url, corps } = e.discord[0];
 	assert.equal(url, "https://discord.example/api/webhooks/1/x?wait=true");
-	assert.ok(corps.thread_name.startsWith(`${id} · Jean @everyone · tour 87`));
+	assert.ok(corps.thread_name.startsWith(`${id} · Jean @everyone · turn 87`));
 	assert.deepEqual(corps.allowed_mentions, { parse: [] });
 	assert.deepEqual(corps.applied_tags, ["42"]);
-	assert.ok(corps.content.includes("Jean \\@everyone (France), tour 87"), corps.content);
-	assert.ok(corps.content.includes("multijoueur, hôte, en pause, 4 humain(s)"), corps.content);
-	assert.ok(corps.content.includes("Steam : 76561198000000042 <https://steamcommunity.com/profiles/76561198000000042>"), corps.content);
-	assert.ok(corps.content.includes("2 fichiers dont 1 sauvegarde(s)"), corps.content);
-	assert.ok(corps.content.endsWith("> La partie se désynchronise \\*à chaque\\* tour après la guerre \\@here"), corps.content);
+	assert.ok(corps.content.startsWith(`**Bug report ${id}**\n\n**Description**\n> La partie se désynchronise \\*à chaque\\* tour après la guerre \\@here\n`), corps.content);
+	assert.ok(corps.content.includes("**Player:** Jean \\@everyone (France), turn 87"), corps.content);
+	assert.ok(corps.content.includes("**Game:** multiplayer, host, paused, 4 human player(s)"), corps.content);
+	assert.ok(corps.content.includes("**Steam:** 76561198000000042 <https://steamcommunity.com/profiles/76561198000000042>"), corps.content);
+	assert.ok(corps.content.includes("2 file(s) including 1 save(s)"), corps.content);
 	assert.ok(corps.content.length < 2000);
-	const lien = corps.content.match(/Télécharger : (\S+)/)[1];
+	const lien = corps.content.match(/\*\*Download:\*\* (\S+)/)[1];
 	assert.ok(lien.startsWith(`https://bge-rapports.exemple.workers.dev/rapport/${id}?cle=`));
 	const d = await worker.fetch(new Request(lien), e);
 	assert.equal(d.status, 200);
@@ -128,7 +128,7 @@ test("description longue coupée, absente signalée", async () => {
 	await worker.fetch(envoi(zip({ ...META, description: "x".repeat(5000) })), e);
 	await worker.fetch(envoi(zip({ ...META, description: "" })), e);
 	assert.ok(e.discord[0].corps.content.length < 2000, String(e.discord[0].corps.content.length));
-	assert.ok(e.discord[1].corps.content.endsWith("> (pas de description)"));
+	assert.ok(e.discord[1].corps.content.includes("**Description**\n> *(no description)*"));
 });
 
 test("refus : limite, pas de zip, trop gros, mauvaise route", async () => {
@@ -174,6 +174,17 @@ test("plafond du bucket : les plus anciens partent d'abord", async () => {
 	const { id } = await r.json();
 	assert.ok(!e.objets.has("rapports/BGE-000004.zip"), "le plus ancien est parti");
 	assert.ok(e.objets.has(`rapports/${id}.zip`) && e.objets.has("autre/x"));
+});
+
+test("message en anglais, sans meta.json lisible", async () => {
+	const e = env();
+	await worker.fetch(envoi(zip({ ...META, multijoueur: "0" })), e);
+	assert.ok(e.discord[0].corps.content.includes("**Game:** single player"), e.discord[0].corps.content);
+	const brutZip = new Uint8Array(30); brutZip.set([0x50, 0x4b, 3, 4]);
+	await worker.fetch(envoi(brutZip), e);
+	const c = e.discord[1].corps.content;
+	assert.ok(c.includes("meta.json unreadable") && c.includes("> *(no description)*") && c.includes("**Download:**"), c);
+	assert.ok(!/[àéèêç]|joueur|tour |Télécharger|Partie/.test(c), "pas de français : " + c);
 });
 
 test("Steam ID : celui du jeu, sinon celui de Windows, sinon inconnu", () => {

@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="en_US">
 			<Text>Sending the report...[NEWLINE]You can close this window: the sending continues.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="en_US">
-			<Text>Report sent</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="en_US">
-			<Text>Thank you! The report has reached the BetterGameExperience team.[NEWLINE][NEWLINE]Report number: {1}[NEWLINE][NEWLINE]To add details, send this number to @goaterino in a private message on Discord.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="en_US">
-			<Text>Report not sent</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="en_US">
-			<Text>The report could not be sent. The archive was saved here:[NEWLINE]{1}[NEWLINE][NEWLINE]Send it to @goaterino in a private message on Discord, with a description of the problem.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="en_US">
 			<Text>{1} is reporting a bug, please wait.</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="en_US">
 			<Text>Describe the problem: what happened, when, and what you expected instead.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="en_US">
+			<Text>Bug report sent, number {1}. To add details, send this number to @goaterino in a private message on Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="en_US">
+			<Text>The bug report could not be sent. The archive was saved here: {1}. Send it to @goaterino in a private message on Discord.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

@@ -12,9 +12,9 @@
 //! - **Le suivi.** Le menu est caché dès que le joueur le ferme, et la partie est souvent en pause :
 //!   ni ses images ni les événements du jeu ne suivent alors l'envoi. `InGame.xml` reçoit un
 //!   minuteur (`BGD_RapportMinuteur`, une `SlideAnim`), et `InGame.lua` le bloc `rapport_suivi.lua`,
-//!   qui interroge le thread toutes les 0,5 s environ et rend le résultat au menu
-//!   (`LuaEvents.BGD_RapportFini`). Le menu prévient le chat, affiche le résultat, et se rouvre
-//!   s'il était fermé.
+//!   qui interroge le thread toutes les 0,5 s environ. La fin (`rapport_fin.lua`) : un message à
+//!   tous, et une ligne du chat que seul le joueur local voit (numéro du rapport, ou chemin du zip,
+//!   et le contact), sans popup : celui du menu ne se voyait qu'en rouvrant le menu.
 //!
 //! L'envoi tourne dans un thread, pour ne pas figer le jeu : il attend la sauvegarde demandée par le
 //! bloc (`BGE_rapport.Civ6Save`), rassemble les journaux, les derniers autosaves et les réglages,
@@ -41,11 +41,21 @@ use std::process::Command;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("rapport.lua"));
+pub const LUA_BLOCK: &str = concat!(
+    include_str!("../../textes/bgd_textes.lua"),
+    include_str!("../../textes/bgd_texte.lua"),
+    include_str!("rapport_fin.lua"),
+    include_str!("rapport.lua")
+);
 pub const SCRIPT: &str = "ingametopoptionsmenu.lua";
 pub const XML: &str = "InGameTopOptionsMenu.xml";
 /// Le suivi, dans le contexte toujours affiché de la partie (le script est celui de `salon::SCRIPT_PARTIE`).
-pub const SUIVI_BLOCK: &str = include_str!("rapport_suivi.lua");
+pub const SUIVI_BLOCK: &str = concat!(
+    include_str!("../../textes/bgd_textes.lua"),
+    include_str!("../../textes/bgd_texte.lua"),
+    include_str!("rapport_fin.lua"),
+    include_str!("rapport_suivi.lua")
+);
 pub const XML_PARTIE: &str = "InGame.xml";
 /// Minuteur du suivi : une animation d'une demi-seconde environ (vitesse 2), relancée à sa fin.
 const MINUTEUR: &str = r#"  <!-- BetterGameExperience : minuteur du suivi d'un rapport de bug (startup_proxy/src/rapport.rs) -->
@@ -882,8 +892,9 @@ mod tests {
         assert!(out.ends_with("Stopped=\"1\"/>\r\n</Context>"), "{out}");
         assert!(out.find("LuaContext").unwrap() < out.find("BGD_RapportMinuteur").unwrap(), "par-dessus les autres contextes");
         assert!(patch_in_game_xml(out.as_bytes()).is_err(), "pas deux fois");
-        assert!(SUIVI_BLOCK.contains("Controls.BGD_RapportMinuteur") && SUIVI_BLOCK.contains("BGD_RapportFini"));
+        assert!(SUIVI_BLOCK.contains("Controls.BGD_RapportMinuteur") && SUIVI_BLOCK.contains("function BGD_RapportTerminer"));
         assert!(LUA_BLOCK.contains("LuaEvents.BGD_RapportSuivre()") && LUA_BLOCK.contains("LuaEvents.BGD_RapportFini.Add"));
+        assert!(LUA_BLOCK.contains("function BGD_RapportTerminer"), "fin de secours dans le menu");
         for &(_, name) in SUIVI_NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(SUIVI_BLOCK.contains(name), "{name} posée mais pas utilisée");
@@ -910,7 +921,7 @@ mod tests {
     #[test]
     fn textes_du_bloc() {
         let en = include_str!("../../textes/en_US.xml");
-        let bloc = include_str!("rapport.lua");
+        let bloc = concat!(include_str!("rapport.lua"), include_str!("rapport_fin.lua"));
         let cles: Vec<&str> = bloc.split('"').filter(|s| s.starts_with("LOC_BGD_")).collect();
         assert!(cles.len() >= 10, "{cles:?}");
         for cle in cles {

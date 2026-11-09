@@ -12,8 +12,9 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
   l'en-tête `X-BGE-Cle`. Sans la bonne clé, le Worker répond 403 avant toute autre chose. Il
   vérifie ensuite la limite par IP (3 rapports par minute), la taille (50 Mo au plus) et la signature du zip,
   le range dans R2 sous `rapports/BGE-XXXXXX.zip`, lit son `meta.json` et ouvre un fil dans le salon
-  forum : titre `BGE-XXXXXX · joueur · tour N`, résumé de la partie, Steam ID du joueur et lien
-  vers son profil, lien de téléchargement, puis la description écrite par le joueur. Il rend
+  forum, en anglais : titre `BGE-XXXXXX · joueur · turn N`, la description écrite par le joueur
+  juste sous le titre, puis le résumé de la partie (pseudo, Steam ID et lien vers son profil,
+  partie, version de BGE, archive) et le lien de téléchargement. Il rend
   `{"id": "BGE-XXXXXX"}`, que le jeu montre au joueur.
 - **`GET /rapport/BGE-XXXXXX?cle=…`** : le zip. La clé, tirée au hasard pour chaque rapport, n'est
   écrite que dans le fil Discord. Sans elle, le Worker répond 404.

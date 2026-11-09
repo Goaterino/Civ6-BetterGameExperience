@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ru_RU">
 			<Text>Отправка отчёта...[NEWLINE]Это окно можно закрыть: отправка продолжится.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="ru_RU">
-			<Text>Отчёт отправлен</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ru_RU">
-			<Text>Спасибо! Отчёт доставлен команде BetterGameExperience.[NEWLINE][NEWLINE]Номер отчёта: {1}[NEWLINE][NEWLINE]Чтобы добавить подробности, отправьте этот номер @goaterino в личном сообщении в Discord.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ru_RU">
-			<Text>Отчёт не отправлен</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ru_RU">
-			<Text>Не удалось отправить отчёт. Архив сохранён здесь:[NEWLINE]{1}[NEWLINE][NEWLINE]Отправьте его @goaterino в личном сообщении в Discord с описанием проблемы.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ru_RU">
 			<Text>{1} сообщает об ошибке, пожалуйста, подождите.</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ru_RU">
 			<Text>Опишите проблему: что произошло, когда и чего вы ожидали вместо этого.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="ru_RU">
+			<Text>Отчёт об ошибке отправлен, номер {1}. Чтобы добавить подробности, отправьте этот номер @goaterino в личном сообщении в Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ru_RU">
+			<Text>Не удалось отправить отчёт об ошибке. Архив сохранён здесь: {1}. Отправьте его @goaterino в личном сообщении в Discord.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

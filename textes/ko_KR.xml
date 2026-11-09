@@ -530,18 +530,6 @@
 		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ko_KR">
 			<Text>보고서를 보내는 중...[NEWLINE]이 창을 닫아도 전송은 계속됩니다.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="ko_KR">
-			<Text>보고서 전송 완료</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ko_KR">
-			<Text>감사합니다! 보고서가 BetterGameExperience 팀에 전달되었습니다.[NEWLINE][NEWLINE]보고서 번호: {1}[NEWLINE][NEWLINE]자세한 내용을 추가하려면 이 번호를 Discord 개인 메시지로 @goaterino 님에게 보내 주세요.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ko_KR">
-			<Text>보고서 전송 실패</Text>
-		</Row>
-		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ko_KR">
-			<Text>보고서를 보내지 못했습니다. 압축 파일은 다음 위치에 저장되었습니다:[NEWLINE]{1}[NEWLINE][NEWLINE]문제 설명과 함께 Discord 개인 메시지로 @goaterino 님에게 보내 주세요.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ko_KR">
 			<Text>{1} 님이 버그를 신고하는 중입니다. 잠시 기다려 주세요.</Text>
 		</Row>
@@ -559,6 +547,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ko_KR">
 			<Text>문제를 설명해 주세요: 무슨 일이 언제 일어났는지, 원래 어떻게 될 것으로 예상했는지.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="ko_KR">
+			<Text>버그 보고서를 보냈습니다(번호 {1}). 자세한 내용을 추가하려면 이 번호를 Discord 개인 메시지로 @goaterino 님에게 보내 주세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ko_KR">
+			<Text>버그 보고서를 보내지 못했습니다. 압축 파일 저장 위치: {1}. Discord 개인 메시지로 @goaterino 님에게 보내 주세요.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>
