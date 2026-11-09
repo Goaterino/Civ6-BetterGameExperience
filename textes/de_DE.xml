@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="de_DE">
 			<Text>Abkommen nicht gesendet: Die Runde endet. Bitte in der nächsten Runde erneut senden.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="de_DE">
+			<Text>+{1} {2} {3} durch {4}, erhalten von {5}</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="de_DE">
 			<Text>Zuschauer: nur ansehen, Ihre Stimmen zählen nicht.</Text>
 		</Row>

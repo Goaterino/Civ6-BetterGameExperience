@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="zh_Hans_CN">
 			<Text>交易未发送：回合即将结束。请在下个回合重新发送。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="zh_Hans_CN">
+			<Text>{4}：+{1} {2} {3}，由{5}获得</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="zh_Hans_CN">
 			<Text>观战者：仅可查看，你的投票不计入。</Text>
 		</Row>

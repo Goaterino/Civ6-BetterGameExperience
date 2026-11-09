@@ -3,7 +3,8 @@
 //! les fichiers du mod sont neutralisés au moment où l'exe les compile ou les lit.
 //!
 //! - `ui_charges` : charges des bâtisseurs sur leur drapeau (Better Builder Charges Tracking, wltk) ;
-//! - `ui_routes` : tours avant la fin de la route d'un négociant, sur son drapeau ;
+//! - `ui_routes` : tours avant la fin de la route d'un négociant, sur son drapeau, et, dans l'écran
+//!   de choix des routes, l'or que reçoit la destination d'une route intérieure (Poundmaker) ;
 //! - `ui_notifications` : bouton « tout effacer » des notifications (NotificationClear, 336tarot) ;
 //! - `ui_bandeau` : nourriture, production, population, activités moyennes par ville et luxes dans
 //!   le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) ;
@@ -102,6 +103,7 @@ const EMBARQUES: [(&str, &[u8]); 12] = [
 ];
 
 const DRAPEAUX: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/drapeaux.lua"));
+const ROUTES_CHOIX: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/routes_choix.lua"));
 const NOTIFS: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/notifications.lua"));
 const BANDEAU_LUA: &str = include_str!("mods/bandeau.lua");
 const BANDEAU_XML: &str = include_str!("mods/bandeau.xml");
@@ -259,6 +261,12 @@ fn ajoute(src: &[u8], bloc: &str) -> Vec<u8> {
 pub fn ajouter(chunk: &str, src: &[u8], entree_bandeau: bool) -> Option<Result<(Vec<u8>, String), String>> {
     if (on(&CHARGES) || on(&ROUTES)) && is_file(chunk, "UnitFlagManager.lua") {
         return Some(Ok((patch_drapeaux(src, on(&CHARGES), on(&ROUTES)), "charges et routes sur les drapeaux".into())));
+    }
+    if on(&ROUTES) && is_file(chunk, "TradeRouteChooser.lua") {
+        if has(src, "proxy/src/mods/routes_choix.lua") {
+            return Some(Err("déjà modifié".into()));
+        }
+        return Some(Ok((ajoute(src, ROUTES_CHOIX), "or reçu par la destination d'une route intérieure".into())));
     }
     if on(&NOTIFICATIONS) && is_file(chunk, "NotificationPanel.lua") {
         return Some(patch_notifications(src).map(|t| (t, "bouton d'effacement des notifications".into())));
@@ -664,6 +672,19 @@ mod tests {
         let out = String::from_utf8(patch_xml_bandeau(&xml).unwrap()).unwrap();
         assert!(out.find("BGD_TooltipType_TopPanel_Food").unwrap() < out.rfind("</Context>").unwrap());
         assert!(patch_xml_bandeau(out.as_bytes()).is_err());
+    }
+
+    #[test]
+    fn choix_des_routes() {
+        set_routes(true);
+        for chunk in [r"C:\x\Base\Assets\UI\Choosers\TradeRouteChooser.lua", "ui/replacements/compatibility/traderoutechooser.lua"] {
+            let Some(Ok((out, _))) = ajouter(chunk, b"Initialize();", false) else { panic!("{chunk} : pas de bloc") };
+            let out = String::from_utf8(out).unwrap();
+            assert!(out.starts_with("Initialize();\r\n") && out.ends_with(include_str!("mods/routes_choix.lua")));
+            assert!(out.contains("LOC_BGD_ROUTE_OR_DESTINATION = {"));
+            assert!(matches!(ajouter(chunk, out.as_bytes(), false), Some(Err(_))), "pas deux fois");
+        }
+        assert!(ajouter("TradeOverview.lua", b"x", false).is_none());
     }
 
     #[test]
