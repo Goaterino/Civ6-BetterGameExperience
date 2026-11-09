@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="fr_FR">
 			<Text>accord non envoyé : le tour se termine. Renvoyez-le au tour suivant.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="fr_FR">
+			<Text>+{1} {2} {3} grâce à {4}, reçus par {5}</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="fr_FR">
 			<Text>Spectateur : consultation seule, vos votes ne comptent pas.</Text>
 		</Row>

@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="ru_RU">
 			<Text>сделка не отправлена: ход заканчивается. Отправьте её снова в следующем ходу.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="ru_RU">
+			<Text>+{1} {2} {3} от «{4}», получает {5}</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="ru_RU">
 			<Text>Зритель: только просмотр, ваши голоса не учитываются.</Text>
 		</Row>

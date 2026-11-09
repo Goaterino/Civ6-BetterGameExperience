@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="en_US">
 			<Text>deal not sent: the turn is ending. Send it again next turn.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="en_US">
+			<Text>+{1} {2} {3} from {4}, received by {5}</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="en_US">
 			<Text>Spectator: read only, your votes are not counted.</Text>
 		</Row>
