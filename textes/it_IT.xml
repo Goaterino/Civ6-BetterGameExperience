@@ -516,7 +516,7 @@
 			<Text>Segnala un bug</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="it_IT">
-			<Text>BetterGameExperience invierà al suo team un salvataggio di questo momento, gli ultimi salvataggi automatici e i registri del gioco. Il tuo nome utente di Windows viene rimosso dai registri.[NEWLINE][NEWLINE]Poi descrivi il bug sul Discord di BetterGameExperience, con il numero di segnalazione che riceverai.</Text>
+			<Text>BetterGameExperience invierà al suo team un salvataggio di questo momento, gli ultimi salvataggi automatici e i registri del gioco. Il tuo nome utente di Windows viene rimosso dai registri.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="it_IT">
 			<Text>Invia la segnalazione</Text>
@@ -534,13 +534,13 @@
 			<Text>Segnalazione inviata</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="it_IT">
-			<Text>Numero di segnalazione: {1}[NEWLINE][NEWLINE]Indicalo sul Discord di BetterGameExperience quando descrivi il bug.</Text>
+			<Text>Grazie! La segnalazione è arrivata al team di BetterGameExperience.[NEWLINE][NEWLINE]Numero di segnalazione: {1}[NEWLINE][NEWLINE]Per aggiungere dettagli, invia questo numero a @goaterino in un messaggio privato su Discord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="it_IT">
 			<Text>Segnalazione non inviata</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="it_IT">
-			<Text>Non è stato possibile inviare la segnalazione. L'archivio è stato salvato qui:[NEWLINE]{1}[NEWLINE][NEWLINE]Pubblicalo sul Discord di BetterGameExperience con una descrizione del bug.</Text>
+			<Text>Non è stato possibile inviare la segnalazione. L'archivio è stato salvato qui:[NEWLINE]{1}[NEWLINE][NEWLINE]Invialo a @goaterino in un messaggio privato su Discord, con una descrizione del problema.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="it_IT">
 			<Text>{1} sta segnalando un bug, attendere prego.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="it_IT">
 			<Text>{1}: non è stato possibile inviare la segnalazione, è stata salvata sul suo computer. La pausa può essere tolta.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="it_IT">
+			<Text>Descrivi il problema: cosa è successo, quando e cosa ti aspettavi invece.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

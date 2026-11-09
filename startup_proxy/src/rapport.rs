@@ -3,10 +3,18 @@
 //! Un bouton « Signaler un bug (BGE) » est ajouté au menu Échap, juste sous « Options » :
 //! - **XML.** Après la lecture d'`InGameTopOptionsMenu.xml`, l'élément du bouton `OptionsButton` est
 //!   recopié juste après lui, sous l'ID `BGD_RapportButton`, sans son texte : même style, même taille,
-//!   dans la même pile. Le menu reçoit aussi l'instance `PopupDialog` s'il ne l'a pas.
+//!   dans la même pile. À la fin du contexte, le formulaire du rapport (`rapport_formulaire.xml` :
+//!   explication, champ de texte pour décrire le problème, Envoyer et Annuler), puis l'instance
+//!   `PopupDialog` si le menu ne l'a pas (suivi de l'envoi et résultat).
 //! - **Lua.** `rapport.lua` est ajouté à la fin d'`InGameTopOptionsMenu.lua` (que MPH inclut depuis
 //!   son remplaçant), après avoir posé trois fonctions natives : `Civ6Proxy_RapportEnvoyer(meta)`,
 //!   `Civ6Proxy_RapportEtat()` et `Civ6Proxy_Journal(texte)`.
+//! - **Le suivi.** Le menu est caché dès que le joueur le ferme, et la partie est souvent en pause :
+//!   ni ses images ni les événements du jeu ne suivent alors l'envoi. `InGame.xml` reçoit un
+//!   minuteur (`BGD_RapportMinuteur`, une `SlideAnim`), et `InGame.lua` le bloc `rapport_suivi.lua`,
+//!   qui interroge le thread toutes les 0,5 s environ et rend le résultat au menu
+//!   (`LuaEvents.BGD_RapportFini`). Le menu prévient le chat, affiche le résultat, et se rouvre
+//!   s'il était fermé.
 //!
 //! L'envoi tourne dans un thread, pour ne pas figer le jeu : il attend la sauvegarde demandée par le
 //! bloc (`BGE_rapport.Civ6Save`), rassemble les journaux, les derniers autosaves et les réglages,
@@ -36,6 +44,12 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("rapport.lua"));
 pub const SCRIPT: &str = "ingametopoptionsmenu.lua";
 pub const XML: &str = "InGameTopOptionsMenu.xml";
+/// Le suivi, dans le contexte toujours affiché de la partie (le script est celui de `salon::SCRIPT_PARTIE`).
+pub const SUIVI_BLOCK: &str = include_str!("rapport_suivi.lua");
+pub const XML_PARTIE: &str = "InGame.xml";
+/// Minuteur du suivi : une animation d'une demi-seconde environ (vitesse 2), relancée à sa fin.
+const MINUTEUR: &str = r#"  <!-- BetterGameExperience : minuteur du suivi d'un rapport de bug (startup_proxy/src/rapport.rs) -->
+  <SlideAnim ID="BGD_RapportMinuteur" Size="1,1" Begin="0,0" End="0,0" Function="Root" Speed="2" Cycle="Once" Stopped="1"/>"#;
 
 /// URL du relais, gravée à la compilation (`BGE_RAPPORT_URL`, voir `rapport_worker/README.md`) ;
 /// `rapport_url=` dans `rollover_proxy.cfg` la remplace, pour essayer un autre relais.
@@ -44,6 +58,14 @@ const RELAIS: Option<&str> = option_env!("BGE_RAPPORT_URL");
 /// Bouton recopié, et ID de la copie.
 const ANCRE: &str = r#"ID="OptionsButton""#;
 const ID_BOUTON: &str = "BGD_RapportButton";
+
+/// Formulaire ajouté à la fin du contexte, caché jusqu'au clic sur le bouton.
+const FORMULAIRE: &str = include_str!("rapport_formulaire.xml");
+
+/// Clé que le relais exige de chaque rapport (en-tête `X-BGE-Cle`, `CLE_CLIENT` du Worker) : elle
+/// écarte les envois qui ne viennent pas de cette DLL sans l'avoir lue. Ce n'est pas un secret :
+/// elle se lit dans la DLL ; la limite par IP et la taille maximale du relais restent la protection.
+const CLE_CLIENT: &str = "16ea4c738b288eb2852868d2670e169e";
 
 /// Nom de la sauvegarde demandée par le bloc Lua (`Network.SaveGame`).
 const SAUVEGARDE: &str = "BGE_rapport";
@@ -100,8 +122,32 @@ pub fn patch_menu_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     out.push_str(&retrait);
     out.push_str(&copie);
     out.push_str(&text[fin..]);
+    ajouter_formulaire(&mut out)?;
     ajouter_popup(&mut out)?;
     Ok(out.into_bytes())
+}
+
+/// Fin du contexte : la dernière balise fermante `</Context>` ou `</ContextDefaults>`.
+fn fin_du_contexte(text: &str) -> Result<usize, String> {
+    ["</ContextDefaults>", "</Context>"].iter().filter_map(|f| text.rfind(f)).max().ok_or_else(|| "fin du contexte introuvable".to_string())
+}
+
+/// Le formulaire à la fin du contexte : par-dessus les boutons du menu.
+fn ajouter_formulaire(text: &mut String) -> Result<(), String> {
+    let fin = fin_du_contexte(text)?;
+    text.insert_str(fin, &format!("{}\r\n", FORMULAIRE.trim_end()));
+    Ok(())
+}
+
+/// `InGame.xml` avec le minuteur du suivi à la fin du contexte.
+pub fn patch_in_game_xml(src: &[u8]) -> Result<Vec<u8>, String> {
+    let mut text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?.to_string();
+    if text.contains("ID=\"BGD_RapportMinuteur\"") {
+        return Err("minuteur déjà présent".into());
+    }
+    let fin = fin_du_contexte(&text)?;
+    text.insert_str(fin, &format!("{MINUTEUR}\r\n"));
+    Ok(text.into_bytes())
 }
 
 /// L'instance `PopupDialog` à la fin du contexte (et son modèle), si le menu ne l'a pas : le bloc
@@ -110,7 +156,7 @@ fn ajouter_popup(text: &mut String) -> Result<(), String> {
     if text.contains(r#"<MakeInstance Name="PopupDialog""#) {
         return Ok(());
     }
-    let fin = ["</ContextDefaults>", "</Context>"].iter().filter_map(|f| text.rfind(f)).max().ok_or("fin du contexte introuvable")?;
+    let fin = fin_du_contexte(text)?;
     let mut ajout = String::new();
     if !text.contains(r#"<Include File="PopupDialog""#) {
         ajout.push_str("  <Include File=\"PopupDialog\" />\r\n");
@@ -558,6 +604,31 @@ fn collecter(lua: &[(String, String)], depart: SystemTime) -> Collecte {
     Collecte { base, saves }
 }
 
+/// Steam ID 64 bits d'un compte Steam : `ActiveUser`, l'ID de compte 32 bits, plus la base des comptes
+/// individuels.
+pub fn steam_id64(compte: u32) -> Option<String> {
+    (compte != 0).then(|| (76_561_197_960_265_728u64 + compte as u64).to_string())
+}
+
+/// `ActiveUser` dans la sortie de `reg query` : `    ActiveUser    REG_DWORD    0x1a2b3c`.
+pub fn lire_active_user(sortie: &str) -> Option<u32> {
+    let ligne = sortie.lines().find(|l| l.trim_start().starts_with("ActiveUser"))?;
+    let hex = ligne.split_whitespace().last()?.strip_prefix("0x")?;
+    u32::from_str_radix(hex, 16).ok()
+}
+
+/// Le compte Steam connecté sur cette machine (registre de Steam), pour un rapport fait en solo, où
+/// le jeu ne donne pas toujours l'identifiant du joueur.
+fn steam_id_windows() -> Option<String> {
+    let root = std::env::var_os("SystemRoot").unwrap_or("C:\\Windows".into());
+    let out = Command::new(PathBuf::from(root).join("System32\\reg.exe"))
+        .args(["query", r"HKCU\Software\Valve\Steam\ActiveProcess", "/v", "ActiveUser"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .ok()?;
+    steam_id64(lire_active_user(&String::from_utf8_lossy(&out.stdout))?)
+}
+
 fn infos_proxy() -> Vec<(&'static str, String)> {
     let exe = std::env::current_exe().ok().map(|p| nom_fichier(&p)).unwrap_or_default();
     let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
@@ -566,6 +637,7 @@ fn infos_proxy() -> Vec<(&'static str, String)> {
         ("bge_release", crate::version::RELEASE.unwrap_or("locale").to_string()),
         ("exe", exe),
         ("date_unix", secs.to_string()),
+        ("steam_id_windows", steam_id_windows().unwrap_or_default()),
     ]
 }
 
@@ -614,6 +686,8 @@ fn envoyer_zip(url: &str, dir: &Path, nom: &str) -> Result<String, String> {
         .current_dir(dir)
         .args(["-sS", "--max-time", "300", "-w", "\n%{http_code}", "-H"])
         .arg(format!("X-BGE-Version: {}", crate::version::RELEASE.unwrap_or(crate::version::VERSION)))
+        .arg("-H")
+        .arg(format!("X-BGE-Cle: {CLE_CLIENT}"))
         .arg("-F")
         .arg(format!("archive=@{nom};type=application/zip"))
         .arg(url)
@@ -739,6 +813,17 @@ pub const NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
 ];
 
+const SUIVI_NATIVES: Natives = &[(lua_etat, b"Civ6Proxy_RapportEtat\0"), (lua_log, b"Civ6Proxy_Journal\0")];
+
+/// Appelée par l'accroche sur InGame.lua, après le bloc de `salon` : pose les natives du suivi, puis
+/// ajoute son bloc au texte.
+pub unsafe fn prepare_suivi(l: *mut std::ffi::c_void, mut text: Vec<u8>) -> Vec<u8> {
+    publish_natives(l, SUIVI_NATIVES, "rapport");
+    text.extend_from_slice(b"\r\n");
+    text.extend_from_slice(SUIVI_BLOCK.as_bytes());
+    text
+}
+
 /// Appelée par l'accroche sur InGameTopOptionsMenu.lua : pose les natives, puis rend le texte à compiler.
 pub unsafe fn prepare(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
     publish_natives(l, NATIVES, "rapport");
@@ -758,6 +843,10 @@ mod tests {
         assert!(opt < rap && rap < exit, "{out}");
         assert!(out.contains("\t\t<GridButton ID=\"BGD_RapportButton\" Style=\"MainButton\" Size=\"250,41\"/>"), "{out}");
         assert_eq!(out.matches("<MakeInstance Name=\"PopupDialog\"").count(), 1);
+        // Formulaire à la fin du contexte, une fois, avec ses contrôles.
+        let (form, fin) = (out.find("ID=\"BGD_RapportFond\"").unwrap(), out.rfind("</Context>").unwrap());
+        assert!(exit < form && form < fin, "{out}");
+        assert_eq!(out.matches("ID=\"BGD_RapportFond\"").count(), 1);
         assert!(patch_menu_xml(out.as_bytes()).is_err(), "pas deux fois");
         let err = patch_menu_xml(b"<Context><GridButton ID=\"ReturnButton\"/></Context>").unwrap_err();
         assert!(err.contains("ReturnButton"), "{err}");
@@ -781,6 +870,41 @@ mod tests {
         }
         assert!(LUA_BLOCK.contains(ID_BOUTON));
         assert!(LUA_BLOCK.contains(SAUVEGARDE));
+        // Chaque contrôle nommé du formulaire est employé par le bloc.
+        for id in FORMULAIRE.split("ID=\"").skip(1).filter_map(|s| s.split('"').next()) {
+            assert!(LUA_BLOCK.contains(&format!("Controls.{id}")), "{id} dans le formulaire, inconnu du bloc");
+        }
+    }
+
+    #[test]
+    fn minuteur_du_suivi() {
+        let out = String::from_utf8(patch_in_game_xml(b"<Context ID=\"InGame\">\r\n  <LuaContext FileName=\"X\"/>\r\n</Context>").unwrap()).unwrap();
+        assert!(out.ends_with("Stopped=\"1\"/>\r\n</Context>"), "{out}");
+        assert!(out.find("LuaContext").unwrap() < out.find("BGD_RapportMinuteur").unwrap(), "par-dessus les autres contextes");
+        assert!(patch_in_game_xml(out.as_bytes()).is_err(), "pas deux fois");
+        assert!(SUIVI_BLOCK.contains("Controls.BGD_RapportMinuteur") && SUIVI_BLOCK.contains("BGD_RapportFini"));
+        assert!(LUA_BLOCK.contains("LuaEvents.BGD_RapportSuivre()") && LUA_BLOCK.contains("LuaEvents.BGD_RapportFini.Add"));
+        for &(_, name) in SUIVI_NATIVES {
+            let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
+            assert!(SUIVI_BLOCK.contains(name), "{name} posée mais pas utilisée");
+        }
+    }
+
+    #[test]
+    fn steam_id() {
+        let sortie = "\r\nHKEY_CURRENT_USER\\Software\\Valve\\Steam\\ActiveProcess\r\n    ActiveUser    REG_DWORD    0x2a\r\n\r\n";
+        assert_eq!(lire_active_user(sortie), Some(42));
+        assert_eq!(steam_id64(42).as_deref(), Some("76561197960265770"));
+        assert_eq!(steam_id64(0), None, "Steam fermé : ActiveUser vaut 0");
+        assert_eq!(lire_active_user("ERROR: The system was unable to find the specified registry key"), None);
+    }
+
+    /// La clé de la DLL est celle qu'attend le relais.
+    #[test]
+    fn cle_du_relais() {
+        let worker = include_str!("../../rapport_worker/src/index.js");
+        assert!(worker.contains(&format!("export const CLE_CLIENT = \"{CLE_CLIENT}\";")), "CLE_CLIENT différente dans rapport_worker/src/index.js");
+        assert!(CLE_CLIENT.len() == 32 && CLE_CLIENT.bytes().all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]

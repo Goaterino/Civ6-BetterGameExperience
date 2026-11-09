@@ -1,0 +1,20 @@
+  <!-- BetterGameExperience : formulaire du rapport de bug (startup_proxy/src/rapport.rs), rempli et
+       redimensionné par rapport.lua. Champ de texte comme celui du nom LAN de l'écran d'options. -->
+  <Box ID="BGD_RapportFond" Anchor="C,C" Size="parent,parent" Color="0,0,0,170" ConsumeMouse="1" Hidden="1">
+    <Box ID="BGD_RapportBord" Anchor="C,C" Size="624,300" Color="95,115,140,255">
+      <Box ID="BGD_RapportCadre" Anchor="C,C" Size="620,296" Color="16,25,38,250">
+        <Stack ID="BGD_RapportPile" Anchor="C,T" Offset="0,18" StackGrowth="Down" Padding="12">
+          <Label ID="BGD_RapportTitre" Anchor="C,T" Style="ShellOptionText" String=""/>
+          <Label ID="BGD_RapportExplication" Anchor="C,T" Style="ShellOptionText" WrapWidth="580" String=""/>
+          <Label ID="BGD_RapportConsigne" Anchor="L,T" Offset="2,0" Style="ShellOptionText" WrapWidth="580" String=""/>
+          <Grid Anchor="C,T" Style="EditTextArea" Size="580,30" InnerPadding="6,6">
+            <EditBox ID="BGD_RapportTexte" Anchor="L,C" Offset="0,0" Size="parent,23" EditMode="1" Style="FontNormal14" ColorSet="BodyTextCool" FontStyle="stroke" MaxLength="1000"/>
+          </Grid>
+          <Stack Anchor="C,T" StackGrowth="Right" Padding="20">
+            <GridButton ID="BGD_RapportConfirmer" Style="MainButton" Size="260,41" String=""/>
+            <GridButton ID="BGD_RapportAnnuler" Style="MainButton" Size="260,41" String=""/>
+          </Stack>
+        </Stack>
+      </Box>
+    </Box>
+  </Box>

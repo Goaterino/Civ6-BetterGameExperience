@@ -516,7 +516,7 @@
 			<Text>Fehler melden</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="de_DE">
-			<Text>BetterGameExperience sendet seinem Team einen Spielstand dieses Moments, die letzten automatischen Spielstände und die Spielprotokolle. Ihr Windows-Benutzername wird aus den Protokollen entfernt.[NEWLINE][NEWLINE]Beschreiben Sie den Fehler danach im Discord von BetterGameExperience, mit der Berichtsnummer, die Sie erhalten.</Text>
+			<Text>BetterGameExperience sendet seinem Team einen Spielstand dieses Moments, die letzten automatischen Spielstände und die Spielprotokolle. Ihr Windows-Benutzername wird aus den Protokollen entfernt.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="de_DE">
 			<Text>Bericht senden</Text>
@@ -534,13 +534,13 @@
 			<Text>Bericht gesendet</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="de_DE">
-			<Text>Berichtsnummer: {1}[NEWLINE][NEWLINE]Geben Sie sie im Discord von BetterGameExperience an, wenn Sie den Fehler beschreiben.</Text>
+			<Text>Danke! Der Bericht ist beim Team von BetterGameExperience angekommen.[NEWLINE][NEWLINE]Berichtsnummer: {1}[NEWLINE][NEWLINE]Um Details zu ergänzen, senden Sie diese Nummer per Privatnachricht auf Discord an @goaterino.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="de_DE">
 			<Text>Bericht nicht gesendet</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="de_DE">
-			<Text>Der Bericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert:[NEWLINE]{1}[NEWLINE][NEWLINE]Posten Sie es mit einer Beschreibung des Fehlers im Discord von BetterGameExperience.</Text>
+			<Text>Der Bericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert:[NEWLINE]{1}[NEWLINE][NEWLINE]Senden Sie es per Privatnachricht auf Discord an @goaterino, mit einer Beschreibung des Problems.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="de_DE">
 			<Text>{1} meldet einen Fehler, bitte warten.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="de_DE">
 			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert. Die Pause kann aufgehoben werden.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="de_DE">
+			<Text>Beschreiben Sie das Problem: was passiert ist, wann, und was Sie stattdessen erwartet haben.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

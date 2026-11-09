@@ -516,7 +516,7 @@
 			<Text>Relatar um bug</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="pt_BR">
-			<Text>O BetterGameExperience vai enviar à sua equipe um jogo salvo deste momento, os últimos salvamentos automáticos e os registros do jogo. Seu nome de usuário do Windows é removido dos registros.[NEWLINE][NEWLINE]Depois, descreva o bug no Discord do BetterGameExperience, com o número do relatório que você vai receber.</Text>
+			<Text>O BetterGameExperience vai enviar à sua equipe um jogo salvo deste momento, os últimos salvamentos automáticos e os registros do jogo. Seu nome de usuário do Windows é removido dos registros.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="pt_BR">
 			<Text>Enviar o relatório</Text>
@@ -534,13 +534,13 @@
 			<Text>Relatório enviado</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="pt_BR">
-			<Text>Número do relatório: {1}[NEWLINE][NEWLINE]Informe-o no Discord do BetterGameExperience ao descrever o bug.</Text>
+			<Text>Obrigado! O relatório chegou à equipe do BetterGameExperience.[NEWLINE][NEWLINE]Número do relatório: {1}[NEWLINE][NEWLINE]Para adicionar detalhes, envie este número para @goaterino por mensagem privada no Discord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="pt_BR">
 			<Text>Relatório não enviado</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="pt_BR">
-			<Text>Não foi possível enviar o relatório. O arquivo foi salvo aqui:[NEWLINE]{1}[NEWLINE][NEWLINE]Publique-o no Discord do BetterGameExperience com uma descrição do bug.</Text>
+			<Text>Não foi possível enviar o relatório. O arquivo foi salvo aqui:[NEWLINE]{1}[NEWLINE][NEWLINE]Envie-o para @goaterino por mensagem privada no Discord, com uma descrição do problema.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="pt_BR">
 			<Text>{1} está relatando um bug, aguarde.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pt_BR">
 			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador. A pausa pode ser retirada.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pt_BR">
+			<Text>Descreva o problema: o que aconteceu, quando e o que você esperava em vez disso.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

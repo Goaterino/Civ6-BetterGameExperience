@@ -516,7 +516,7 @@
 			<Text>Report a bug</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="en_US">
-			<Text>BetterGameExperience will send its team a save of this moment, the last autosaves and the game logs. Your Windows user name is removed from the logs.[NEWLINE][NEWLINE]Then describe the bug on the BetterGameExperience Discord, with the report number you will get.</Text>
+			<Text>BetterGameExperience will send its team a save of this moment, the last autosaves and the game logs. Your Windows user name is removed from the logs.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="en_US">
 			<Text>Send the report</Text>
@@ -534,13 +534,13 @@
 			<Text>Report sent</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="en_US">
-			<Text>Report number: {1}[NEWLINE][NEWLINE]Mention it on the BetterGameExperience Discord when you describe the bug.</Text>
+			<Text>Thank you! The report has reached the BetterGameExperience team.[NEWLINE][NEWLINE]Report number: {1}[NEWLINE][NEWLINE]To add details, send this number to @goaterino in a private message on Discord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="en_US">
 			<Text>Report not sent</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="en_US">
-			<Text>The report could not be sent. The archive was saved here:[NEWLINE]{1}[NEWLINE][NEWLINE]Post it on the BetterGameExperience Discord with a description of the bug.</Text>
+			<Text>The report could not be sent. The archive was saved here:[NEWLINE]{1}[NEWLINE][NEWLINE]Send it to @goaterino in a private message on Discord, with a description of the problem.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="en_US">
 			<Text>{1} is reporting a bug, please wait.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="en_US">
 			<Text>{1}: the bug report could not be sent, it was kept on their computer. The pause can be lifted.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="en_US">
+			<Text>Describe the problem: what happened, when, and what you expected instead.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

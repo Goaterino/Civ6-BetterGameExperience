@@ -516,7 +516,7 @@
 			<Text>バグを報告</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="ja_JP">
-			<Text>BetterGameExperience は、この時点のセーブデータ、最新のオートセーブ、ゲームのログをチームに送信します。Windows のユーザー名はログから削除されます。[NEWLINE][NEWLINE]その後、受け取るレポート番号を添えて、BetterGameExperience の Discord でバグの内容を説明してください。</Text>
+			<Text>BetterGameExperience は、この時点のセーブデータ、最新のオートセーブ、ゲームのログをチームに送信します。Windows のユーザー名はログから削除されます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="ja_JP">
 			<Text>レポートを送信</Text>
@@ -534,13 +534,13 @@
 			<Text>レポートを送信しました</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ja_JP">
-			<Text>レポート番号: {1}[NEWLINE][NEWLINE]BetterGameExperience の Discord でバグを説明するときに、この番号を伝えてください。</Text>
+			<Text>ありがとうございます。レポートは BetterGameExperience チームに届きました。[NEWLINE][NEWLINE]レポート番号: {1}[NEWLINE][NEWLINE]詳細を追加するには、この番号を Discord の個人メッセージで @goaterino に送ってください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ja_JP">
 			<Text>レポートを送信できませんでした</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ja_JP">
-			<Text>レポートを送信できませんでした。アーカイブは次の場所に保存されました:[NEWLINE]{1}[NEWLINE][NEWLINE]バグの説明を添えて、BetterGameExperience の Discord に投稿してください。</Text>
+			<Text>レポートを送信できませんでした。アーカイブは次の場所に保存されました:[NEWLINE]{1}[NEWLINE][NEWLINE]問題の説明を添えて、Discord の個人メッセージで @goaterino に送ってください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ja_JP">
 			<Text>{1} がバグを報告しています。しばらくお待ちください。</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ja_JP">
 			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。一時停止を解除して構いません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ja_JP">
+			<Text>問題を説明してください：何が起きたか、いつ起きたか、本来どうなるはずだったか。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

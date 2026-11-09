@@ -516,7 +516,7 @@
 			<Text>Сообщить об ошибке</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="ru_RU">
-			<Text>BetterGameExperience отправит своей команде сохранение этого момента, последние автосохранения и журналы игры. Ваше имя пользователя Windows удаляется из журналов.[NEWLINE][NEWLINE]Затем опишите ошибку в Discord BetterGameExperience, указав номер отчёта, который вы получите.</Text>
+			<Text>BetterGameExperience отправит своей команде сохранение этого момента, последние автосохранения и журналы игры. Ваше имя пользователя Windows удаляется из журналов.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="ru_RU">
 			<Text>Отправить отчёт</Text>
@@ -534,13 +534,13 @@
 			<Text>Отчёт отправлен</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ru_RU">
-			<Text>Номер отчёта: {1}[NEWLINE][NEWLINE]Укажите его в Discord BetterGameExperience, когда будете описывать ошибку.</Text>
+			<Text>Спасибо! Отчёт доставлен команде BetterGameExperience.[NEWLINE][NEWLINE]Номер отчёта: {1}[NEWLINE][NEWLINE]Чтобы добавить подробности, отправьте этот номер @goaterino в личном сообщении в Discord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ru_RU">
 			<Text>Отчёт не отправлен</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ru_RU">
-			<Text>Не удалось отправить отчёт. Архив сохранён здесь:[NEWLINE]{1}[NEWLINE][NEWLINE]Опубликуйте его в Discord BetterGameExperience с описанием ошибки.</Text>
+			<Text>Не удалось отправить отчёт. Архив сохранён здесь:[NEWLINE]{1}[NEWLINE][NEWLINE]Отправьте его @goaterino в личном сообщении в Discord с описанием проблемы.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ru_RU">
 			<Text>{1} сообщает об ошибке, пожалуйста, подождите.</Text>
@@ -556,6 +556,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ru_RU">
 			<Text>{1}: отчёт об ошибке не удалось отправить, он сохранён на компьютере игрока. Паузу можно снять.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ru_RU">
+			<Text>Опишите проблему: что произошло, когда и чего вы ожидали вместо этого.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>
