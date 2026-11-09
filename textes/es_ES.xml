@@ -509,5 +509,53 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="es_ES">
 			<Text>permisos de administrador denegados</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="es_ES">
+			<Text>Informar de un error (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="es_ES">
+			<Text>Envía una partida guardada, los últimos autoguardados y los registros del juego al equipo de BetterGameExperience. En multijugador, se avisa a los demás jugadores en el chat.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="es_ES">
+			<Text>Informar de un error</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="es_ES">
+			<Text>BetterGameExperience enviará a su equipo una partida guardada de este momento, los últimos autoguardados y los registros del juego. Tu nombre de usuario de Windows se elimina de los registros.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="es_ES">
+			<Text>Enviar el informe</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="es_ES">
+			<Text>Cancelar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="es_ES">
+			<Text>Cerrar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="es_ES">
+			<Text>Enviando el informe...[NEWLINE]Puedes cerrar esta ventana: el envío continúa.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="es_ES">
+			<Text>{1} está informando de un error.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="es_ES">
+			<Text>{1} ha cancelado el informe de error.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="es_ES">
+			<Text>{1} está enviando el informe de error...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="es_ES">
+			<Text>{1}: informe de error enviado.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="es_ES">
+			<Text>{1}: no se ha podido enviar el informe de error, se ha guardado en su ordenador.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="es_ES">
+			<Text>Describe el problema: qué ha pasado, cuándo y qué esperabas en su lugar.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="es_ES">
+			<Text>Informe de error enviado, número {1}. Para añadir detalles, envía este número a @goaterino por mensaje privado en Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="es_ES">
+			<Text>No se ha podido enviar el informe de error. El archivo se ha guardado aquí: {1}. Envíalo a @goaterino por mensaje privado en Discord.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

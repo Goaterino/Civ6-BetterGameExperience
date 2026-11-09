@@ -509,5 +509,53 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="de_DE">
 			<Text>Administratorrechte verweigert</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="de_DE">
+			<Text>Fehler melden (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="de_DE">
+			<Text>Sendet einen Spielstand, die letzten automatischen Spielstände und die Spielprotokolle an das Team von BetterGameExperience. Im Mehrspielermodus werden die anderen Spieler im Chat informiert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="de_DE">
+			<Text>Fehler melden</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="de_DE">
+			<Text>BetterGameExperience sendet seinem Team einen Spielstand dieses Moments, die letzten automatischen Spielstände und die Spielprotokolle. Ihr Windows-Benutzername wird aus den Protokollen entfernt.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="de_DE">
+			<Text>Bericht senden</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="de_DE">
+			<Text>Abbrechen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="de_DE">
+			<Text>Schließen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="de_DE">
+			<Text>Bericht wird gesendet ...[NEWLINE]Sie können dieses Fenster schließen: Das Senden läuft weiter.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="de_DE">
+			<Text>{1} meldet einen Fehler.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="de_DE">
+			<Text>{1} hat die Fehlermeldung abgebrochen.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="de_DE">
+			<Text>{1} sendet den Fehlerbericht ...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="de_DE">
+			<Text>{1}: Fehlerbericht gesendet.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="de_DE">
+			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="de_DE">
+			<Text>Beschreiben Sie das Problem: was passiert ist, wann, und was Sie stattdessen erwartet haben.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="de_DE">
+			<Text>Fehlerbericht gesendet, Nummer {1}. Um Details zu ergänzen, senden Sie diese Nummer per Privatnachricht auf Discord an @goaterino.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="de_DE">
+			<Text>Der Fehlerbericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert: {1}. Senden Sie es per Privatnachricht auf Discord an @goaterino.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

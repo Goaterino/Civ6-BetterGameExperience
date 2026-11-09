@@ -509,5 +509,53 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="pt_BR">
 			<Text>permissões de administrador negadas</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="pt_BR">
+			<Text>Relatar um bug (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="pt_BR">
+			<Text>Envia um jogo salvo, os últimos salvamentos automáticos e os registros do jogo para a equipe do BetterGameExperience. No multijogador, os outros jogadores são avisados no chat.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="pt_BR">
+			<Text>Relatar um bug</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="pt_BR">
+			<Text>O BetterGameExperience vai enviar à sua equipe um jogo salvo deste momento, os últimos salvamentos automáticos e os registros do jogo. Seu nome de usuário do Windows é removido dos registros.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="pt_BR">
+			<Text>Enviar o relatório</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="pt_BR">
+			<Text>Cancelar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="pt_BR">
+			<Text>Fechar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="pt_BR">
+			<Text>Enviando o relatório...[NEWLINE]Você pode fechar esta janela: o envio continua.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="pt_BR">
+			<Text>{1} está relatando um bug.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="pt_BR">
+			<Text>{1} cancelou o relatório de bug.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="pt_BR">
+			<Text>{1} está enviando o relatório de bug...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="pt_BR">
+			<Text>{1}: relatório de bug enviado.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pt_BR">
+			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pt_BR">
+			<Text>Descreva o problema: o que aconteceu, quando e o que você esperava em vez disso.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="pt_BR">
+			<Text>Relatório de bug enviado, número {1}. Para adicionar detalhes, envie este número para @goaterino por mensagem privada no Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="pt_BR">
+			<Text>Não foi possível enviar o relatório de bug. O arquivo foi salvo aqui: {1}. Envie-o para @goaterino por mensagem privada no Discord.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

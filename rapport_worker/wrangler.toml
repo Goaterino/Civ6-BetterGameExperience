@@ -1,0 +1,34 @@
+# Relais des rapports de bug de BetterGameExperience (voir README.md).
+name = "bge-rapports"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+# Adresse publique https://bge-rapports.<compte>.workers.dev, celle que le jeu appelle. Pas d'URL de
+# prévisualisation par version : seule la version déployée doit recevoir les rapports.
+workers_dev = true
+preview_urls = false
+
+# Journaux gardés (tableau de bord : Workers > bge-rapports > Logs), dont les erreurs de Discord.
+[observability]
+enabled = true
+
+# Les zips des rapports, 9,5 Go au plus : les plus anciens sont supprimés d'abord (README.md,
+# « Plafond du bucket et rétention »).
+[[r2_buckets]]
+binding = "RAPPORTS"
+bucket_name = "bge-rapports"
+
+# 3 rapports par minute et par IP au plus.
+[[ratelimits]]
+name = "LIMITE"
+namespace_id = "1701"
+
+  [ratelimits.simple]
+  limit = 3
+  period = 60
+
+# Secret, jamais dans ce fichier : npx wrangler secret put DISCORD_WEBHOOK
+# Facultatif : ID d'un tag du forum posé sur chaque fil.
+# [vars]
+# DISCORD_TAG = "123456789012345678"
+# Plafond du bucket en octets (9,5 Go par défaut).
+# PLAFOND_OCTETS = "9500000000"

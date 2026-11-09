@@ -509,5 +509,53 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ru_RU">
 			<Text>отказано в правах администратора</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ru_RU">
+			<Text>Сообщить об ошибке (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ru_RU">
+			<Text>Отправляет сохранение, последние автосохранения и журналы игры команде BetterGameExperience. В сетевой игре остальные игроки получают сообщение в чате.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ru_RU">
+			<Text>Сообщить об ошибке</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="ru_RU">
+			<Text>BetterGameExperience отправит своей команде сохранение этого момента, последние автосохранения и журналы игры. Ваше имя пользователя Windows удаляется из журналов.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="ru_RU">
+			<Text>Отправить отчёт</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="ru_RU">
+			<Text>Отмена</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="ru_RU">
+			<Text>Закрыть</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ru_RU">
+			<Text>Отправка отчёта...[NEWLINE]Это окно можно закрыть: отправка продолжится.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ru_RU">
+			<Text>{1} сообщает об ошибке.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ru_RU">
+			<Text>{1} отменил(а) отчёт об ошибке.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ru_RU">
+			<Text>{1} отправляет отчёт об ошибке...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ru_RU">
+			<Text>{1}: отчёт об ошибке отправлен.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ru_RU">
+			<Text>{1}: отчёт об ошибке не удалось отправить, он сохранён на компьютере игрока.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ru_RU">
+			<Text>Опишите проблему: что произошло, когда и чего вы ожидали вместо этого.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="ru_RU">
+			<Text>Отчёт об ошибке отправлен, номер {1}. Чтобы добавить подробности, отправьте этот номер @goaterino в личном сообщении в Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ru_RU">
+			<Text>Не удалось отправить отчёт об ошибке. Архив сохранён здесь: {1}. Отправьте его @goaterino в личном сообщении в Discord.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
