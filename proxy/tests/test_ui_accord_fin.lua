@@ -3,8 +3,8 @@
 -- 1. Le vrai DiplomacyDealView.lua (Expansion2) suivi des textes et du bloc compile (annotations
 --    HavokScript retirées) et appelle bien DealManager.SendWorkingDeal.
 -- 2. Dans un environnement simulé : un accord vers un humain part en cours de tour, ne part pas
---    dans les MARGE_S dernières secondes, minuteur écoulé ou passage de tour commencé, et le joueur
---    est prévenu. Vers une IA, ou hors multijoueur en réseau, tout part. Le reste de DealManager
+--    jusqu'à la dernière seconde, ne part pas minuteur écoulé ou passage de tour commencé, et le
+--    joueur est prévenu. Vers une IA, ou hors multijoueur en réseau, tout part. Le reste de DealManager
 --    est celui du jeu.
 
 local dir = arg[0]:match("^(.*)[/\\]") or ".";
@@ -95,32 +95,25 @@ Check(env.DealManager ~= env.jeu and env.DealManager.GetWorkingDeal() == "deal",
 env.Events.TurnTimerUpdated.Fire(10, 60);
 env.DealManager.SendWorkingDeal(1, 0, 1);
 Check(#env.sent == 1, "en cours de tour : l'accord part");
-env.Events.TurnTimerUpdated.Fire(58, 60);
+env.Events.TurnTimerUpdated.Fire(59.5, 60);
 env.DealManager.SendWorkingDeal(1, 0, 1);
-Check(#env.sent == 1 and #env.lines == 1, "2 s restantes : retenu, joueur prévenu");
-Check(env.lines[1]:find("accord non envoyé", 1, true) ~= nil, "message dans la langue du jeu");
-env.DealManager.SendWorkingDeal(1, 0, 2);
-Check(#env.sent == 2, "vers une IA : part quand même");
-env.clock = 110;
-env.DealManager.SendWorkingDeal(2, 0, 1);
-Check(#env.sent == 3, "valeur du minuteur périmée : ignorée");
+Check(#env.sent == 2 and #env.lines == 0, "dernière seconde, tour actif : l'accord part");
 env.elapsed = true;
 env.DealManager.SendWorkingDeal(2, 0, 1);
-Check(#env.sent == 3, "minuteur écoulé : retenu");
+Check(#env.sent == 2 and #env.lines == 1, "minuteur écoulé : retenu, joueur prévenu");
+Check(env.lines[1]:find("accord non envoyé", 1, true) ~= nil, "message dans la langue du jeu");
+env.DealManager.SendWorkingDeal(1, 0, 2);
+Check(#env.sent == 3, "vers une IA : part quand même");
 env.elapsed = false;
 env.actifs[0], env.actifs[1] = false, false;
 env.DealManager.SendWorkingDeal(2, 0, 1);
 Check(#env.sent == 3, "plus aucun humain actif (passage de tour) : retenu");
 env.actifs[1] = true;
 env.DealManager.SendWorkingDeal(2, 0, 1);
-Check(#env.sent == 4, "l'autre joue encore, sans minuteur proche : part");
-env.Events.TurnTimerUpdated.Fire(59, 60);
-env.Events.LocalPlayerTurnBegin.Fire();
-env.DealManager.SendWorkingDeal(1, 0, 1);
-Check(#env.sent == 5, "début du tour suivant : minuteur oublié, l'accord part");
+Check(#env.sent == 4, "l'autre joue encore, minuteur pas écoulé : part");
 
 local solo = NewEnv({ reseau = false });
-solo.Events.TurnTimerUpdated.Fire(59, 60);
+solo.elapsed = true;
 solo.DealManager.SendWorkingDeal(1, 0, 1);
 Check(#solo.sent == 1, "hors multijoueur en réseau : rien ne change");
 

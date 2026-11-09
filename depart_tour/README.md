@@ -318,10 +318,17 @@ dernière seconde part donc en plein passage de tour.
 **Correctif** ([proxy/src/ui_accord_fin.lua](../proxy/src/ui_accord_fin.lua), ajouté à
 `DiplomacyDealView.lua`, toujours actif, interface seule) : `DealManager.SendWorkingDeal`
 (proposition, acceptation, refus, exigence) est enveloppée dans ce contexte. Vers un humain, en
-multijoueur en réseau, l'accord ne part pas si le minuteur du tour local a moins de 3 s à courir
-(ou est écoulé), ou si plus aucun humain n'a son tour actif. Une ligne locale prévient le joueur
+multijoueur en réseau, l'accord ne part pas si le minuteur du tour local est écoulé (fin forcée
+comprise), ou si plus aucun humain n'a son tour actif. Une ligne locale prévient le joueur
 (`LOC_BGD_ACCORD_FIN_TOUR`) ; il propose au tour suivant. Les accords avec les IA ne changent pas.
 Test hors jeu : `lua proxy/tests/test_ui_accord_fin.lua`.
+
+Pas de marge avant la fin du minuteur : les deux accords en cause sont partis après la fin du tour
+de leur expéditeur (son `PlayerTurnComplete` arrive avant eux chez l'hôte). Un accord envoyé
+pendant que l'on joue arrive avant notre `PlayerTurnComplete`, donc avant la fin du tour. Seul cas
+non couvert : un joueur qui a fini en avance envoie un accord pendant qu'un autre finit son tour
+(minuteur pas écoulé chez lui, un humain encore actif). Pas observé ; une marge de quelques
+secondes le couvrirait, au prix d'accords refusés à chaque fin de tour.
 
 Reste à vérifier en partie : plus de tour bloqué, et un accord retenu laisse l'écran et l'accord en
 attente dans un état propre (l'autre joueur ne voit rien arriver).
@@ -334,7 +341,7 @@ attente dans un état propre (l'autre joueur ne voit rien arriver).
 | [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ, fin envoyée par l'hôte |
 | [proxy/src/ui_depart_panneau.lua](../proxy/src/ui_depart_panneau.lua) | à la fin de `ActionPanel.lua` : pendant la retenue, `UI.IsProcessingMessages()` vrai par une table `UI` propre au contexte (bouton de fin de tour en attente : `OnRefresh` lit l'état réel de la simulation, et `EndTurnDirty` / `EndTurnBlockingChanged` arrivent avant `LocalPlayerTurnBegin`), `OnEndTurnBlockingChanged` rejoué au début du tour, jauge du minuteur figée ; journal `depart : panneau : …` |
 | [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGE - …` |
-| [proxy/src/ui_accord_fin.lua](../proxy/src/ui_accord_fin.lua) | à la fin de `DiplomacyDealView.lua` : pas d'accord vers un humain dans les 3 dernières secondes ni pendant le passage de tour (voir plus haut) |
+| [proxy/src/ui_accord_fin.lua](../proxy/src/ui_accord_fin.lua) | à la fin de `DiplomacyDealView.lua` : pas d'accord vers un humain une fois le minuteur écoulé ni pendant le passage de tour (voir plus haut) |
 | [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
 
 Choix faits à l'implémentation :

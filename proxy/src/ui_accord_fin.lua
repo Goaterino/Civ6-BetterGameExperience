@@ -10,8 +10,13 @@
 -- pendant un passage de tour ont donné les deux seuls tours bloqués.
 -- On enveloppe donc DealManager.SendWorkingDeal (proposition, acceptation, refus, exigence) dans
 -- ce contexte : vers un humain, en multijoueur en réseau, l'accord ne part pas
---   - si le minuteur du tour local a moins de MARGE_S secondes à courir, ou est écoulé ;
+--   - si le minuteur du tour local est écoulé (fin forcée par l'hôte comprise) ;
 --   - ou si plus aucun humain n'a son tour actif (le passage de tour a commencé).
+-- Les deux accords en cause sont partis après la fin du tour de leur expéditeur : son
+-- PlayerTurnComplete arrive avant eux chez l'hôte, minuteur déjà écoulé. Un accord envoyé pendant
+-- que l'on joue arrive avant notre PlayerTurnComplete (messages d'un joueur dans l'ordre), donc
+-- avant la fin du tour : rien à retenir. Pas de marge avant la fin du minuteur, donc : elle
+-- bloquerait les accords de la dernière seconde pour rien.
 -- Le joueur est prévenu dans le chat (ligne locale, ui_depart_chat.lua) et propose au tour suivant.
 -- Les accords avec les IA ne changent pas : leurs réponses partent aussi pendant le passage de tour.
 -- ===========================================================================
@@ -22,27 +27,8 @@ do
 		end
 		BGD_AccordFin = true;
 
-		local MARGE_S = 3;
-		-- Au-delà, la dernière valeur du minuteur n'est plus fiable (pause, minuteur arrêté).
-		local FRAICHEUR_S = 2;
-
 		local DealManager_jeu = DealManager;
 		local SendWorkingDeal_jeu = DealManager_jeu.SendWorkingDeal;
-
-		local m_Reste = nil;     -- secondes restantes au dernier TurnTimerUpdated
-		local m_ResteVu = 0;     -- os.clock() de cette mise à jour
-
-		Events.TurnTimerUpdated.Add(function(ecoule, limite)
-			if type(ecoule) == "number" and type(limite) == "number" and limite > 0 then
-				m_Reste = limite - ecoule;
-				m_ResteVu = os.clock();
-			else
-				m_Reste = nil;
-			end
-		end);
-		Events.LocalPlayerTurnBegin.Add(function()
-			m_Reste = nil;
-		end);
 
 		local function Reseau()
 			return GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud()
@@ -70,9 +56,6 @@ do
 			local ok, elapsed = pcall(UI.IsTurnTimerElapsed, moi);
 			if ok and elapsed == true then
 				return "minuteur écoulé";
-			end
-			if m_Reste ~= nil and os.clock() - m_ResteVu <= FRAICHEUR_S and m_Reste < MARGE_S then
-				return string.format("%.1f s restantes", m_Reste);
 			end
 			if not TourEnCours() then
 				return "passage de tour";
