@@ -2,6 +2,42 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.8.0. Poprawka umów na koniec tury chroni
+tylko tych, którzy ją mają: jeden gracz, który został przy 0.7.x, może sprowadzić zablokowaną turę na
+wszystkich. W poczekalni gospodarz widzi na czerwono, kto ma inną wersję, a poczekalnia, w której są
+0.7.x i 0.8.0, wyłącza poprawki **[wszyscy gracze]**.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Tura w pętli po umowie między ludźmi**: umowa zaproponowana lub przyjęta tuż pod koniec twojej
+  tury mogła dotrzeć do gospodarza po końcu tury. Następna tura zaczynała się wtedy w kółko u
+  niektórych graczy, trzeba było wracać do poczekalni, a gra często się desynchronizowała. Taka umowa
+  nie jest już wysyłana, gdy twój zegar się skończył ani gdy żaden człowiek nie ma już aktywnej tury:
+  mówi ci o tym wiersz na czacie. Umowy z SI się nie zmieniają.
+
+### Nowości
+- Przycisk **Zgłoś błąd (BGE)** w menu Esc, pod Opcjami. Opisz problem: BGE wysyła zapis gry,
+  ostatnie autozapisy i dzienniki gry (bez twojej nazwy użytkownika Windows), a wiersz na twoim czacie
+  podaje numer zgłoszenia. Pozostali gracze widzą na czacie, że zgłoszenie jest wysyłane. Jeśli
+  wysyłanie się nie uda, zip trafia na twój Pulpit.
+
+### Poprawki interfejsu
+- **Efekt kart ustrojowych**: Racjonalizm, Wielka opera, Simultaneum i Wolny rynek liczą też stałe
+  plony dodane do budynków, które wzmacniają (miasta-państwa, gubernatorzy…), a nie tylko ich plon
+  podstawowy.
+- **Wybór szlaków handlowych**: dla szlaku wewnętrznego widać teraz złoto, które zdolność Poundmakera
+  daje miastu docelowemu (+1 za każdy obóz i każde pastwisko), z wierszem podpowiedzi, który nazywa
+  to miasto.
+- **Górny pasek**: przycisk populacji pokazuje też średnie udogodnienia netto na miasto (na zielono
+  od +3, na czerwono poniżej 0).
+- **Menu główne**: wersja BetterGameExperience jest widoczna w lewym dolnym rogu, po wersjach gry
+  i MPH (`… - MPH / … - BGE / 0.8.0`).
+
+### Ustawienia
+- Opcja gry **„No First/Last moves (BGE)”**: teraz domyślnie zaznaczona. Gospodarz wciąż może ją
+  odznaczyć.
+
 ## BetterGameExperience 0.7.0
 
 W grze wieloosobowej poprawki **[wszyscy gracze]** wymagają, by wszyscy ludzcy gracze mieli 0.7.0:
@@ -33,8 +69,6 @@ poczekalnia, w której są 0.6.x i 0.7.0, je wyłącza.
   (nieukończony wrogi obóz), strefy kontroli (czerwone pola) są widoczne, a pola wody,
   na które jednostka nie może jeszcze wejść (wybrzeże przed zaokrętowaniem, ocean przed
   Kartografią), nie są już proponowane.
-- **Menu główne**: wersja BetterGameExperience jest wyświetlana w lewym dolnym rogu, po wersji gry
-  i MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Ustawienia
 - Przycisk **Zresetuj BGE** w zakładce BetterGameExperience: przywraca wszystkie ustawienia do

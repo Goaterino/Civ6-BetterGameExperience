@@ -2,6 +2,44 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.0
+
+Im Mehrspielermodus müssen alle menschlichen Spieler 0.8.0 haben. Die Korrektur für Abkommen am
+Rundenende schützt nur die Spieler, die sie haben: Ein einziger Spieler, der noch 0.7.x hat, kann die
+hängende Runde für alle zurückbringen. In der Lobby sieht der Host in Rot, wer eine andere Version
+hat, und eine Lobby, die 0.7.x und 0.8.0 mischt, schaltet die Korrekturen **[alle Spieler]** ab.
+
+### Mehrspielerkorrekturen [alle Spieler]
+- **Runde in Endlosschleife nach einem Abkommen zwischen Menschen**: Ein Abkommen, das genau zum
+  Ende deiner Runde vorgeschlagen oder angenommen wurde, konnte nach dem Rundenende beim Host
+  ankommen. Die nächste Runde startete dann bei manchen Spielern immer wieder neu, man musste zurück
+  in die Lobby, und das Spiel desynchronisierte oft. Ein solches Abkommen wird nicht mehr gesendet,
+  sobald dein Timer abgelaufen ist oder kein Mensch mehr seine Runde aktiv hat: Eine Zeile in deinem
+  Chat sagt es dir. Abkommen mit KIs bleiben unverändert.
+
+### Neu
+- Schaltfläche **Fehler melden (BGE)** im Esc-Menü, unter Optionen. Beschreibe das Problem: BGE
+  sendet einen Spielstand, die letzten Autosaves und die Spielprotokolle (ohne deinen
+  Windows-Benutzernamen), und eine Zeile in deinem Chat nennt die Nummer des Berichts. Die anderen
+  Spieler sehen im Chat, dass ein Bericht gesendet wird. Schlägt das Senden fehl, wird das Zip auf
+  deinen Desktop kopiert.
+
+### Korrekturen der Oberfläche
+- **Wirkung der Politikkarten**: Rationalismus, Große Oper, Simultaneum und Freie Marktwirtschaft
+  zählen jetzt auch die festen Erträge, die den verstärkten Gebäuden hinzugefügt werden
+  (Stadtstaaten, Gouverneure…), nicht nur deren Grundertrag.
+- **Auswahl der Handelswege**: Bei einem Inlandshandelsweg wird jetzt das Gold angezeigt, das
+  Poundmakers Fähigkeit der Zielstadt gibt (+1 pro Lager und pro Weide), mit einer Tooltip-Zeile, die
+  die Stadt nennt.
+- **Obere Leiste**: Die Bevölkerungsschaltfläche zeigt auch die durchschnittliche netto
+  Annehmlichkeit pro Stadt (grün ab +3, rot unter 0).
+- **Hauptmenü**: Die Version von BetterGameExperience wird unten links angezeigt, nach der des
+  Spiels und der von MPH (`… - MPH / … - BGE / 0.8.0`).
+
+### Einstellungen
+- Spieloption **„No First/Last moves (BGE)“**: jetzt standardmäßig aktiviert. Der Host kann sie
+  weiterhin abwählen.
+
 ## BetterGameExperience 0.7.0
 
 Im Mehrspielermodus brauchen die Korrekturen **[alle Spieler]** alle menschlichen Spieler auf
@@ -34,8 +72,6 @@ Im Mehrspielermodus brauchen die Korrekturen **[alle Spieler]** alle menschliche
   (unfertiges feindliches Lager), Kontrollzonen (rote Felder) werden
   angezeigt, und Wasserfelder, die die Einheit noch nicht betreten kann (Küste vor dem Einschiffen,
   Ozean vor Kartografie), werden nicht mehr angeboten.
-- **Hauptmenü**: Die Version von BetterGameExperience wird unten links angezeigt, nach der des
-  Spiels und der von MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Einstellungen
 - Schaltfläche **BGE zurücksetzen** im Reiter BetterGameExperience: setzt alle Einstellungen auf

@@ -2,6 +2,42 @@
 
 [English](../CHANGELOG.md) · outros idiomas: veja o [registro em inglês](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.0
+
+No multijogador, todos os jogadores humanos precisam estar na 0.8.0. A correção dos acordos no fim
+do turno só protege quem a tem: um único jogador ainda na 0.7.x pode trazer de volta o turno travado
+para todos. No saguão, o anfitrião vê em vermelho quem tem outra versão, e um saguão que mistura 0.7.x
+e 0.8.0 desativa as correções **[todos os jogadores]**.
+
+### Correções do multijogador [todos os jogadores]
+- **Turno em loop depois de um acordo entre humanos**: um acordo proposto ou aceito bem no fim do seu
+  turno podia chegar ao anfitrião depois do fim do turno. O turno seguinte então recomeçava sem parar
+  para alguns jogadores, era preciso voltar ao saguão e a partida muitas vezes dessincronizava. Um
+  acordo assim não é mais enviado depois que o seu cronômetro acabou, nem quando nenhum humano ainda
+  está com o turno ativo: uma linha no seu chat avisa. Os acordos com as IAs não mudam.
+
+### Novidades
+- Botão **Relatar um bug (BGE)** no menu Esc, abaixo de Opções. Descreva o problema: o BGE envia um
+  jogo salvo, os últimos salvamentos automáticos e os registros do jogo (sem o seu nome de usuário do
+  Windows), e uma linha do seu chat dá o número do relatório. Os outros jogadores veem no chat que um
+  relatório está sendo enviado. Se o envio falhar, o zip é copiado para a sua Área de Trabalho.
+
+### Correções da interface
+- **Efeito das cartas de política**: Racionalismo, Grande Ópera, Simultaneum e Livre Mercado também
+  contam os rendimentos fixos adicionados às construções que reforçam (cidades-estado,
+  governadores…), e não só o rendimento base delas.
+- **Escolha das rotas comerciais**: numa rota doméstica, o ouro que a habilidade de Poundmaker dá à
+  cidade de destino (+1 por acampamento e por pasto) agora é mostrado, com uma linha na dica que
+  nomeia a cidade.
+- **Barra superior**: o botão da população também mostra a média de comodidades líquidas por cidade
+  (em verde a partir de +3, em vermelho abaixo de 0).
+- **Menu principal**: a versão do BetterGameExperience aparece no canto inferior esquerdo, depois da
+  do jogo e da do MPH (`… - MPH / … - BGE / 0.8.0`).
+
+### Configurações
+- Opção de partida **"No First/Last moves (BGE)"**: agora marcada por padrão. O anfitrião ainda pode
+  desmarcá-la.
+
 ## BetterGameExperience 0.7.0
 
 No multijogador, as correções **[todos os jogadores]** exigem que todos os jogadores humanos
@@ -32,8 +68,6 @@ estejam na 0.7.0: um saguão que mistura 0.6.x e 0.7.0 as desativa.
   (acampamento inimigo não concluído), as zonas de controle (hexágonos
   vermelhos) são exibidas e os hexágonos de água onde a unidade ainda não pode entrar (costa antes
   do embarque, oceano antes da Cartografia) não são mais oferecidos.
-- **Menu principal**: a versão do BetterGameExperience aparece no canto inferior esquerdo, depois da
-  do jogo e da do MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Configurações
 - Botão **Redefinir BGE** na aba BetterGameExperience: volta todas as configurações ao valor
