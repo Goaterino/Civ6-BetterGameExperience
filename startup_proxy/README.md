@@ -294,6 +294,12 @@ appliquent. Le journal le dit (`citoyens : version inattendue`).
   `<MakeInstance Name="PopupDialog" />` à la fin de `MainMenu.xml` (et le modèle s'il manque), comme
   le XML du jeu, et le bloc crée son popup sur ces contrôles (`include("PopupDialog")`). Sans ces
   contrôles, l'erreur va au journal.
+- **L'indicateur de version.** `Initialize()` du menu, du jeu comme de MPH, écrit la version du jeu
+  dans `VersionLabel`, en bas à gauche ; MPH y ajoute la sienne (` - MPH / <version>`, en bleu clair).
+  Le bloc, exécuté juste après, ajoute de la même façon ` - BGE / <version>` : celle de la release, ou
+  celle du salon pour une compilation locale, réécrite dans le bloc par le proxy
+  (`local BGD_VERSION`). L'indicateur s'affiche aussi avec `verif_maj=off`, et sans `VersionLabel`
+  il n'y a rien. Le label étant placé avant les sous-écrans du menu, ceux-ci le recouvrent.
 - **Le message**, dans le popup du menu (`g_PopupDialog`, ou le sien), dans la langue du jeu
   ([textes/](../textes/README.md)) : « La version 0.1.2 de BetterGameExperience est disponible (installée : 0.1.1) ».
   - **Mettre à jour** lance l'installeur, `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`

@@ -34,6 +34,8 @@ Im Mehrspielermodus brauchen die Korrekturen **[alle Spieler]** alle menschliche
   (unfertiges feindliches Lager), Kontrollzonen (rote Felder) werden
   angezeigt, und Wasserfelder, die die Einheit noch nicht betreten kann (Küste vor dem Einschiffen,
   Ozean vor Kartografie), werden nicht mehr angeboten.
+- **Hauptmenü**: Die Version von BetterGameExperience wird unten links angezeigt, nach der des
+  Spiels und der von MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Einstellungen
 - Schaltfläche **BGE zurücksetzen** im Reiter BetterGameExperience: setzt alle Einstellungen auf
