@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="ja_JP">
 			<Text>取引は送信されませんでした: ターンが終了しようとしています。次のターンにもう一度送ってください。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="ja_JP">
+			<Text>{4}により+{1} {2} {3}（{5}が受け取る）</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="ja_JP">
 			<Text>観戦者: 閲覧のみで、投票は数えられません。</Text>
 		</Row>

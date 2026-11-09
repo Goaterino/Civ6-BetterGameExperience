@@ -369,6 +369,29 @@ fin minimale = départ + ⌊TRADE_ROUTE_TURN_DURATION_BASE × CostMultiplier / 1
   sur son propre thread. Elle ne fait que lire, et seulement aux rafraîchissements ; mais une route
   créée ou supprimée au même instant n'est pas exclue.
 
+### `ui_routes` : l'or de Poundmaker dans le choix des routes
+
+La capacité de Poundmaker (Cree, « Conditions favorables ») donne, pour chaque camp et chaque pâturage
+de la ville de destination, +1 nourriture à l'origine et +1 or **à la destination**
+(`MODIFIER_PLAYER_ADJUST_TRADE_ROUTE_YIELD_PER_IMPROVEMENT_IN_TARGET`, arguments `Origin` ou
+`Destination`). L'écran de choix ne montre pour chaque route que les rendements de la ville
+d'origine : la nourriture y est, l'or non. Vers une ville du même joueur, c'est pourtant lui qui le
+reçoit.
+
+- [routes_choix.lua](../proxy/src/mods/routes_choix.lua), ajouté à la fin de `TradeRouteChooser.lua`
+  (celui du jeu ou celui de BBG, presque identiques), enveloppe `GetYieldsForRoute` (de
+  `TradeSupport.lua`) côté origine et `GetYieldForCity` (filtre par rendement). Pour une route
+  intérieure, il ajoute l'or reçu par la destination, avec une ligne d'infobulle
+  (`LOC_BGD_ROUTE_OR_DESTINATION`) qui dit quelle ville le reçoit. La liste des destinations,
+  l'en-tête de la route choisie et le tri par or en tiennent compte.
+- **Rien de codé pour Poundmaker** : les capacités du dirigeant et de la civilisation du joueur sont
+  relues dans la base, et seuls les modificateurs de ce type, sans prérequis, vers la destination
+  sont pris. BBG ne change pas cette capacité.
+- **Pas vers un autre joueur** : l'or va alors à l'autre joueur, rien n'est ajouté.
+- **Limites** : les aménagements pillés ne sont pas comptés (comportement du jeu non vérifié) ; si la
+  partie « reçoit » de la destination dans l'en-tête montre déjà cet or, il apparaît des deux côtés.
+- Test hors jeu : `lua proxy/tests/test_mods_routes_choix.lua`.
+
 ### RMA : les effets mal calculés
 
 RMA (`CalculateModifierEffect`) décode chaque modificateur de la carte : son `EffectType`, ses

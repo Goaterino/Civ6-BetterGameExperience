@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="pl_PL">
 			<Text>umowa nie została wysłana: tura dobiega końca. Wyślij ją ponownie w następnej turze.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="pl_PL">
+			<Text>+{1} {2} {3} dzięki {4}, otrzymuje {5}</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="pl_PL">
 			<Text>Obserwator: tylko podgląd, twoje głosy się nie liczą.</Text>
 		</Row>

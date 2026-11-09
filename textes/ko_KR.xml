@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="ko_KR">
 			<Text>거래가 전송되지 않았습니다: 턴이 끝나는 중입니다. 다음 턴에 다시 보내세요.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="ko_KR">
+			<Text>{4}(으)로 +{1} {2} {3}, {5}에서 받음</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="ko_KR">
 			<Text>관전자: 보기만 가능하며, 투표는 집계되지 않습니다.</Text>
 		</Row>
