@@ -2,7 +2,7 @@
 --   lua startup_proxy/tests/test_rapport.lua
 -- Deux contextes simulés qui partagent leurs LuaEvents, comme dans le jeu : le menu Échap (bouton
 -- et formulaire ajoutés par le proxy, popup, ContextPtr) et InGame (minuteur du suivi). Natives
--- pilotées par le test. On vérifie la pause, les messages du chat à chaque étape (couleurs et
+-- pilotées par le test. On vérifie l'absence de pause, les messages du chat à chaque étape (couleurs et
 -- traduction à l'arrivée), le formulaire et sa description, la sauvegarde, les champs envoyés, et la
 -- fin : message à tous et ligne locale du chat, menu ouvert, menu fermé et partie en pause.
 
@@ -201,17 +201,17 @@ local function Traduit(texte)
 	return env.BGD_TxtChat(texte);
 end
 
--- 1. Multijoueur, pas encore en pause : la pause est demandée, le chat prévenu, puis annulation.
+-- 1. Multijoueur : pas de pause, le chat prévenu, puis annulation.
 do
 	local m = NewJeu();
 	check(m.bouton.text == "Signaler un bug (BGE)", "texte du bouton : " .. tostring(m.bouton.text));
 	check(m.bouton.tip ~= nil, "infobulle");
 	check(not m.Formulaire(), "formulaire caché au départ");
 	m.Clic();
-	check(m.wantsPause == true and m.broadcasts == 1, "pause demandée et diffusée");
+	check(m.wantsPause == false and m.broadcasts == 0, "pas de pause demandée");
 	check(#m.chat == 1 and m.chat[1].target == -1, "un message au chat de tous");
-	check(Dernier(m) == "[COLOR_Civ6Red]BGE - Testeur is reporting a bug, please wait.[ENDCOLOR]", "message de début : " .. Dernier(m));
-	check(Traduit(Dernier(m)) == "[COLOR_Civ6Red]BGE - Testeur signale un bug, merci de patienter.[ENDCOLOR]", "traduit à l'arrivée : " .. tostring(Traduit(Dernier(m))));
+	check(Dernier(m) == "[COLOR_Civ6Red]BGE - Testeur is reporting a bug.[ENDCOLOR]", "message de début : " .. Dernier(m));
+	check(Traduit(Dernier(m)) == "[COLOR_Civ6Red]BGE - Testeur signale un bug.[ENDCOLOR]", "traduit à l'arrivée : " .. tostring(Traduit(Dernier(m))));
 	check(m.Formulaire(), "formulaire ouvert");
 	check(m.controls.BGD_RapportTitre.text == "Signaler un bug", "titre");
 	check(string.find(m.controls.BGD_RapportConsigne.text, "Décrivez le problème", 1, true) ~= nil, "consigne du champ");
@@ -222,21 +222,20 @@ do
 	m.Ecrire("brouillon");
 	m.Annuler();
 	check(not m.Formulaire(), "formulaire fermé");
-	check(#m.chat == 2 and Dernier(m) == "[COLOR_Civ6Green]BGE - Testeur cancelled the bug report. The pause can be lifted.[ENDCOLOR]", "message d'annulation : " .. Dernier(m));
-	check(Traduit(Dernier(m)) == "[COLOR_Civ6Green]BGE - Testeur a annulé le rapport de bug. La pause peut être levée.[ENDCOLOR]", "annulation traduite");
+	check(#m.chat == 2 and Dernier(m) == "[COLOR_Civ6Green]BGE - Testeur cancelled the bug report.[ENDCOLOR]", "message d'annulation : " .. Dernier(m));
+	check(Traduit(Dernier(m)) == "[COLOR_Civ6Green]BGE - Testeur a annulé le rapport de bug.[ENDCOLOR]", "annulation traduite");
 	check(#m.envois == 0 and #m.saves == 0, "rien d'envoyé");
-	check(m.wantsPause == true, "la pause n'est pas levée par le bloc");
 	-- Nouveau rapport : nouveaux messages, champ vidé.
 	m.Clic();
 	check(#m.chat == 3 and m.controls.BGD_RapportTexte.text == "", "deuxième rapport annoncé, champ vide");
 end
 
--- 2. Déjà en pause : pas de nouvelle demande, mais le message part.
+-- 2. Partie déjà en pause (par un joueur) : le bloc n'y touche pas, le message part.
 do
 	local m = NewJeu({ pause = true });
 	m.Clic();
-	check(m.wantsPause == false and m.broadcasts == 0, "pas de pause demandée");
-	check(#m.chat == 1, "message de début envoyé quand même");
+	check(m.wantsPause == false and m.broadcasts == 0, "pause laissée telle quelle");
+	check(#m.chat == 1, "message de début envoyé");
 end
 
 -- 3. Menu fermé puis rouvert pendant le formulaire : même formulaire, texte gardé, pas de message.
@@ -270,8 +269,8 @@ do
 	check(#m.chat == 2, "rien tant que l'envoi tourne");
 	m.etat = { "ok", "BGE-7F3A2C", "C:\\x.zip" };
 	m.Image();
-	check(Dernier(m) == "[COLOR_Civ6Green]BGE - Testeur: bug report sent. The pause can be lifted.[ENDCOLOR]", "message de fin : " .. Dernier(m));
-	check(Traduit(Dernier(m)) == "[COLOR_Civ6Green]BGE - Testeur : envoi du rapport terminé. La pause peut être levée.[ENDCOLOR]", "fin traduite");
+	check(Dernier(m) == "[COLOR_Civ6Green]BGE - Testeur: bug report sent.[ENDCOLOR]", "message de fin : " .. Dernier(m));
+	check(Traduit(Dernier(m)) == "[COLOR_Civ6Green]BGE - Testeur : envoi du rapport terminé.[ENDCOLOR]", "fin traduite");
 	check(#m.locales == 1 and Locale(m) == "[COLOR_Civ6Green]BGE - Rapport de bug envoyé, numéro BGE-7F3A2C. Pour ajouter des détails, envoyez ce numéro à @goaterino en message privé sur Discord.[ENDCOLOR]", "ligne locale : " .. Locale(m));
 	check(m.cleared and m.update == nil, "suivi par image arrêté");
 	check(not m.popup.open, "popup d'envoi fermé, pas de popup de résultat");
@@ -299,7 +298,7 @@ do
 	check(#m.chat == 2 and #m.locales == 0, "rien tant que l'envoi tourne");
 	m.etat = { "echec", "relais non configuré", "C:\\Users\\x\\Desktop\\BGE_rapport_1.zip" };
 	m.Tic();
-	check(Dernier(m) == "[COLOR_Civ6Red]BGE - Testeur: the bug report could not be sent, it was kept on their computer. The pause can be lifted.[ENDCOLOR]", "message d'échec : " .. Dernier(m));
+	check(Dernier(m) == "[COLOR_Civ6Red]BGE - Testeur: the bug report could not be sent, it was kept on their computer.[ENDCOLOR]", "message d'échec : " .. Dernier(m));
 	check(Traduit(Dernier(m)) ~= nil, "échec traduit");
 	check(#m.locales == 1 and string.find(Locale(m), "BGE_rapport_1.zip", 1, true) and string.find(Locale(m), "@goaterino", 1, true)
 		and string.find(Locale(m), "[COLOR_Civ6Red]", 1, true) == 1, "ligne locale d'échec : " .. Locale(m));
@@ -350,7 +349,7 @@ end
 do
 	local m = NewJeu({ multi = false });
 	m.Clic();
-	check(#m.chat == 0 and m.wantsPause == false, "solo : ni chat ni pause");
+	check(#m.chat == 0 and m.wantsPause == false, "solo : pas de chat");
 	m.Confirmer();
 	check(#m.envois == 1 and string.find(m.envois[1], "multijoueur=0", 1, true), "solo : envoi");
 	m.etat = { "ok", "BGE-000003", "C:\\x.zip" };

@@ -510,7 +510,7 @@
 			<Text>Report a bug (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="en_US">
-			<Text>Sends a save, the last autosaves and the game logs to the BetterGameExperience team. In multiplayer, the game is paused and the other players are told in the chat.</Text>
+			<Text>Sends a save, the last autosaves and the game logs to the BetterGameExperience team. In multiplayer, the other players are told in the chat.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="en_US">
 			<Text>Report a bug</Text>
@@ -531,19 +531,19 @@
 			<Text>Sending the report...[NEWLINE]You can close this window: the sending continues.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="en_US">
-			<Text>{1} is reporting a bug, please wait.</Text>
+			<Text>{1} is reporting a bug.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="en_US">
-			<Text>{1} cancelled the bug report. The pause can be lifted.</Text>
+			<Text>{1} cancelled the bug report.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="en_US">
 			<Text>{1} is sending the bug report...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="en_US">
-			<Text>{1}: bug report sent. The pause can be lifted.</Text>
+			<Text>{1}: bug report sent.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="en_US">
-			<Text>{1}: the bug report could not be sent, it was kept on their computer. The pause can be lifted.</Text>
+			<Text>{1}: the bug report could not be sent, it was kept on their computer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="en_US">
 			<Text>Describe the problem: what happened, when, and what you expected instead.</Text>

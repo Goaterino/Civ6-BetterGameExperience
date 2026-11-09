@@ -510,7 +510,7 @@
 			<Text>Zgłoś błąd (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="pl_PL">
-			<Text>Wysyła zapis gry, ostatnie autozapisy i dzienniki gry do zespołu BetterGameExperience. W grze wieloosobowej rozgrywka zostaje wstrzymana, a pozostali gracze są powiadamiani na czacie.</Text>
+			<Text>Wysyła zapis gry, ostatnie autozapisy i dzienniki gry do zespołu BetterGameExperience. W grze wieloosobowej pozostali gracze są powiadamiani na czacie.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="pl_PL">
 			<Text>Zgłoś błąd</Text>
@@ -531,19 +531,19 @@
 			<Text>Wysyłanie zgłoszenia...[NEWLINE]Możesz zamknąć to okno: wysyłanie będzie kontynuowane.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="pl_PL">
-			<Text>{1} zgłasza błąd, proszę czekać.</Text>
+			<Text>{1} zgłasza błąd.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="pl_PL">
-			<Text>{1} anulował(a) zgłoszenie błędu. Można zdjąć pauzę.</Text>
+			<Text>{1} anulował(a) zgłoszenie błędu.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="pl_PL">
 			<Text>{1} wysyła zgłoszenie błędu...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="pl_PL">
-			<Text>{1}: zgłoszenie błędu wysłane. Można zdjąć pauzę.</Text>
+			<Text>{1}: zgłoszenie błędu wysłane.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pl_PL">
-			<Text>{1}: nie udało się wysłać zgłoszenia błędu, zostało zapisane na komputerze gracza. Można zdjąć pauzę.</Text>
+			<Text>{1}: nie udało się wysłać zgłoszenia błędu, zostało zapisane na komputerze gracza.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pl_PL">
 			<Text>Opisz problem: co się stało, kiedy i czego oczekiwałeś zamiast tego.</Text>

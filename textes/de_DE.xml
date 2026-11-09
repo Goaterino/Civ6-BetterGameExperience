@@ -510,7 +510,7 @@
 			<Text>Fehler melden (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="de_DE">
-			<Text>Sendet einen Spielstand, die letzten automatischen Spielstände und die Spielprotokolle an das Team von BetterGameExperience. Im Mehrspielermodus wird die Partie pausiert und die anderen Spieler werden im Chat informiert.</Text>
+			<Text>Sendet einen Spielstand, die letzten automatischen Spielstände und die Spielprotokolle an das Team von BetterGameExperience. Im Mehrspielermodus werden die anderen Spieler im Chat informiert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="de_DE">
 			<Text>Fehler melden</Text>
@@ -531,19 +531,19 @@
 			<Text>Bericht wird gesendet ...[NEWLINE]Sie können dieses Fenster schließen: Das Senden läuft weiter.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="de_DE">
-			<Text>{1} meldet einen Fehler, bitte warten.</Text>
+			<Text>{1} meldet einen Fehler.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="de_DE">
-			<Text>{1} hat die Fehlermeldung abgebrochen. Die Pause kann aufgehoben werden.</Text>
+			<Text>{1} hat die Fehlermeldung abgebrochen.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="de_DE">
 			<Text>{1} sendet den Fehlerbericht ...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="de_DE">
-			<Text>{1}: Fehlerbericht gesendet. Die Pause kann aufgehoben werden.</Text>
+			<Text>{1}: Fehlerbericht gesendet.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="de_DE">
-			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert. Die Pause kann aufgehoben werden.</Text>
+			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="de_DE">
 			<Text>Beschreiben Sie das Problem: was passiert ist, wann, und was Sie stattdessen erwartet haben.</Text>

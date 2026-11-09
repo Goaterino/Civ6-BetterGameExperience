@@ -510,7 +510,7 @@
 			<Text>Сообщить об ошибке (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ru_RU">
-			<Text>Отправляет сохранение, последние автосохранения и журналы игры команде BetterGameExperience. В сетевой игре партия ставится на паузу, а остальные игроки получают сообщение в чате.</Text>
+			<Text>Отправляет сохранение, последние автосохранения и журналы игры команде BetterGameExperience. В сетевой игре остальные игроки получают сообщение в чате.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ru_RU">
 			<Text>Сообщить об ошибке</Text>
@@ -531,19 +531,19 @@
 			<Text>Отправка отчёта...[NEWLINE]Это окно можно закрыть: отправка продолжится.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ru_RU">
-			<Text>{1} сообщает об ошибке, пожалуйста, подождите.</Text>
+			<Text>{1} сообщает об ошибке.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ru_RU">
-			<Text>{1} отменил(а) отчёт об ошибке. Паузу можно снять.</Text>
+			<Text>{1} отменил(а) отчёт об ошибке.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ru_RU">
 			<Text>{1} отправляет отчёт об ошибке...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ru_RU">
-			<Text>{1}: отчёт об ошибке отправлен. Паузу можно снять.</Text>
+			<Text>{1}: отчёт об ошибке отправлен.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ru_RU">
-			<Text>{1}: отчёт об ошибке не удалось отправить, он сохранён на компьютере игрока. Паузу можно снять.</Text>
+			<Text>{1}: отчёт об ошибке не удалось отправить, он сохранён на компьютере игрока.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ru_RU">
 			<Text>Опишите проблему: что произошло, когда и чего вы ожидали вместо этого.</Text>

@@ -510,7 +510,7 @@
 			<Text>Signaler un bug (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="fr_FR">
-			<Text>Envoie une sauvegarde, les derniers autosaves et les journaux du jeu à l'équipe de BetterGameExperience. En multijoueur, la partie est mise en pause et les autres joueurs sont prévenus dans le chat.</Text>
+			<Text>Envoie une sauvegarde, les derniers autosaves et les journaux du jeu à l'équipe de BetterGameExperience. En multijoueur, les autres joueurs sont prévenus dans le chat.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="fr_FR">
 			<Text>Signaler un bug</Text>
@@ -531,19 +531,19 @@
 			<Text>Envoi du rapport en cours...[NEWLINE]Vous pouvez fermer cette fenêtre : l'envoi continue.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="fr_FR">
-			<Text>{1} signale un bug, merci de patienter.</Text>
+			<Text>{1} signale un bug.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="fr_FR">
-			<Text>{1} a annulé le rapport de bug. La pause peut être levée.</Text>
+			<Text>{1} a annulé le rapport de bug.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="fr_FR">
 			<Text>{1} : envoi du rapport en cours...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="fr_FR">
-			<Text>{1} : envoi du rapport terminé. La pause peut être levée.</Text>
+			<Text>{1} : envoi du rapport terminé.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="fr_FR">
-			<Text>{1} : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur. La pause peut être levée.</Text>
+			<Text>{1} : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="fr_FR">
 			<Text>Décrivez le problème : ce qui s'est passé, à quel moment, et ce que vous attendiez à la place.</Text>
