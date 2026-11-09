@@ -33,6 +33,8 @@ abbiano la 0.7.0: una lobby che mescola 0.6.x e 0.7.0 le disattiva.
   (accampamento nemico non finito), le zone di controllo (caselle rosse) vengono
   mostrate e le caselle d'acqua in cui l'unità non può ancora entrare (costa prima
   dell'imbarco, oceano prima della Cartografia) non vengono più proposte.
+- **Menu principale**: un piccolo indicatore in basso a destra mostra la versione installata di
+  BetterGameExperience, come quello di MPH.
 
 ### Impostazioni
 - Pulsante **Ripristina BGE** nella scheda BetterGameExperience: riporta tutte le impostazioni al

@@ -32,6 +32,8 @@ mixes 0.6.x and 0.7.0 turns them off.
 - **Movement range of a unit on an enemy district**: no more lag spike when you select it (unfinished
   enemy encampment), zones of control (red tiles) are shown, and water tiles the
   unit can't enter yet (coast before embarkation, ocean before Cartography) are no longer offered.
+- **Main menu**: a small indicator in the bottom-right corner shows the installed version of
+  BetterGameExperience, like MPH's.
 
 ### Settings
 - **Reset BGE** button in the BetterGameExperience tab: puts every setting back to its default
