@@ -21,7 +21,8 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
 - Le bucket ne dépasse jamais 9,5 Go : les rapports les plus anciens sont supprimés d'abord (voir
   [Plafond du bucket et rétention](#plafond-du-bucket-et-rétention)).
 - Si Discord ne répond pas, le zip reste dans R2 et le joueur a son numéro : on le retrouve dans le
-  bucket. L'erreur va aux journaux du Worker (`npx wrangler tail`).
+  bucket. L'erreur (`rapport BGE-… : Discord <code> : <réponse>`) va aux journaux du Worker : en direct
+  avec `npx wrangler tail`, et gardés dans le tableau de bord (Workers > bge-rapports > Logs).
 
 Le texte écrit par le joueur (pseudo, civilisation…) passe sans mise en forme ni mention
 (`allowed_mentions` vide) : un pseudo `@everyone` ne notifie personne.

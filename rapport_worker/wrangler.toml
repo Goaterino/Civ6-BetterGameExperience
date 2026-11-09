@@ -7,6 +7,10 @@ compatibility_date = "2026-06-01"
 workers_dev = true
 preview_urls = false
 
+# Journaux gardés (tableau de bord : Workers > bge-rapports > Logs), dont les erreurs de Discord.
+[observability]
+enabled = true
+
 # Les zips des rapports, 9,5 Go au plus : les plus anciens sont supprimés d'abord (README.md,
 # « Plafond du bucket et rétention »).
 [[r2_buckets]]
