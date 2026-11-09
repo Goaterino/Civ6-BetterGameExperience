@@ -421,6 +421,18 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
   - Toujours actif, sans réglage. Interface seule : rien ne part sur le réseau, il suffit que le
     joueur qui ouvre l'écran ait le proxy.
   - Test hors jeu, avec le vrai `InstanceManager.lua` : `lua proxy/tests/test_ui_accord_or.lua`.
+- **Accord entre humains pendant le passage de tour.** Un accord proposé ou accepté dans la
+  dernière seconde arrive chez l'hôte pendant le passage de tour ; l'hôte lance alors le tour
+  suivant trop tôt et des joueurs voient leur tour passer en boucle (analyse :
+  [depart_tour](../depart_tour/README.md#accord-pendant-le-passage-de-tour--tours-passés-en-boucle)).
+  - Le proxy ajoute [src/ui_accord_fin.lua](src/ui_accord_fin.lua) à la fin du fichier, après le
+    bouton d'or (`patch_accord_fin`). Il remplace la globale `DealManager` de ce contexte par une
+    table dont seule `SendWorkingDeal` change, le reste venant du jeu. Vers un humain, en
+    multijoueur en réseau, l'accord ne part pas à moins de 3 s de la fin du minuteur local, minuteur
+    écoulé, ou quand plus aucun humain n'a son tour actif ; une ligne locale le dit au joueur.
+  - Toujours actif, sans réglage. Interface seule : rien ne part sur le réseau, il suffit que le
+    joueur qui envoie l'accord ait le proxy.
+  - Test hors jeu : `lua proxy/tests/test_ui_accord_fin.lua`.
 - **Code commun avec le proxy de démarrage.** La table d'imports, la signature et le tampon de
   la lecture XML sont dans [src/exe.rs](src/exe.rs), que `startup_proxy` inclut aussi. Le proxy de
   démarrage détourne la lecture XML le premier : on y trouve alors son `jmp [rip+0]`, qu'on recopie
@@ -435,7 +447,7 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
   `ui : …CityPanel.lua : owningPlayerID corrigé, compilation réussie`, et
   `ui : …UnitFlagManager.lua : clic sur un drapeau en visée d'une ville ou d'un quartier, compilation réussie`, et
   `ui : …ProductionPanel.lua : production en cours affichée au changement de ville, compilation réussie`, et
-  `ui : …DiplomacyDealView.lua : bouton d'or disponible réactivé, compilation réussie`.
+  `ui : …DiplomacyDealView.lua : bouton d'or disponible réactivé, pas d'accord vers un humain pendant le passage de tour, compilation réussie`.
   `Lua.log` doit contenir
   `Civ6RolloverProxy : boutons d'attaque au-dessus des drapeaux d'unités`.
 - **Tests hors jeu** (`cargo test --release`) : les remplacements de texte sur les fichiers du jeu et

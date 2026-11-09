@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ja_JP">
 			<Text>ターン終了: ホストのタイマーが切れました。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="ja_JP">
+			<Text>取引は送信されませんでした: ターンが終了しようとしています。次のターンにもう一度送ってください。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="ja_JP">
 			<Text>観戦者: 閲覧のみで、投票は数えられません。</Text>
 		</Row>

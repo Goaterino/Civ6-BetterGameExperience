@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="it_IT">
 			<Text>fine del turno: il timer dell'host è scaduto.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="it_IT">
+			<Text>accordo non inviato: il turno sta finendo. Invialo di nuovo al prossimo turno.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="it_IT">
 			<Text>Spettatore: sola consultazione, i tuoi voti non contano.</Text>
 		</Row>

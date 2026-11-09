@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="fr_FR">
 			<Text>fin du tour : le minuteur de l'hôte est écoulé.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="fr_FR">
+			<Text>accord non envoyé : le tour se termine. Renvoyez-le au tour suivant.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="fr_FR">
 			<Text>Spectateur : consultation seule, vos votes ne comptent pas.</Text>
 		</Row>

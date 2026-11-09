@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="es_ES">
 			<Text>fin del turno: el temporizador del anfitrión ha terminado.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="es_ES">
+			<Text>acuerdo no enviado: el turno está terminando. Vuelve a enviarlo en el próximo turno.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="es_ES">
 			<Text>Espectador: solo consulta, tus votos no cuentan.</Text>
 		</Row>

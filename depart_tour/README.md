@@ -285,6 +285,47 @@ la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
   L'hôte l'annonce au chargement, dans le même message que le départ. La ligne locale « fin du
   tour : le minuteur de l'hôte est écoulé » n'apparaît qu'avec le réglage `depart_signaux`.
 
+## Accord pendant le passage de tour : tours passés en boucle
+
+Partie du 2026-11-09 (8 humains, hôte joueur 0, journaux de l'hôte) : deux fois, des joueurs n'ont
+pas pu jouer (« bug tour », « je peux pas jouer », « faut relobby »), et l'hôte a relancé la partie.
+
+| tour | joueurs bloqués | accord arrivé pendant le passage de tour |
+|---|---|---|
+| 4 → 5 | les 7 clients | `DiplomacyDeal eActionType=2` puis `DiplomacyStatement MAKE_DEAL`, joueur 7 → joueur 4 |
+| 52 → 53 | joueur 4 | `DiplomacyDeal eActionType=1` puis `DiplomacyStatement MAKE_DEAL`, joueur 5 → joueur 3 |
+
+Ce sont les deux seuls messages de diplomatie entre humains reçus entre `Game Turn Ended` et
+`GameSyncComplete` sur les 69 tours, et les deux seuls tours bloqués. Déroulé chez l'hôte
+(`net_message_debug.log`) :
+
+1. la fin du tour part normalement (`.bgd_fin`, `TurnComplete` de tous au même instant) ;
+2. l'accord arrive juste après `Game Turn Ended` ;
+3. l'hôte écrit `Game Turn: N+1` **avant** d'avoir reçu le `GameTurnComplete` de certains joueurs.
+   Ceux-là, et eux seuls, sont bloqués (les 7 au tour 5, le joueur 4 au tour 53). Ailleurs, tous
+   les `GameTurnComplete` arrivent avant `Game Turn` ;
+4. à l'activation, l'hôte les passe aussitôt à `TurnActive 0` sans `PlayerTurnComplete` reçu.
+   Chaque `PlayerTurnUnready` du client est accepté puis défait dans la foulée : le tour passe en
+   boucle, rien ne s'en sort hors relobby ;
+5. le contrôle de synchro du même tour montre une grosse désynchro (des centaines d'archives,
+   joueurs 2 et 7 au tour 5, 6 et 7 au tour 53), sans doute l'accord traité à des moments
+   différents selon les machines.
+
+La fin simultanée y expose plus qu'avant : tout le monde finit au même instant, et rien ne retient
+les ordres après la fin (réponses aux IA, voir plus haut). Un accord proposé ou accepté dans la
+dernière seconde part donc en plein passage de tour.
+
+**Correctif** ([proxy/src/ui_accord_fin.lua](../proxy/src/ui_accord_fin.lua), ajouté à
+`DiplomacyDealView.lua`, toujours actif, interface seule) : `DealManager.SendWorkingDeal`
+(proposition, acceptation, refus, exigence) est enveloppée dans ce contexte. Vers un humain, en
+multijoueur en réseau, l'accord ne part pas si le minuteur du tour local a moins de 3 s à courir
+(ou est écoulé), ou si plus aucun humain n'a son tour actif. Une ligne locale prévient le joueur
+(`LOC_BGD_ACCORD_FIN_TOUR`) ; il propose au tour suivant. Les accords avec les IA ne changent pas.
+Test hors jeu : `lua proxy/tests/test_ui_accord_fin.lua`.
+
+Reste à vérifier en partie : plus de tour bloqué, et un accord retenu laisse l'écran et l'accord en
+attente dans un état propre (l'autre joueur ne voit rien arriver).
+
 ## Implémentation
 
 | où | quoi |
@@ -293,6 +334,7 @@ la fin de leur propre durée. L'écart se réduit au ping, comme au départ.
 | [proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua) | à la fin de `InGame.lua` : `CPL_SYNCTURN` coupé, protocole prêt / départ, fin envoyée par l'hôte |
 | [proxy/src/ui_depart_panneau.lua](../proxy/src/ui_depart_panneau.lua) | à la fin de `ActionPanel.lua` : pendant la retenue, `UI.IsProcessingMessages()` vrai par une table `UI` propre au contexte (bouton de fin de tour en attente : `OnRefresh` lit l'état réel de la simulation, et `EndTurnDirty` / `EndTurnBlockingChanged` arrivent avant `LocalPlayerTurnBegin`), `OnEndTurnBlockingChanged` rejoué au début du tour, jauge du minuteur figée ; journal `depart : panneau : …` |
 | [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGE - …` |
+| [proxy/src/ui_accord_fin.lua](../proxy/src/ui_accord_fin.lua) | à la fin de `DiplomacyDealView.lua` : pas d'accord vers un humain dans les 3 dernières secondes ni pendant le passage de tour (voir plus haut) |
 | [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
 
 Choix faits à l'implémentation :

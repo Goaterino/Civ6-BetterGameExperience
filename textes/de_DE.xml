@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="de_DE">
 			<Text>Runde vorbei: Der Timer des Hosts ist abgelaufen.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="de_DE">
+			<Text>Abkommen nicht gesendet: Die Runde endet. Bitte in der nächsten Runde erneut senden.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="de_DE">
 			<Text>Zuschauer: nur ansehen, Ihre Stimmen zählen nicht.</Text>
 		</Row>
