@@ -2,6 +2,10 @@
 name = "bge-rapports"
 main = "src/index.js"
 compatibility_date = "2026-06-01"
+# Adresse publique https://bge-rapports.<compte>.workers.dev, celle que le jeu appelle. Pas d'URL de
+# prévisualisation par version : seule la version déployée doit recevoir les rapports.
+workers_dev = true
+preview_urls = false
 
 # Les zips des rapports, 9,5 Go au plus : les plus anciens sont supprimés d'abord (README.md,
 # « Plafond du bucket et rétention »).
