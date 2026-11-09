@@ -52,6 +52,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
   pour une unité navale (correctif POL) ;
+- [littoral](analyses/littoral/README.md) : ville côtière qui ne peut plus produire ni acheter de
+  navire jusqu'au rechargement, et correctif POL proposé (analyse statique) ;
 - défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
