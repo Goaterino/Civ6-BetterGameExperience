@@ -2,6 +2,44 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.0
+
+En multijoueur, tous les humains doivent être en 0.8.0. Le correctif des accords en fin de tour ne
+protège que ceux qui l'ont : un seul joueur resté en 0.7.x peut ramener le tour bloqué pour tout le
+monde. Au salon, l'hôte voit en rouge qui a une autre version, et un salon qui mélange 0.7.x et
+0.8.0 désactive les correctifs **[tous les joueurs]**.
+
+### Correctifs du multijoueur [tous les joueurs]
+- **Tour qui tourne en boucle après un accord entre humains** : un accord proposé ou accepté juste
+  à la fin de votre tour pouvait arriver chez l'hôte après la fin du tour. Le tour suivant se
+  relançait alors sans fin chez certains joueurs, il fallait revenir au salon, et la partie se
+  désynchronisait souvent. Un tel accord ne part plus une fois votre minuteur écoulé, ni quand plus
+  aucun humain n'a son tour actif : une ligne dans votre chat vous le dit. Les accords avec les IA ne
+  changent pas.
+
+### Nouveautés
+- Bouton **Signaler un bug (BGE)** dans le menu Échap, sous Options. Décrivez le problème : BGE
+  envoie une sauvegarde, les derniers autosaves et les journaux du jeu (sans votre nom
+  d'utilisateur Windows), et une ligne de votre chat donne le numéro du rapport. Les autres joueurs
+  voient dans le chat qu'un rapport est en cours d'envoi. Si l'envoi échoue, le zip est copié sur
+  votre Bureau.
+
+### Corrections de l'interface
+- **Effet des cartes de politique** : Rationalisme, Grand opéra, Simultaneum et Libre marché
+  comptent aussi les rendements fixes ajoutés aux bâtiments qu'elles renforcent (cités-États,
+  gouverneurs…), et plus seulement leur rendement de base.
+- **Choix des routes commerciales** : pour une route intérieure, l'or que la capacité de Poundmaker
+  donne à la ville de destination (+1 par camp et par pâturage) est maintenant affiché, avec une
+  ligne d'infobulle qui nomme la ville.
+- **Bandeau du haut** : le bouton de la population affiche aussi la moyenne des aménités nettes par
+  ville (en vert à partir de +3, en rouge sous 0).
+- **Menu principal** : la version de BetterGameExperience s'affiche en bas à gauche, après celles
+  du jeu et de MPH (`… - MPH / … - BGE / 0.8.0`).
+
+### Réglages
+- Option de partie **« No First/Last moves (BGE) »** : cochée par défaut. L'hôte peut toujours la
+  décocher.
+
 ## BetterGameExperience 0.7.0
 
 En multijoueur, les correctifs **[tous les joueurs]** demandent que tous les humains soient en
@@ -33,8 +71,6 @@ En multijoueur, les correctifs **[tous les joueurs]** demandent que tous les hum
   sélectionnez (campement ennemi non terminé), les zones de contrôle (cases
   rouges) sont affichées, et les cases d'eau où l'unité ne peut pas encore aller (côte avant
   l'embarquement, océan avant la Cartographie) ne sont plus proposées.
-- **Menu principal** : la version de BetterGameExperience s'affiche en bas à gauche, après celles
-  du jeu et de MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Réglages
 - Bouton **Réinitialiser BGE** dans l'onglet BetterGameExperience : remet tous les réglages à leur
