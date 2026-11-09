@@ -195,7 +195,7 @@ pub fn reset_config(existing: &str, keys: &str) -> Result<String, String> {
 
 /// Dossier du proxy de GameCore, `DLC\Expansion2\Binaries\Win64`, depuis celui de l'exe
 /// (`Base\Binaries\Win64Steam`), où est posé ce proxy.
-fn gamecore_dir() -> Option<std::path::PathBuf> {
+pub(crate) fn gamecore_dir() -> Option<std::path::PathBuf> {
     let exe_dir = crate::self_dir()?;
     Some(exe_dir.parent()?.parent()?.parent()?.join("DLC").join("Expansion2").join("Binaries").join("Win64"))
 }
@@ -430,12 +430,16 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
             (patch_options_lua(&src), "options : onglet des proxys et entrées du limiteur d'images ajoutés")
         }
         crate::salon::SCRIPT => (crate::salon::prepare(l, src), "salon : annonce de version ajoutée"),
-        crate::salon::SCRIPT_PARTIE => (crate::salon::prepare_partie(l, src), "partie : relais du verdict ajouté"),
+        crate::salon::SCRIPT_PARTIE => {
+            let text = crate::salon::prepare_partie(l, src);
+            (crate::rapport::prepare_suivi(l, text), "partie : relais du verdict et suivi des rapports de bug ajoutés")
+        }
         crate::salon::SCRIPT_CHARGEMENT => {
             (crate::salon::prepare_chargement(l, src), "chargement : correctifs POL des parties locales ajoutés")
         }
         crate::maj::SCRIPT => (crate::maj::prepare(l, src), "maj : notification de mise à jour ajoutée"),
         crate::salon::SCRIPT_OPTION => (crate::salon::prepare_option(l, src), "option : « No First/Last moves (BGE) » ajoutée"),
+        crate::rapport::SCRIPT => (crate::rapport::prepare(l, src), "rapport : bouton « Signaler un bug » du menu Échap ajouté"),
         _ => return real(l, buf, size, name),
     };
     let r = real(l, text.as_ptr(), text.len(), name);
@@ -463,6 +467,26 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
             Ok(Some(text)) if replace_buffer(b, &text) => log(&format!("maj : {name} : popup du menu ajouté")),
             Ok(Some(_)) => log(&format!("maj : {name} : allocation impossible, laissé tel quel")),
             Err(e) => log(&format!("maj : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
+    if is_file(&name, crate::rapport::XML_PARTIE) {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match crate::rapport::patch_in_game_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("rapport : {name} : minuteur du suivi ajouté")),
+            Ok(_) => log(&format!("rapport : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("rapport : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
+    if is_file(&name, crate::rapport::XML) {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match crate::rapport::patch_menu_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("rapport : {name} : bouton « Signaler un bug » ajouté sous Options")),
+            Ok(_) => log(&format!("rapport : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("rapport : {name} laissé tel quel : {e}")),
         }
         return r;
     }

@@ -509,5 +509,53 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ja_JP">
 			<Text>管理者権限が拒否されました</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ja_JP">
+			<Text>バグを報告 (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ja_JP">
+			<Text>セーブデータ、最新のオートセーブ、ゲームのログを BetterGameExperience チームに送信します。マルチプレイでは、他のプレイヤーにチャットで知らせます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ja_JP">
+			<Text>バグを報告</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="ja_JP">
+			<Text>BetterGameExperience は、この時点のセーブデータ、最新のオートセーブ、ゲームのログをチームに送信します。Windows のユーザー名はログから削除されます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="ja_JP">
+			<Text>レポートを送信</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="ja_JP">
+			<Text>キャンセル</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="ja_JP">
+			<Text>閉じる</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ja_JP">
+			<Text>レポートを送信中...[NEWLINE]このウィンドウを閉じても送信は続きます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ja_JP">
+			<Text>{1} がバグを報告しています。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ja_JP">
+			<Text>{1} がバグ報告をキャンセルしました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ja_JP">
+			<Text>{1} がバグレポートを送信しています...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ja_JP">
+			<Text>{1}: バグレポートの送信が完了しました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ja_JP">
+			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ja_JP">
+			<Text>問題を説明してください：何が起きたか、いつ起きたか、本来どうなるはずだったか。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_OK" Language="ja_JP">
+			<Text>バグレポートを送信しました（番号 {1}）。詳細を追加するには、この番号を Discord の個人メッセージで @goaterino に送ってください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ja_JP">
+			<Text>バグレポートを送信できませんでした。アーカイブの保存先: {1}。Discord の個人メッセージで @goaterino に送ってください。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

@@ -16,7 +16,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [proxy](proxy/README.md) : la DLL proxy (Rust), son installation et ses réglages
   (`rollover_proxy.cfg`) ;
 - [startup_proxy](startup_proxy/README.md) : le proxy de démarrage (`winmm.dll`) : chargement du
-  proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour ;
+  proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour, bouton
+  « Signaler un bug » du menu Échap ; [rapport_worker](rapport_worker/README.md) : le relais
+  Cloudflare qui reçoit les rapports et les publie dans le forum Discord ;
 - [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe`, et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
