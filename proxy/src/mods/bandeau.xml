@@ -86,3 +86,14 @@
 			</Stack>
 		</Grid>
 	</Instance>
+
+	<!-- Ajout de BetterGameExperience : activités moyennes par ville, à la suite de la croissance dans le
+	     bouton de la population (src/mods/bandeau.lua). Mêmes réglages que YieldButton_DoubleLabel du
+	     jeu : séparateur comme la croissance, icône comme celle de la population, nombre à sa taille. -->
+	<Instance Name="BGD_TopPanel_AmenitiesInstance">
+		<Stack ID="Top" Anchor="L,T" StackGrowth="Right">
+			<Label ID="Separator" Offset="2,-2" Style="FontNormal14" ColorSet="StatNormalCS" FontStyle="Stroke" String=" | "/>
+			<Label ID="AmenitiesIcon" Anchor="L,B" Offset="0,6" String="[ICON_Amenities]"/>
+			<Label ID="AmenitiesValue" Anchor="C,T" Offset="0,-1" Style="FontNormal18" ColorSet="StatNormalCS" String="0"/>
+		</Stack>
+	</Instance>
