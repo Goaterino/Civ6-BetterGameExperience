@@ -10,7 +10,9 @@
 --   préfixés BGD_, sont ajoutés à TopPanel.xml par le proxy, et elles sont remplies directement ;
 -- - avec le fichier de BSM, son RefreshResources reste (bandeau du joueur observé) : c'est la version
 --   de XP2 qu'il appelle pour les autres joueurs (XP2_RefreshResources) qui est remplacée ;
--- - textes du mod embarqués (BGD_Lookup).
+-- - textes du mod embarqués (BGD_Lookup) ;
+-- - ajout de BetterGameExperience : le bouton de la population montre aussi les activités moyennes
+--   par ville (nettes, arrondies à l'entier inférieur), après la croissance ; même infobulle.
 -- ===========================================================================
 do
 	local f = Civ6Proxy_Charger and Civ6Proxy_Charger("BGD_Commun");
@@ -27,6 +29,7 @@ do
 
 	local m_FoodYieldButton = nil;
 	local m_PopulationYieldButton = nil;
+	local m_PopulationAmenities = nil;		-- ajout de BetterGameExperience (BGD_TopPanel_AmenitiesInstance)
 	local m_ProductionYieldButton = nil;
 	local m_LuxuryResourcesTypeYieldButton = nil;
 
@@ -233,27 +236,42 @@ do
 		m_FoodYieldButton.YieldButtonStack:CalculateSize();
 	end
 
+	-- Ajout de BetterGameExperience : après la croissance, les activités moyennes par ville (nettes,
+	-- arrondies à l'entier inférieur), à la taille de la population (BGD_TopPanel_AmenitiesInstance de
+	-- bandeau.xml) : vert dès +3 (ville en extase), rouge sous 0 (ville mécontente). L'infobulle reste
+	-- celle de la population.
 	local function RefreshPopulation()
 		m_PopulationYieldButton = m_PopulationYieldButton or m_YieldButtonDoubleManager:GetInstance();
 		local Population_Info = { TotalPopulation = 0, PopulationPerTurn = 0, CitysInfo = {} };
 		local pTotalPopulation = 0;
 		local pTotalPopulationPerTurn = 0;
+		local pTotalAmenities = 0;
 		for _, pCity in Players[Game.GetLocalPlayer()]:GetCities():Members() do
 			local pPopulation = pCity:GetPopulation();
 			local pCityGrowth = pCity:GetGrowth();
+			local pAmenity = pCityGrowth:GetAmenities() - pCityGrowth:GetAmenitiesNeeded();
 			pTotalPopulation = pTotalPopulation + pPopulation;
 			pTotalPopulationPerTurn = pTotalPopulationPerTurn + GetPopulationPerTurn(pCity);
+			pTotalAmenities = pTotalAmenities + pAmenity;
 			table.insert(Population_Info.CitysInfo, {
 				CityName = Locale.Lookup(pCity:GetName()),
 				Population = pPopulation,
 				Housing = pCityGrowth:GetHousing() - pPopulation,
 				HousingMultiplier = pCityGrowth:GetHousingGrowthModifier(),
-				Amenity = pCityGrowth:GetAmenities() - pCityGrowth:GetAmenitiesNeeded(),
+				Amenity = pAmenity,
 				HappinessGrowthModifier = pCityGrowth:GetHappinessNonFoodYieldModifier() / 100,
 			});
 		end
 		Population_Info.TotalPopulation = Locale.ToNumber(pTotalPopulation, "#####.#");
 		Population_Info.PopulationPerTurn = Locale.ToNumber(Round(pTotalPopulationPerTurn, 1), "#####.#");
+		local average = 0;
+		if #Population_Info.CitysInfo > 0 then average = math.floor(pTotalAmenities / #Population_Info.CitysInfo); end
+		local color = "StatNormalCS";
+		if average >= 3 then
+			color = "StatGoodCS";
+		elseif average < 0 then
+			color = "ResMilitaryLabelCS";
+		end
 		m_PopulationYieldButton.YieldIconString:SetText("[ICON_Citizen]");
 		m_PopulationYieldButton.YieldIconString:SetOffsetY(6);
 		m_PopulationYieldButton.YieldPerTurn:SetColorByName("StatNormalCS");
@@ -262,6 +280,13 @@ do
 		m_PopulationYieldButton.YieldBalance:SetText(Locale.ToNumber(pTotalPopulation, "#####"));
 		m_PopulationYieldButton.YieldBalance:SetOffsetY(-1);
 		m_PopulationYieldButton.YieldBalance:SetColorByName("StatNormalCS");
+		if m_PopulationAmenities == nil then
+			m_PopulationAmenities = {};
+			ContextPtr:BuildInstanceForControl("BGD_TopPanel_AmenitiesInstance", m_PopulationAmenities, m_PopulationYieldButton.YieldButtonStack);
+		end
+		m_PopulationAmenities.AmenitiesValue:SetText(average > 0 and ("+" .. average) or tostring(average));
+		m_PopulationAmenities.AmenitiesValue:SetColorByName(color);
+		m_PopulationAmenities.Top:CalculateSize();
 		m_PopulationYieldButton.YieldBacking:SetColorByName("ChatMessage_Whisper");
 		SetToolTip(m_PopulationYieldButton, "BGD_TooltipType_TopPanel_Population", TT_Population, Population_Info);
 		m_PopulationYieldButton.YieldButtonStack:CalculateSize();
@@ -588,6 +613,11 @@ do
 		BGD_LateInitialize_jeu();
 		Events.ResearchCompleted.Add(GetTeamVisibleResources);
 		Events.CivicCompleted.Add(GetTeamVisibleResources);
+		-- Un luxe gagné ou perdu en cours de tour change les activités : le jeu ne redessine alors
+		-- que les ressources. OnRefreshYields (TopPanel.lua) regroupe les demandes.
+		Events.PlayerResourceChanged.Add(function(playerID)
+			if playerID == Game.GetLocalPlayer() and OnRefreshYields ~= nil then OnRefreshYields(); end
+		end);
 		for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
 			-- Sans équipes, l'équipe d'un joueur est son propre identifiant.
 			if Players[playerID]:GetTeam() ~= playerID then IsFFA = false; end

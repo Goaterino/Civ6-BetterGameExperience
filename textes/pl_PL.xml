@@ -156,7 +156,7 @@
 			<Text>Rozszerzony górny pasek</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="pl_PL">
-			<Text>Na podstawie TopPanel Extension Pro (号码菌 / Azukii). Żywność, produkcja, populacja i zasoby luksusowe w górnym pasku, ze szczegółami dla każdego miasta; zasoby sojuszników z drużyny. Zastępuje moda, jeśli jest aktywny. Bez moda zachowany jest górny pasek Better Spectator Mod.</Text>
+			<Text>Na podstawie TopPanel Extension Pro (号码菌 / Azukii). Żywność, produkcja, populacja, średnie udogodnienia na miasto i zasoby luksusowe w górnym pasku, ze szczegółami dla każdego miasta; zasoby sojuszników z drużyny. Zastępuje moda, jeśli jest aktywny. Bez moda zachowany jest górny pasek Better Spectator Mod.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="pl_PL">
 			<Text>Efekt kart doktryn</Text>
