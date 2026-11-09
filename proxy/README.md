@@ -696,7 +696,7 @@ plus les tours des routes commerciales.
 | réglage | défaut | effet |
 |---|---|---|
 | `ui_charges=on\|off` (`-UiCharges`) | on | charges restantes sur le drapeau des unités qui en ont (Better Builder Charges Tracking, wltk) |
-| `ui_routes=on\|off` (`-UiRoutes`) | on | tours avant la fin de la route sur le drapeau des négociants du joueur |
+| `ui_routes=on\|off` (`-UiRoutes`) | on | tours avant la fin de la route sur le drapeau des négociants du joueur ; dans l'écran de choix des routes, l'or que reçoit la destination d'une route intérieure (Poundmaker), ajouté par [src/mods/routes_choix.lua](src/mods/routes_choix.lua) à `TradeRouteChooser.lua` ; test hors jeu : `lua proxy/tests/test_mods_routes_choix.lua` |
 | `ui_notifications=on\|off` (`-UiNotifications`) | on | bouton « tout effacer » des notifications (NotificationClear, 336tarot) |
 | `ui_bandeau=on\|off` (`-UiBandeau`) | on | nourriture, production, population, activités moyennes par ville et luxes dans le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) |
 | `ui_politiques=on\|off` (`-UiPolitiques`) | on | effet chiffré des cartes de politique (Extended Policy Cards, Aristos), avec RMA corrigé |

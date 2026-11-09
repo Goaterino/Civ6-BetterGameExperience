@@ -326,6 +326,9 @@
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="it_IT">
 			<Text>accordo non inviato: il turno sta finendo. Invialo di nuovo al prossimo turno.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="it_IT">
+			<Text>+{1} {2} {3} da {4}, ricevuto da {5}</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="it_IT">
 			<Text>Spettatore: sola consultazione, i tuoi voti non contano.</Text>
 		</Row>
