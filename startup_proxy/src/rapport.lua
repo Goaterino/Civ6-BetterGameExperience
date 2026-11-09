@@ -8,11 +8,10 @@
 --                                       zip ; ou "echec", raison, zip
 --   Civ6Proxy_Journal(texte)         -> écrit dans RolloverProxy.log
 --
--- En multijoueur, le clic met la partie en pause si personne ne l'a déjà fait (SetWantsPause, comme
--- MPH), et prévient tout le monde dans le chat. Chaque étape a son message : formulaire ouvert,
--- rapport annulé, envoi en cours, envoi terminé (ou en échec). Les messages partent en anglais, et
--- chaque machine qui a BetterGameExperience les affiche dans sa langue (BGD_TxtChat). La pause
--- n'est pas levée par le bloc : les messages disent quand elle peut l'être.
+-- En multijoueur, chaque étape a son message dans le chat de tous : formulaire ouvert, rapport
+-- annulé, envoi en cours, envoi terminé (ou en échec). Les messages partent en anglais, et chaque
+-- machine qui a BetterGameExperience les affiche dans sa langue (BGD_TxtChat). La partie n'est pas
+-- mise en pause.
 -- Couleurs atténuées de la palette du jeu (COLOR_Civ6Green, COLOR_Civ6Red), propres à ce module.
 -- Le formulaire (BGD_RapportFond, ajouté au XML par le proxy) a un champ de texte pour décrire le
 -- problème, envoyé dans meta.json. L'envoi tourne dans un thread du proxy ; un popup du jeu
@@ -60,21 +59,6 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		local texte = "[" .. couleur .. "]BGE - " .. BGD_TxtAnglais(cle, NomLocal()) .. "[ENDCOLOR]";
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		Journal("message : " .. texte);
-	end
-
-	-- Pause demandée comme MPH (DropControl.lua) et la touche de pause du jeu : le joueur local
-	-- veut la pause, et le dit aux autres. Rien si la partie est déjà en pause.
-	local function Pauser()
-		if not EnLigne() then return; end
-		if GameConfiguration.IsPaused() then
-			Journal("partie déjà en pause");
-			return;
-		end
-		local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
-		if cfg == nil then return; end
-		cfg:SetWantsPause(true);
-		Network.BroadcastPlayerInfo();
-		Journal("pause demandée");
 	end
 
 	-- Sauvegarde de l'instant du rapport, comme la sauvegarde rapide du menu : le proxy l'attend
@@ -258,7 +242,6 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		end
 		R.etat = "formulaire";
 		Journal("formulaire ouvert");
-		Pauser();
 		Chat("LOC_BGD_CHAT_RAPPORT_DEBUT", "COLOR_Civ6Red");
 		Controls.BGD_RapportTexte:SetText("");
 		Formulaire(true);

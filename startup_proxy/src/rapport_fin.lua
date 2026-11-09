@@ -3,7 +3,7 @@
 -- Placé devant rapport_suivi.lua (InGame) et devant rapport.lua (menu Échap) : celui des deux qui
 -- reçoit le résultat termine le rapport, une seule fois.
 --   BGD_RapportTerminer(statut, texte, archive, journal)
---     - en multijoueur, un message à tous : envoi terminé, ou en échec (la pause peut être levée) ;
+--     - en multijoueur, un message à tous : envoi terminé, ou en échec ;
 --     - une ligne dans le chat que seul le joueur local voit : numéro du rapport, ou chemin du zip,
 --       et le contact (@goaterino en message privé Discord). LuaEvents.BGD_DepartTexte, le canal
 --       des lignes locales du chat (proxy de GameCore, ui_depart_chat.lua) ;

@@ -510,7 +510,7 @@
 			<Text>Informar de un error (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="es_ES">
-			<Text>Envía una partida guardada, los últimos autoguardados y los registros del juego al equipo de BetterGameExperience. En multijugador, la partida se pausa y se avisa a los demás jugadores en el chat.</Text>
+			<Text>Envía una partida guardada, los últimos autoguardados y los registros del juego al equipo de BetterGameExperience. En multijugador, se avisa a los demás jugadores en el chat.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="es_ES">
 			<Text>Informar de un error</Text>
@@ -531,19 +531,19 @@
 			<Text>Enviando el informe...[NEWLINE]Puedes cerrar esta ventana: el envío continúa.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="es_ES">
-			<Text>{1} está informando de un error, espera por favor.</Text>
+			<Text>{1} está informando de un error.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="es_ES">
-			<Text>{1} ha cancelado el informe de error. Se puede quitar la pausa.</Text>
+			<Text>{1} ha cancelado el informe de error.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="es_ES">
 			<Text>{1} está enviando el informe de error...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="es_ES">
-			<Text>{1}: informe de error enviado. Se puede quitar la pausa.</Text>
+			<Text>{1}: informe de error enviado.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="es_ES">
-			<Text>{1}: no se ha podido enviar el informe de error, se ha guardado en su ordenador. Se puede quitar la pausa.</Text>
+			<Text>{1}: no se ha podido enviar el informe de error, se ha guardado en su ordenador.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="es_ES">
 			<Text>Describe el problema: qué ha pasado, cuándo y qué esperabas en su lugar.</Text>

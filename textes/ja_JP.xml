@@ -510,7 +510,7 @@
 			<Text>バグを報告 (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ja_JP">
-			<Text>セーブデータ、最新のオートセーブ、ゲームのログを BetterGameExperience チームに送信します。マルチプレイでは、ゲームが一時停止され、他のプレイヤーにチャットで知らせます。</Text>
+			<Text>セーブデータ、最新のオートセーブ、ゲームのログを BetterGameExperience チームに送信します。マルチプレイでは、他のプレイヤーにチャットで知らせます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ja_JP">
 			<Text>バグを報告</Text>
@@ -531,19 +531,19 @@
 			<Text>レポートを送信中...[NEWLINE]このウィンドウを閉じても送信は続きます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ja_JP">
-			<Text>{1} がバグを報告しています。しばらくお待ちください。</Text>
+			<Text>{1} がバグを報告しています。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ja_JP">
-			<Text>{1} がバグ報告をキャンセルしました。一時停止を解除して構いません。</Text>
+			<Text>{1} がバグ報告をキャンセルしました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ja_JP">
 			<Text>{1} がバグレポートを送信しています...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ja_JP">
-			<Text>{1}: バグレポートの送信が完了しました。一時停止を解除して構いません。</Text>
+			<Text>{1}: バグレポートの送信が完了しました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ja_JP">
-			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。一時停止を解除して構いません。</Text>
+			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ja_JP">
 			<Text>問題を説明してください：何が起きたか、いつ起きたか、本来どうなるはずだったか。</Text>

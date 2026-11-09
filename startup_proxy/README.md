@@ -326,19 +326,17 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
 - **En multijoueur**, à chaque étape, un message `BGE -` part dans le chat de tous, en anglais, et
   s'affiche dans sa langue chez chaque joueur qui a BetterGameExperience (`BGD_TxtChat`), dans les
   couleurs atténuées du jeu (`COLOR_Civ6Green`, `COLOR_Civ6Red`, propres à ce module) :
-  1. Clic : si la partie n'est pas déjà en pause, le joueur demande la pause comme MPH
-     (`SetWantsPause(true)`, `BroadcastPlayerInfo`). « X signale un bug, merci de patienter. »
+  1. Clic : « X signale un bug. » La partie n'est pas mise en pause.
      Le formulaire s'ouvre : ce qui sera envoyé, un champ pour décrire le problème (1 000
      caractères au plus, envoyé dans `meta.json`), **Envoyer le rapport** et **Annuler**. Menu
      fermé puis rouvert, le formulaire revient tel quel, texte compris.
-  2. **Annuler** (ou Échap) : « X a annulé le rapport de bug. La pause peut être levée. »
+  2. **Annuler** : « X a annulé le rapport de bug. »
   3. **Envoyer le rapport** : « X : envoi du rapport en cours... ». Le bloc demande une sauvegarde
      `BGE_rapport` (comme la sauvegarde rapide), et le proxy lance l'envoi dans un thread.
-  4. Fin de l'envoi : « X : envoi du rapport terminé. La pause peut être levée. », ou, en échec,
-     « X : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur. La pause peut être
-     levée. »
+  4. Fin de l'envoi : « X : envoi du rapport terminé. », ou, en échec, « X : le rapport n'a pas pu
+     être envoyé, il est gardé sur son ordinateur. »
 
-  Le bloc ne lève jamais la pause lui-même. En solo, ni pause ni message : le rapport part seul.
+  En solo, pas de message à tous : le rapport part seul.
 - **Le suivi.** Un popup dit que l'envoi est en cours ; on peut le fermer, et fermer le menu,
   l'envoi continue. Le menu interroge `Civ6Proxy_RapportEtat()` à chaque image tant qu'il est
   affiché. Fermé, il n'a plus d'images, et la partie en pause n'a plus d'événements : le suivi passe

@@ -510,7 +510,7 @@
 			<Text>报告错误 (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="zh_Hans_CN">
-			<Text>向 BetterGameExperience 团队发送一个存档、最近的自动存档和游戏日志。在多人游戏中，游戏会暂停，并在聊天中通知其他玩家。</Text>
+			<Text>向 BetterGameExperience 团队发送一个存档、最近的自动存档和游戏日志。在多人游戏中，会在聊天中通知其他玩家。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="zh_Hans_CN">
 			<Text>报告错误</Text>
@@ -531,19 +531,19 @@
 			<Text>正在发送报告...[NEWLINE]你可以关闭此窗口：发送会继续进行。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="zh_Hans_CN">
-			<Text>{1} 正在报告错误，请稍候。</Text>
+			<Text>{1} 正在报告错误。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="zh_Hans_CN">
-			<Text>{1} 已取消错误报告。可以解除暂停。</Text>
+			<Text>{1} 已取消错误报告。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="zh_Hans_CN">
 			<Text>{1} 正在发送错误报告...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="zh_Hans_CN">
-			<Text>{1}：错误报告已发送。可以解除暂停。</Text>
+			<Text>{1}：错误报告已发送。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="zh_Hans_CN">
-			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。可以解除暂停。</Text>
+			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="zh_Hans_CN">
 			<Text>请描述问题：发生了什么、在什么时候，以及你原本期望的结果。</Text>

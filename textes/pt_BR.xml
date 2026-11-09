@@ -510,7 +510,7 @@
 			<Text>Relatar um bug (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="pt_BR">
-			<Text>Envia um jogo salvo, os últimos salvamentos automáticos e os registros do jogo para a equipe do BetterGameExperience. No multijogador, a partida é pausada e os outros jogadores são avisados no chat.</Text>
+			<Text>Envia um jogo salvo, os últimos salvamentos automáticos e os registros do jogo para a equipe do BetterGameExperience. No multijogador, os outros jogadores são avisados no chat.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="pt_BR">
 			<Text>Relatar um bug</Text>
@@ -531,19 +531,19 @@
 			<Text>Enviando o relatório...[NEWLINE]Você pode fechar esta janela: o envio continua.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="pt_BR">
-			<Text>{1} está relatando um bug, aguarde.</Text>
+			<Text>{1} está relatando um bug.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="pt_BR">
-			<Text>{1} cancelou o relatório de bug. A pausa pode ser retirada.</Text>
+			<Text>{1} cancelou o relatório de bug.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="pt_BR">
 			<Text>{1} está enviando o relatório de bug...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="pt_BR">
-			<Text>{1}: relatório de bug enviado. A pausa pode ser retirada.</Text>
+			<Text>{1}: relatório de bug enviado.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pt_BR">
-			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador. A pausa pode ser retirada.</Text>
+			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pt_BR">
 			<Text>Descreva o problema: o que aconteceu, quando e o que você esperava em vez disso.</Text>

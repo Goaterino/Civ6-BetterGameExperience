@@ -510,7 +510,7 @@
 			<Text>버그 신고 (BGE)</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ko_KR">
-			<Text>저장 파일, 최근 자동 저장 파일, 게임 로그를 BetterGameExperience 팀에 보냅니다. 멀티플레이에서는 게임이 일시 정지되고 다른 플레이어에게 채팅으로 알립니다.</Text>
+			<Text>저장 파일, 최근 자동 저장 파일, 게임 로그를 BetterGameExperience 팀에 보냅니다. 멀티플레이에서는 다른 플레이어에게 채팅으로 알립니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ko_KR">
 			<Text>버그 신고</Text>
@@ -531,19 +531,19 @@
 			<Text>보고서를 보내는 중...[NEWLINE]이 창을 닫아도 전송은 계속됩니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ko_KR">
-			<Text>{1} 님이 버그를 신고하는 중입니다. 잠시 기다려 주세요.</Text>
+			<Text>{1} 님이 버그를 신고하는 중입니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ko_KR">
-			<Text>{1} 님이 버그 신고를 취소했습니다. 일시 정지를 해제해도 됩니다.</Text>
+			<Text>{1} 님이 버그 신고를 취소했습니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ko_KR">
 			<Text>{1} 님이 버그 보고서를 보내는 중입니다...</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ko_KR">
-			<Text>{1}: 버그 보고서 전송이 끝났습니다. 일시 정지를 해제해도 됩니다.</Text>
+			<Text>{1}: 버그 보고서 전송이 끝났습니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ko_KR">
-			<Text>{1}: 버그 보고서를 보내지 못해 해당 플레이어의 컴퓨터에 저장했습니다. 일시 정지를 해제해도 됩니다.</Text>
+			<Text>{1}: 버그 보고서를 보내지 못해 해당 플레이어의 컴퓨터에 저장했습니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ko_KR">
 			<Text>문제를 설명해 주세요: 무슨 일이 언제 일어났는지, 원래 어떻게 될 것으로 예상했는지.</Text>
