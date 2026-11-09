@@ -375,7 +375,7 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
   clé que le relais exige (`CLE_CLIENT`, la même dans le Worker, un test le vérifie) : elle écarte
   les envois qui ne viennent pas de la DLL. Le relais rend `{"id": "BGE-…"}`.
   Sans relais (compilation locale), ou s'il échoue, le zip est copié sur le Bureau.
-- **Le journal** : `rapport : formulaire ouvert`, `pause demandée`, `message : …`, `envoi lancé
+- **Le journal** : `rapport : formulaire ouvert`, `message : …`, `envoi lancé
   (…)`, `<zip> écrit (… octets)`, `envoyé, numéro …` ou `envoi impossible : …`, et toute erreur du
   bloc, qui n'est jamais propagée au menu.
 
@@ -420,7 +420,7 @@ cd startup_proxy && cargo build --release
   lua startup_proxy/tests/test_option_partie.lua
   ```
 - Le signalement d'un bug, dans un menu Échap et un contexte InGame simulés qui partagent leurs
-  `LuaEvents` : pause demandée ou déjà en place, messages du chat à chaque étape (couleurs,
+  `LuaEvents` : partie jamais mise en pause, messages du chat à chaque étape (couleurs,
   traduction à l'arrivée), formulaire, description et Steam ID envoyés, annulation, sauvegarde,
   fin (message à tous et ligne locale) menu ouvert, menu fermé et partie en pause, sans minuteur,
   sans le bloc du suivi, échec, refus, solo, natives, bouton ou formulaire absents.
