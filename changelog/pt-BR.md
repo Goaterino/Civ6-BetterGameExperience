@@ -32,6 +32,8 @@ estejam na 0.7.0: um saguão que mistura 0.6.x e 0.7.0 as desativa.
   (acampamento inimigo não concluído), as zonas de controle (hexágonos
   vermelhos) são exibidas e os hexágonos de água onde a unidade ainda não pode entrar (costa antes
   do embarque, oceano antes da Cartografia) não são mais oferecidos.
+- **Menu principal**: a versão do BetterGameExperience aparece no canto inferior esquerdo, depois da
+  do jogo e da do MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Configurações
 - Botão **Redefinir BGE** na aba BetterGameExperience: volta todas as configurações ao valor

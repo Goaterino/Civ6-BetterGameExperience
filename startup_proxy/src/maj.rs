@@ -268,11 +268,17 @@ pub fn patch_main_menu_xml(src: &[u8]) -> Result<Option<Vec<u8>>, String> {
     Ok(Some(out.into_bytes()))
 }
 
-/// MainMenu.lua suivi du bloc de la notification.
+/// Ligne du bloc qui porte la version de l'indicateur du menu : réécrite avec celle de la release
+/// (`RELEASE`), ou celle du salon (`version::VERSION`) pour une compilation locale.
+const VERSION_LINE: &str = "local BGD_VERSION = nil;";
+
+/// MainMenu.lua suivi du bloc de la notification et de l'indicateur de version.
 pub fn patch_main_menu_lua(src: &[u8]) -> Vec<u8> {
+    let version = RELEASE.unwrap_or(crate::version::VERSION);
+    let block = LUA_BLOCK.replacen(VERSION_LINE, &format!("local BGD_VERSION = \"{version}\";"), 1);
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(LUA_BLOCK.as_bytes());
+    out.extend_from_slice(block.as_bytes());
     out
 }
 
@@ -369,6 +375,10 @@ mod tests {
     fn bloc_ajoute() {
         let out = patch_main_menu_lua(b"Initialize();");
         assert!(out.starts_with(b"Initialize();\r\n-- "));
+        assert_eq!(LUA_BLOCK.matches(VERSION_LINE).count(), 1);
+        let version = RELEASE.unwrap_or(crate::version::VERSION);
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains(&format!("local BGD_VERSION = \"{version}\";")), "version de l'indicateur non posée");
         for &(_, name) in NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(LUA_BLOCK.contains(name), "{name} posée mais pas utilisée par le bloc");

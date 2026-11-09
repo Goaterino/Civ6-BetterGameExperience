@@ -33,6 +33,8 @@ En multijoueur, les correctifs **[tous les joueurs]** demandent que tous les hum
   sélectionnez (campement ennemi non terminé), les zones de contrôle (cases
   rouges) sont affichées, et les cases d'eau où l'unité ne peut pas encore aller (côte avant
   l'embarquement, océan avant la Cartographie) ne sont plus proposées.
+- **Menu principal** : la version de BetterGameExperience s'affiche en bas à gauche, après celles
+  du jeu et de MPH (`… - MPH / … - BGE / 0.7.0`).
 
 ### Réglages
 - Bouton **Réinitialiser BGE** dans l'onglet BetterGameExperience : remet tous les réglages à leur
