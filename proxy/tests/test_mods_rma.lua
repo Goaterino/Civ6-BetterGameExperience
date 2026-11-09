@@ -80,6 +80,7 @@ end
 
 -- Fonctions exposées comme dans le mod.
 Check(type(RMA.CalculateModifierEffect) == "function", "RMA.CalculateModifierEffect exposée");
+local YieldTableGetYieldOrig = env.YieldTableGetYield;
 
 -- Pourcentages d'une infobulle de rendement, en anglais et en français (espaces insécables).
 local function City(tip) return { GetYieldToolTip = function() return tip; end }; end
@@ -96,6 +97,7 @@ local subject = { City = City(tipEN), Yields = Any };
 env.YieldTableGetYield = function() return 33; end;
 local impact = env.BGD_YieldModifierImpact(subject, "YIELD_SCIENCE", 75);
 Check(math.abs(impact - 15) < 1e-9, "gain du Monachisme : " .. tostring(impact));
+env.YieldTableGetYield = YieldTableGetYieldOrig;
 
 -- Prérequis du propriétaire : dirigeant.
 local function Set(testAny, reqs) return { TestAny = testAny, TestAll = not testAny, Reqs = reqs }; end
@@ -172,6 +174,99 @@ env.YieldTableAdd(total, pg);
 total.PG_ENGINEER = total.PG_ENGINEER + 4;
 env.Locale = { ToNumber = function(v) return string.format("%+g", v); end };
 Check(env.YieldTableGetInfo(total):find("[ICON_GreatEngineer]+8", 1, true) ~= nil, "texte des points : " .. env.YieldTableGetInfo(total));
+
+-- Cartes en % des bâtiments (Rationalisme…) : base + bonus fixes lus au jeu, sans les % déjà
+-- appliqués. Bibliothèque : 2 de base + 2 d'une cité-État ; Rationalisme posé, ses deux % remplis
+-- (+50 % et +50 %) : le jeu donne 8. Seondeok ajoute +30 % au Campus par titre de gouverneur.
+local function Req(id, t, args) return { ReqId = id, ReqType = t, Arguments = args }; end
+local function ReqSet(reqs) return { TestAll = true, TestAny = false, Reqs = reqs }; end
+local pop13 = ReqSet({ Req("POP", "REQUIREMENT_CITY_HAS_X_POPULATION", { Amount = "13" }) });
+local titre1 = ReqSet({ Req("GOV", "REQUIREMENT_CITY_HAS_GOVERNOR_WITH_X_TITLES", { Amount = "1" }) });
+local function PctMod(id, district, amount, reqset)
+	return { ModifierId = id, EffectType = "EFFECT_ADJUST_BUILDING_YIELD_MODIFIERS_FOR_DISTRICT",
+		Arguments = { DistrictType = district, YieldType = "YIELD_SCIENCE", Amount = tostring(amount) }, SubjectReqSet = reqset };
+end
+local tMods = {
+	RATIONALISM_BUILDING_YIELDS_HIGH_POP = PctMod("RATIONALISM_BUILDING_YIELDS_HIGH_POP", "DISTRICT_CAMPUS", 50, pop13),
+	RATIONALISM_BUILDING_YIELDS_HIGH_ADJACENCY = PctMod("RATIONALISM_BUILDING_YIELDS_HIGH_ADJACENCY", "DISTRICT_CAMPUS", 50, nil),
+	GRANDOPERA_BUILDING_YIELDS_HIGH_POP = PctMod("GRANDOPERA_BUILDING_YIELDS_HIGH_POP", "DISTRICT_THEATER", 100, pop13),
+	SEONDEOK_1 = PctMod("SEONDEOK_1", "DISTRICT_CAMPUS", 30, titre1),
+	ATTACHE = { ModifierId = "ATTACHE", EffectType = "EFFECT_ATTACH_MODIFIER", Arguments = { ModifierId = "SEONDEOK_1" } },
+	AUTRE = { ModifierId = "AUTRE", EffectType = "EFFECT_ADJUST_CITY_YIELD_CHANGE", Arguments = {} },
+};
+env.FetchAndCacheData = function(id) return tMods[id]; end;
+env.GameInfo.Policies = Table({ { PolicyType = "POLICY_RATIONALISM", Index = 7 }, { PolicyType = "POLICY_GRAND_OPERA", Index = 8 } });
+env.GameInfo.PolicyModifiers = Table({
+	{ PolicyType = "POLICY_RATIONALISM", ModifierId = "RATIONALISM_BUILDING_YIELDS_HIGH_POP" },
+	{ PolicyType = "POLICY_RATIONALISM", ModifierId = "RATIONALISM_BUILDING_YIELDS_HIGH_ADJACENCY" },
+	{ PolicyType = "POLICY_GRAND_OPERA", ModifierId = "GRANDOPERA_BUILDING_YIELDS_HIGH_POP" },
+});
+env.GameInfo.LeaderTraits = Table({ { LeaderType = "LEADER_SEONDEOK", TraitType = "TRAIT_LEADER_HWARANG" } });
+env.GameInfo.TraitModifiers = Table({ { TraitType = "TRAIT_LEADER_HWARANG", ModifierId = "ATTACHE" }, { TraitType = "TRAIT_LEADER_HWARANG", ModifierId = "AUTRE" } });
+env.GameInfo.BuildingReplaces = Table({ { CivUniqueBuildingType = "BUILDING_MADRASA", ReplacesBuildingType = "BUILDING_UNIVERSITY" } });
+env.GameInfo.DistrictReplaces = Table({ { CivUniqueDistrictType = "DISTRICT_SEOWON", ReplacesDistrictType = "DISTRICT_CAMPUS" } });
+local tSlots = { 7, -1 };
+env.Players[0].GetCulture = function() return {
+	GetNumPolicySlots = function() return #tSlots; end,
+	GetSlotPolicy = function(_, i) return tSlots[i + 1]; end,
+	GetCurrentGovernment = function() return -1; end,
+}; end;
+LEADER = "LEADER_GANDHI";
+
+-- Rendement réel lu au jeu (par index de rendement, ou par nom si l'index échoue).
+local tBase = env.YieldTableNew(); tBase.SCIENCE = 2;
+local pCityJeu = { GetBuildingYield = function(_, b, y) if y == 2 then return 8; elseif y == 3 then return 1; end return 0; end };
+local tTotal, bJeu = env.BGD_BuildingYieldsTotal(pCityJeu, 12, tBase);
+Check(bJeu and tTotal.SCIENCE == 8 and tTotal.CULTURE == 1, "rendement réel du bâtiment");
+local pCityNom = { GetBuildingYield = function(_, b, y) if type(y) ~= "string" then error("index"); end return y == "YIELD_SCIENCE" and 5 or 0; end };
+tTotal, bJeu = env.BGD_BuildingYieldsTotal(pCityNom, 12, tBase);
+Check(bJeu and tTotal.SCIENCE == 5, "rendement réel par nom de rendement");
+tTotal, bJeu = env.BGD_BuildingYieldsTotal({}, 12, tBase);
+Check(not bJeu and tTotal.SCIENCE == 2, "sans GetBuildingYield : base");
+
+local function Bibli(total, pille, type)
+	local t = env.YieldTableNew(); t.SCIENCE = total;
+	local b = env.YieldTableNew(); b.SCIENCE = 2;
+	return { BuildingType = type or "BUILDING_LIBRARY", Yields = b, YieldsTotal = t, IsYieldsTotalFromGame = true, isPillaged = pille };
+end
+local function VilleCampus(pop, batiments, district)
+	return { SubjectType = "City", Population = pop, IsGovernorEstablished = false, NumGovernorPromotions = 0,
+		Districts = { { DistrictType = district or "DISTRICT_CAMPUS", isBuilt = true, Buildings = batiments } } };
+end
+local function Proche(a, b) return math.abs(a - b) < 1e-9; end
+local v = VilleCampus(15, { Bibli(8) });
+local f = env.BGD_BuildingYieldBeforePercent(v, "DISTRICT_CAMPUS", v.Districts[1].Buildings[1], "YIELD_SCIENCE");
+Check(Proche(f, 4), "bibliothèque avant les % (Rationalisme posé, 2 %) : " .. tostring(f));
+local rat = tMods.RATIONALISM_BUILDING_YIELDS_HIGH_ADJACENCY;
+local t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+Check(t ~= nil and Proche(t.SCIENCE, 2), "Rationalisme (+50 %) sur 4 : " .. tostring(t and t.SCIENCE));
+-- Ville de 10 : seul le % de proximité est actif, le jeu donne 4 × 1,5 = 6.
+v = VilleCampus(10, { Bibli(6) });
+t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+Check(t ~= nil and Proche(t.SCIENCE, 2), "ville de 10 : " .. tostring(t and t.SCIENCE));
+-- Carte non posée : le rendement lu au jeu est celui avant la carte.
+tSlots = { -1 };
+env.CalculateModifierEffect("Policy", "POLICY_X", 0);
+v = VilleCampus(15, { Bibli(4) });
+t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+Check(t ~= nil and Proche(t.SCIENCE, 2), "carte non posée : " .. tostring(t and t.SCIENCE));
+-- Seondeok (trait, modificateur attaché) avec un titre de gouverneur : +30 % déjà dans les 5,2.
+LEADER = "LEADER_SEONDEOK";
+env.CalculateModifierEffect("Policy", "POLICY_X", 0);
+v = VilleCampus(15, { Bibli(5.2, false, "BUILDING_MADRASA") }, "DISTRICT_SEOWON");
+v.IsGovernorEstablished, v.NumGovernorPromotions = true, 1;
+t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+Check(t ~= nil and Proche(t.SCIENCE, 2), "Seondeok, Seowon et bâtiment unique : " .. tostring(t and t.SCIENCE));
+LEADER = "LEADER_GANDHI";
+env.CalculateModifierEffect("Policy", "POLICY_X", 0);
+-- Bâtiment pillé : rien ; rendement réel indisponible : base de données, comme avant.
+v = VilleCampus(15, { Bibli(4, true) });
+t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+Check(t ~= nil and t.SCIENCE == 0, "bâtiment pillé");
+local sans = Bibli(4); sans.IsYieldsTotalFromGame = false;
+v = VilleCampus(15, { sans });
+t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+Check(t ~= nil and Proche(t.SCIENCE, 1), "sans rendement réel : base 2 × 50 % = " .. tostring(t and t.SCIENCE));
 
 if failures == 0 then print("ok : corrections de RMA"); end
 os.exit(failures == 0 and 0 or 1);

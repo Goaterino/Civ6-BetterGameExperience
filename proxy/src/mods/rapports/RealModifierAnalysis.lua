@@ -1077,6 +1077,9 @@ function GetCityData( pCity:table )
 			--for yield,yid in pairs(YieldTypes) do extyields[ yield ] = pCity:GetBuildingYield(buildingType, yid); end
 			for yield,_ in pairs(YieldTypes) do extyields[ yield ] = GetBuildingBaseYield(sBuildingType, "YIELD_"..yield); end
 			-- extyields.TOURISM = 0; -- tourism is produced in another way, GetBuildingYield() produces stupid numbers here ??? I don't know, the bug is for districts for sure
+			-- BGD : rendement réel du bâtiment, avec les bonus fixes (cités-États, gouverneurs, chefs,
+			-- personnages illustres…), pour les cartes en % des bâtiments (BGD_BuildingYieldBeforePercent).
+			local totyields:table, bTotal:boolean = BGD_BuildingYieldsTotal(pCity, buildingType, extyields);
 			
 			if building.IsWonder then
 				table.insert( data.Wonders, {
@@ -1103,6 +1106,8 @@ function GetCityData( pCity:table )
 					SubjectType			= SubjectTypes.Building,
 					Name				= BGD_Lookup(building.Name),
 					Yields				= extyields,
+					YieldsTotal			= totyields, -- BGD
+					IsYieldsTotalFromGame = bTotal, -- BGD
 					BuildingType		= sBuildingType,
 					-- not used yet
 					--Yields				= kYields,
@@ -1634,6 +1639,144 @@ function BGD_IsPolicySlotted(sPolicyType:string)
 		if pCulture:GetSlotPolicy(i) == policy.Index then return true; end
 	end
 	return false;
+end
+
+-- BGD : rendements des bâtiments pour les cartes en % des bâtiments (Rationalisme, Grand opéra,
+-- Simultaneum, Libre marché…). RMA prenait le seul rendement de base de la base de données
+-- (Building_YieldChanges) et oubliait les bonus fixes ajoutés au bâtiment : cités-États,
+-- gouverneurs, personnages illustres, chefs (tombeau d'Ahiram : 0 de base, +x par amiral)…
+-- pCity:GetBuildingYield les donne, mais avec les % déjà appliqués (la carte elle-même si elle est
+-- posée, d'où le double compte qu'Infixo voulait éviter) : on retire ces % en divisant par
+-- (100 + somme des % actifs) / 100, le jeu les additionnant sur le rendement du bâtiment.
+
+-- Rendement réel par type de rendement (FOOD…FAITH) ; les autres clés gardent la base. Rend aussi
+-- vrai si le jeu a répondu, faux sinon (on garde alors la base, comme avant).
+function BGD_BuildingYieldsTotal(pCity:table, iBuildingIndex:number, tBase:table)
+	local tTotal:table = YieldTableNew();
+	for yield,value in pairs(tBase) do tTotal[ yield ] = value; end
+	if pCity == nil or pCity.GetBuildingYield == nil or iBuildingIndex == nil then return tTotal, false; end
+	local bAny:boolean = false;
+	for row in GameInfo.Yields() do
+		local sKey:string = YieldTypesMap[ row.YieldType ];
+		local ok, v = pcall(function() return pCity:GetBuildingYield(iBuildingIndex, row.Index); end);
+		if not (ok and type(v) == "number") then
+			ok, v = pcall(function() return pCity:GetBuildingYield(iBuildingIndex, row.YieldType); end);
+		end
+		-- v ~= v : NaN ; les valeurs aberrantes (négatives énormes) sont écartées aussi
+		if sKey ~= nil and ok and type(v) == "number" and v == v and v > -1000 and v < 100000 then
+			tTotal[ sKey ] = v;
+			bAny = true;
+		end
+	end
+	return tTotal, bAny;
+end
+
+-- Modificateurs en % des rendements de bâtiments actifs pour le joueur local : cartes posées,
+-- gouvernement, traits du chef et de la civilisation (Seondeok : +30 % au Seowon par titre de
+-- gouverneur dans BBG). Relus à chaque CalculateModifierEffect (les cartes posées changent dans
+-- l'écran du gouvernement) et à chaque RefreshBaseData, en cache entre les deux.
+local BGD_EFFETS_PCT_BATIMENT:table = {
+	EFFECT_ADJUST_BUILDING_YIELD_MODIFIERS_FOR_DISTRICT = true,
+	EFFECT_ADJUST_BUILDING_YIELD_MODIFIER = true,
+};
+local tBGDBuildingPercentMods:table = nil;
+
+function BGD_ActiveBuildingPercentMods()
+	if tBGDBuildingPercentMods ~= nil then return tBGDBuildingPercentMods; end
+	local tList:table, tSeen:table = {}, {};
+	local function Add(sModifierId:string, iDepth:number)
+		if sModifierId == nil or tSeen[ sModifierId ] or iDepth > 3 then return; end
+		tSeen[ sModifierId ] = true;
+		local tMod:table = FetchAndCacheData(sModifierId);
+		if tMod == nil then return; end
+		if tMod.OwnerReqSet and not BGD_OwnerRequirementsMet(tMod.OwnerReqSet) then return; end
+		if tMod.EffectType == "EFFECT_ATTACH_MODIFIER" then
+			Add(tMod.Arguments.ModifierId, iDepth + 1);
+		elseif BGD_EFFETS_PCT_BATIMENT[ tMod.EffectType ] then
+			table.insert(tList, tMod);
+		end
+	end
+	local function AddFrom(sTable:string, sField:string, tKeys:table)
+		if GameInfo[ sTable ] == nil then return; end
+		for row in GameInfo[ sTable ]() do
+			if tKeys[ row[ sField ] ] then Add(row.ModifierId or row.ModifierID, 0); end
+		end
+	end
+	local ePlayer:number = Game.GetLocalPlayer();
+	local pPlayer:table = Players[ ePlayer ];
+	local pCulture:table = pPlayer and pPlayer.GetCulture and pPlayer:GetCulture();
+	-- cartes posées
+	local tPolicies:table = {};
+	if pCulture and pCulture.GetNumPolicySlots then
+		for i = 0, pCulture:GetNumPolicySlots() - 1 do
+			local policy = GameInfo.Policies[ pCulture:GetSlotPolicy(i) ];
+			if policy then tPolicies[ policy.PolicyType ] = true; end
+		end
+	end
+	AddFrom("PolicyModifiers", "PolicyType", tPolicies);
+	-- gouvernement
+	if pCulture and pCulture.GetCurrentGovernment then
+		local government = GameInfo.Governments[ pCulture:GetCurrentGovernment() ];
+		if government then AddFrom("GovernmentModifiers", "GovernmentType", { [government.GovernmentType] = true }); end
+	end
+	-- traits du chef et de la civilisation
+	local pConfig = PlayerConfigurations[ ePlayer ];
+	if pConfig then
+		local tTraits:table = {};
+		local sLeader:string, sCiv:string = pConfig:GetLeaderTypeName(), pConfig:GetCivilizationTypeName();
+		if GameInfo.LeaderTraits then
+			for row in GameInfo.LeaderTraits() do if row.LeaderType == sLeader then tTraits[ row.TraitType ] = true; end end
+		end
+		if GameInfo.CivilizationTraits then
+			for row in GameInfo.CivilizationTraits() do if row.CivilizationType == sCiv then tTraits[ row.TraitType ] = true; end end
+		end
+		AddFrom("TraitModifiers", "TraitType", tTraits);
+	end
+	tBGDBuildingPercentMods = tList;
+	return tList;
+end
+
+local function BGD_BaseBuildingType(sBuildingType:string)
+	local tRep = GameInfo.BuildingReplaces[ sBuildingType ];
+	return tRep and tRep.ReplacesBuildingType or sBuildingType;
+end
+
+local function BGD_BaseDistrictType(sDistrictType:string)
+	local tRep = GameInfo.DistrictReplaces[ sDistrictType ];
+	return tRep and tRep.ReplacesDistrictType or sDistrictType;
+end
+
+-- Somme des % actifs sur ce rendement de ce bâtiment, dans cette ville.
+function BGD_BuildingPercentActive(tCity:table, sDistrictType:string, sBuildingType:string, sYieldType:string)
+	local iSum:number = 0;
+	for _,tMod in ipairs(BGD_ActiveBuildingPercentMods()) do
+		local tArgs:table = tMod.Arguments;
+		local bMatch:boolean = ( tArgs.YieldType == sYieldType );
+		if bMatch then
+			if tMod.EffectType == "EFFECT_ADJUST_BUILDING_YIELD_MODIFIERS_FOR_DISTRICT" then
+				bMatch = ( tArgs.DistrictType == sDistrictType );
+			else
+				bMatch = ( tArgs.BuildingType == sBuildingType );
+			end
+		end
+		if bMatch and tMod.SubjectReqSet then
+			bMatch = CheckAllRequirements(tMod.SubjectReqSet, tCity, SubjectTypes.City);
+		end
+		if bMatch then iSum = iSum + (tonumber(tArgs.Amount) or 0); end
+	end
+	return iSum;
+end
+
+-- Rendement du bâtiment avant les % (base + bonus fixes), sur lequel s'applique un % de plus.
+function BGD_BuildingYieldBeforePercent(tCity:table, sDistrictType:string, building:table, sYieldType:string)
+	if building.isPillaged then return 0; end -- un bâtiment pillé ne rapporte rien
+	if not building.IsYieldsTotalFromGame or building.YieldsTotal == nil then
+		return YieldTableGetYield(building.Yields, sYieldType) or 0;
+	end
+	local fTotal:number = YieldTableGetYield(building.YieldsTotal, sYieldType) or 0;
+	local iPercent:number = BGD_BuildingPercentActive(tCity, BGD_BaseDistrictType(sDistrictType), BGD_BaseBuildingType(building.BuildingType), sYieldType);
+	if 100 + iPercent <= 0 then return 0; end
+	return fTotal * 100 / (100 + iPercent);
 end
 
 function DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tMainSubjects:table, sMainSubjectType:string)
@@ -2432,7 +2575,9 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 					local buildingType:string = building.BuildingType;	
 					if GameInfo.BuildingReplaces[ buildingType ] then buildingType = GameInfo.BuildingReplaces[ buildingType ].ReplacesBuildingType; end
 					if buildingType == sBuildingType then
-						YieldTableSetYield(tImpact, tMod.Arguments.YieldType, YieldTableGetYield(building.Yields, tMod.Arguments.YieldType)*tonumber(tMod.Arguments.Amount)/100.0); bApplied = true; break;
+						-- BGD : base + bonus fixes, sans les % déjà appliqués
+						local fYield:number = BGD_BuildingYieldBeforePercent(tSubject, district.DistrictType, building, tMod.Arguments.YieldType);
+						YieldTableSetYield(tImpact, tMod.Arguments.YieldType, fYield*tonumber(tMod.Arguments.Amount)/100.0); bApplied = true; break;
 					end
 				end
 				if bApplied then break; end
@@ -2449,7 +2594,9 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				if district.isBuilt then
 					local fYieldChange:number = 0.0;
 					for _,building in ipairs(district.Buildings) do
-						fYieldChange = fYieldChange + YieldTableGetYield(building.Yields, tMod.Arguments.YieldType) * tonumber(tMod.Arguments.Amount) / 100.0;
+						-- BGD : base + bonus fixes, sans les % déjà appliqués
+						local fYield:number = BGD_BuildingYieldBeforePercent(tSubject, district.DistrictType, building, tMod.Arguments.YieldType);
+						fYieldChange = fYieldChange + fYield * tonumber(tMod.Arguments.Amount) / 100.0;
 					end
 					YieldTableSetYield(tImpact, tMod.Arguments.YieldType, fYieldChange);
 					break;
@@ -2908,6 +3055,7 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 	local bUnknownEffect:boolean = false;
 	local sSubjectFilter:string = ( sInfluence and "PLAYER_HAS_"..sInfluence.."_INFLUENCE" or nil );
 	sBGDCurrentPolicy = ( sObject == "Policy" and sObjectType or nil );
+	tBGDBuildingPercentMods = nil; -- BGD : les cartes posées changent dans l'écran du gouvernement
 	for mod in GameInfo[sModifiersTable]() do
 		if mod[sObjectTypeField] == sObjectType then
 			-- stupid Firaxis, some fields are named ModifierId and some ModifierID (sic!)
@@ -2987,7 +3135,8 @@ function RefreshBaseData(ePlayerID:number)
 	local pCities	:table = pPlayer:GetCities();
 
 	tCities = {}; -- clear old values
-	
+	tBGDBuildingPercentMods = nil; -- BGD : cartes, gouvernement ou traits ont pu changer
+
 	for _,pCity in pCities:Members() do	
 		local cityName:string = pCity:GetName();
 
