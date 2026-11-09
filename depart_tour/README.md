@@ -61,7 +61,8 @@ ne serait pas bloqué.
 ### L'option de partie « No First/Last moves (BGE) »
 
 C'est une option de la config de partie, choisie par l'hôte dans le salon comme les options de MPH,
-et non un réglage de `rollover_proxy.cfg`. Seule l'option d'affichage des signaux du chat caché
+et non un réglage de `rollover_proxy.cfg`. Elle est cochée par défaut (`DefaultValue` 1, remise à 1
+sur une ligne écrite par une version précédente). Seule l'option d'affichage des signaux du chat caché
 (ci-dessous) est un réglage de BGE, dans l'onglet hors salon.
 
 **Comment l'injecter.** Les options de partie viennent de la base `Configuration` :

@@ -12,8 +12,8 @@ fichiers par Steam ni les mises à jour du jeu n'y touchent.
 - Des correctifs pour de vieux défauts du jeu : cases travaillées, boutons d'attaque cachés derrière
   les drapeaux d'unités, compteur de tours de production, merveilles retirées de la file, bandeau du
   haut figé, écran des émissaires, touche Entrée, et d'autres.
-- **No First/Last moves** : une option de partie qui fait commencer et finir chaque tour au même
-  instant pour tous les joueurs.
+- **No First/Last moves** : une option de partie, cochée par défaut, qui fait commencer et finir
+  chaque tour au même instant pour tous les joueurs.
 - Des mods d'interface populaires intégrés et corrigés : Better Report Screen, Extended Policy Cards,
   TopPanel Extension Pro, NotificationClear, Better Builder Charges Tracking.
 - Fonctionne en DirectX 11 et DirectX 12, avec [Better Balanced Game](https://steamcommunity.com/sharedfiles/filedetails/?id=2865001760),
@@ -57,8 +57,8 @@ BetterGameExperience. Le salon le vérifie tout seul. Au lancement de la partie,
 chat dit si ces correctifs sont actifs, et qui n'a pas le mod. Les joueurs sans le mod lisent ces
 messages en anglais. Ceux qui l'ont les voient dans leur langue.
 
-Pour jouer avec **No First/Last moves (BGE)**, l'hôte coche l'option dans les options de partie
-avant le lancement. Tous les joueurs doivent avoir BetterGameExperience, à la même version.
+**No First/Last moves (BGE)** est cochée par défaut dans les options de partie ; l'hôte peut la
+décocher avant le lancement. Tous les joueurs doivent avoir BetterGameExperience, à la même version.
 
 ## Réglages
 

@@ -9,8 +9,8 @@ the game files. No game file is replaced, so Steam file checks and game updates 
   batched and cached, with results identical to the base game.
 - Fixes for long-standing game bugs: worked tiles, attack buttons hidden behind unit flags, production
   turn counter, wonders dropped from the queue, stale top bar, Envoys screen, Enter key, and more.
-- **No First/Last moves**: an optional game setting that makes every player start and end each turn
-  at the same moment.
+- **No First/Last moves**: a game setting, on by default, that makes every player start and end each
+  turn at the same moment.
 - Popular interface mods built in and fixed: Better Report Screen, Extended Policy Cards, TopPanel
   Extension Pro, NotificationClear, Better Builder Charges Tracking.
 - Works with DirectX 11 and DirectX 12, [Better Balanced Game](https://steamcommunity.com/sharedfiles/filedetails/?id=2865001760),
@@ -52,8 +52,8 @@ own. When the game starts, a `BGE -` message in the chat says whether these fixe
 missing the mod. Players without the mod read these messages in English. Players who have it see
 them in their own language.
 
-To use **No First/Last moves (BGE)**, the host ticks it in the game options before launching. Every
-player needs BetterGameExperience, at the same version.
+**No First/Last moves (BGE)** is ticked by default in the game options; the host can untick it before
+launching. Every player needs BetterGameExperience, at the same version.
 
 ## Settings
 

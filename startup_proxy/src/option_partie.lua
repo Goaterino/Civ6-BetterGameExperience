@@ -26,7 +26,8 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		end
 	end
 
-	-- Une seule option pour le départ et la fin simultanés (ui_depart.lua).
+	-- Une seule option pour le départ et la fin simultanés (ui_depart.lua), cochée par défaut : l'hôte
+	-- peut la décocher.
 	local OPTIONS = {
 		{
 			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGE)", ordre = 43,
@@ -42,13 +43,21 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 	local refusJournalise = false;
 	local function AjouterUne(o)
 		if Presente(o.id) then
+			-- Ligne écrite par une version précédente (décochée par défaut) dans une base pas encore
+			-- reconstruite : on remet la valeur par défaut.
+			local r = DB.ConfigurationQuery("SELECT DefaultValue FROM Parameters WHERE ParameterId = ?1", o.id);
+			if r ~= nil and r[1] ~= nil and tostring(r[1].DefaultValue) ~= "1" then
+				pcall(DB.ConfigurationQuery, "UPDATE Parameters SET DefaultValue = 1 WHERE ParameterId = ?1", o.id);
+				QueryCache = {};
+				J(o.id .. " : cochée par défaut");
+			end
 			return;
 		end
 		local avant = DB.ConfigurationChanges and DB.ConfigurationChanges();
 		DB.ConfigurationQuery("INSERT INTO Parameters (ParameterId, Name, Description, Domain, DefaultValue, "
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
-			.. "VALUES (?1, ?2, ?3, 'bool', 0, 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
+			.. "VALUES (?1, ?2, ?3, 'bool', 1, 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
 			o.id, o.nom, BGD_Txt(o.aide), o.ordre);
 		local ok = Presente(o.id);
 		if ok then
