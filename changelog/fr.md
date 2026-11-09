@@ -26,8 +26,9 @@ monde. Au salon, l'hôte voit en rouge qui a une autre version, et un salon qui 
 
 ### Corrections de l'interface
 - **Effet des cartes de politique** : Rationalisme, Grand opéra, Simultaneum et Libre marché
-  comptent aussi les rendements fixes ajoutés aux bâtiments qu'elles renforcent (cités-États,
-  gouverneurs…), et plus seulement leur rendement de base.
+  comptent aussi les rendements fixes ajoutés aux bâtiments qu'elles renforcent (gouverneurs…), et
+  plus seulement leur rendement de base. Les bonus des cités-États sur ces bâtiments restent à part,
+  comme dans le jeu, qui ne les multiplie pas.
 - **Choix des routes commerciales** : pour une route intérieure, l'or que la capacité de Poundmaker
   donne à la ville de destination (+1 par camp et par pâturage) est maintenant affiché, avec une
   ligne d'infobulle qui nomme la ville.

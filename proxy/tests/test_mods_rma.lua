@@ -268,5 +268,41 @@ v = VilleCampus(15, { sans });
 t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and Proche(t.SCIENCE, 1), "sans rendement réel : base 2 × 50 % = " .. tostring(t and t.SCIENCE));
 
+-- Bonus des cités-États (CityStatesOnly) : hors des % dans le jeu. Bibliothèque : 2 de base + 2 de
+-- Genève (3 émissaires, en paix) ; le jeu donne 4, Rationalisme (+50 %) rapporte 1 et non 2.
+tMods.MINOR_SCI_MEDIUM = { ModifierId = "MINOR_SCI_MEDIUM", EffectType = "EFFECT_ATTACH_MODIFIER",
+	Arguments = { ModifierId = "MINOR_SCI_LIBRARY" },
+	SubjectReqSet = ReqSet({ Req("R1", "REQUIREMENT_PLAYER_HAS_GIVEN_INFLUENCE_TOKENS", { MinimumTokens = "3" }),
+		Req("R2", "REQUIREMENT_PLAYER_AT_PEACE", {}) }) };
+tMods.MINOR_SCI_LIBRARY = { ModifierId = "MINOR_SCI_LIBRARY", EffectType = "EFFECT_ADJUST_BUILDING_YIELD_CHANGE",
+	Arguments = { BuildingType = "BUILDING_LIBRARY", YieldType = "YIELD_SCIENCE", Amount = "2", CityStatesOnly = "true" } };
+env.DB = { Query = function(q) if q:find("CityStatesOnly", 1, true) then return { { ModifierId = "MINOR_SCI_LIBRARY" } }; end return {}; end };
+env.GameInfo.Leaders = Table({ { LeaderType = "LEADER_MINOR_CIV_GENEVA", InheritFrom = "LEADER_MINOR_CIV_SCIENTIFIC" }, { LeaderType = "LEADER_MINOR_CIV_SCIENTIFIC" } });
+env.GameInfo.LeaderTraits = Table({ { LeaderType = "LEADER_SEONDEOK", TraitType = "TRAIT_LEADER_HWARANG" },
+	{ LeaderType = "LEADER_MINOR_CIV_SCIENTIFIC", TraitType = "MINOR_CIV_SCIENTIFIC_TRAIT" } });
+env.GameInfo.TraitModifiers = Table({ { TraitType = "TRAIT_LEADER_HWARANG", ModifierId = "ATTACHE" }, { TraitType = "TRAIT_LEADER_HWARANG", ModifierId = "AUTRE" },
+	{ TraitType = "MINOR_CIV_SCIENTIFIC_TRAIT", ModifierId = "MINOR_SCI_MEDIUM" } });
+env.PlayerConfigurations[5] = { GetLeaderTypeName = function() return "LEADER_MINOR_CIV_GENEVA"; end };
+local iTokens, bGuerre, bCiteEtat = 3, false, true;
+local pGeneve = { GetID = function() return 5; end, IsMinor = function() return bCiteEtat; end,
+	GetInfluence = function() return { GetTokensReceived = function(_, p) return p == 0 and iTokens or 0; end }; end };
+env.PlayerManager = { GetAliveMinors = function() return { pGeneve }; end };
+env.Players[0].GetDiplomacy = function() return { IsAtWarWith = function() return bGuerre; end }; end;
+local function RationalismeAvecCE()
+	env.CalculateModifierEffect("Policy", "POLICY_X", 0); -- vide les caches
+	local vCE = VilleCampus(15, { Bibli(4) });
+	local r = env.ApplyEffectAndCalculateImpact(rat, vCE, "City");
+	return r and r.SCIENCE;
+end
+Check(Proche(RationalismeAvecCE(), 1), "cité-État : bonus hors du % : " .. tostring(RationalismeAvecCE()));
+Check(Proche(env.BGD_CityStateBuildingBonus("BUILDING_LIBRARY", "YIELD_SCIENCE"), 2), "bonus de Genève sur la bibliothèque");
+iTokens = 2;
+Check(Proche(RationalismeAvecCE(), 2), "2 émissaires : pas de bonus à retirer");
+iTokens, bGuerre = 3, true;
+Check(Proche(RationalismeAvecCE(), 2), "en guerre : pas de bonus à retirer");
+bGuerre, bCiteEtat = false, false;
+Check(Proche(RationalismeAvecCE(), 2), "cité libre : pas de bonus");
+bCiteEtat = true;
+
 if failures == 0 then print("ok : corrections de RMA"); end
 os.exit(failures == 0 and 0 or 1);

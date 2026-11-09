@@ -25,8 +25,9 @@ una sala que mezcla 0.7.x y 0.8.0 desactiva las correcciones **[todos los jugado
 
 ### Correcciones de la interfaz
 - **Efecto de las cartas de política**: Racionalismo, Gran ópera, Simultaneum y Libre mercado
-  cuentan también los rendimientos fijos añadidos a los edificios que potencian (ciudades-estado,
-  gobernadores…), y no solo su rendimiento base.
+  cuentan también los rendimientos fijos añadidos a los edificios que potencian (gobernadores…), y
+  no solo su rendimiento base. Las bonificaciones de las ciudades-estado en esos edificios quedan
+  fuera, como en el juego, que no las multiplica.
 - **Selección de rutas comerciales**: en una ruta interior, ahora se muestra el oro que la capacidad
   de Poundmaker da a la ciudad de destino (+1 por campamento y por pasto), con una línea en la
   descripción emergente que nombra la ciudad.

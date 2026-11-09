@@ -25,8 +25,9 @@ per tutti. Nella lobby, l'host vede in rosso chi ha un'altra versione, e una lob
 
 ### Correzioni dell'interfaccia
 - **Effetto delle carte politica**: Razionalismo, Grand opéra, Simultaneum e Libero mercato contano
-  anche le rese fisse aggiunte agli edifici che potenziano (città-stato, governatori…), non solo la
-  loro resa di base.
+  anche le rese fisse aggiunte agli edifici che potenziano (governatori…), non solo la loro resa di
+  base. I bonus delle città-stato su questi edifici restano esclusi, come nel gioco, che non li
+  moltiplica.
 - **Scelta delle rotte commerciali**: per una rotta interna, ora viene mostrato l'oro che l'abilità
   di Poundmaker dà alla città di destinazione (+1 per accampamento e per pascolo), con una riga del
   tooltip che nomina la città.

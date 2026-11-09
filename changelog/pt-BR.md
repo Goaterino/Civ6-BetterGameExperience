@@ -24,8 +24,9 @@ e 0.8.0 desativa as correções **[todos os jogadores]**.
 
 ### Correções da interface
 - **Efeito das cartas de política**: Racionalismo, Grande Ópera, Simultaneum e Livre Mercado também
-  contam os rendimentos fixos adicionados às construções que reforçam (cidades-estado,
-  governadores…), e não só o rendimento base delas.
+  contam os rendimentos fixos adicionados às construções que reforçam (governadores…), e não só o
+  rendimento base delas. Os bônus das cidades-estado nessas construções ficam de fora, como no
+  jogo, que não os multiplica.
 - **Escolha das rotas comerciais**: numa rota doméstica, o ouro que a habilidade de Poundmaker dá à
   cidade de destino (+1 por acampamento e por pasto) agora é mostrado, com uma linha na dica que
   nomeia a cidade.

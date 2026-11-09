@@ -24,8 +24,8 @@ wszystkich. W poczekalni gospodarz widzi na czerwono, kto ma inną wersję, a po
 
 ### Poprawki interfejsu
 - **Efekt kart ustrojowych**: Racjonalizm, Wielka opera, Simultaneum i Wolny rynek liczą też stałe
-  plony dodane do budynków, które wzmacniają (miasta-państwa, gubernatorzy…), a nie tylko ich plon
-  podstawowy.
+  plony dodane do budynków, które wzmacniają (gubernatorzy…), a nie tylko ich plon podstawowy.
+  Premie od miast-państw dla tych budynków są pomijane, jak w grze, która ich nie mnoży.
 - **Wybór szlaków handlowych**: dla szlaku wewnętrznego widać teraz złoto, które zdolność Poundmakera
   daje miastu docelowemu (+1 za każdy obóz i każde pastwisko), z wierszem podpowiedzi, który nazywa
   to miasto.
