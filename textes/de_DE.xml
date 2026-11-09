@@ -506,5 +506,56 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="de_DE">
 			<Text>Administratorrechte verweigert</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="de_DE">
+			<Text>Fehler melden (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="de_DE">
+			<Text>Sendet einen Spielstand, die letzten automatischen Spielstände und die Spielprotokolle an das Team von BetterGameExperience. Im Mehrspielermodus wird die Partie pausiert und die anderen Spieler werden im Chat informiert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="de_DE">
+			<Text>Fehler melden</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="de_DE">
+			<Text>BetterGameExperience sendet seinem Team einen Spielstand dieses Moments, die letzten automatischen Spielstände und die Spielprotokolle. Ihr Windows-Benutzername wird aus den Protokollen entfernt.[NEWLINE][NEWLINE]Beschreiben Sie den Fehler danach im Discord von BetterGameExperience, mit der Berichtsnummer, die Sie erhalten.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="de_DE">
+			<Text>Bericht senden</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="de_DE">
+			<Text>Abbrechen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="de_DE">
+			<Text>Schließen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="de_DE">
+			<Text>Bericht wird gesendet ...[NEWLINE]Sie können dieses Fenster schließen: Das Senden läuft weiter.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="de_DE">
+			<Text>Bericht gesendet</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="de_DE">
+			<Text>Berichtsnummer: {1}[NEWLINE][NEWLINE]Geben Sie sie im Discord von BetterGameExperience an, wenn Sie den Fehler beschreiben.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="de_DE">
+			<Text>Bericht nicht gesendet</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="de_DE">
+			<Text>Der Bericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert:[NEWLINE]{1}[NEWLINE][NEWLINE]Posten Sie es mit einer Beschreibung des Fehlers im Discord von BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="de_DE">
+			<Text>{1} meldet einen Fehler, bitte warten.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="de_DE">
+			<Text>{1} hat die Fehlermeldung abgebrochen. Die Pause kann aufgehoben werden.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="de_DE">
+			<Text>{1} sendet den Fehlerbericht ...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="de_DE">
+			<Text>{1}: Fehlerbericht gesendet. Die Pause kann aufgehoben werden.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="de_DE">
+			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert. Die Pause kann aufgehoben werden.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

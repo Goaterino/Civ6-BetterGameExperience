@@ -8,7 +8,8 @@ d'options du jeu un onglet **BetterGameExperience**, qui édite les réglages du
 (`rollover_proxy.cfg`). Dans le salon multijoueur, il annonce sa version aux autres joueurs, et
 l'hôte établit si tous ont le proxy (voir [Le salon multijoueur](#le-salon-multijoueur--qui-a-le-proxy-)).
 Au menu principal, il propose les nouvelles versions (voir
-[La notification de mise à jour](#la-notification-de-mise-à-jour)).
+[La notification de mise à jour](#la-notification-de-mise-à-jour)). En partie, le menu Échap gagne
+un bouton qui envoie un rapport de bug (voir [Le signalement d'un bug](#le-signalement-dun-bug)).
 
 ## Pourquoi winmm
 
@@ -305,6 +306,61 @@ appliquent. Le journal le dit (`citoyens : version inattendue`).
   `maj : vérification impossible : …`, `maj : notification de la version …`, `maj : installeur
   lancé (…)`, et toute erreur du bloc, qui n'est jamais propagée au menu.
 
+## Le signalement d'un bug
+
+[src/rapport.rs](src/rapport.rs) et [src/rapport.lua](src/rapport.lua). Le relais qui reçoit les
+rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.md).
+
+- **Le bouton.** « Signaler un bug (BGE) », dans la liste principale du menu Échap, juste sous
+  « Options ». Après la lecture d'`InGameTopOptionsMenu.xml`, l'accroche XML recopie l'élément du
+  bouton `OptionsButton` juste après lui, sous l'ID `BGD_RapportButton` : même style, même taille,
+  même pile. La copie perd son texte et son infobulle (le bloc pose les siens), et les ID de ses
+  enfants sont préfixés. Sans `OptionsButton` (autre version du menu), rien n'est ajouté, et le
+  journal liste les boutons trouvés. L'instance `PopupDialog` est ajoutée au contexte s'il ne l'a
+  pas.
+- **L'accroche Lua.** `rapport.lua` est ajouté à la fin d'`InGameTopOptionsMenu.lua`, que le
+  remplaçant de MPH inclut (`ingametopoptionsmenu_MPH.lua`), après avoir posé
+  `Civ6Proxy_RapportEnvoyer(lignes)`, `Civ6Proxy_RapportEtat()` et `Civ6Proxy_Journal(texte)`.
+- **En multijoueur**, à chaque étape, un message `BGE -` part dans le chat de tous, en anglais, et
+  s'affiche dans sa langue chez chaque joueur qui a BetterGameExperience (`BGD_TxtChat`) :
+  1. Clic : si la partie n'est pas déjà en pause, le joueur demande la pause comme MPH
+     (`SetWantsPause(true)`, `BroadcastPlayerInfo`). « X signale un bug, merci de patienter. »
+     Le formulaire s'ouvre : ce qui sera envoyé, **Envoyer le rapport** et **Annuler**.
+  2. **Annuler** (ou Échap) : « X a annulé le rapport de bug. La pause peut être levée. »
+  3. **Envoyer le rapport** : « X : envoi du rapport en cours... ». Le bloc demande une sauvegarde
+     `BGE_rapport` (comme la sauvegarde rapide), et le proxy lance l'envoi dans un thread.
+  4. Fin de l'envoi : « X : envoi du rapport terminé. La pause peut être levée. », ou, en échec,
+     « X : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur. La pause peut être
+     levée. »
+
+  Le bloc ne lève jamais la pause lui-même. En solo, ni pause ni message : le rapport part seul.
+- **Le suivi.** Le popup montre l'envoi en cours ; on peut le fermer, l'envoi continue. Le bloc
+  interroge `Civ6Proxy_RapportEtat()` à chaque image tant que le menu est affiché
+  (`ContextPtr:SetUpdate`), et à chaque `GameCoreEventPublishComplete` sinon. Le popup final donne
+  le numéro du rapport (`BGE-7F3A2C`), à citer sur Discord, ou le chemin du zip en cas d'échec.
+- **Le zip**, préparé dans le thread : il attend la sauvegarde `BGE_rapport.Civ6Save` (20 s au
+  plus, taille stable), puis réunit :
+  - `meta.json` : ce que dit le bloc (tour, joueur, civilisation, dirigeant, multijoueur, hôte,
+    pause, humains, langue), la version de BGE, l'exe (DX11 ou DX12) et la liste des fichiers ;
+  - `bge/RolloverProxy.log` et `bge/rollover_proxy.cfg` ;
+  - `logs/` : le dossier `Logs` du jeu (`%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VI`),
+    `AppOptions.txt` et `Mods.sqlite` ;
+  - `saves/` : la sauvegarde du rapport et les 3 derniers autosaves (multijoueur, ou solo et
+    hotseat), dans `Documents\My Games\…\Saves` (dossier Documents de Windows, OneDrive compris).
+
+  Les fichiers texte sont coupés à leurs 5 derniers Mo, et le nom d'utilisateur Windows est retiré
+  des chemins (`C:\Users\<utilisateur>`). Au-delà de 40 Mo, les autosaves sont retirés, du plus
+  ancien au plus récent. Compression deflate ([miniz_oxide](https://crates.io/crates/miniz_oxide)).
+  Les 5 derniers zips restent dans `%LOCALAPPDATA%\BetterGameExperience\rapports`.
+- **L'envoi** : `curl.exe` de Windows, sans fenêtre, 300 s au plus, champ `archive` d'un
+  formulaire multipart, vers l'URL du relais gravée à la compilation (`BGE_RAPPORT_URL`, variable
+  du dépôt GitHub lue par le workflow de release). `rapport_url=https://…` dans
+  `rollover_proxy.cfg` la remplace, pour essayer un autre relais. Le relais rend `{"id": "BGE-…"}`.
+  Sans relais (compilation locale), ou s'il échoue, le zip est copié sur le Bureau.
+- **Le journal** : `rapport : formulaire ouvert`, `pause demandée`, `message : …`, `envoi lancé
+  (…)`, `<zip> écrit (… octets)`, `envoyé, numéro …` ou `envoi impossible : …`, et toute erreur du
+  bloc, qui n'est jamais propagée au menu.
+
 ## Compiler, tester, installer
 
 ```bash
@@ -344,6 +400,13 @@ cd startup_proxy && cargo build --release
 
   ```bash
   lua startup_proxy/tests/test_option_partie.lua
+  ```
+- Le bloc du signalement d'un bug, dans un menu Échap simulé : pause demandée ou déjà en place,
+  messages du chat à chaque étape et leur traduction à l'arrivée, annulation, sauvegarde, champs
+  envoyés, suivi par image et par les événements du jeu, échec, solo, natives ou bouton absents.
+
+  ```bash
+  lua startup_proxy/tests/test_rapport.lua
   ```
 - La DLL : elle se charge, chaque export aboutit à la même adresse que dans la winmm de System32
   (ordinal 2 compris), `timeGetTime` répond par le relais, les lignes de journal sont écrites, et

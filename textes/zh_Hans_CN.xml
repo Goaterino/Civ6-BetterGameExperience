@@ -506,5 +506,56 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="zh_Hans_CN">
 			<Text>管理员权限被拒绝</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="zh_Hans_CN">
+			<Text>报告错误 (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="zh_Hans_CN">
+			<Text>向 BetterGameExperience 团队发送一个存档、最近的自动存档和游戏日志。在多人游戏中，游戏会暂停，并在聊天中通知其他玩家。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="zh_Hans_CN">
+			<Text>报告错误</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="zh_Hans_CN">
+			<Text>BetterGameExperience 将向其团队发送此刻的存档、最近的自动存档和游戏日志。你的 Windows 用户名会从日志中删除。[NEWLINE][NEWLINE]之后，请在 BetterGameExperience 的 Discord 上描述该错误，并附上你将收到的报告编号。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="zh_Hans_CN">
+			<Text>发送报告</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="zh_Hans_CN">
+			<Text>取消</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="zh_Hans_CN">
+			<Text>关闭</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="zh_Hans_CN">
+			<Text>正在发送报告...[NEWLINE]你可以关闭此窗口：发送会继续进行。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="zh_Hans_CN">
+			<Text>报告已发送</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="zh_Hans_CN">
+			<Text>报告编号：{1}[NEWLINE][NEWLINE]在 BetterGameExperience 的 Discord 上描述错误时请注明此编号。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="zh_Hans_CN">
+			<Text>报告未发送</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="zh_Hans_CN">
+			<Text>无法发送报告。压缩包已保存到：[NEWLINE]{1}[NEWLINE][NEWLINE]请将其连同错误描述一起发布到 BetterGameExperience 的 Discord。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="zh_Hans_CN">
+			<Text>{1} 正在报告错误，请稍候。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="zh_Hans_CN">
+			<Text>{1} 已取消错误报告。可以解除暂停。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="zh_Hans_CN">
+			<Text>{1} 正在发送错误报告...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="zh_Hans_CN">
+			<Text>{1}：错误报告已发送。可以解除暂停。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="zh_Hans_CN">
+			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。可以解除暂停。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

@@ -506,5 +506,56 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ja_JP">
 			<Text>管理者権限が拒否されました</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ja_JP">
+			<Text>バグを報告 (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ja_JP">
+			<Text>セーブデータ、最新のオートセーブ、ゲームのログを BetterGameExperience チームに送信します。マルチプレイでは、ゲームが一時停止され、他のプレイヤーにチャットで知らせます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ja_JP">
+			<Text>バグを報告</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="ja_JP">
+			<Text>BetterGameExperience は、この時点のセーブデータ、最新のオートセーブ、ゲームのログをチームに送信します。Windows のユーザー名はログから削除されます。[NEWLINE][NEWLINE]その後、受け取るレポート番号を添えて、BetterGameExperience の Discord でバグの内容を説明してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="ja_JP">
+			<Text>レポートを送信</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="ja_JP">
+			<Text>キャンセル</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="ja_JP">
+			<Text>閉じる</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ja_JP">
+			<Text>レポートを送信中...[NEWLINE]このウィンドウを閉じても送信は続きます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="ja_JP">
+			<Text>レポートを送信しました</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ja_JP">
+			<Text>レポート番号: {1}[NEWLINE][NEWLINE]BetterGameExperience の Discord でバグを説明するときに、この番号を伝えてください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ja_JP">
+			<Text>レポートを送信できませんでした</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ja_JP">
+			<Text>レポートを送信できませんでした。アーカイブは次の場所に保存されました:[NEWLINE]{1}[NEWLINE][NEWLINE]バグの説明を添えて、BetterGameExperience の Discord に投稿してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ja_JP">
+			<Text>{1} がバグを報告しています。しばらくお待ちください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ja_JP">
+			<Text>{1} がバグ報告をキャンセルしました。一時停止を解除して構いません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ja_JP">
+			<Text>{1} がバグレポートを送信しています...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ja_JP">
+			<Text>{1}: バグレポートの送信が完了しました。一時停止を解除して構いません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ja_JP">
+			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。一時停止を解除して構いません。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
