@@ -506,5 +506,56 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="pt_BR">
 			<Text>permissões de administrador negadas</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="pt_BR">
+			<Text>Relatar um bug (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="pt_BR">
+			<Text>Envia um jogo salvo, os últimos salvamentos automáticos e os registros do jogo para a equipe do BetterGameExperience. No multijogador, a partida é pausada e os outros jogadores são avisados no chat.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="pt_BR">
+			<Text>Relatar um bug</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="pt_BR">
+			<Text>O BetterGameExperience vai enviar à sua equipe um jogo salvo deste momento, os últimos salvamentos automáticos e os registros do jogo. Seu nome de usuário do Windows é removido dos registros.[NEWLINE][NEWLINE]Depois, descreva o bug no Discord do BetterGameExperience, com o número do relatório que você vai receber.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="pt_BR">
+			<Text>Enviar o relatório</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="pt_BR">
+			<Text>Cancelar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="pt_BR">
+			<Text>Fechar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="pt_BR">
+			<Text>Enviando o relatório...[NEWLINE]Você pode fechar esta janela: o envio continua.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="pt_BR">
+			<Text>Relatório enviado</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="pt_BR">
+			<Text>Número do relatório: {1}[NEWLINE][NEWLINE]Informe-o no Discord do BetterGameExperience ao descrever o bug.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="pt_BR">
+			<Text>Relatório não enviado</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="pt_BR">
+			<Text>Não foi possível enviar o relatório. O arquivo foi salvo aqui:[NEWLINE]{1}[NEWLINE][NEWLINE]Publique-o no Discord do BetterGameExperience com uma descrição do bug.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="pt_BR">
+			<Text>{1} está relatando um bug, aguarde.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="pt_BR">
+			<Text>{1} cancelou o relatório de bug. A pausa pode ser retirada.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="pt_BR">
+			<Text>{1} está enviando o relatório de bug...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="pt_BR">
+			<Text>{1}: relatório de bug enviado. A pausa pode ser retirada.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pt_BR">
+			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador. A pausa pode ser retirada.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

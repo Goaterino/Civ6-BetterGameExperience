@@ -8,6 +8,10 @@ description = "Proxy de démarrage pour Civ6 : winmm.dll posée à côté de l'e
 # Paquet autonome, comme proxy/ : il ne vise que Windows x64.
 [workspace]
 
+# Compression des rapports de bug (rapport.rs), en Rust pur.
+[dependencies]
+miniz_oxide = "0.8"
+
 [lib]
 name = "winmm"
 crate-type = ["cdylib"]

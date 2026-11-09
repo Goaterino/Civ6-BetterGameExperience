@@ -7,7 +7,8 @@
 //!
 //! Ce proxy charge le proxy de GameCore à la place de l'original (`chargeur`), ajoute à l'écran
 //! d'options un onglet qui édite ses réglages (`options`), et annonce sa version aux autres joueurs
-//! du salon multijoueur (`salon`). Journal commun aux deux proxys :
+//! du salon multijoueur (`salon`), et ajoute au menu Échap un bouton qui envoie un rapport de bug
+//! (`rapport`). Journal commun aux deux proxys :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
 // Modules communs avec le proxy de GameCore, qui y trouvent `crate::win` et `crate::patch`.
@@ -28,6 +29,7 @@ mod relais;
 mod options;
 mod maj;
 mod salon;
+mod rapport;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]

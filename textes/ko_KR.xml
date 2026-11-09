@@ -506,5 +506,56 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ko_KR">
 			<Text>관리자 권한이 거부되었습니다</Text>
 		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ko_KR">
+			<Text>버그 신고 (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_INFOBULLE" Language="ko_KR">
+			<Text>저장 파일, 최근 자동 저장 파일, 게임 로그를 BetterGameExperience 팀에 보냅니다. 멀티플레이에서는 게임이 일시 정지되고 다른 플레이어에게 채팅으로 알립니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TITRE" Language="ko_KR">
+			<Text>버그 신고</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_TEXTE" Language="ko_KR">
+			<Text>BetterGameExperience가 현재 시점의 저장 파일, 최근 자동 저장 파일, 게임 로그를 팀에 보냅니다. Windows 사용자 이름은 로그에서 제거됩니다.[NEWLINE][NEWLINE]그런 다음 받게 될 보고서 번호와 함께 BetterGameExperience Discord에 버그를 설명해 주세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_CONFIRMER" Language="ko_KR">
+			<Text>보고서 보내기</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ANNULER" Language="ko_KR">
+			<Text>취소</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_FERMER" Language="ko_KR">
+			<Text>닫기</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_EN_COURS" Language="ko_KR">
+			<Text>보고서를 보내는 중...[NEWLINE]이 창을 닫아도 전송은 계속됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TITRE" Language="ko_KR">
+			<Text>보고서 전송 완료</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_OK_TEXTE" Language="ko_KR">
+			<Text>보고서 번호: {1}[NEWLINE][NEWLINE]BetterGameExperience Discord에 버그를 설명할 때 이 번호를 알려 주세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TITRE" Language="ko_KR">
+			<Text>보고서 전송 실패</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_ECHEC_TEXTE" Language="ko_KR">
+			<Text>보고서를 보내지 못했습니다. 압축 파일은 다음 위치에 저장되었습니다:[NEWLINE]{1}[NEWLINE][NEWLINE]버그 설명과 함께 BetterGameExperience Discord에 올려 주세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_DEBUT" Language="ko_KR">
+			<Text>{1} 님이 버그를 신고하는 중입니다. 잠시 기다려 주세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ANNULE" Language="ko_KR">
+			<Text>{1} 님이 버그 신고를 취소했습니다. 일시 정지를 해제해도 됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ENVOI" Language="ko_KR">
+			<Text>{1} 님이 버그 보고서를 보내는 중입니다...</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_FIN" Language="ko_KR">
+			<Text>{1}: 버그 보고서 전송이 끝났습니다. 일시 정지를 해제해도 됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ko_KR">
+			<Text>{1}: 버그 보고서를 보내지 못해 해당 플레이어의 컴퓨터에 저장했습니다. 일시 정지를 해제해도 됩니다.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

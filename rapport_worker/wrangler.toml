@@ -1,0 +1,23 @@
+# Relais des rapports de bug de BetterGameExperience (voir README.md).
+name = "bge-rapports"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# Les zips des rapports. Les supprimer après 90 jours : voir README.md, « Rétention ».
+[[r2_buckets]]
+binding = "RAPPORTS"
+bucket_name = "bge-rapports"
+
+# 3 rapports par minute et par IP au plus.
+[[ratelimits]]
+name = "LIMITE"
+namespace_id = "1701"
+
+  [ratelimits.simple]
+  limit = 3
+  period = 60
+
+# Secret, jamais dans ce fichier : npx wrangler secret put DISCORD_WEBHOOK
+# Facultatif : ID d'un tag du forum posé sur chaque fil.
+# [vars]
+# DISCORD_TAG = "123456789012345678"
