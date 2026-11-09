@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="zh_Hans_CN">
 			<Text>回合结束：主机的计时器已到。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="zh_Hans_CN">
+			<Text>交易未发送：回合即将结束。请在下个回合重新发送。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="zh_Hans_CN">
 			<Text>观战者：仅可查看，你的投票不计入。</Text>
 		</Row>

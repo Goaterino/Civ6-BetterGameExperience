@@ -67,6 +67,8 @@ const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
 const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
+const ACCORD_FIN_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_accord_fin.lua"));
 
 static BOUTONS: AtomicBool = AtomicBool::new(true);
 static RECENTRAGE: AtomicBool = AtomicBool::new(false);
@@ -640,6 +642,22 @@ pub fn patch_accord_or(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// DiplomacyDealView.lua suivi de `ui_accord_fin.lua` : pas d'accord envoyé à un humain pendant le
+/// passage de tour (tours passés en boucle chez l'hôte, depart_tour/README.md).
+pub fn patch_accord_fin(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if !has("DealManager.SendWorkingDeal") {
+        return Err("DealManager.SendWorkingDeal introuvable".into());
+    }
+    if has("Civ6RolloverProxy (src/ui_accord_fin.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ACCORD_FIN_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// DiplomacyDealView.lua suivi de `ui_diag_accords.lua`, qui ne fait qu'écrire dans Lua.log.
 pub fn patch_diag_accords(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
@@ -967,6 +985,16 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 None
             }
         };
+        let fixed = match patch_accord_fin(fixed.as_deref().unwrap_or(src)) {
+            Ok(text) => {
+                what.push("pas d'accord vers un humain pendant le passage de tour".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} : accords en fin de tour laissés tels quels : {e}"));
+                fixed
+            }
+        };
         if DIAG_ACCORDS.load(Ordering::Relaxed) {
             what.push("diagnostic des accords ajouté".into());
             return Some(patch_diag_accords(fixed.as_deref().unwrap_or(src)));
@@ -1222,6 +1250,19 @@ mod tests {
         assert!(new.ends_with(ACCORD_OR_BLOCK.as_bytes()));
         assert!(patch_accord_or(&new).is_err(), "pas deux fois");
         assert!(patch_accord_or(b"function OnShow() end").is_err());
+    }
+
+    #[test]
+    fn accords_retenus_en_fin_de_tour() {
+        let src = b"function OnPropose() DealManager.SendWorkingDeal(1, 0, 1); end";
+        let out = patch_accord_fin(src).unwrap();
+        assert!(out.starts_with(src));
+        assert!(out.ends_with(ACCORD_FIN_BLOCK.as_bytes()));
+        assert!(patch_accord_fin(&out).is_err(), "pas deux fois");
+        assert!(patch_accord_fin(b"function OnShow() end").is_err());
+        if let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua")) {
+            assert!(patch_accord_fin(&src).is_ok());
+        }
     }
 
     #[test]

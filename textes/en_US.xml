@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="en_US">
 			<Text>turn over: the host's turn timer ran out.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="en_US">
+			<Text>deal not sent: the turn is ending. Send it again next turn.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="en_US">
 			<Text>Spectator: read only, your votes are not counted.</Text>
 		</Row>

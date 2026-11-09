@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pl_PL">
 			<Text>koniec tury: zegar hosta dobiegł końca.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="pl_PL">
+			<Text>umowa nie została wysłana: tura dobiega końca. Wyślij ją ponownie w następnej turze.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="pl_PL">
 			<Text>Obserwator: tylko podgląd, twoje głosy się nie liczą.</Text>
 		</Row>

@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ru_RU">
 			<Text>конец хода: таймер хоста истёк.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="ru_RU">
+			<Text>сделка не отправлена: ход заканчивается. Отправьте её снова в следующем ходу.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="ru_RU">
 			<Text>Зритель: только просмотр, ваши голоса не учитываются.</Text>
 		</Row>

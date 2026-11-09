@@ -323,6 +323,9 @@
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pt_BR">
 			<Text>fim do turno: o cronômetro do anfitrião acabou.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="pt_BR">
+			<Text>acordo não enviado: o turno está terminando. Envie-o novamente no próximo turno.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CONGRES_SPECTATEUR" Language="pt_BR">
 			<Text>Espectador: apenas consulta, seus votos não contam.</Text>
 		</Row>
