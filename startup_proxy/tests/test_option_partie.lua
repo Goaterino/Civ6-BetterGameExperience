@@ -18,14 +18,21 @@ local function Check(name, ok)
 end
 
 -- Base simulée : SELECT et INSERT sur Parameters, ou écriture refusée.
-local function NewScreen(lang, refuse)
-	local rows, journal, discovered = {}, {}, 0;
+local function NewScreen(lang, refuse, rows)
+	local rows, journal, discovered = rows or {}, {}, 0;
 	local DB = {
 		ConfigurationQuery = function(sql, ...)
 			local args = { ... };
 			if sql:find("^INSERT") then
 				if refuse then error("attempt to write a readonly database"); end
-				table.insert(rows, { ParameterId = args[1], Name = args[2], Description = args[3], SortIndex = args[4], sql = sql });
+				table.insert(rows, { ParameterId = args[1], Name = args[2], Description = args[3], SortIndex = args[4], sql = sql,
+					DefaultValue = tonumber(sql:match("'bool', (%d+),")) });
+				return {};
+			end
+			if sql:find("^UPDATE") then
+				for _, row in ipairs(rows) do
+					if row.ParameterId == args[1] then row.DefaultValue = tonumber(sql:match("DefaultValue = (%d+)")); end
+				end
 				return {};
 			end
 			local r = {};
@@ -38,7 +45,7 @@ local function NewScreen(lang, refuse)
 	local SetupParameters = {};
 	function SetupParameters:Data_DiscoverParameters() discovered = discovered + 1; return "liste"; end
 	local env = {
-		pcall = pcall, print = function() end, tostring = tostring, type = type, string = string, ipairs = ipairs,
+		pcall = pcall, print = function() end, tostring = tostring, tonumber = tonumber, type = type, string = string, ipairs = ipairs,
 		DB = DB, SetupParameters = SetupParameters, QueryCache = { vieux = true },
 		Locale = { GetCurrentLanguage = function() return { Type = lang }; end },
 		Civ6Proxy_Journal = function(t) table.insert(journal, t); end,
@@ -55,8 +62,8 @@ do
 	Check("libellé « No First/Last moves (BGE) », aide en français", rows[1].Name == "No First/Last moves (BGE)"
 		and rows[1].Description:find("^Tous les joueurs commencent et finissent") ~= nil);
 	Check("position 43 dans les options", rows[1].SortIndex == 43);
-	Check("réseau seulement, option de partie booléenne",
-		rows[1].sql:find("'bool', 0, 'Game', %?1, 'GameOptions', 0, 0, 0, 1, %?4") ~= nil);
+	Check("réseau seulement, option de partie booléenne, cochée par défaut",
+		rows[1].sql:find("'bool', 1, 'Game', %?1, 'GameOptions', 0, 0, 0, 1, %?4") ~= nil and rows[1].DefaultValue == 1);
 	Check("cache des requêtes vidé", next(env.QueryCache) == nil);
 	Check("journal", #journal == 1 and journal[1] == "option : BGD_DEPART_SIMULTANE ajoutée à Parameters");
 	env.SetupParameters.Data_DiscoverParameters({});
@@ -67,6 +74,17 @@ do
 	local env, rows = NewScreen("en_US");
 	env.SetupParameters.Data_DiscoverParameters({});
 	Check("même libellé, aide en anglais", rows[1].Name == "No First/Last moves (BGE)" and rows[1].Description:find("^Every player starts and ends") ~= nil);
+end
+
+do
+	-- Ligne d'une version précédente, décochée par défaut, restée dans la base.
+	local env, rows, journal = NewScreen("fr_FR", false, { { ParameterId = "BGD_DEPART_SIMULTANE", DefaultValue = 0 } });
+	env.SetupParameters.Data_DiscoverParameters({});
+	Check("ancienne ligne : cochée par défaut, sans doublon", #rows == 1 and rows[1].DefaultValue == 1);
+	Check("ancienne ligne : cache vidé, journal", next(env.QueryCache) == nil
+		and #journal == 1 and journal[1] == "option : BGD_DEPART_SIMULTANE : cochée par défaut");
+	env.SetupParameters.Data_DiscoverParameters({});
+	Check("ancienne ligne : une seule mise à jour", #journal == 1);
 end
 
 do
