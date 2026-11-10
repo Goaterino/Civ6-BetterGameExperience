@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="en_US">
 			<Text>Every game message</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="en_US">
+			<Text>World Congress only</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="en_US">
+			<Text>All but the World Congress</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="en_US">
 			<Text>General</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="en_US">
 			<Text>Based on Better Report Screen (Infixo). Reworked report screen, with Deals, Units, Policies, City-States and Cities tabs, and the effect of each policy and city-state, fixed like the cards. Replaces the mod if it is active.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="en_US">
+			<Text>Better Spectator Mod for spectators</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="en_US">
+			<Text>Replaces the interface scripts of Better Spectator Mod (city-states, diplomacy ribbon, leader icons, World Congress) with the proxy's versions, made for spectators taken out of the major civilizations. Only when every player has the proxy; the spectator level itself always follows that rule.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="en_US">
 			<Text>Log loaded scripts and XML</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="en_US">
 			<Text>Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="en_US">
+			<Text>Better Spectator Mod scripts replaced</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="en_US">
+			<Text>Diagnostic: which interface scripts of Better Spectator Mod the proxy replaces, to isolate one that misbehaves.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="en_US">
 			<Text>Show simultaneous turn start and end signals</Text>

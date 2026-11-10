@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ja_JP">
 			<Text>ゲームのすべてのメッセージ</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="ja_JP">
+			<Text>世界議会のみ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ja_JP">
+			<Text>世界議会以外すべて</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ja_JP">
 			<Text>全般</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ja_JP">
 			<Text>Better Report Screen (Infixo) に基づきます。取引、ユニット、政策、都市国家、都市のタブを持つ新しいレポート画面で、各政策と都市国家の効果をカードと同じく修正して表示します。MOD が有効な場合はそれに置き換わります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="ja_JP">
+			<Text>観戦者向け Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="ja_JP">
+			<Text>Better Spectator Mod のインターフェーススクリプト（都市国家、外交リボン、指導者アイコン、世界議会）を、主要文明から外された観戦者向けに書かれたプロキシ版に置き換えます。全プレイヤーがプロキシを持つ場合のみ。観戦者のレベルも常にこの規則に従います。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ja_JP">
 			<Text>読み込んだスクリプトと XML を記録</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ja_JP">
 			<Text>送受信した取引の提案と取引画面の表示内容を Lua.log に書き込み、人間同士の取引の行き違いを調べます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="ja_JP">
+			<Text>置き換える Better Spectator Mod のスクリプト</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="ja_JP">
+			<Text>診断：問題のあるスクリプトを切り分けるため、プロキシが置き換える Better Spectator Mod のインターフェーススクリプトを選びます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ja_JP">
 			<Text>同時開始・同時終了の信号を表示</Text>

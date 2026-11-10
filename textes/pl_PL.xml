@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="pl_PL">
 			<Text>Każdy komunikat gry</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="pl_PL">
+			<Text>Tylko Kongres Światowy</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="pl_PL">
+			<Text>Wszystko oprócz Kongresu Światowego</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="pl_PL">
 			<Text>Ogólne</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="pl_PL">
 			<Text>Na podstawie Better Report Screen (Infixo). Przebudowany ekran raportów z kartami Umowy, Jednostki, Doktryny, Miasta-państwa i Miasta oraz efektem każdej doktryny i miasta-państwa, poprawionym jak w kartach. Zastępuje moda, jeśli jest aktywny.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="pl_PL">
+			<Text>Better Spectator Mod dla obserwatorów</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="pl_PL">
+			<Text>Zastępuje skrypty interfejsu Better Spectator Mod (miasta-państwa, wstęga dyplomatyczna, ikony przywódców, Kongres Światowy) wersjami proxy, napisanymi dla obserwatorów wyłączonych z głównych cywilizacji. Tylko gdy wszyscy gracze mają proxy; poziom obserwatorów zawsze podlega tej zasadzie.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="pl_PL">
 			<Text>Zapisuj wczytane skrypty i XML</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="pl_PL">
 			<Text>Zapisuje w Lua.log wysłane i otrzymane propozycje umów oraz to, co pokazuje ekran umowy, aby zrozumieć krzyżujące się umowy między ludźmi.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="pl_PL">
+			<Text>Zastępowane skrypty Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="pl_PL">
+			<Text>Diagnostyka: które skrypty interfejsu Better Spectator Mod zastępuje proxy, aby wyodrębnić ten, który sprawia problemy.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="pl_PL">
 			<Text>Pokazuj sygnały jednoczesnego początku i końca tury</Text>

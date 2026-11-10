@@ -65,6 +65,7 @@ pub fn set_rapports(on: bool) {
 pub fn set_spectateur(on: bool) {
     SPECTATEUR.store(on, Ordering::Relaxed);
 }
+#[cfg(any(feature = "diag", test))]
 pub fn set_spectateur_fichiers(masque: usize) {
     SPECTATEUR_FICHIERS.store(masque, Ordering::Relaxed);
 }
