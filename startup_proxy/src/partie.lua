@@ -4,6 +4,8 @@
 -- (startup_proxy/src/salon.rs). Fonctions natives posées par le proxy :
 --   Civ6Proxy_PolActifs()     -> 1 si les correctifs POL sont actifs sur cette machine, sinon 0
 --   Civ6Proxy_Journal(texte)  -> écrit dans RolloverProxy.log
+--   Civ6Proxy_GardeMessages() -> lectures corrigées par la garde des messages réseau depuis
+--                                le dernier appel (voir la fin de ce bloc)
 --
 -- Un joueur qui rejoint la partie en cours, ou s'y reconnecte, passe par le salon : il tire un
 -- nouveau jeton et ne croit le verdict de l'hôte que s'il l'y trouve (salon.lua). Or l'hôte est en
@@ -87,4 +89,38 @@ if Civ6Proxy_PolActifs ~= nil then
 	end
 	Events.PlayerInfoChanged.Add(protege);
 	Events.MultiplayerPlayerConnected.Add(protege);
+end
+
+-- Garde des messages réseau (startup_proxy/src/messages.rs) : quand elle a jeté un message abîmé
+-- qui aurait gelé le jeu, le joueur le dit à tous dans le chat, en anglais (chaque machine équipée
+-- l'affiche dans sa langue, ui_depart_chat.lua) : « <joueur>: BGE - Blocked a damaged network
+-- message… ». Une correction faite avant l'arrivée en jeu (salon, chargement) est dite à la
+-- première occasion. Au plus une ligne par minute : le reste est dans le journal. Sans chat (solo,
+-- hotseat, PlayByCloud), le journal seulement.
+if Civ6Proxy_GardeMessages ~= nil then
+	local dernier = nil;
+	local function BGD_PartieGarde()
+		local n = Civ6Proxy_GardeMessages();
+		if n == nil or n <= 0 then
+			return;
+		end
+		BGD_PartieJournal("garde : " .. tostring(n) .. " lecture(s) corrigée(s)");
+		local maintenant = os.clock();
+		if dernier ~= nil and maintenant - dernier < 60 then
+			return;
+		end
+		dernier = maintenant;
+		if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud() then
+			return;
+		end
+		local texte = "[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_GARDE") .. "[ENDCOLOR]";
+		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
+		BGD_PartieJournal("message : " .. texte);
+	end
+	Events.GameCoreEventPublishComplete.Add(function()
+		local ok, err = pcall(BGD_PartieGarde);
+		if not ok then
+			BGD_PartieJournal("erreur : " .. tostring(err));
+		end
+	end);
 end

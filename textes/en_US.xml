@@ -551,6 +551,9 @@
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="en_US">
 			<Text>{1}: the bug report could not be sent, it was kept on their computer.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE" Language="en_US">
+			<Text>Blocked a damaged network message that would have frozen your game.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="en_US">
 			<Text>Describe the problem: what happened, when, and what you expected instead.</Text>
 		</Row>

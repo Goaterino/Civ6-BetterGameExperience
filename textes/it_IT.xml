@@ -551,6 +551,9 @@
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="it_IT">
 			<Text>{1}: non è stato possibile inviare la segnalazione, è stata salvata sul suo computer.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE" Language="it_IT">
+			<Text>Messaggio di rete danneggiato bloccato: avrebbe congelato la partita.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="it_IT">
 			<Text>Descrivi il problema: cosa è successo, quando e cosa ti aspettavi invece.</Text>
 		</Row>

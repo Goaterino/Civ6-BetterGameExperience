@@ -551,6 +551,9 @@
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="pt_BR">
 			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pt_BR">
+			<Text>Mensagem de rede danificada bloqueada: ela teria congelado a partida.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pt_BR">
 			<Text>Descreva o problema: o que aconteceu, quando e o que você esperava em vez disso.</Text>
 		</Row>
