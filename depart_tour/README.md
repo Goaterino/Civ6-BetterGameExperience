@@ -353,6 +353,11 @@ Choix faits à l'implémentation :
 - **Qui est attendu** : les humains vivants, connectés, pas spectateurs, et qui annoncent la même
   version dans leur config de joueur (`BGD_VERSION`). Un humain sans BetterGameExperience n'est pas
   attendu : il ne serait pas bloqué de toute façon.
+- **Hôte spectateur** : il ne retient rien chez lui, mais c'est toujours lui qui reçoit les signaux
+  et donne le départ. Il se déclare prêt au début du tour (`TurnBegin`, `LocalPlayerTurnBegin` ou
+  fermeture de l'écran de chargement) et attend les joueurs comme un hôte joueur. Avant le
+  2026-11-10, il ignorait la barrière : personne ne donnait le départ, et les joueurs restaient
+  retenus jusqu'au délai de sécurité (partie de test avec BSM, hôte spectateur).
 - **Délais** : l'hôte part sans les retardataires après 60 s et les nomme (ligne locale) ; sans
   départ reçu, le proxy lève l'attente au premier ordre tenté après 120 s.
 - **`CivicsCommand`** (choix de recherche ou de dogme) passe : son ordre n'a pas d'enjeu.

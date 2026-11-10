@@ -241,6 +241,14 @@ spectateurs hors des majeurs : ils ne sont substitués qu'avec les correctifs PO
 une partie avec BSM se comporte comme avant cette reprise. `ui_spectateur=off` ne coupe que ces
 scripts d'interface, sur la seule machine qui le règle.
 
+Dans le ruban diplomatique repris (essai du 2026-11-10, hôte spectateur) :
+- le spectateur est cherché parmi tous les participants (`GameConfiguration.GetParticipatingPlayerIDs`),
+  et plus seulement parmi les majeurs et les mineurs ; sinon, chez un joueur, le ruban de BSM
+  pouvait ne pas le trouver et passer la main à celui du jeu ;
+- un joueur ne voit pas les spectateurs, comme dans BSM, qui masquait leur portrait. Affichés, ils
+  passaient par le ruban du jeu : portrait « ? » (pas d'icône pour `LEADER_SPECTATOR`), nom et
+  rendements, comme un bot. Les spectateurs, eux, se voient entre eux.
+
 Sur le popup du Congrès de BSM, le proxy ajoute le retour au vote (`ui_congres_vote.lua`), comme au
 popup du jeu, mais pas la lecture seule (`ui_congres.lua`) : ce popup gère déjà le spectateur.
 

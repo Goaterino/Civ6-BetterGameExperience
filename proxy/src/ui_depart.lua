@@ -329,11 +329,35 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		EnvoyerPret();
 	end
 
+	-- Hôte spectateur : il ne joue pas et ne retient rien, mais c'est lui qui reçoit les signaux et
+	-- donne le départ. Prêt dès le début du tour, il attend les joueurs comme un hôte joueur.
+	local function Coordonner(tour)
+		if not Network.IsGameHost() or not Spectateur(Moi()) or not Actif() or D.chargement
+			or type(tour) ~= "number" or D.tour == tour then
+			return;
+		end
+		D.tour = tour;
+		D.pret = true;
+		D.pretDepuis = os.clock();
+		D.avisRejets = 0;
+		if D.parti >= tour then
+			return;
+		end
+		J("tour " .. tour .. " : hôte spectateur, départ donné quand les joueurs sont prêts");
+		ContextPtr:SetUpdate(Tic);
+		Evaluer(tour);
+	end
+
+	local function OnTurnBegin()
+		Coordonner(Game.GetCurrentGameTurn());
+	end
+
 	local function OnLocalPlayerTurnBegin()
 		if Civ6RolloverProxy_FinLever ~= nil then
 			Civ6RolloverProxy_FinLever();
 		end
 		Entrer(Game.GetCurrentGameTurn());
+		Coordonner(Game.GetCurrentGameTurn());
 	end
 
 	-- 3. Fin simultanée ---------------------------------------------------------------------------
@@ -420,6 +444,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			EnvoyerPret();
 		end
 		Armer();
+		Coordonner(Game.GetCurrentGameTurn());
 	end
 
 	local function OnChat(fromPlayer, toPlayer, text, eTargetType)
@@ -474,6 +499,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 
 	if Reseau() then
 		Events.LocalPlayerTurnBegin.Add(Protege(OnLocalPlayerTurnBegin));
+		Events.TurnBegin.Add(Protege(OnTurnBegin));
 		-- Distribué par la publication détournée elle-même : armé à temps même si le début du tour
 		-- suit dans la même série d'événements.
 		Events.TurnEnd.Add(Protege(Armer));

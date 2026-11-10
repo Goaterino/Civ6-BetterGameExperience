@@ -196,9 +196,19 @@ function LateInitialize()
 		m_first_spec_id = bspec_loc_id
 	end
 
+	-- BGE : avec les correctifs POL, un spectateur est au niveau CIVILIZATION_LEVEL_SPECTATOR, ni
+	-- majeur ni mineur. Cherché parmi les seuls majeurs et mineurs, il n'était trouvé que sur sa
+	-- propre machine (forcé ci-dessous) : chez les autres, le ruban du jeu l'affichait comme un
+	-- humain non rencontré, portrait « ? », son nom et ses rendements. On parcourt donc tous les
+	-- participants.
 	local candidates = {}
 	for _, pPlayer in ipairs(PlayerManager.GetAliveMajors()) do table.insert(candidates, pPlayer) end
 	for _, pPlayer in ipairs(PlayerManager.GetAliveMinors()) do table.insert(candidates, pPlayer) end
+	if GameConfiguration.GetParticipatingPlayerIDs ~= nil then
+		for _, pid in ipairs(GameConfiguration.GetParticipatingPlayerIDs()) do
+			if Players[pid] ~= nil then table.insert(candidates, Players[pid]) end
+		end
+	end
 	for _, pPlayer in ipairs(candidates) do
 		local pid:number = pPlayer:GetID();
 		if PlayerConfigurations[pid] ~= nil and PlayerConfigurations[pid]:GetLeaderTypeName() == "LEADER_SPECTATOR" then
@@ -463,7 +473,12 @@ function UpdateLeaders()
 			local pPlayerConfig	:table = PlayerConfigurations[playerID];
 			local isHumanMP		:boolean = (GameConfiguration.IsAnyMultiplayer() and pPlayerConfig:IsHuman());
 			local isSpectatorPlayer:boolean = (bspec_game == true and kSpecIds[playerID] == true);
-			if (isMet or isHumanMP or isSpectatorPlayer) then
+			-- BGE : un joueur ne voit pas les spectateurs, comme dans BSM (qui masquait leur
+			-- portrait). Affichés, ils passaient par le ruban du jeu : portrait « ? » (pas d'icône
+			-- pour LEADER_SPECTATOR), nom et rendements, comme un bot. Les spectateurs se voient.
+			local isHiddenSpec:boolean = (bspec_loc == false)
+				and (kSpecIds[playerID] == true or pPlayerConfig:GetLeaderTypeName() == "LEADER_SPECTATOR");
+			if (not isHiddenSpec) and (isMet or isHumanMP or isSpectatorPlayer) then
 				local leaderName:string = pPlayerConfig:GetLeaderTypeName();
 				-- SPECv2 : un spectateur n'est jamais "masque", son portrait doit rester lisible.
 				local isMasked	:boolean = (isMet==false) and isHumanMP and (not isSpectatorPlayer);	-- Multiplayer human but haven't met
