@@ -249,6 +249,23 @@ Dans le ruban diplomatique repris (essai du 2026-11-10, hôte spectateur) :
   passaient par le ruban du jeu : portrait « ? » (pas d'icône pour `LEADER_SPECTATOR`), nom et
   rendements, comme un bot. Les spectateurs, eux, se voient entre eux.
 
+Désynchro de `SPEC_LAST_ID` (défaut d'origine de BSM, vu le 2026-11-10 : `Variable Out Of Sync :
+m_kProperties` au contrôle de fin de tour, clé `4016213350` = `~CRC32("SPEC_LAST_ID")`) :
+`Data/Spectator.lua` posait cette propriété de partie dans `DoObserverPlayer`, que l'interface du
+spectateur déclenche quand il change de joueur observé. Elle n'existait donc que sur sa machine, et
+le jeu devait la resynchroniser. `Spectator_UI.lua` ne la lit qu'au début du tour du spectateur, pour
+revenir au dernier joueur observé. Le `Spectator.lua` du proxy ne l'écrit plus, et le proxy corrige
+`Spectator_UI.lua` (`mods_ui::patch_spectateur_ui`) : la valeur est retenue dans l'interface, à
+chaque `UIDoObserverPlayer`. Les deux vont ensemble, sous le même verrou POL.
+
+Tour du spectateur après une pause (pause de MPH, qui est celle du jeu) : BSM ne passe le tour du
+spectateur qu'à `LocalPlayerTurnBegin` (`ACTION_ENDTURN`, « UserForced »). Une pause à ce moment-là
+fait échouer la demande, et rien ne la refait : le spectateur devait passer son tour à la main. Le
+même correctif de `Spectator_UI.lua` refait la demande à la sortie de la pause
+(`GameConfigChanged`, `PlayerInfoChanged`), si le tour du spectateur local est encore actif, hors
+congrès et si `BSM_SP` est absent ou vrai, comme BSM. `Lua.log` : `BGE : tour du spectateur repasse
+apres la pause`.
+
 Sur le popup du Congrès de BSM, le proxy ajoute le retour au vote (`ui_congres_vote.lua`), comme au
 popup du jeu, mais pas la lecture seule (`ui_congres.lua`) : ce popup gère déjà le spectateur.
 

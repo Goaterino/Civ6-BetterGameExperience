@@ -181,6 +181,75 @@ fn fichier_du_jeu(rel: &str) -> Result<Vec<u8>, String> {
     std::fs::read(&path).map_err(|e| format!("{} illisible : {e}", path.display()))
 }
 
+const SPEC_LAST_ID: &str = "Game:GetProperty(\"SPEC_LAST_ID\")";
+
+/// Bloc mis en tête de Spectator_UI.lua : le dernier joueur observé, retenu à chaque
+/// `UIDoObserverPlayer` (l'événement que Spectator.lua écoute).
+const SPECTATEUR_UI_BLOC: &str = "-- BetterGameDLLs : dernier joueur observé gardé dans l'interface. BSM le mettait dans une\r\n\
+-- propriété de partie (SPEC_LAST_ID), écrite par la seule machine du spectateur : désynchro.\r\n\
+local BGD_SpecDernier = nil;\r\n\
+if ExposedMembers ~= nil and ExposedMembers.LuaEvents ~= nil then\r\n\
+\tExposedMembers.LuaEvents.UIDoObserverPlayer.Add(function(id)\r\n\
+\t\tif type(id) == \"number\" then BGD_SpecDernier = id; end\r\n\
+\tend);\r\n\
+end\r\n";
+
+/// Bloc mis en fin de Spectator_UI.lua : BSM ne passe le tour du spectateur qu'à
+/// `LocalPlayerTurnBegin`. Pendant une pause (celle de MPH est la pause du jeu), la demande
+/// n'aboutit pas et rien ne la refait : le spectateur devait passer son tour à la main. On la refait
+/// à la sortie de la pause, avec les mêmes règles (hors congrès, `BSM_SP` absent ou vrai).
+const SPECTATEUR_UI_PAUSE: &str = "\r\n-- BetterGameDLLs : tour du spectateur repassé à la sortie d'une pause.\r\n\
+do\r\n\
+\tlocal enPause = GameConfiguration.IsPaused();\r\n\
+\tlocal function BGD_SpecRepasser()\r\n\
+\t\tlocal ok, err = pcall(function()\r\n\
+\t\t\tlocal pause = GameConfiguration.IsPaused();\r\n\
+\t\t\tlocal sortie = enPause and not pause;\r\n\
+\t\t\tenPause = pause;\r\n\
+\t\t\tif not sortie or not UI.IsInGame() then return; end\r\n\
+\t\t\tlocal id = Game.GetLocalPlayer();\r\n\
+\t\t\tlocal pc, p = PlayerConfigurations[id], Players[id];\r\n\
+\t\t\tif pc == nil or p == nil or pc:GetLeaderTypeName() ~= \"LEADER_SPECTATOR\" or not p:IsTurnActive() then return; end\r\n\
+\t\t\tlocal sp = GameConfiguration.GetValue(\"BSM_SP\");\r\n\
+\t\t\tif sp ~= nil and sp ~= true then return; end\r\n\
+\t\t\tlocal segment = Game.GetCurrentTurnSegment();\r\n\
+\t\t\tif (WORLD_CONGRESS_STAGE_1 ~= nil and segment == WORLD_CONGRESS_STAGE_1)\r\n\
+\t\t\t\tor (WORLD_CONGRESS_STAGE_2 ~= nil and segment == WORLD_CONGRESS_STAGE_2) then return; end\r\n\
+\t\t\tUI.RequestAction(ActionTypes.ACTION_ENDTURN, { REASON = \"UserForced\" });\r\n\
+\t\t\tprint(\"BGE : tour du spectateur repasse apres la pause\");\r\n\
+\t\tend);\r\n\
+\t\tif not ok then print(\"BGE : repasser le tour : \" .. tostring(err)); end\r\n\
+\tend\r\n\
+\tEvents.GameConfigChanged.Add(BGD_SpecRepasser);\r\n\
+\tEvents.PlayerInfoChanged.Add(BGD_SpecRepasser);\r\n\
+end\r\n";
+
+/// Spectator_UI.lua de BSM relit au début du tour du spectateur le dernier joueur qu'il observait,
+/// dans la propriété de partie SPEC_LAST_ID. Spectator.lua l'écrivait à la demande de cette
+/// interface, sur la seule machine du spectateur : la propriété divergeait des autres machines.
+/// La valeur est désormais gardée dans l'interface (`BGD_SpecDernier`). En fin de fichier, le tour
+/// du spectateur est repassé à la sortie d'une pause (`SPECTATEUR_UI_PAUSE`).
+pub fn patch_spectateur_ui(src: &[u8]) -> Result<Vec<u8>, String> {
+    if has(src, "BGD_SpecDernier") {
+        return Err("déjà corrigé".into());
+    }
+    let pos = find(src, SPEC_LAST_ID);
+    if pos.is_empty() {
+        return Err("SPEC_LAST_ID introuvable".into());
+    }
+    // Octets remplacés tels quels : le fichier n'est pas forcément en UTF-8.
+    let mut out = SPECTATEUR_UI_BLOC.as_bytes().to_vec();
+    let mut debut = 0;
+    for p in pos {
+        out.extend_from_slice(&src[debut..p]);
+        out.extend_from_slice(b"BGD_SpecDernier");
+        debut = p + SPEC_LAST_ID.len();
+    }
+    out.extend_from_slice(&src[debut..]);
+    out.extend_from_slice(SPECTATEUR_UI_PAUSE.as_bytes());
+    Ok(out)
+}
+
 // ---------------------------------------------------------------------------------------------
 // Étape 1 : texte entier remplacé.
 
@@ -202,6 +271,13 @@ pub fn remplacer(chunk: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), St
         }
         crate::spectateurs::script_niveau_compile();
         return Some(Ok((SPECTATEUR_DATA.to_vec(), "Better Spectator Mod : Spectator.lua du proxy (POL)".into())));
+    }
+    // Va avec Spectator.lua du proxy, qui n'écrit plus SPEC_LAST_ID : même verrou.
+    if bsm && is_file(chunk, "Spectator_UI.lua") {
+        if !crate::pol::actifs() {
+            return None;
+        }
+        return Some(patch_spectateur_ui(src).map(|t| (t, "Better Spectator Mod : dernier joueur observé gardé dans l'interface, tour repassé après une pause".into())));
     }
     // Les scripts d'interface, écrits pour des spectateurs hors des majeurs : avec les correctifs
     // POL seulement, sans quoi une partie se comporte comme sans cette reprise.
@@ -848,7 +924,7 @@ mod tests {
         assert!(!dans_bsm(r"C:\x\Base\Assets\UI\CityStates.lua"));
         set_spectateur(true);
         set_spectateur_fichiers(31);
-        for f in [r"Data\Spectator.lua", r"UI\CityStates.lua", r"UI\Replacements\leadericon.lua", r"UI\diplomacyribbon_spec.lua"] {
+        for f in [r"Data\Spectator.lua", r"UI\Spectator_UI.lua", r"UI\CityStates.lua", r"UI\Replacements\leadericon.lua", r"UI\diplomacyribbon_spec.lua"] {
             assert!(remplacer(&format!(r"{BSM}\{f}"), b"-- x").is_none(), "{f} remplacé sans POL");
         }
         assert!(BSM_VU.load(Ordering::Relaxed));
@@ -856,6 +932,30 @@ mod tests {
         assert!(est_popup_spectateur(SPECTATEUR_CONGRES) && !est_popup_spectateur(b"-- x"));
         for text in [SPECTATEUR_DATA, SPECTATEUR_RIBBON, SPECTATEUR_ICONE, SPECTATEUR_CITYSTATES, SPECTATEUR_CONGRES] {
             assert!(std::str::from_utf8(text).is_ok());
+        }
+    }
+
+    /// SPEC_LAST_ID : plus écrit par Spectator.lua du proxy, gardé dans l'interface seulement.
+    #[test]
+    fn spectateur_dernier_observe() {
+        let data = std::str::from_utf8(SPECTATEUR_DATA).unwrap();
+        assert!(
+            data.lines().all(|l| l.trim_start().starts_with("--") || !l.contains("SetProperty(\"SPEC_LAST_ID\"")),
+            "Spectator.lua écrit encore SPEC_LAST_ID"
+        );
+        let src = b"UIEvents = ExposedMembers.LuaEvents;\r\nif ( Game:GetProperty(\"SPEC_LAST_ID\") ~= nil) then\r\n\tspecid = Game:GetProperty(\"SPEC_LAST_ID\")\r\nend";
+        let out = patch_spectateur_ui(src).unwrap();
+        let t = String::from_utf8(out.clone()).unwrap();
+        assert!(t.starts_with(SPECTATEUR_UI_BLOC) && !t.contains(SPEC_LAST_ID));
+        assert!(t.ends_with(SPECTATEUR_UI_PAUSE), "tour repassé après une pause");
+        assert!(t.contains("if ( BGD_SpecDernier ~= nil) then") && t.contains("specid = BGD_SpecDernier\r\nend"));
+        assert!(patch_spectateur_ui(&out).is_err(), "pas deux fois");
+        assert!(patch_spectateur_ui(b"-- x").is_err());
+        const BSM: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407";
+        if let Some(src) = read(format!(r"{BSM}\UI\Spectator_UI.lua")) {
+            let out = patch_spectateur_ui(&src).unwrap();
+            assert!(find(&out, SPEC_LAST_ID).is_empty());
+            assert_eq!(find(&out, "BGD_SpecDernier = ").len(), 2, "déclaration et écouteur");
         }
     }
 }
