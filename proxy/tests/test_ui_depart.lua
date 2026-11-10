@@ -47,7 +47,7 @@ local function NewGame(opts)
 		local P = G.players[id];
 		-- Événements du jeu seulement : un nom inconnu vaut nil, comme en partie (relevés dans l'UI du jeu).
 		local Events = {};
-		for _, k in ipairs({ "LocalPlayerTurnBegin", "TurnEnd", "GameCoreEventPublishComplete", "LoadScreenClose",
+		for _, k in ipairs({ "LocalPlayerTurnBegin", "TurnBegin", "TurnEnd", "GameCoreEventPublishComplete", "LoadScreenClose",
 			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated" }) do
 			Events[k] = NewEvent();
 		end
@@ -153,6 +153,9 @@ local function NewGame(opts)
 		function m.Debut()
 			m.tourActif = true;
 			m.Events.LocalPlayerTurnBegin();
+		end
+		function m.DebutGlobal()
+			m.Events.TurnBegin(G.tour);
 		end
 		function m.Publie()
 			m.Events.GameCoreEventPublishComplete();
@@ -268,6 +271,45 @@ do
 	Check("spectateur : pas d'attente", G.machines[2].natives.attendre == 0 and #G.sent == 0);
 	G.machines[0].Debut(); G.machines[0].Publie();
 		Check("sans proxy et spectateur non attendus : l'hôte part seul", not G.machines[0].natives.attente and #G.sent == 0);
+end
+
+do
+	-- Hôte spectateur (partie du 2026-11-10) : il ne retient rien, mais reçoit les signaux et donne
+	-- le départ ; avant, personne ne le donnait et les joueurs attendaient le délai de sécurité.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true, spectateur = true },
+		[1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a, b = G.machines[0], G.machines[1], G.machines[2];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.sent = {};
+	G.tour = 2;
+	h.DebutGlobal();
+	Check("hôte spectateur : rien de retenu chez lui", h.natives.attendre == 0 and h.natives.armer == nil);
+	a.Debut(); a.Publie();
+	Check("hôte spectateur : pas de départ tant que B n'est pas prêt", a.natives.attente and #G.sent == 1);
+	b.Debut(); b.Publie();
+	Check("hôte spectateur : départ envoyé à A et B", #G.sent == 4 and G.sent[3].text == ".bgd_depart 2" and G.sent[4].text == ".bgd_depart 2");
+	Check("hôte spectateur : A et B partis", not a.natives.attente and not b.natives.attente);
+	h.Debut(); h.DebutGlobal();
+	Check("hôte spectateur : un seul départ par tour", #G.sent == 4);
+
+	-- Tour suivant : les signaux arrivent avant le début du tour chez l'hôte.
+	G.sent = {};
+	G.tour = 3;
+	a.Debut(); a.Publie(); b.Debut(); b.Publie();
+	Check("hôte spectateur : signaux reçus avant son début de tour", #G.sent == 2 and a.natives.attente);
+	h.DebutGlobal();
+	Check("hôte spectateur : départ dès son début de tour", not a.natives.attente and not b.natives.attente);
+
+	-- Un joueur absent : départ sans lui après le délai.
+	G.sent = {};
+	G.tour = 4;
+	h.DebutGlobal();
+	a.Debut(); a.Publie();
+	G.clock = G.clock + 61;
+	h.Tic(1);
+	Check("hôte spectateur : départ sans l'absent après le délai", not a.natives.attente);
 end
 
 do
