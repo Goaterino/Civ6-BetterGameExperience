@@ -152,6 +152,13 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "profil_zones", defaut = "off", libre = true, demarrage = true, diag = true,
 		choix = PROXY_ON_OFF },
+	-- Correctif de bug : sans réglage en release ; ici pour la couper ou voir le mode test.
+	{ cle = "garde_messages", defaut = "on", demarrage = true, diag = true,
+		choix = {
+			{ "on", "LOC_BGD_OPT_CHOIX_ACTIVE" },
+			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+			{ "test", "LOC_BGD_OPT_CHOIX_TEST" },
+		} },
 };
 
 -- Toutes les clés, réglages de diagnostic compris : la réinitialisation les retire toutes du fichier.

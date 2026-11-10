@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="it_IT">
 			<Text>Tutto tranne il Congresso Mondiale</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="it_IT">
+			<Text>Test</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="it_IT">
 			<Text>Generale</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="it_IT">
 			<Text>Registra la durata di ogni zona cronometrata dal gioco (immagine, interfaccia, script, eventi) in %LOCALAPPDATA%\Civ6RolloverProxy\zones, per l'analisi delle prestazioni. Circa 1 MB per secondo di gioco. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="it_IT">
+			<Text>Protezione dei messaggi di rete</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="it_IT">
+			<Text>Sostituisce con 0 i conteggi impossibili dei messaggi di rete (il blocco quando un giocatore si disconnette). Test: inietta una volta il conteggio del blocco in un messaggio reale, per vedere agire la protezione in una partita giocata da soli; quel messaggio va perso. Solo diagnostica: la release ha sempre la protezione. Effettivo dal prossimo avvio del gioco.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="it_IT">
 			<Text>Queste sono le impostazioni dei proxy di BetterGameExperience (rollover_proxy.cfg). Avranno effetto all'avvio della prossima partita.</Text>

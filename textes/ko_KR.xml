@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ko_KR">
 			<Text>세계 의회 제외 전부</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="ko_KR">
+			<Text>테스트</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ko_KR">
 			<Text>일반</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="ko_KR">
 			<Text>게임이 측정하는 각 구간(프레임, 인터페이스, 스크립트, 이벤트)의 시간을 성능 분석을 위해 %LOCALAPPDATA%\Civ6RolloverProxy\zones에 기록합니다. 플레이 1초당 약 1MB입니다. 다음에 게임을 시작할 때부터 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="ko_KR">
+			<Text>네트워크 메시지 보호</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="ko_KR">
+			<Text>네트워크 메시지의 불가능한 개수를 0으로 바꿉니다(플레이어 연결 끊김 시 멈춤 대책). 테스트: 멈춤의 개수를 실제 메시지에 한 번 주입하여 혼자 하는 게임에서 보호가 작동하는지 확인합니다. 그 메시지는 손실됩니다. 진단 전용: 릴리스에는 항상 보호가 있습니다. 다음 게임 실행 시 적용됩니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="ko_KR">
 			<Text>BetterGameExperience 프록시의 설정(rollover_proxy.cfg)입니다. 다음 게임을 시작할 때 적용됩니다.</Text>

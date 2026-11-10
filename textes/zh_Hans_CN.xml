@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="zh_Hans_CN">
 			<Text>除世界议会外全部</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="zh_Hans_CN">
+			<Text>测试</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="zh_Hans_CN">
 			<Text>常规</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="zh_Hans_CN">
 			<Text>将游戏计时的每个区段（帧、界面、脚本、事件）的耗时记录到 %LOCALAPPDATA%\Civ6RolloverProxy\zones，用于性能分析。每秒游戏约 1 MB。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="zh_Hans_CN">
+			<Text>网络消息保护</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="zh_Hans_CN">
+			<Text>将网络消息中不可能的计数替换为 0（玩家断开连接时的卡死）。测试：向一条真实消息注入一次卡死计数，以便在单人游戏中观察保护生效；该消息随之丢失。仅限诊断：发布版始终启用保护。下次启动游戏时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="zh_Hans_CN">
 			<Text>这些是 BetterGameExperience 代理的设置（rollover_proxy.cfg）。将在下一局游戏开始时生效。</Text>
