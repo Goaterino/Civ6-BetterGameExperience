@@ -2,6 +2,31 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.1
+
+### Nouveautés
+- **Annuler la production depuis le bandeau de ville** : un clic droit sur l'icône de production du
+  bandeau d'une de vos villes retire l'élément en cours, comme dans le panneau de production.
+- **Quartiers en réduction** : dans la liste de production, un quartier dont le coût est réduit
+  (moins de quartiers de ce type que votre moyenne) affiche sa réduction, par exemple **-40%**. Elle
+  se met à jour dès qu'un quartier est posé, puisqu'en poser un peut faire perdre la réduction. Les
+  quartiers qui ne comptent pas dans la moyenne, comme le Thành du Viêt Nam, sont aussi indiqués.
+- **Production en réserve** : le bandeau de la ville, le panneau de la ville et le panneau de
+  production affichent la production que la ville garde en réserve (débordement d'un élément
+  terminé, ou tour passé sans rien produire ; le jeu en garde au plus un tour), ajoutée à sa
+  production du tour suivant. Sur le bandeau d'une ville sans production, elle s'affiche en **+N**.
+
+### Corrections de l'interface
+- **Panneau de la ville après le retrait de la production** : le panneau en bas à droite se met à
+  jour quand on retire le seul élément de la file, au lieu de l'afficher encore.
+- **Clic droit sur la production en cours** : il la retire aussi depuis l'onglet Production, plus
+  seulement file ouverte.
+- **Salon de MPH** : hors draft, le tableau des joueurs remonte dans l'espace vide que MPH réserve
+  à son draft, et le « . » affiché au-dessus dans une partie rechargée disparaît.
+
+### Réglages
+- Les trois nouveautés ont chacune un réglage dans l'onglet BetterGameExperience, activé par défaut.
+
 ## BetterGameExperience 0.8.0
 
 En multijoueur, tous les humains doivent être en 0.8.0. Le correctif des accords en fin de tour ne

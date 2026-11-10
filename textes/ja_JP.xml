@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="ja_JP">
 			<Text>入れ替えによって生産キューから外れた遺産を、通常のゲームコマンドで戻します。プロキシを持たないプレイヤーとも同期ずれは起きません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="ja_JP">
+			<Text>都市バナーの生産を右クリックで取り消す</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="ja_JP">
+			<Text>自分の都市バナーの生産アイコンを右クリックすると、生産パネルでの右クリックと同じく、生産中の項目を取り除きます。通常のゲームコマンドなので同期ずれは起きません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="ja_JP">
+			<Text>割引中の区域を表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ja_JP">
+			<Text>生産リストで、コストが割引されている区域 (その種類の区域数が平均より少ない) に割引率を表示します。区域を配置するとすぐに更新されます。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ja_JP">
+			<Text>蓄えられた生産力</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ja_JP">
+			<Text>都市が蓄えている生産力 (余剰分、最大 1 ターン分) を、都市バナー、都市パネル、生産パネルに表示します。これは次のターンの生産力に加算されます。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ja_JP">
+			<Text>区域の割引: -{1}% (この種類の区域数が平均より少ない)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="ja_JP">
+			<Text>+{1} [ICON_Production] を保持中。次のターンの生産力に加算されます (最大 1 ターン分の生産力)。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="ja_JP">
 			<Text>総督や偉人の後に帝国の産出量を更新</Text>
 		</Row>

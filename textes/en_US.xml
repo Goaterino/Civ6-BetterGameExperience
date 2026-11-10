@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="en_US">
 			<Text>A wonder removed from the production queue by a swap is put back, through normal game commands: no desync, even against players without the proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="en_US">
+			<Text>Right-click the city banner production to cancel it</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="en_US">
+			<Text>A right-click on the production icon of one of your city banners removes the item being produced, like a right-click in the production panel. Normal game command: no desync.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="en_US">
+			<Text>Discounted districts badge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="en_US">
+			<Text>In the production list, districts whose cost is currently reduced (fewer of that district than your average) show their discount, updated as soon as a district is placed. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="en_US">
+			<Text>Stored production</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="en_US">
+			<Text>Shows the production a city keeps in reserve (overflow, at most one turn), which is added to its production next turn: on the city banner, in the city panel and in the production panel. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
+			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="en_US">
+			<Text>+{1} [ICON_Production] in reserve, added to next turn's production (at most one turn of production).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="en_US">
 			<Text>Empire yields updated after a governor or great person</Text>
 		</Row>

@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="it_IT">
 			<Text>Una meraviglia tolta dalla coda di produzione da uno scambio viene rimessa, tramite normali comandi del gioco: nessuna desincronizzazione, anche contro giocatori senza il proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="it_IT">
+			<Text>Clic destro sulla produzione dello stendardo della città per annullarla</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="it_IT">
+			<Text>Un clic destro sull'icona di produzione dello stendardo di una delle tue città rimuove l'elemento in corso, come un clic destro nel pannello di produzione. Comando normale del gioco: nessuna desincronizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="it_IT">
+			<Text>Indicatore dei distretti scontati</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="it_IT">
+			<Text>Nell'elenco di produzione, i distretti con costo ridotto (meno distretti di quel tipo della tua media) mostrano lo sconto, aggiornato non appena viene posizionato un distretto. Solo visualizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="it_IT">
+			<Text>Produzione in riserva</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="it_IT">
+			<Text>Mostra la produzione che una città tiene in riserva (eccedenza, al massimo un turno), aggiunta alla sua produzione del turno successivo: sullo stendardo della città, nel pannello della città e nel pannello di produzione. Solo visualizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="it_IT">
+			<Text>Sconto del distretto: -{1}% (hai meno distretti di questo tipo della tua media).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="it_IT">
+			<Text>+{1} [ICON_Production] in riserva, aggiunti alla produzione del prossimo turno (al massimo un turno di produzione).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="it_IT">
 			<Text>Rese dell'impero aggiornate dopo un governatore o un grande personaggio</Text>
 		</Row>

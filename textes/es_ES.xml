@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="es_ES">
 			<Text>Una maravilla retirada de la cola de producción por un intercambio se vuelve a poner, mediante órdenes normales del juego: sin desincronización, incluso contra jugadores sin el proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="es_ES">
+			<Text>Clic derecho en la producción del estandarte de la ciudad para cancelarla</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="es_ES">
+			<Text>Un clic derecho en el icono de producción del estandarte de una de tus ciudades retira el elemento en curso, como un clic derecho en el panel de producción. Orden normal del juego: sin desincronización.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="es_ES">
+			<Text>Insignia de distritos con descuento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="es_ES">
+			<Text>En la lista de producción, los distritos cuyo coste está reducido (menos distritos de ese tipo que tu media) muestran su descuento, actualizado en cuanto se coloca un distrito. Solo visualización.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="es_ES">
+			<Text>Producción en reserva</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="es_ES">
+			<Text>Muestra la producción que una ciudad guarda en reserva (excedente, como máximo un turno), que se suma a su producción del turno siguiente: en el estandarte de la ciudad, en el panel de la ciudad y en el panel de producción. Solo visualización.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="es_ES">
+			<Text>Descuento de distrito: -{1} % (tienes menos distritos de este tipo que tu media).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="es_ES">
+			<Text>+{1} [ICON_Production] en reserva, que se suman a la producción del próximo turno (como máximo un turno de producción).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="es_ES">
 			<Text>Rendimientos del imperio actualizados tras un gobernador o un gran personaje</Text>
 		</Row>

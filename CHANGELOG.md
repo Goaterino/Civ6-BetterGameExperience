@@ -4,6 +4,31 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.8.1
+
+### New
+- **Cancel production from the city banner**: right-click the production icon on the banner of
+  one of your cities to remove the item being produced, as in the production panel.
+- **Discounted districts**: in the production list, a district whose cost is reduced (you have fewer
+  of that district than your average) shows its discount, for example **-40%**. It updates as soon
+  as a district is placed, since placing one can end the discount. Districts that do not count in
+  the average, such as Vietnam's Thành, are shown too.
+- **Stored production**: a city's banner, the city panel and the production panel show the
+  production the city keeps in reserve (overflow from a finished item, or a turn spent without
+  producing; the game keeps at most one turn), which is added to its production next turn. On the
+  banner of a city without production it appears as **+N**.
+
+### Interface fixes
+- **City panel after removing the production**: the panel at the bottom right now updates when the
+  only item in the queue is removed, instead of still showing it.
+- **Right-click on the current production**: it now removes it from the Production tab too, not
+  only when the queue is open.
+- **MPH lobby**: outside a draft, the player list moves back up into the empty space MPH keeps
+  for its draft, and the stray « . » shown above it in a reloaded game is gone.
+
+### Settings
+- The three new features each have a setting in the BetterGameExperience tab, on by default.
+
 ## BetterGameExperience 0.8.0
 
 Multiplayer games need every human player on 0.8.0. The end-of-turn deal fix only protects the

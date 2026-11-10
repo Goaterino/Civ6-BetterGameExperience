@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="pl_PL">
 			<Text>Cud usunięty z kolejki produkcji przez zamianę zostaje do niej przywrócony zwykłymi poleceniami gry: bez desynchronizacji, także z graczami bez proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="pl_PL">
+			<Text>Prawy klik na produkcję w banerze miasta, aby ją anulować</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="pl_PL">
+			<Text>Prawy klik na ikonę produkcji w banerze jednego z twoich miast usuwa bieżący element, tak jak prawy klik w panelu produkcji. Zwykłe polecenie gry: bez desynchronizacji.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="pl_PL">
+			<Text>Oznaczenie tańszych dzielnic</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="pl_PL">
+			<Text>Na liście produkcji dzielnice o obniżonym koszcie (mniej dzielnic tego typu niż twoja średnia) pokazują zniżkę, odświeżaną od razu po umieszczeniu dzielnicy. Tylko wyświetlanie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="pl_PL">
+			<Text>Zachowana produkcja</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="pl_PL">
+			<Text>Pokazuje produkcję, którą miasto trzyma w zapasie (nadwyżka, najwyżej jedna tura) i która dochodzi do jego produkcji w następnej turze: w banerze miasta, w panelu miasta i w panelu produkcji. Tylko wyświetlanie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pl_PL">
+			<Text>Zniżka dzielnicy: -{1}% (masz mniej dzielnic tego typu niż twoja średnia).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="pl_PL">
+			<Text>+{1} [ICON_Production] w zapasie, doliczane do produkcji w następnej turze (najwyżej jedna tura produkcji).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="pl_PL">
 			<Text>Aktualne plony imperium po gubernatorze lub wielkim człowieku</Text>
 		</Row>

@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="ru_RU">
 			<Text>Чудо, убранное из очереди производства перестановкой, возвращается в неё обычными командами игры: без рассинхронизации, даже с игроками без прокси.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="ru_RU">
+			<Text>Правый щелчок по производству на баннере города отменяет его</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="ru_RU">
+			<Text>Правый щелчок по значку производства на баннере вашего города убирает текущий элемент, как правый щелчок в панели производства. Обычная команда игры: без рассинхронизации.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="ru_RU">
+			<Text>Отметка районов со скидкой</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ru_RU">
+			<Text>В списке производства районы со сниженной стоимостью (таких районов у вас меньше среднего) показывают скидку; она обновляется сразу после размещения района. Только отображение.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ru_RU">
+			<Text>Запасённое производство</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ru_RU">
+			<Text>Показывает производство, которое город держит в запасе (излишек, не больше одного хода) и которое добавится к его производству на следующем ходу: на баннере города, в панели города и в панели производства. Только отображение.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ru_RU">
+			<Text>Скидка на район: -{1}% (таких районов у вас меньше среднего).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="ru_RU">
+			<Text>+{1} [ICON_Production] в запасе, добавятся к производству следующего хода (не больше одного хода производства).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="ru_RU">
 			<Text>Доходы империи обновляются после губернатора или великого человека</Text>
 		</Row>

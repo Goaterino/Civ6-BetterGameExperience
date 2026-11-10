@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="fr_FR">
 			<Text>Une merveille retirée de la file de production par un échange y est remise, par des commandes normales du jeu : pas de désynchronisation, même face à des joueurs sans proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="fr_FR">
+			<Text>Clic droit sur la production du bandeau de ville pour l'annuler</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="fr_FR">
+			<Text>Un clic droit sur l'icône de production du bandeau d'une de vos villes retire l'élément en cours, comme un clic droit dans le panneau de production. Commande normale du jeu : pas de désynchronisation.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="fr_FR">
+			<Text>Badge des quartiers en réduction</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="fr_FR">
+			<Text>Dans la liste de production, les quartiers dont le coût est réduit (moins de quartiers de ce type que votre moyenne) affichent leur réduction, mise à jour dès qu'un quartier est posé. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="fr_FR">
+			<Text>Production en réserve</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="fr_FR">
+			<Text>Affiche la production qu'une ville garde en réserve (débordement, au plus un tour), ajoutée à sa production du tour suivant : sur le bandeau de ville, dans le panneau de la ville et dans le panneau de production. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
+			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="fr_FR">
+			<Text>+{1} [ICON_Production] en réserve, ajoutés à la production du prochain tour (au plus un tour de production).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="fr_FR">
 			<Text>Rendements d'empire à jour après un gouverneur ou un personnage illustre</Text>
 		</Row>
