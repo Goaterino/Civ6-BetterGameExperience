@@ -907,6 +907,12 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         return Some(patch_merveilles(src));
     }
     if is_file(chunk, "WorldCongressPopup.lua") {
+        // Le popup du proxy spectateur est complet : la fenetre reste consultable pendant les
+        // votes. Les blocs de ce module, ecrits pour la popup vanilla, la casseraient.
+        if crate::mods_ui::popup_spectateur_actif() {
+            what.push("popup du Congres du proxy spectateur, blocs du proxy non ajoutes".into());
+            return None;
+        }
         publish_pol(l);
         publish_revote(l);
         let spectateurs = crate::spectateurs::poses();

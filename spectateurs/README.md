@@ -201,6 +201,26 @@ lua proxy/tests/test_congres.lua
 `check_hooks.py` vérifie la pose et la restauration des cinq détours sur la vraie DLL. Rien n'a
 encore été essayé en partie.
 
+## Le niveau de civilisation
+
+Les correctifs ci-dessus laissent le spectateur classé majeur : il figure dans les listes de majeurs,
+et notamment dans celles que lit le Lua (`PlayerManager.GetAliveMajorIDs`). BSM le détecte ainsi.
+
+Le getter `180169cd0` rend le niveau d'un joueur. Pour un spectateur, le proxy rend
+`CIVILIZATION_LEVEL_SPECTATOR` (`d67f2ab1`, le niveau défini par BSM) au lieu de `FULL_CIV` : il sort
+des listes de majeurs, des conditions de victoire et du score.
+
+Deux points qui ne se déduisent pas :
+
+- l'objet reçu par ce getter **n'est pas le CvPlayer** : c'est un wrapper de `0x20` octets où l'ID du
+  joueur est à `+0x00`. À `+0xD8` on lit un pointeur partagé, identique pour tous les joueurs ;
+- la pose vole **14 octets** : `sub rsp,28h`, `mov rcx,[rcx+10h]` et `mov edx,[rip+0A2393Eh]`. La
+  globale lue par la troisième instruction n'est pas encore initialisée à la pose : le trampoline la
+  relit à l'exécution (`mov r11,imm64` / `mov edx,[r11]`).
+
+Le détour est posé séparément des autres : si les octets attendus manquent, seul le niveau reste
+inchangé, et le journal le dit.
+
 ## Refaire
 
 Décompilations : `analyzeHeadless ~/Tools/ghidra-projects civ6xp2 -process
