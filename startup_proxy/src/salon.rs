@@ -16,11 +16,19 @@
 //!   ajouté à la fin de `InGame.lua`, y ajoute son jeton sans changer l'état.
 //!
 //! Une machine qui n'appliquerait pas ces correctifs ne doit pas s'annoncer : `Civ6Proxy_Version()`
-//! rend alors nil et la raison (proxy de GameCore absent, désactivé, ou correctifs non posés).
+//! rend alors nil et la raison (proxy de GameCore absent, désactivé, d'une autre version que ce
+//! proxy, ou correctifs non posés).
+//!
+//! La version annoncée est celle de ce proxy, mais les correctifs POL sont ceux du proxy de GameCore :
+//! après une installation partielle (une seule des deux DLL mise à jour), deux machines annonceraient
+//! la même version sans appliquer les mêmes règles. Les deux DLL compilent `proxy/src/version.rs` ;
+//! leurs `VERSION` doivent être égales, lues par l'export `BgdVersion` du proxy de GameCore s'il est
+//! chargé, sinon par sa marque `BgdVersion=<version>` dans le fichier (`version_du_fichier`).
 
 use crate::options::{hks, publish_natives, push_str, Natives};
-use crate::version::VERSION;
+use crate::version::{MARQUE, VERSION};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Mutex;
 
 pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("salon.lua"));
 pub const SCRIPT: &str = "stagingroom.lua";
@@ -52,25 +60,109 @@ pub fn actif_off(cfg: &str) -> bool {
 /// Pourquoi cette machine n'appliquerait pas les correctifs POL, ou None si elle les appliquera.
 /// Proxy de GameCore déjà chargé : il le dit lui-même (bit ST_POL). Sinon, il le sera au lancement
 /// de la partie, avec le fichier de réglages tel qu'il est.
+/// Ensuite, dans les deux cas, sa version doit être celle de ce proxy (`version_differente`).
 fn pol_indisponible() -> Option<String> {
+    let m = unsafe { crate::win::GetModuleHandleW(crate::win::wide(crate::noms::GAMECORE_PROXY).as_ptr()) };
     unsafe {
-        let m = crate::win::GetModuleHandleW(crate::win::wide(crate::noms::GAMECORE_PROXY).as_ptr());
         let p = if m.is_null() { std::ptr::null_mut() } else { crate::win::GetProcAddress(m, b"RolloverProxyStatus\0".as_ptr()) };
         if !p.is_null() {
             let status: extern "system" fn() -> u32 = std::mem::transmute(p);
             let st = status();
             if st & ST_ORIGINAL != 0 {
-                return (st & ST_POL == 0)
-                    .then(|| "le proxy de GameCore chargé n'a pas posé les correctifs POL (actif=off, ou jeu d'une autre version)".to_string());
+                if st & ST_POL == 0 {
+                    return Some("le proxy de GameCore chargé n'a pas posé les correctifs POL (actif=off, ou jeu d'une autre version)".to_string());
+                }
+                return version_differente(version_chargee(m).as_deref());
             }
         }
     }
     match crate::options::read_config() {
         Ok((_, false)) => Some("proxy de GameCore non installé".into()),
         Ok((cfg, true)) if actif_off(&cfg) => Some("proxys désactivés (actif=off)".into()),
-        Ok(_) => None,
+        Ok(_) if !m.is_null() => version_differente(unsafe { version_chargee(m) }.as_deref()),
+        Ok(_) => version_differente(version_du_fichier().as_deref()),
         Err(e) => Some(e),
     }
+}
+
+/// None si le proxy de GameCore a la version de ce proxy ; sinon la raison, journalisée avec les
+/// deux versions (une fois par raison). `gamecore` : sa version, None s'il n'en dit pas (proxy plus
+/// ancien que l'export `BgdVersion`, compté comme une autre version).
+fn version_differente(gamecore: Option<&str>) -> Option<String> {
+    let raison = raison_version(gamecore)?;
+    static DERNIERE: Mutex<String> = Mutex::new(String::new());
+    let mut d = DERNIERE.lock().unwrap_or_else(|e| e.into_inner());
+    if *d != raison {
+        crate::log(&format!("salon : {raison}"));
+        raison.clone_into(&mut d);
+    }
+    Some(raison)
+}
+
+pub fn raison_version(gamecore: Option<&str>) -> Option<String> {
+    let nom = crate::noms::GAMECORE_PROXY;
+    match gamecore {
+        Some(v) if v == VERSION => None,
+        Some(v) => Some(format!("versions différentes : winmm.dll {VERSION}, {nom} {v} (installation partielle ?)")),
+        None => Some(format!("versions différentes : winmm.dll {VERSION}, {nom} sans version (antérieur à l'export BgdVersion)")),
+    }
+}
+
+/// Version du proxy de GameCore chargé, par son export `BgdVersion` (chaîne terminée par un NUL).
+unsafe fn version_chargee(m: crate::win::HMODULE) -> Option<String> {
+    let p = crate::win::GetProcAddress(m, b"BgdVersion\0".as_ptr());
+    if p.is_null() {
+        return None;
+    }
+    let f: extern "system" fn() -> *const u8 = std::mem::transmute(p);
+    let s = f();
+    if s.is_null() {
+        return None;
+    }
+    // 64 octets au plus : une version tient en quelques-uns.
+    let octets: Vec<u8> = (0..64).map(|i| *s.add(i)).take_while(|&b| b != 0).collect();
+    version_valide(&octets)
+}
+
+/// Version du proxy de GameCore pas encore chargé (premier salon d'une session) : sa marque dans le
+/// fichier. Relue seulement si le fichier change (taille ou date).
+fn version_du_fichier() -> Option<String> {
+    type Cache = Option<((u64, Option<std::time::SystemTime>), Option<String>)>;
+    static CACHE: Mutex<Cache> = Mutex::new(None);
+    let chemin = crate::options::gamecore_dir()?.join(crate::noms::GAMECORE_PROXY);
+    let meta = std::fs::metadata(&chemin).ok()?;
+    let cle = (meta.len(), meta.modified().ok());
+    let mut c = CACHE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((k, v)) = c.as_ref() {
+        if *k == cle {
+            return v.clone();
+        }
+    }
+    let v = std::fs::read(&chemin).ok().and_then(|data| version_marquee(&data));
+    *c = Some((cle, v.clone()));
+    v
+}
+
+/// La première marque `BgdVersion=<version>\0` du fichier, version valide.
+pub fn version_marquee(data: &[u8]) -> Option<String> {
+    let marque = MARQUE.as_bytes();
+    let mut debut = 0;
+    while let Some(i) = data[debut..].windows(marque.len()).position(|w| w == marque) {
+        let apres = &data[debut + i + marque.len()..];
+        if let Some(fin) = apres.iter().take(64).position(|&b| b == 0) {
+            if let Some(v) = version_valide(&apres[..fin]) {
+                return Some(v);
+            }
+        }
+        debut += i + 1;
+    }
+    None
+}
+
+/// Une version comme celles de version.rs : `0.8.0`, `1.0.0-rc.1`.
+fn version_valide(octets: &[u8]) -> Option<String> {
+    let ok = !octets.is_empty() && octets.len() <= 32 && octets.iter().all(|&b| b.is_ascii_alphanumeric() || b"._+-".contains(&b));
+    ok.then(|| String::from_utf8_lossy(octets).into_owned())
 }
 
 /// StagingRoom.lua suivi du bloc du salon. Octets laissés tels quels, comme pour Options.lua.
@@ -225,6 +317,24 @@ mod tests {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(LUA_BLOCK.contains(name), "{name} posée mais pas utilisée par le bloc");
         }
+    }
+
+    #[test]
+    fn version_du_proxy_de_gamecore() {
+        assert_eq!(raison_version(Some(VERSION)), None);
+        let r = raison_version(Some("0.0.1")).unwrap();
+        assert!(r.contains(&format!("winmm.dll {VERSION}")) && r.contains("BGD_GameCore_XP2.dll 0.0.1"), "{r}");
+        let r = raison_version(None).unwrap();
+        assert!(r.contains(&format!("winmm.dll {VERSION}")) && r.contains("sans version"), "{r}");
+        // La marque dans le fichier, telle que la grave proxy/src/lib.rs.
+        let mut dll = b"MZ\0\0BgdVersion\0BgdVersion=\x01\0".to_vec();
+        dll.extend_from_slice(format!("xx{MARQUE}0.9.1-rc.2\0yy").as_bytes());
+        assert_eq!(version_marquee(&dll).as_deref(), Some("0.9.1-rc.2"));
+        assert_eq!(version_marquee(b"MZ RolloverProxyStatus BgdVersion\0"), None, "proxy plus ancien : pas de marque");
+        assert_eq!(version_marquee(format!("{MARQUE}0.8.0").as_bytes()), None, "sans NUL final");
+        assert_eq!(version_valide(b"0.8.0"), Some("0.8.0".into()));
+        assert_eq!(version_valide(b""), None);
+        assert_eq!(version_valide(b"0.8 0"), None);
     }
 
     #[test]

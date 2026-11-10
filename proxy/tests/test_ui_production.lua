@@ -14,8 +14,12 @@ end
 local BLOCK = ReadFile(dir .. "/../src/ui_production.lua");
 local PANEL_PATH = arg[1]
 	or [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Assets\UI\Panels\ProductionPanel.lua]];
+local okPanel, PANEL = pcall(ReadFile, PANEL_PATH);
+if not okPanel then
+	print("ProductionPanel.lua introuvable (" .. PANEL_PATH .. "), test sauté");
+	return;
+end
 -- HavokScript accepte des annotations de type (`local x:number`) que Lua 5.4 refuse : on les retire.
-local PANEL = ReadFile(PANEL_PATH);
 for _, t in ipairs({ "table", "number", "string", "boolean", "object" }) do
 	PANEL = PANEL:gsub("%s*:%s*" .. t .. "%f[^%w_(]", "");
 end

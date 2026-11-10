@@ -14,8 +14,12 @@ end
 local BLOCK = ReadFile(dir .. "/../src/ui_merveilles.lua");
 local HELPER_PATH = arg[1]
 	or [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Assets\UI\ProductionHelper.lua]];
+local okHelper, HELPER = pcall(ReadFile, HELPER_PATH);
+if not okHelper then
+	print("ProductionHelper.lua introuvable (" .. HELPER_PATH .. "), test sauté");
+	return;
+end
 -- HavokScript accepte des annotations de type (`local x:number`) que Lua 5.4 refuse : on les retire.
-local HELPER = ReadFile(HELPER_PATH);
 for _, t in ipairs({ "table", "number", "string", "boolean", "object" }) do
 	HELPER = HELPER:gsub("%s*:%s*" .. t .. "%f[^%w_(]", "");
 end

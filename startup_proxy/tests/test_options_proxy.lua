@@ -15,8 +15,12 @@ end
 local BLOCK = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/options_proxy.lua");
 local OPTIONS_PATH = arg[1]
 	or [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Assets\UI\Options.lua]];
+local okOptions, OPTIONS = pcall(ReadFile, OPTIONS_PATH);
+if not okOptions then
+	print("Options.lua introuvable (" .. OPTIONS_PATH .. "), test sauté");
+	return;
+end
 -- HavokScript accepte des annotations de type (`local x:number`) que Lua 5.4 refuse : on les retire.
-local OPTIONS = ReadFile(OPTIONS_PATH);
 for _, t in ipairs({ "table", "number", "string", "boolean", "object" }) do
 	OPTIONS = OPTIONS:gsub("%s*:%s*" .. t .. "%f[^%w_(]", "");
 end
