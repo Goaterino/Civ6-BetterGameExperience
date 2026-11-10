@@ -159,6 +159,8 @@ local function NewLobby(joueurs, options)
 			env.Civ6Proxy_Jeton = function() lobby.tokens = lobby.tokens + 1; return "j" .. lobby.tokens; end
 			env.Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end
 			env.Civ6Proxy_VersionInstallee = function() return j.version or "0.1.0"; end
+			-- `options.avant` : globales et contrôles du StagingRoom.lua de MPH, posés avant le bloc.
+			if options.avant then options.avant(env); end
 			local chunk = assert(load(BLOCK, "=salon.lua", "t", env));
 			chunk();
 		end
@@ -647,6 +649,59 @@ do
 	env.OnChat(1, -1, "[COLOR_GREEN]BGE - Bob has BetterGameExperience 0.1.0 enabled.[ENDCOLOR]");
 	env.OnChat(1, -1, "salut");
 	check(#recus == 2 and recus[1] == "[COLOR_GREEN]BGE - Bob a BetterGameExperience 0.1.0 activé.[ENDCOLOR]" and recus[2] == "salut", "chat filtré : " .. table.concat(recus, " | "));
+end
+
+-- 26. Salon de MPH : hors draft, libellé « . » vidé et tableau remonté ; draft : mise en page de MPH.
+do
+	local function Ctrl(cache, y, h, texte)
+		local c = { cache = cache, y = y, h = h, texte = texte, calculs = 0 };
+		function c:SetHide(v) self.cache = v; end
+		function c:IsHidden() return self.cache; end
+		function c:SetText(t) self.texte = t; end
+		function c:GetText() return self.texte; end
+		function c:GetOffsetY() return self.y; end
+		function c:SetOffsetY(v) self.y = v; end
+		function c:GetSizeY() return self.h; end
+		function c:SetSizeY(v) self.h = v; end
+		function c:CalculateSize() self.calculs = self.calculs + 1; end
+		return c;
+	end
+	local grilles = 0;
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true, avant = function(env)
+		env.Controls.PhaseLabel = Ctrl(false, 99, 0, ".");
+		env.Controls.PhaseLabel_Version = Ctrl(false, 150, 0, "v180");
+		env.Controls.PrimaryPanelStack = Ctrl(false, 180, 0);
+		env.Controls.HeaderStack = Ctrl(false, 161, 28);
+		env.Controls.PrimaryStackGrid = Ctrl(false, 0, 320);
+		env.Controls.BanPullDown = Ctrl(true, 200, 46);
+		env.RealizeGridSize = function() grilles = grilles + 1; end
+		env.Resize = function() env.Controls.PrimaryStackGrid.h = 300; end
+	end });
+	local c = l.machines[0].env.Controls;
+	l.open();
+	l.tic();
+	check(c.PhaseLabel.texte == "", "libellé « . » vidé : " .. tostring(c.PhaseLabel.texte));
+	check(c.PrimaryPanelStack.y == 128 and c.PrimaryStackGrid.h == 372 and c.PhaseLabel_Version.y == 98 and c.HeaderStack.y == 109 and grilles > 0,
+		"tableau remonté : " .. c.PrimaryPanelStack.y .. " " .. c.PrimaryStackGrid.h .. " " .. c.PhaseLabel_Version.y);
+	l.tic();
+	check(c.PrimaryPanelStack.y == 128 and c.PrimaryStackGrid.h == 372, "une seule fois");
+	l.machines[0].env.Resize();
+	check(c.PrimaryStackGrid.h == 352, "redimensionnement de MPH : place rendue gardée : " .. c.PrimaryStackGrid.h);
+	c.BanPullDown.cache = false;
+	l.tic();
+	check(c.PrimaryPanelStack.y == 180 and c.PrimaryStackGrid.h == 300 and c.PhaseLabel_Version.y == 150 and c.HeaderStack.y == 161, "draft : mise en page de MPH");
+	c.BanPullDown.cache = true;
+	c.PhaseLabel.texte = "FFA Phase 3: Let's Go!";
+	l.tic();
+	check(c.PrimaryPanelStack.y == 180, "libellé de phase écrit : mise en page de MPH");
+end
+
+-- 27. Salon du jeu de base (sans les contrôles de MPH) : rien ne bouge, pas d'erreur.
+do
+	local l = NewLobby({ { nom = "Hôte" } }, { controles = true });
+	l.open();
+	l.tic();
+	check(not (l.machines[0].log or ""):find("erreur", 1, true), "salon de base : pas d'erreur");
 end
 
 if failures > 0 then
