@@ -105,10 +105,16 @@ pub extern "system" fn RolloverProxyLoadOriginal() -> usize {
     forward::real_module()
 }
 
-fn log_path() -> Option<std::path::PathBuf> {
-    let dir = std::path::Path::new(&std::env::var_os("LOCALAPPDATA")?).join("Civ6RolloverProxy");
-    std::fs::create_dir_all(&dir).ok()?;
-    Some(dir.join("RolloverProxy.log"))
+/// Chemin du journal, calculé une fois : le dossier n'est pas recréé à chaque ligne.
+fn log_path() -> Option<&'static std::path::Path> {
+    static CHEMIN: std::sync::OnceLock<Option<std::path::PathBuf>> = std::sync::OnceLock::new();
+    CHEMIN
+        .get_or_init(|| {
+            let dir = std::path::Path::new(&std::env::var_os("LOCALAPPDATA")?).join("Civ6RolloverProxy");
+            std::fs::create_dir_all(&dir).ok()?;
+            Some(dir.join("RolloverProxy.log"))
+        })
+        .as_deref()
 }
 
 pub(crate) fn log(msg: &str) {
