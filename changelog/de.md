@@ -16,6 +16,12 @@
   Produktion, die eine Stadt in Reserve hält (Überschuss eines fertigen Elements oder eine Runde
   ohne Produktion; das Spiel bewahrt höchstens eine Runde auf) und die in der nächsten Runde zu
   ihrer Produktion hinzukommt. Im Banner einer Stadt ohne Produktion erscheint sie als **+N**.
+- **BGE Check**: In einer Mehrspieler-Lobby hat der Host neben dem MOD CHECK von MPH einen Knopf
+  **BGE CHECK**, der jeden Spieler nach seiner BetterGameExperience-Version fragt und das Ergebnis
+  in den Chat schreibt: gleiche Version, andere Version, installiert aber deaktiviert oder keine
+  Antwort.
+- **Ankunftsmeldung**: Beim Öffnen einer Lobby mit aktiviertem BetterGameExperience meldet der
+  Chat dies, mit Ihrer genauen Version.
 
 ### Korrekturen der Oberfläche
 - **Stadtfenster nach dem Entfernen der Produktion**: Das Fenster unten rechts wird aktualisiert,

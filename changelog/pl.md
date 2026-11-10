@@ -15,6 +15,11 @@
   miasto trzyma w zapasie (nadwyżka z ukończonego elementu albo tura bez produkcji; gra zachowuje
   najwyżej jedną turę) i która dochodzi do jego produkcji w następnej turze. W banerze miasta bez
   produkcji pojawia się jako **+N**.
+- **BGE Check**: w poczekalni gry wieloosobowej host ma przycisk **BGE CHECK**, obok MOD CHECK z
+  MPH, który pyta każdego gracza o jego wersję BetterGameExperience i wypisuje wynik na czacie: ta
+  sama wersja, inna wersja, zainstalowany, ale wyłączony, albo brak odpowiedzi.
+- **Wiadomość o dołączeniu**: po otwarciu poczekalni z włączonym BetterGameExperience czat to
+  ogłasza, z dokładną wersją.
 
 ### Poprawki interfejsu
 - **Panel miasta po usunięciu produkcji**: panel w prawym dolnym rogu odświeża się po usunięciu

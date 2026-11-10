@@ -16,6 +16,11 @@
   producción muestran la producción que la ciudad guarda en reserva (excedente de un elemento
   terminado, o un turno sin producir; el juego guarda como máximo un turno), que se suma a su
   producción del turno siguiente. En el estandarte de una ciudad sin producción aparece como **+N**.
+- **BGE Check**: en una sala multijugador, el anfitrión tiene un botón **BGE CHECK**, junto al MOD
+  CHECK de MPH, que pide a cada jugador su versión de BetterGameExperience y escribe el resultado en
+  el chat: misma versión, otra versión, instalado pero desactivado o sin respuesta.
+- **Mensaje de llegada**: al abrir una sala con BetterGameExperience activado, el chat lo anuncia,
+  con tu versión exacta.
 
 ### Correcciones de la interfaz
 - **Panel de la ciudad tras retirar la producción**: el panel de abajo a la derecha se actualiza al

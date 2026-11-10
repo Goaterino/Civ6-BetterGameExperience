@@ -17,6 +17,12 @@
   completato, o un turno senza produrre; il gioco ne conserva al massimo un turno), aggiunta alla
   sua produzione del turno successivo. Sullo stendardo di una città senza produzione appare come
   **+N**.
+- **BGE Check**: in una sala d'attesa multigiocatore, l'host ha un pulsante **BGE CHECK**, accanto
+  al MOD CHECK di MPH, che chiede a ogni giocatore la sua versione di BetterGameExperience e scrive
+  il risultato in chat: stessa versione, altra versione, installato ma disattivato o nessuna
+  risposta.
+- **Messaggio di arrivo**: all'apertura di una sala d'attesa con BetterGameExperience attivo, la
+  chat lo annuncia, con la tua versione esatta.
 
 ### Correzioni dell'interfaccia
 - **Pannello della città dopo aver rimosso la produzione**: il pannello in basso a destra si

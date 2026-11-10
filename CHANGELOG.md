@@ -17,6 +17,11 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
   production the city keeps in reserve (overflow from a finished item, or a turn spent without
   producing; the game keeps at most one turn), which is added to its production next turn. On the
   banner of a city without production it appears as **+N**.
+- **BGE Check**: in a multiplayer lobby, the host has a **BGE CHECK** button, next to MPH's MOD
+  CHECK, which asks every player for their BetterGameExperience version and posts the result in
+  the chat: same version, other version, installed but disabled, or no answer.
+- **Arrival message**: when you open a lobby with BetterGameExperience enabled, the chat says so,
+  with your exact version.
 
 ### Interface fixes
 - **City panel after removing the production**: the panel at the bottom right now updates when the
