@@ -470,6 +470,16 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
         }
         return r;
     }
+    if is_file(&name, crate::salon::XML) {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match crate::salon::patch_staging_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("salon : {name} : bouton BGE Check et minuteur ajoutés")),
+            Ok(_) => log(&format!("salon : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("salon : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
     if is_file(&name, crate::rapport::XML_PARTIE) {
         let b = &mut *buf;
         let Some(src) = b.text() else { return r };

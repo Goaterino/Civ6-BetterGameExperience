@@ -311,6 +311,18 @@
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ru_RU">
 			<Text>No First/Last moves отключено: всем игрокам нужен BetterGameExperience одной и той же версии.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ru_RU">
+			<Text>У {1} включён BetterGameExperience {2}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ru_RU">
+			<Text>BGE Check: у всех игроков включён BetterGameExperience {1} ({2}).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="ru_RU">
+			<Text>BGE Check (хост: {1}). Та же версия: {2}. Другая версия: {3}. Установлен, но неактивен: {4}. Нет ответа (без BetterGameExperience): {5}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="ru_RU">
+			<Text>Запрашивает у каждого игрока его версию BetterGameExperience и публикует итог в чате для всех.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ru_RU">
 			<Text>приказы задержаны: ход ещё не начался для всех игроков.</Text>
 		</Row>
