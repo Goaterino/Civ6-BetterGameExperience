@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="fr_FR">
 			<Text>Tout sauf le Congrès mondial</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="fr_FR">
+			<Text>Test</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="fr_FR">
 			<Text>Général</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="fr_FR">
 			<Text>Note la durée de chaque zone chronométrée par le jeu (image, interface, scripts, événements) dans %LOCALAPPDATA%\Civ6RolloverProxy\zones, pour l'analyse des performances. Environ 1 Mo par seconde de jeu. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="fr_FR">
+			<Text>Garde des messages réseau</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="fr_FR">
+			<Text>Remplace par 0 les comptes impossibles des messages réseau (le gel à la déconnexion d'un joueur). Test : injecte une fois le compte du gel dans un vrai message, pour voir la garde agir dans une partie jouée seul ; ce message est alors perdu. Diagnostic seulement : la release a toujours la garde. Prend effet au prochain lancement du jeu.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="fr_FR">
 			<Text>Ces réglages sont ceux des proxys BetterGameExperience (rollover_proxy.cfg). Ils prendront effet au lancement de la prochaine partie.</Text>

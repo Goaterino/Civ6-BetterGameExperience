@@ -29,10 +29,11 @@
 //! Adresses de `CivilizationVI_DX12.exe` du 5 novembre 2026, vérifiées octet par octet : sur un
 //! autre exe (DX11, autre version), rien n'est posé et le journal le dit.
 //! Réglages : `actif=off` (l'interrupteur général) ne pose rien, comme pour le reste du mod ;
-//! `garde_messages=off` dans `rollover_proxy.cfg` désactive la garde seule (`on` par défaut) ;
-//! `garde_messages=test` injecte une fois le compte du gel à la première lecture « carte :
-//! entrées », pour voir la garde agir dans une partie jouée seul (le journal montre l'injection,
-//! puis la correction).
+//! c'est un correctif de bug, sans réglage en release. Dans les builds de diagnostic (feature
+//! `diag`) seulement, `garde_messages` dans `rollover_proxy.cfg` (onglet, section Diagnostic) :
+//! `off` désactive la garde seule ; `test` injecte une fois le compte du gel à la première lecture
+//! « carte : entrées », pour voir la garde agir dans une partie jouée seul (le journal montre
+//! l'injection, puis la correction). Le mode `test` abîme un vrai message : jamais en release.
 
 use crate::{log, patch, win};
 use std::ffi::c_void;
@@ -60,7 +61,9 @@ pub enum Regle {
     Compte,
     /// Un nombre d'entrées, ou, négatif, le mot de drapeaux du format nommé (laissé tel quel).
     CompteOuDrapeaux,
-    /// La longueur d'un variant, lue juste après ses drapeaux (destination + 4).
+    /// La longueur d'un variant. Ses drapeaux sont lus avant elle, et rangés juste après elle en
+    /// mémoire : à destination + 4 (`DeserializeDataVariant`, drapeaux en variant + 0xC, longueur
+    /// en variant + 8 ; vérifié dans Ghidra le 2026-11-10).
     Longueur,
 }
 
@@ -108,6 +111,8 @@ pub enum Mode {
 }
 
 /// Le réglage `garde_messages` de `rollover_proxy.cfg` (dernière occurrence ; `on` par défaut).
+/// Lu seulement avec la feature `diag`.
+#[cfg_attr(not(feature = "diag"), allow(dead_code))]
 pub fn mode(cfg: &str) -> Mode {
     match cfg.lines().filter_map(|l| l.trim().strip_prefix("garde_messages=")).last().map(str::trim) {
         Some("off") => Mode::Off,
@@ -140,12 +145,15 @@ pub fn a_annoncer() -> u32 {
     A_ANNONCER.swap(0, Ordering::Relaxed)
 }
 
-type Lecture = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut u8, usize) -> usize;
+// `C-unwind` : si la lecture d'origine levait une exception C++, elle traverserait ces cadres au
+// lieu d'arrêter le processus. Aucune levée n'a été trouvée dans le désérialiseur (Ghidra,
+// 2026-11-10), mais la lecture virtuelle du lecteur n'a pas été suivie.
+type Lecture = unsafe extern "C-unwind" fn(*mut c_void, *mut c_void, *mut u8, usize) -> usize;
 
 /// La lecture détournée. Le bout d'assembleur `bgd_messages_lecture_stub` l'appelle avec, en
 /// cinquième argument, l'adresse de retour de l'appelant de la lecture : le site dans le
 /// désérialiseur. Après la lecture d'origine, une valeur impossible à l'un des six sites devient 0.
-unsafe extern "C" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut u8, n: usize, retour: usize) -> usize {
+unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut u8, n: usize, retour: usize) -> usize {
     let real: Lecture = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
     let r = real(lecteur, desc, dest, n);
     if n == 4 && !dest.is_null() {
@@ -192,7 +200,7 @@ std::arch::global_asm!(
     ".seh_endproc",
     lecture = sym lecture,
 );
-extern "C" {
+extern "C-unwind" {
     fn bgd_messages_lecture_stub();
 }
 
@@ -224,7 +232,12 @@ pub unsafe fn install() {
         log("messages : garde non posée (actif=off)");
         return;
     }
-    match mode(&cfg) {
+    // Correctif de bug : pas de réglage en release, la garde est toujours posée.
+    #[cfg(feature = "diag")]
+    let m = mode(&cfg);
+    #[cfg(not(feature = "diag"))]
+    let m = Mode::On;
+    match m {
         Mode::Off => {
             log("messages : garde désactivée (garde_messages=off)");
             return;

@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ja_JP">
 			<Text>世界議会以外すべて</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="ja_JP">
+			<Text>テスト</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ja_JP">
 			<Text>全般</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="ja_JP">
 			<Text>ゲームが計測する各区間 (フレーム、インターフェース、スクリプト、イベント) の所要時間を、パフォーマンス分析のため %LOCALAPPDATA%\Civ6RolloverProxy\zones に記録します。プレイ1秒あたり約1MB。次回のゲーム起動時から有効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="ja_JP">
+			<Text>ネットワークメッセージの保護</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="ja_JP">
+			<Text>ネットワークメッセージ内のありえない件数を0に置き換えます（プレイヤー切断時のフリーズ対策）。テスト：フリーズの件数を一度だけ実際のメッセージに注入し、一人でプレイするゲームで保護の動作を確認します。そのメッセージは失われます。診断専用：リリース版では常に保護が有効です。次回のゲーム起動時に反映されます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="ja_JP">
 			<Text>これは BetterGameExperience プロキシの設定 (rollover_proxy.cfg) です。次のゲームの開始時に反映されます。</Text>

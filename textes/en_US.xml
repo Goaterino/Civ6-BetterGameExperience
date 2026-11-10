@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="en_US">
 			<Text>All but the World Congress</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="en_US">
+			<Text>Test</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="en_US">
 			<Text>General</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="en_US">
 			<Text>Records the duration of every zone the game times (frame, interface, scripts, events) to %LOCALAPPDATA%\Civ6RolloverProxy\zones, for performance analysis. About 1 MB per second of play. Takes effect the next time the game starts.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="en_US">
+			<Text>Network message guard</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="en_US">
+			<Text>Replaces impossible counts in network messages with 0 (the freeze when a player disconnects). Test: injects the freeze count once into a real message, to watch the guard act in a game played alone; that message is then lost. Diagnostic only: the release always has the guard. Takes effect at the next game launch.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="en_US">
 			<Text>These are the settings of the BetterGameExperience proxies (rollover_proxy.cfg). They will take effect when the next game starts.</Text>
@@ -612,7 +621,7 @@
 			<Text>{1}: the bug report could not be sent, it was kept on their computer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="en_US">
-			<Text>Blocked a damaged network message that would have frozen your game.</Text>
+			<Text>Blocked a damaged network message that would have frozen my game.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="en_US">
 			<Text>Describe the problem: what happened, when, and what you expected instead.</Text>

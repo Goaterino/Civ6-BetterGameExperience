@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="pt_BR">
 			<Text>Tudo menos o Congresso Mundial</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="pt_BR">
+			<Text>Teste</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="pt_BR">
 			<Text>Geral</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="pt_BR">
 			<Text>Registra a duração de cada zona cronometrada pelo jogo (quadro, interface, scripts, eventos) em %LOCALAPPDATA%\Civ6RolloverProxy\zones, para a análise de desempenho. Cerca de 1 MB por segundo de jogo. Vale a partir da próxima vez que o jogo for iniciado.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="pt_BR">
+			<Text>Proteção das mensagens de rede</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="pt_BR">
+			<Text>Substitui por 0 as contagens impossíveis das mensagens de rede (o congelamento quando um jogador se desconecta). Teste: injeta uma vez a contagem do congelamento em uma mensagem real, para ver a proteção agir em uma partida jogada sozinho; essa mensagem é perdida. Apenas diagnóstico: a versão publicada sempre tem a proteção. Vale a partir da próxima abertura do jogo.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="pt_BR">
 			<Text>Estas são as configurações dos proxies do BetterGameExperience (rollover_proxy.cfg). Elas terão efeito ao iniciar a próxima partida.</Text>

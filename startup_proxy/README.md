@@ -478,15 +478,16 @@ n'est jamais touchée ; le coût est de quelques instructions par champ lu.
   (les 20 premières, puis une sur 100).
 - Chat : en jeu, `partie.lua` interroge `Civ6Proxy_GardeMessages()` (les lectures corrigées depuis
   le dernier appel) à chaque `GameCoreEventPublishComplete`. Après une correction, le joueur envoie
-  à tous `BGE - Blocked a damaged network message that would have frozen your game.`, en rouge
+  à tous `BGE - Blocked a damaged network message that would have frozen my game.`, en rouge
   (`LOC_BGD_CHAT_GARDE`, traduit à l'arrivée par chaque machine équipée), qui s'affiche
   `<joueur>: BGE - …`. Au plus une ligne par minute ; une correction faite au salon ou au chargement
   est dite à l'arrivée en jeu. Sans chat (solo, hotseat, PlayByCloud), le journal seulement :
   `partie : garde : n lecture(s) corrigée(s)`.
 - Avec l'interrupteur général `actif=off`, rien n'est posé, comme pour le reste du mod
-  (`messages : garde non posée (actif=off)`). `garde_messages=off` dans `rollover_proxy.cfg`
-  désactive la garde seule (`on` par défaut ; réglage sans entrée dans l'onglet, que `install.ps1`
-  n'écrit pas). `garde_messages=test` la laisse active et injecte
+  (`messages : garde non posée (actif=off)`). C'est un correctif de bug : en release, aucun
+  réglage, la garde est toujours posée. Dans les builds de diagnostic (feature `diag`) seulement,
+  `garde_messages` (onglet, section Diagnostic ; `-GardeMessages` de `proxy/install.ps1`) :
+  `off` désactive la garde seule, `test` la laisse active et injecte
   une fois le compte du gel à la première lecture « carte : entrées » : dans une partie en réseau
   (Internet ou LAN) lancée seul contre l'IA, le journal doit montrer `messages : test : compte du
   gel (0x61746143) injecté…` puis `… remplacé par 0 (1 corrections)`, la ligne `BGE - Blocked…`

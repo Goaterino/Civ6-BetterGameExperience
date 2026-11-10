@@ -35,6 +35,9 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="de_DE">
 			<Text>Alles außer dem Weltkongress</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="de_DE">
+			<Text>Test</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="de_DE">
 			<Text>Allgemein</Text>
 		</Row>
@@ -253,6 +256,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="de_DE">
 			<Text>Zeichnet die Dauer jeder vom Spiel gemessenen Zone (Bild, Oberfläche, Skripte, Ereignisse) in %LOCALAPPDATA%\Civ6RolloverProxy\zones auf, für die Leistungsanalyse. Etwa 1 MB pro Sekunde Spielzeit. Wirkt beim nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="de_DE">
+			<Text>Schutz der Netzwerknachrichten</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_AIDE" Language="de_DE">
+			<Text>Ersetzt unmögliche Zähler in Netzwerknachrichten durch 0 (das Einfrieren, wenn ein Spieler die Verbindung trennt). Test: fügt einmal den Zähler des Einfrierens in eine echte Nachricht ein, um den Schutz in einer allein gespielten Partie wirken zu sehen; diese Nachricht geht dann verloren. Nur Diagnose: die Release hat den Schutz immer. Wirkt ab dem nächsten Spielstart.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_AVERT_PARTIE" Language="de_DE">
 			<Text>Dies sind die Einstellungen der BetterGameExperience-Proxys (rollover_proxy.cfg). Sie wirken ab dem Start der nächsten Partie.</Text>
