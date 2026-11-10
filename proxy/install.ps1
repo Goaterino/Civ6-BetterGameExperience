@@ -93,8 +93,9 @@ param(
     [string]$UiPolitiques = "on",
     [ValidateSet("on", "off")]
     [string]$UiRapports = "on",
-    # Better Spectator Mod : scripts remplaces par ceux du proxy, et niveau de civilisation des
-    # spectateurs (voir spectateurs/README.md).
+    # Better Spectator Mod : scripts d'interface remplacés par ceux du proxy, avec les correctifs
+    # POL seulement. Le niveau des spectateurs et Data/Spectator.lua suivent POL, pas ce réglage
+    # (voir spectateurs/README.md).
     [ValidateSet("on", "off")]
     [string]$UiSpectateur = "on",
     # Profil des zones chronométrées de l'exe (diagnostic, lu par le proxy de démarrage).
