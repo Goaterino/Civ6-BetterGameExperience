@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ko_KR">
 			<Text>게임의 모든 메시지</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="ko_KR">
+			<Text>세계 의회만</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ko_KR">
+			<Text>세계 의회 제외 전부</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ko_KR">
 			<Text>일반</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ko_KR">
 			<Text>Better Report Screen(Infixo) 기반. 거래, 유닛, 정책, 도시국가, 도시 탭이 있는 새 보고서 화면으로, 각 정책과 도시국가의 효과를 카드와 같이 수정해 보여 줍니다. 모드가 켜져 있으면 모드를 대체합니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="ko_KR">
+			<Text>관전자용 Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="ko_KR">
+			<Text>Better Spectator Mod의 인터페이스 스크립트(도시국가, 외교 리본, 지도자 아이콘, 세계 의회)를 주요 문명에서 제외된 관전자를 위해 작성된 프록시 버전으로 바꿉니다. 모든 플레이어가 프록시를 가진 경우에만 적용되며, 관전자 등급도 항상 이 규칙을 따릅니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ko_KR">
 			<Text>불러온 스크립트와 XML 기록</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ko_KR">
 			<Text>보내고 받은 거래 제안과 거래 화면의 내용을 Lua.log에 기록해, 사람 사이의 엇갈린 거래를 분석합니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="ko_KR">
+			<Text>교체할 Better Spectator Mod 스크립트</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="ko_KR">
+			<Text>진단: 문제가 있는 스크립트를 가려내기 위해 프록시가 교체할 Better Spectator Mod 인터페이스 스크립트를 고릅니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ko_KR">
 			<Text>동시 시작·종료 신호 표시</Text>

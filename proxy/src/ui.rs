@@ -1126,7 +1126,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     if is_file(chunk, "WorldCongressPopup.lua") {
         publish_pol(l);
         publish_revote(l);
-        let spectateurs = crate::spectateurs::poses();
+        // Le popup de BSM repris par le proxy (`mods_ui::remplacer`) gère déjà le spectateur : sa
+        // fenêtre reste consultable, sans bulletin. `ui_congres.lua` (lecture seule) y ferait
+        // double emploi ; le retour au vote, lui, s'y ajoute comme au popup du jeu.
+        let spectateurs = crate::spectateurs::poses() && !crate::mods_ui::est_popup_spectateur(src);
         return match patch_congres(src, spectateurs) {
             Ok(text) => {
                 if spectateurs {
@@ -1863,6 +1866,17 @@ mod tests {
         assert!(patch_congres(b"function SetPhase() end", false).is_err());
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongressPopup.lua"));
         assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongress.lua"));
+    }
+
+    /// Popup du Congrès de BSM repris par le proxy : le retour au vote s'y ajoute, pas la lecture
+    /// seule (ce popup gère déjà le spectateur).
+    #[test]
+    fn congres_popup_bsm() {
+        let bsm = include_bytes!("mods/spectateur/worldcongresspopup_spec.lua");
+        assert!(crate::mods_ui::est_popup_spectateur(bsm));
+        let vote = patch_congres(bsm, false).unwrap();
+        assert!(vote.starts_with(bsm) && vote.ends_with(VOTE_BLOCK.as_bytes()));
+        assert!(patch_congres(&vote, false).is_err(), "pas deux fois");
     }
 
     #[test]

@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="de_DE">
 			<Text>Jede Spielnachricht</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="de_DE">
+			<Text>Nur Weltkongress</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="de_DE">
+			<Text>Alles außer dem Weltkongress</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="de_DE">
 			<Text>Allgemein</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="de_DE">
 			<Text>Nach Better Report Screen (Infixo). Überarbeiteter Berichtsbildschirm mit den Reitern Abkommen, Einheiten, Politiken, Stadtstaaten und Städte sowie der Wirkung jeder Politik und jedes Stadtstaats, korrigiert wie die Karten. Ersetzt den Mod, wenn er aktiv ist.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="de_DE">
+			<Text>Better Spectator Mod für Zuschauer</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="de_DE">
+			<Text>Ersetzt die Oberflächenskripte von Better Spectator Mod (Stadtstaaten, Diplomatieleiste, Anführersymbole, Weltkongress) durch die Versionen des Proxys, geschrieben für Zuschauer, die nicht mehr zu den Hauptzivilisationen zählen. Nur wenn alle Spieler den Proxy haben; die Zuschauerstufe folgt immer dieser Regel.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="de_DE">
 			<Text>Geladene Skripte und XML protokollieren</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="de_DE">
 			<Text>Schreibt in Lua.log die gesendeten und empfangenen Abkommensvorschläge und was der Abkommensbildschirm zeigt, um gekreuzte Abkommen zwischen Menschen zu verstehen.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="de_DE">
+			<Text>Ersetzte Skripte von Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="de_DE">
+			<Text>Diagnose: welche Oberflächenskripte von Better Spectator Mod der Proxy ersetzt, um ein fehlerhaftes zu isolieren.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="de_DE">
 			<Text>Signale des gleichzeitigen Rundenbeginns und -endes anzeigen</Text>

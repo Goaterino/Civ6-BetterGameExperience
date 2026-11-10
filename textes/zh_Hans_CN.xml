@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="zh_Hans_CN">
 			<Text>每条游戏消息</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="zh_Hans_CN">
+			<Text>仅世界议会</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="zh_Hans_CN">
+			<Text>除世界议会外全部</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="zh_Hans_CN">
 			<Text>常规</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="zh_Hans_CN">
 			<Text>基于 Better Report Screen（Infixo）。重做的报告界面，含交易、单位、政策、城邦和城市标签页，并显示每项政策和每个城邦的效果，与政策卡一样经过修正。如果该模组已启用，则取代它。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="zh_Hans_CN">
+			<Text>观战者用 Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="zh_Hans_CN">
+			<Text>将 Better Spectator Mod 的界面脚本（城邦、外交栏、领袖图标、世界议会）替换为代理的版本，这些版本专为不再算作主要文明的观战者编写。仅当所有玩家都装有代理时生效；观战者等级也始终遵循此规则。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="zh_Hans_CN">
 			<Text>记录已加载的脚本和 XML</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="zh_Hans_CN">
 			<Text>将发送和收到的交易提议以及交易界面显示的内容写入 Lua.log，用于分析人类玩家之间交错的交易。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="zh_Hans_CN">
+			<Text>替换的 Better Spectator Mod 脚本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="zh_Hans_CN">
+			<Text>诊断：选择代理替换哪些 Better Spectator Mod 界面脚本，以找出有问题的脚本。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="zh_Hans_CN">
 			<Text>显示同时开始与结束回合的信号</Text>
