@@ -3,8 +3,15 @@
 //!
 //! L'accroche `luaL_loadbuffer` d'`options` ajoute `salon.lua` à la fin de `StagingRoom.lua`, ou de
 //! son remplaçant par un mod (MPH en a un, du même nom), après avoir posé dans la table globale du
-//! contexte quatre fonctions natives : `Civ6Proxy_Version()`, `Civ6Proxy_Jeton()`,
-//! `Civ6Proxy_Journal(texte)` et `Civ6Proxy_FixerPol(actif, raison)`.
+//! contexte cinq fonctions natives : `Civ6Proxy_Version()`, `Civ6Proxy_Jeton()`,
+//! `Civ6Proxy_Journal(texte)`, `Civ6Proxy_FixerPol(actif, raison)` et
+//! `Civ6Proxy_VersionInstallee()`.
+//!
+//! **Le BGE Check.** Après la lecture de `StagingRoom.xml` (ou de celui de MPH), `patch_staging_xml`
+//! ajoute juste après le bouton `BackButton` de la barre du haut un bouton `BGD_CheckButton`, placé
+//! comme le « MOD CHECK » de MPH (`Anchor="R,C" Offset="180,0"`) mais à gauche (`Anchor="L,C"`) :
+//! symétrique par rapport à l'axe vertical du centre de l'écran. À la fin du contexte, un minuteur
+//! `BGD_SalonMinuteur` (environ 0,5 s) rythme l'annonce d'arrivée et le délai des réponses.
 //!
 //! **Les correctifs POL** (« proxy-only lobbies ») changent la simulation : le proxy de GameCore ne
 //! les applique que si `BgdPolActifs` (export de ce proxy, voir lib.rs) rend 1. Cet état est tenu
@@ -32,6 +39,13 @@ use std::sync::Mutex;
 
 pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("salon.lua"));
 pub const SCRIPT: &str = "stagingroom.lua";
+pub const XML: &str = "StagingRoom.xml";
+/// Bouton de l'hôte, juste après celui-ci (même parent : la barre du haut du salon).
+const ANCRE_XML: &str = r#"ID="BackButton""#;
+const BOUTON_CHECK: &str = r#"<GridButton ID="BGD_CheckButton" Style="ShellButtonOrnateFlat" Anchor="L,C" Offset="180,0" Size="150,38" String="BGE CHECK" Hidden="1"/>"#;
+/// Minuteur du salon : une animation d'une demi-seconde environ (vitesse 2), relancée à sa fin.
+const MINUTEUR: &str = r#"  <!-- BetterGameExperience : minuteur du salon (startup_proxy/src/salon.rs) -->
+  <SlideAnim ID="BGD_SalonMinuteur" Size="1,1" Begin="0,0" End="0,0" Function="Root" Speed="2" Cycle="Once" Stopped="1"/>"#;
 pub const CHARGEMENT_BLOCK: &str = include_str!("chargement.lua");
 pub const SCRIPT_CHARGEMENT: &str = "loadscreen.lua";
 pub const PARTIE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("partie.lua"));
@@ -175,6 +189,29 @@ pub fn patch_staging_lua(src: &[u8]) -> Vec<u8> {
     out
 }
 
+/// `StagingRoom.xml` avec le bouton du BGE Check après `BackButton` (même retrait) et le minuteur à
+/// la fin du contexte.
+pub fn patch_staging_xml(src: &[u8]) -> Result<Vec<u8>, String> {
+    let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
+    if text.contains("ID=\"BGD_CheckButton\"") {
+        return Err("bouton déjà présent".into());
+    }
+    let (debut, fin) = crate::rapport::element(text, ANCRE_XML).ok_or_else(|| "bouton BackButton introuvable".to_string())?;
+    let ligne = text[..debut].rfind('\n').map_or(0, |i| i + 1);
+    let retrait: String = text[ligne..debut].chars().take_while(|c| c.is_whitespace()).collect();
+    let mut out = String::with_capacity(text.len() + BOUTON_CHECK.len() + MINUTEUR.len() + 128);
+    out.push_str(&text[..fin]);
+    out.push_str("\r\n");
+    out.push_str(&retrait);
+    out.push_str("<!-- BetterGameExperience : BGE Check, symétrique du MOD CHECK de MPH (startup_proxy/src/salon.rs) -->\r\n");
+    out.push_str(&retrait);
+    out.push_str(BOUTON_CHECK);
+    out.push_str(&text[fin..]);
+    let fin = crate::rapport::fin_du_contexte(&out)?;
+    out.insert_str(fin, &format!("{MINUTEUR}\r\n"));
+    Ok(out.into_bytes())
+}
+
 /// Jeton d'une ouverture du salon : l'heure en nanosecondes, l'identifiant du processus et un
 /// compteur, en hexadécimal. Il suffit qu'il diffère d'une ouverture à l'autre et d'une machine à
 /// l'autre ; ce n'est pas un secret.
@@ -200,6 +237,13 @@ unsafe extern "C-unwind" fn lua_version(l: *mut std::ffi::c_void) -> i32 {
             2
         }
     }
+}
+
+/// `Civ6Proxy_VersionInstallee()` → la version de ce proxy, qu'il s'annonce ou non (BGE Check).
+unsafe extern "C-unwind" fn lua_version_installee(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    push_str(h, l, VERSION);
+    1
 }
 
 unsafe fn arg_str(l: *mut std::ffi::c_void, i: i32) -> Option<String> {
@@ -245,6 +289,7 @@ pub const NATIVES: Natives = &[
     (lua_token, b"Civ6Proxy_Jeton\0"),
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
+    (lua_version_installee, b"Civ6Proxy_VersionInstallee\0"),
 ];
 
 const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
@@ -319,6 +364,21 @@ mod tests {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(LUA_BLOCK.contains(name), "{name} posée mais pas utilisée par le bloc");
         }
+    }
+
+    #[test]
+    fn bouton_du_check() {
+        let src = "<Context>\r\n  <Container ID=\"TopPanel\">\r\n    <Grid>\r\n      <GridButton ID=\"BackButton\" Anchor=\"R,C\" Offset=\"1,0\"/>\r\n      <Stack ID=\"LeftTopButtonStack\"/>\r\n    </Grid>\r\n  </Container>\r\n</Context>\r\n";
+        let out = String::from_utf8(patch_staging_xml(src.as_bytes()).unwrap()).unwrap();
+        let (back, bouton, pile) = (out.find("BackButton").unwrap(), out.find(BOUTON_CHECK).unwrap(), out.find("LeftTopButtonStack").unwrap());
+        assert!(back < bouton && bouton < pile, "{out}");
+        assert!(out.contains(&format!("\r\n      {BOUTON_CHECK}")), "même retrait que BackButton : {out}");
+        let (minuteur, fin) = (out.find("BGD_SalonMinuteur").unwrap(), out.rfind("</Context>").unwrap());
+        assert!(pile < minuteur && minuteur < fin);
+        assert!(BOUTON_CHECK.contains(r#"Anchor="L,C" Offset="180,0" Size="150,38""#), "symétrique du MOD CHECK de MPH");
+        assert!(patch_staging_xml(out.as_bytes()).is_err(), "pas deux fois");
+        assert!(patch_staging_xml(b"<Context></Context>").is_err(), "sans BackButton");
+        assert!(LUA_BLOCK.contains("BGD_CheckButton") && LUA_BLOCK.contains("BGD_SalonMinuteur"));
     }
 
     #[test]

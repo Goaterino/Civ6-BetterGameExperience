@@ -138,7 +138,7 @@ pub fn patch_menu_xml(src: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// Fin du contexte : la dernière balise fermante `</Context>` ou `</ContextDefaults>`.
-fn fin_du_contexte(text: &str) -> Result<usize, String> {
+pub(crate) fn fin_du_contexte(text: &str) -> Result<usize, String> {
     ["</ContextDefaults>", "</Context>"].iter().filter_map(|f| text.rfind(f)).max().ok_or_else(|| "fin du contexte introuvable".to_string())
 }
 
@@ -177,7 +177,7 @@ fn ajouter_popup(text: &mut String) -> Result<(), String> {
 }
 
 /// Début et fin de l'élément qui porte `ancre` dans sa balise ouvrante, enfants compris.
-fn element(text: &str, ancre: &str) -> Option<(usize, usize)> {
+pub(crate) fn element(text: &str, ancre: &str) -> Option<(usize, usize)> {
     let at = text.find(ancre)?;
     let debut = text[..at].rfind('<')?;
     let nom: String = text[debut + 1..].chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '_').collect();
