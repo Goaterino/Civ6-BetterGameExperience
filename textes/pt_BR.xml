@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="pt_BR">
 			<Text>Uma maravilha retirada da fila de produção por uma troca é recolocada, por meio de comandos normais do jogo: sem dessincronização, mesmo contra jogadores sem o proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="pt_BR">
+			<Text>Clique direito na produção do estandarte da cidade para cancelá-la</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="pt_BR">
+			<Text>Um clique direito no ícone de produção do estandarte de uma de suas cidades remove o item em andamento, como um clique direito no painel de produção. Comando normal do jogo: sem dessincronização.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="pt_BR">
+			<Text>Indicador de distritos com desconto</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="pt_BR">
+			<Text>Na lista de produção, os distritos com custo reduzido (menos distritos desse tipo que a sua média) mostram o desconto, atualizado assim que um distrito é posicionado. Apenas exibição.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="pt_BR">
+			<Text>Produção em reserva</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="pt_BR">
+			<Text>Mostra a produção que uma cidade guarda em reserva (excedente, no máximo um turno), somada à sua produção do turno seguinte: no estandarte da cidade, no painel da cidade e no painel de produção. Apenas exibição.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pt_BR">
+			<Text>Desconto de distrito: -{1}% (você tem menos distritos deste tipo que a sua média).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="pt_BR">
+			<Text>+{1} [ICON_Production] em reserva, somados à produção do próximo turno (no máximo um turno de produção).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="pt_BR">
 			<Text>Rendimentos do império atualizados após um governador ou uma grande personalidade</Text>
 		</Row>

@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="de_DE">
 			<Text>Ein Weltwunder, das durch einen Tausch aus der Produktionswarteschlange entfernt wurde, wird mit normalen Spielbefehlen wieder eingereiht: keine Desynchronisation, auch gegen Spieler ohne Proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="de_DE">
+			<Text>Rechtsklick auf die Produktion im Stadtbanner bricht sie ab</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="de_DE">
+			<Text>Ein Rechtsklick auf das Produktionssymbol im Banner einer eurer Städte entfernt das aktuelle Element, wie ein Rechtsklick im Produktionsfenster. Normaler Spielbefehl: keine Desynchronisation.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="de_DE">
+			<Text>Markierung vergünstigter Bezirke</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="de_DE">
+			<Text>In der Produktionsliste zeigen Bezirke mit gesenkten Kosten (weniger Bezirke dieses Typs als euer Durchschnitt) ihren Rabatt an, aktualisiert, sobald ein Bezirk platziert wird. Nur Anzeige.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="de_DE">
+			<Text>Gespeicherte Produktion</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="de_DE">
+			<Text>Zeigt die Produktion, die eine Stadt in Reserve hält (Überschuss, höchstens eine Runde) und die in der nächsten Runde zu ihrer Produktion hinzukommt: im Stadtbanner, im Stadtfenster und im Produktionsfenster. Nur Anzeige.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="de_DE">
+			<Text>Bezirksrabatt: -{1} % (weniger Bezirke dieses Typs als euer Durchschnitt).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="de_DE">
+			<Text>+{1} [ICON_Production] in Reserve, kommen zur Produktion der nächsten Runde hinzu (höchstens eine Runde Produktion).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="de_DE">
 			<Text>Reichserträge nach Gouverneur oder Großer Persönlichkeit aktuell</Text>
 		</Row>

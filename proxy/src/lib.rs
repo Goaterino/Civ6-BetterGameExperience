@@ -11,7 +11,8 @@
 //! défaut), `wmd_accel=<facteur>|off` (20 par défaut, voir `wmd`), `ui_boutons`, `ui_recentrage` et
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_carte_entiere=on|off`
 //! (on par défaut, voir `carte`), `ui_rendements=on|off`
-//! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`),
+//! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`), `ui_debordement=on|off` (on, voir
+//! `debordement`), `ui_banniere_annuler` et `ui_reduction_quartiers` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
@@ -24,6 +25,7 @@ mod carte;
 mod citoyens;
 mod coalesce;
 mod congres;
+mod debordement;
 mod depart;
 mod empilement;
 mod exe;
@@ -207,6 +209,15 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_carte_entiere=") {
             carte::set_enabled(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("ui_banniere_annuler=") {
+            ui::set_banniere_annuler(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_reduction_quartiers=") {
+            ui::set_reduction_quartiers(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_debordement=") {
+            debordement::set_enabled(v.trim() != "off");
+        }
         if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
             ui::set_merveilles(v.trim() != "off");
         }
@@ -264,6 +275,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             rendements::on_proxy_unload();
             rendements_empire::on_proxy_unload();
             tours::on_proxy_unload();
+            debordement::on_proxy_unload();
             wmd::on_proxy_unload();
             ui::on_proxy_unload();
         }

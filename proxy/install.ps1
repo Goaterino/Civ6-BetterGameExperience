@@ -58,6 +58,15 @@ param(
     # désynchro (voir wonder_queue/README.md).
     [ValidateSet("on", "off")]
     [string]$UiMerveilles = "on",
+    # Clic droit sur l'icône de production du bandeau de ville : retire l'élément en tête (BET-12).
+    [ValidateSet("on", "off")]
+    [string]$UiBanniereAnnuler = "on",
+    # Badge des quartiers dont le coût est réduit, dans la liste de production (BET-22).
+    [ValidateSet("on", "off")]
+    [string]$UiReductionQuartiers = "on",
+    # Production en réserve (débordement) sur le bandeau d'une ville sans production (BET-21).
+    [ValidateSet("on", "off")]
+    [string]$UiDebordement = "on",
     # Rendements d'empire de l'interface rafraîchis après un gouverneur ou un personnage illustre
     # (voir empire_yields/README.md).
     [ValidateSet("on", "off")]
@@ -131,6 +140,6 @@ if ($Uninstall) {
 $built = Join-Path $PSScriptRoot "target\release\BGD_GameCore_XP2.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
 Copy-Item $built $proxy -Force
-Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones"
-Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
+Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_banniere_annuler=$UiBanniereAnnuler", "ui_reduction_quartiers=$UiReductionQuartiers", "ui_debordement=$UiDebordement", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones"
+Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_banniere_annuler $UiBanniereAnnuler, ui_reduction_quartiers $UiReductionQuartiers, ui_debordement $UiDebordement, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="ko_KR">
 			<Text>교체로 생산 대기열에서 빠진 불가사의를 일반 게임 명령으로 되돌립니다. 프록시가 없는 플레이어와도 동기화 오류가 생기지 않습니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="ko_KR">
+			<Text>도시 배너의 생산을 우클릭해 취소</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="ko_KR">
+			<Text>내 도시 배너의 생산 아이콘을 우클릭하면 생산 패널에서 우클릭할 때처럼 생산 중인 항목을 제거합니다. 일반 게임 명령이므로 동기화 오류가 생기지 않습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="ko_KR">
+			<Text>할인 중인 특수지구 표시</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ko_KR">
+			<Text>생산 목록에서 비용이 할인된 특수지구(해당 종류의 특수지구 수가 평균보다 적음)에 할인율을 표시하며, 특수지구를 배치하면 바로 갱신합니다. 표시만 바뀝니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ko_KR">
+			<Text>비축된 생산력</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ko_KR">
+			<Text>도시가 비축한 생산력(초과분, 최대 1턴)을 도시 배너, 도시 패널, 생산 패널에 표시합니다. 이 생산력은 다음 턴 생산에 더해집니다. 표시만 바뀝니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ko_KR">
+			<Text>특수지구 할인: -{1}% (이 종류의 특수지구 수가 평균보다 적음).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="ko_KR">
+			<Text>+{1} [ICON_Production] 비축, 다음 턴 생산에 더해집니다 (최대 1턴의 생산력).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="ko_KR">
 			<Text>총독이나 위인 이후 제국 산출량 갱신</Text>
 		</Row>

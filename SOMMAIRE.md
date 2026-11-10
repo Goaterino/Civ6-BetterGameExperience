@@ -29,6 +29,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   bonus plats de gouvernement (fascisme), corrigé dans le proxy ;
 - [wonder_queue](wonder_queue/README.md) : merveille retirée de la file de production après deux
   échanges, rattrapée par l'interface du proxy sans désynchro ;
+- production dans l'interface du proxy (voir [proxy/README.md](proxy/README.md)) : clic droit
+  sur la production en cours (onglet Production) et sur l'icône du bandeau de ville pour la
+  retirer, badge des quartiers en réduction, production en réserve (débordement) sur le bandeau ;
 - [empire_yields](empire_yields/README.md) : rendements d'empire du bandeau figés après un gouverneur ou
   un personnage illustre, rafraîchis par le proxy sans désynchro ;
 - [map_pins](map_pins/README.md) : lag des épingles de carte en multijoueur, reconstructions inutiles

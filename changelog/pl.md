@@ -2,6 +2,31 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.1
+
+### Nowości
+- **Anulowanie produkcji z banera miasta**: prawy klik na ikonę produkcji w banerze jednego z twoich
+  miast usuwa bieżący element, tak jak w panelu produkcji.
+- **Tańsze dzielnice**: na liście produkcji dzielnica o obniżonym koszcie (masz mniej dzielnic tego
+  typu niż twoja średnia) pokazuje zniżkę, na przykład **-40%**. Odświeża się od razu po
+  umieszczeniu dzielnicy, bo nowa dzielnica może zakończyć zniżkę. Dzielnice, które nie liczą się do
+  średniej, jak wietnamski Thành, też są oznaczone.
+- **Zachowana produkcja**: baner miasta, panel miasta i panel produkcji pokazują produkcję, którą
+  miasto trzyma w zapasie (nadwyżka z ukończonego elementu albo tura bez produkcji; gra zachowuje
+  najwyżej jedną turę) i która dochodzi do jego produkcji w następnej turze. W banerze miasta bez
+  produkcji pojawia się jako **+N**.
+
+### Poprawki interfejsu
+- **Panel miasta po usunięciu produkcji**: panel w prawym dolnym rogu odświeża się po usunięciu
+  jedynego elementu kolejki, zamiast nadal go pokazywać.
+- **Prawy klik na bieżącą produkcję**: usuwa ją teraz także w karcie Produkcja, nie tylko przy
+  otwartej kolejce.
+- **Poczekalnia MPH**: poza draftem lista graczy przesuwa się w górę, w puste miejsce, które MPH
+  rezerwuje na draft, a samotna « . » nad nią we wczytanej grze znika.
+
+### Ustawienia
+- Trzy nowości mają po jednym ustawieniu w karcie BetterGameExperience, domyślnie włączonym.
+
 ## BetterGameExperience 0.8.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.8.0. Poprawka umów na koniec tury chroni

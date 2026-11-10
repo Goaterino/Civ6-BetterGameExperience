@@ -128,6 +128,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="zh_Hans_CN">
 			<Text>因交换而被移出生产队列的奇观，会通过正常的游戏指令放回：不会不同步，即使对方没有代理。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="zh_Hans_CN">
+			<Text>右键单击城市横幅上的生产以取消</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="zh_Hans_CN">
+			<Text>右键单击你的城市横幅上的生产图标，会像在生产面板中右键单击一样移除正在生产的项目。正常的游戏指令：不会不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="zh_Hans_CN">
+			<Text>折扣区域标记</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="zh_Hans_CN">
+			<Text>在生产列表中，成本降低的区域（该类区域数量少于你的平均值）会显示折扣，放置区域后立即更新。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="zh_Hans_CN">
+			<Text>储备的生产力</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>在城市横幅、城市面板和生产面板中显示城市储备的生产力（溢出部分，最多一回合），它会加到下一回合的生产中。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
+			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="zh_Hans_CN">
+			<Text>储备 +{1} [ICON_Production]，将加到下一回合的生产中（最多一回合的生产力）。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="zh_Hans_CN">
 			<Text>总督或伟人之后更新帝国产出</Text>
 		</Row>

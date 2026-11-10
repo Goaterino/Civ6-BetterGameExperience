@@ -2,6 +2,32 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.1
+
+### Neu
+- **Produktion im Stadtbanner abbrechen**: Ein Rechtsklick auf das Produktionssymbol im Banner
+  einer eurer Städte entfernt das aktuelle Element, wie im Produktionsfenster.
+- **Vergünstigte Bezirke**: In der Produktionsliste zeigt ein Bezirk mit gesenkten Kosten (weniger
+  Bezirke dieses Typs als euer Durchschnitt) seinen Rabatt an, zum Beispiel **-40%**. Die Anzeige
+  wird aktualisiert, sobald ein Bezirk platziert wird, denn ein neuer Bezirk kann den Rabatt
+  beenden. Bezirke, die nicht in den Durchschnitt eingehen, wie das Thành Vietnams, werden auch
+  angezeigt.
+- **Gespeicherte Produktion**: Stadtbanner, Stadtfenster und Produktionsfenster zeigen die
+  Produktion, die eine Stadt in Reserve hält (Überschuss eines fertigen Elements oder eine Runde
+  ohne Produktion; das Spiel bewahrt höchstens eine Runde auf) und die in der nächsten Runde zu
+  ihrer Produktion hinzukommt. Im Banner einer Stadt ohne Produktion erscheint sie als **+N**.
+
+### Korrekturen der Oberfläche
+- **Stadtfenster nach dem Entfernen der Produktion**: Das Fenster unten rechts wird aktualisiert,
+  wenn das einzige Element der Warteschlange entfernt wird, statt es weiter anzuzeigen.
+- **Rechtsklick auf die aktuelle Produktion**: Er entfernt sie jetzt auch im Reiter Produktion,
+  nicht nur bei geöffneter Warteschlange.
+- **MPH-Lobby**: Außerhalb eines Drafts rückt die Spielerliste in den leeren Platz auf, den MPH
+  für seinen Draft freihält, und der einzelne « . » darüber in einem geladenen Spiel verschwindet.
+
+### Einstellungen
+- Die drei Neuerungen haben je eine Einstellung im Reiter BetterGameExperience, standardmäßig aktiv.
+
 ## BetterGameExperience 0.8.0
 
 Im Mehrspielermodus müssen alle menschlichen Spieler 0.8.0 haben. Die Korrektur für Abkommen am

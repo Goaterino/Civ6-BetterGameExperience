@@ -67,6 +67,12 @@ const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
 const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
+/// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
+const ANNULER_BLOCK: &str = include_str!("ui_banniere_annuler.lua");
+const QUARTIERS_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_quartiers.lua"));
+const DEBORDEMENT_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
 const ACCORD_FIN_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_accord_fin.lua"));
 
@@ -78,6 +84,8 @@ static OPTI: AtomicBool = AtomicBool::new(true);
 static MERVEILLES: AtomicBool = AtomicBool::new(true);
 static DIAG_ACCORDS: AtomicBool = AtomicBool::new(false);
 static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
+static ANNULER: AtomicBool = AtomicBool::new(true);
+static QUARTIERS: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -113,6 +121,14 @@ pub fn set_epingles(on: bool) {
     OPTI.store(on, Ordering::Relaxed);
 }
 
+pub fn set_banniere_annuler(on: bool) {
+    ANNULER.store(on, Ordering::Relaxed);
+}
+
+pub fn set_reduction_quartiers(on: bool) {
+    QUARTIERS.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -130,6 +146,9 @@ fn active() -> bool {
         || OPTI.load(Ordering::Relaxed)
         || MERVEILLES.load(Ordering::Relaxed)
         || DIAG_ACCORDS.load(Ordering::Relaxed)
+        || ANNULER.load(Ordering::Relaxed)
+        || QUARTIERS.load(Ordering::Relaxed)
+        || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
         || crate::spectateurs::poses()
@@ -212,6 +231,29 @@ pub fn patch_city_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out.into_bytes())
 }
 
+const PANNEAU_VILLE_BLOCK: &str = include_str!("ui_panneau_ville.lua");
+
+/// CityPanel.lua : la faute d'`owningPlayerID` (`patch_city_panel`), puis `ui_panneau_ville.lua`,
+/// qui redessine le panneau quand la file change (production retirée, file vidée). La faute peut
+/// manquer (corrigée par un mod) : le bloc est ajouté quand même.
+pub fn patch_city_panel_complet(src: &[u8]) -> Result<Vec<u8>, String> {
+    const MARQUE: &[u8] = b"Civ6RolloverProxy (src/ui_panneau_ville.lua)";
+    if src.windows(MARQUE.len()).any(|w| w == MARQUE) {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = match patch_city_panel(src) {
+        Ok(t) => t,
+        Err(e) => {
+            log(&format!("ui : CityPanel.lua : owningPlayerID laissé tel quel : {e}"));
+            src.to_vec()
+        }
+    };
+    out.extend_from_slice(b"
+");
+    out.extend_from_slice(PANNEAU_VILLE_BLOCK.as_bytes());
+    Ok(out)
+}
+
 const FLAG_BLOCK: &str = include_str!("ui_drapeaux.lua");
 
 /// En visée d'une ville ou d'un quartier, un clic gauche sur le drapeau d'une unité étrangère ne
@@ -253,12 +295,21 @@ const PRODUCTION_BLOCK: &str = include_str!("ui_production.lua");
 
 /// Les variables locales de ProductionPanel.lua que lit `ui_production.lua`, et la fonction qu'il
 /// enveloppe.
-const PRODUCTION_NAMES: [&str; 5] =
-    ["local LISTMODE", "local m_isQueueOpen", "local m_hasProductionToShow", "local m_CurrentListMode", "\nfunction View("];
+const PRODUCTION_NAMES: [&str; 6] = [
+    "local LISTMODE",
+    "local m_isQueueOpen",
+    "local m_hasProductionToShow",
+    "local m_CurrentListMode",
+    "local m_productionTab",
+    "\nfunction View(",
+];
 
-/// En changeant de ville, la production en cours du panneau gardait la visibilité de la ville
-/// précédente : cachée après une ville sans production. `ui_production.lua`, ajouté à la fin du
-/// fichier pour lire ses variables locales, enveloppe `View` et applique la règle des onglets.
+/// Deux défauts du panneau de production, corrigés par `ui_production.lua`, ajouté à la fin du
+/// fichier pour lire ses variables locales :
+/// - en changeant de ville, la production en cours gardait la visibilité de la ville précédente
+///   (cachée après une ville sans production) : on enveloppe `View` et applique la règle des onglets ;
+/// - onglet Production, le clic droit sur la production en cours ne la retirait pas (bouton
+///   désactivé par l'onglet, BET-13) : on le réactive après chaque passage sur l'onglet.
 /// Octets laissés tels quels, comme pour les drapeaux.
 pub fn patch_production_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
@@ -832,9 +883,9 @@ const FIXES: [(&str, Fix, &str); 8] = [
     ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
     ("CityStates.lua", patch_city_states, EMISSAIRES_DONE),
     ("ActionPanel.lua", patch_action_panel, "Entrée suit la touche de « Action suivante »"),
-    ("CityPanel.lua", patch_city_panel, "owningPlayerID corrigé"),
+    ("CityPanel.lua", patch_city_panel_complet, "owningPlayerID corrigé, panneau redessiné quand la file change"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
-    ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville"),
+    ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville, retirée au clic droit"),
 ];
 
 /// Les cadres que les calques de ui_boutons.xml reproduisent : sans eux, les boutons déplacés ne
@@ -1030,7 +1081,7 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
             // Mesure de ui_mouvements.lua : horloge à la milliseconde (os.clock est à la seconde).
             publish_clock(l);
         }
-        return match patch(src) {
+        let fixed = match patch(src) {
             Ok(text) => {
                 what.push(done.into());
                 Some(text)
@@ -1040,6 +1091,14 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 None
             }
         };
+        if file == "ProductionPanel.lua" {
+            return production_extras(l, fixed.as_deref().unwrap_or(src), what).or(fixed);
+        }
+        if file == "CityPanel.lua" && crate::debordement::pose() && crate::debordement::publier(l) {
+            what.push("production en réserve".into());
+            return Some(append_blocks(fixed.as_deref().unwrap_or(src), &[DEBORDEMENT_BLOCK]));
+        }
+        return fixed;
     }
     if !is_file(chunk, "CityBannerManager.lua") {
         return None;
@@ -1059,7 +1118,45 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
             if RECENTRAGE.load(Ordering::Relaxed) { "gardé" } else { "retiré" }
         ));
     }
-    new
+    let mut blocks: Vec<&str> = Vec::new();
+    if ANNULER.load(Ordering::Relaxed) {
+        blocks.push(ANNULER_BLOCK);
+        what.push("clic droit sur la production du bandeau : retrait".into());
+    }
+    if crate::debordement::pose() && crate::debordement::publier(l) {
+        blocks.push(DEBORDEMENT_BLOCK);
+        what.push("production en réserve sur le bandeau".into());
+    }
+    if blocks.is_empty() {
+        return new;
+    }
+    Some(append_blocks(new.as_deref().unwrap_or(src), &blocks))
+}
+
+/// Le texte suivi des blocs, chacun sur sa ligne. Octets laissés tels quels.
+fn append_blocks(src: &[u8], blocks: &[&str]) -> Vec<u8> {
+    let mut out = src.to_vec();
+    for b in blocks {
+        out.extend_from_slice(b"
+");
+        out.extend_from_slice(b.as_bytes());
+    }
+    out
+}
+
+/// ProductionPanel.lua : blocs des réglages `ui_reduction_quartiers` (badge des quartiers en
+/// réduction) et `ui_debordement` (production en réserve), après `ui_production.lua`. None si aucun.
+unsafe fn production_extras(l: *mut c_void, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
+    let mut blocks: Vec<&str> = Vec::new();
+    if QUARTIERS.load(Ordering::Relaxed) {
+        blocks.push(QUARTIERS_BLOCK);
+        what.push("badge des quartiers en réduction".into());
+    }
+    if crate::debordement::pose() && crate::debordement::publier(l) {
+        blocks.push(DEBORDEMENT_BLOCK);
+        what.push("production en réserve".into());
+    }
+    (!blocks.is_empty()).then(|| append_blocks(src, &blocks))
 }
 
 /// Trois étapes : le texte entier remplacé par une reprise de mod (`mods_ui::remplacer`), les
@@ -1385,6 +1482,10 @@ mod tests {
         assert!(!new.contains("owningPlayerID"));
         assert_eq!(new.len(), src.len() - 1, "owning → owner, rien d'autre");
         assert!(patch_city_panel(new.as_bytes()).is_err(), "pas deux fois");
+        let complet = patch_city_panel_complet(&src).unwrap();
+        assert!(complet.starts_with(new.as_bytes()), "faute corrigée, puis le bloc");
+        assert!(complet.ends_with(PANNEAU_VILLE_BLOCK.as_bytes()));
+        assert!(patch_city_panel_complet(&complet).is_err(), "bloc pas deux fois");
     }
 
     fn check_flags(path: String) {

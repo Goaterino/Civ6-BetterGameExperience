@@ -2,6 +2,34 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.1
+
+### Novità
+- **Annullare la produzione dallo stendardo della città**: un clic destro sull'icona di produzione
+  dello stendardo di una delle tue città rimuove l'elemento in corso, come nel pannello di
+  produzione.
+- **Distretti scontati**: nell'elenco di produzione, un distretto con costo ridotto (hai meno
+  distretti di quel tipo della tua media) mostra lo sconto, per esempio **-40%**. Si aggiorna non
+  appena viene posizionato un distretto, perché posizionarne uno può far perdere lo sconto. Anche i
+  distretti che non contano nella media, come il Thành del Vietnam, sono indicati.
+- **Produzione in riserva**: lo stendardo della città, il pannello della città e il pannello di
+  produzione mostrano la produzione che la città tiene in riserva (eccedenza di un elemento
+  completato, o un turno senza produrre; il gioco ne conserva al massimo un turno), aggiunta alla
+  sua produzione del turno successivo. Sullo stendardo di una città senza produzione appare come
+  **+N**.
+
+### Correzioni dell'interfaccia
+- **Pannello della città dopo aver rimosso la produzione**: il pannello in basso a destra si
+  aggiorna quando si rimuove l'unico elemento della coda, invece di mostrarlo ancora.
+- **Clic destro sulla produzione in corso**: ora la rimuove anche dalla scheda Produzione, non solo
+  con la coda aperta.
+- **Sala d'attesa di MPH**: fuori da un draft, l'elenco dei giocatori risale nello spazio vuoto che
+  MPH riserva al suo draft, e il « . » mostrato sopra in una partita ricaricata scompare.
+
+### Impostazioni
+- Le tre novità hanno ciascuna un'impostazione nella scheda BetterGameExperience, attiva per
+  impostazione predefinita.
+
 ## BetterGameExperience 0.8.0
 
 In multigiocatore, tutti i giocatori umani devono avere la 0.8.0. La correzione degli accordi a fine
