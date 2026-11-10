@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="de_DE">
 			<Text>Nach NotificationClear (336tarot). Eine Schaltfläche im Benachrichtigungsbereich schließt mit einem Klick alle, die Sie selbst schließen können. Ersetzt den Mod, wenn er aktiv ist.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="de_DE">
+			<Text>Fortschritt von Forschung und Ausrichtung</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="de_DE">
+			<Text>Zeigt neben dem Namen der aktuellen Technologie und Ausrichtung im Panel oben links die bereits investierte Wissenschaft (Kultur) die Gesamtkosten und in Klammern die aus einer abgeschlossenen Technologie (Ausrichtung) übrig gebliebene Wissenschaft (Kultur) an, zum Beispiel 120/260 (+15). Nur Anzeige.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="de_DE">
 			<Text>Erweiterte obere Leiste</Text>
 		</Row>

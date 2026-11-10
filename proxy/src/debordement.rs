@@ -103,20 +103,20 @@ fn reserve(joueur: i32, ville: i32) -> Option<f64> {
 // ---------------------------------------------------------------------------------------------
 // Lua.
 
-type LuaCFn = unsafe extern "C-unwind" fn(*mut c_void) -> i32;
+pub(crate) type LuaCFn = unsafe extern "C-unwind" fn(*mut c_void) -> i32;
 
-struct Hks {
-    push_closure: unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, i32, *const c_char, i32),
-    set_field: unsafe extern "C-unwind" fn(*mut c_void, i32, *const c_char),
-    cpcall: unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, *mut c_void) -> i32,
-    set_top: unsafe extern "C-unwind" fn(*mut c_void, i32),
-    to_integer: unsafe extern "C-unwind" fn(*mut c_void, i32) -> i32,
-    push_number: unsafe extern "C-unwind" fn(*mut c_void, f64),
+pub(crate) struct Hks {
+    pub(crate) push_closure: unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, i32, *const c_char, i32),
+    pub(crate) set_field: unsafe extern "C-unwind" fn(*mut c_void, i32, *const c_char),
+    pub(crate) cpcall: unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, *mut c_void) -> i32,
+    pub(crate) set_top: unsafe extern "C-unwind" fn(*mut c_void, i32),
+    pub(crate) to_integer: unsafe extern "C-unwind" fn(*mut c_void, i32) -> i32,
+    pub(crate) push_number: unsafe extern "C-unwind" fn(*mut c_void, f64),
 }
 
 static HKS: OnceLock<Option<Hks>> = OnceLock::new();
 
-unsafe fn hks() -> Option<&'static Hks> {
+pub(crate) unsafe fn hks() -> Option<&'static Hks> {
     HKS.get_or_init(|| {
         let m = win::GetModuleHandleW(win::wide("HavokScript_FinalRelease.dll").as_ptr());
         if m.is_null() {
@@ -138,7 +138,7 @@ unsafe fn hks() -> Option<&'static Hks> {
     .as_ref()
 }
 
-const LUA_GLOBALSINDEX: i32 = -10002;
+pub(crate) const LUA_GLOBALSINDEX: i32 = -10002;
 const NOM: &[u8] = b"BGD_Debordement\0";
 
 unsafe extern "C-unwind" fn lua_debordement(l: *mut c_void) -> i32 {

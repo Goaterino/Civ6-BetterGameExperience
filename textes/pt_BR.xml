@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="pt_BR">
 			<Text>Baseado em NotificationClear (336tarot). Um botão do painel de notificações fecha com um clique aquelas que você pode fechar sozinho. Substitui o mod se ele estiver ativo.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="pt_BR">
+			<Text>Progresso da pesquisa e do princípio</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="pt_BR">
+			<Text>Ao lado do nome da tecnologia e do princípio em andamento, no painel superior esquerdo, mostra a ciência (a cultura) já investida, o custo total e, entre parênteses, a ciência (a cultura) excedente de uma tecnologia (um princípio) concluída, por exemplo 120/260 (+15). Apenas exibição.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="pt_BR">
 			<Text>Barra superior ampliada</Text>
 		</Row>

@@ -12,7 +12,7 @@
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_carte_entiere=on|off`
 //! (on par défaut, voir `carte`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`), `ui_debordement=on|off` (on, voir
-//! `debordement`), `ui_banniere_annuler` et `ui_reduction_quartiers` (on, voir `ui`),
+//! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_avancement` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
@@ -21,6 +21,7 @@
 
 #![allow(non_snake_case)] // le nom de la DLL produite, BGD_GameCore_XP2.
 
+mod avancement;
 mod carte;
 mod citoyens;
 mod coalesce;
@@ -215,6 +216,9 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_reduction_quartiers=") {
             ui::set_reduction_quartiers(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("ui_avancement=") {
+            ui::set_avancement(v.trim() != "off");
+        }
         if let Some(v) = line.trim().strip_prefix("ui_debordement=") {
             debordement::set_enabled(v.trim() != "off");
         }
@@ -276,6 +280,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             rendements_empire::on_proxy_unload();
             tours::on_proxy_unload();
             debordement::on_proxy_unload();
+            avancement::on_proxy_unload();
             wmd::on_proxy_unload();
             ui::on_proxy_unload();
         }

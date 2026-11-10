@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="ja_JP">
 			<Text>NotificationClear (336tarot) に基づきます。通知パネルのボタンで、自分で閉じられる通知をワンクリックで閉じます。MOD が有効な場合はそれに置き換わります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="ja_JP">
+			<Text>研究と社会制度の進捗</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="ja_JP">
+			<Text>左上のパネルで、研究中のテクノロジーと社会制度の名前の横に、投入済みの科学力 (文化力) 、総コスト、括弧内に完了したテクノロジー (社会制度) から繰り越された余剰の科学力 (文化力) を表示します (例: 120/260 (+15))。表示のみ。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="ja_JP">
 			<Text>拡張された上部バー</Text>
 		</Row>

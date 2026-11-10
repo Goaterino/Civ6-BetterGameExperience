@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="es_ES">
 			<Text>Basado en NotificationClear (336tarot). Un botón del panel de notificaciones cierra de un clic las que puedes cerrar tú mismo. Sustituye al mod si está activo.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="es_ES">
+			<Text>Progreso de investigación y principio</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="es_ES">
+			<Text>Junto al nombre de la tecnología y el principio en curso, en el panel superior izquierdo, muestra la ciencia (la cultura) ya invertida, el coste total y, entre paréntesis, la ciencia (la cultura) sobrante de una tecnología (un principio) terminada, por ejemplo 120/260 (+15). Solo visualización.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="es_ES">
 			<Text>Barra superior ampliada</Text>
 		</Row>

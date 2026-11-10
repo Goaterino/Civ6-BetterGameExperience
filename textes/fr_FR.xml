@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="fr_FR">
 			<Text>D'après NotificationClear (336tarot). Un bouton du panneau des notifications ferme d'un clic celles qu'on peut fermer soi-même. Remplace le mod s'il est actif.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="fr_FR">
+			<Text>Avancement de la recherche et du dogme</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="fr_FR">
+			<Text>À côté du nom de la technologie et du dogme en cours, dans le panneau en haut à gauche, affiche la science (la culture) déjà investie, le coût total et, entre parenthèses, la science (la culture) gardée en excédent d'une technologie (d'un dogme) terminée, par exemple 120/260 (+15). Affichage seulement.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="fr_FR">
 			<Text>Bandeau du haut étendu</Text>
 		</Row>

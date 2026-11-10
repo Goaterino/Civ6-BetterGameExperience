@@ -31,6 +31,9 @@
 //! - `ui_diag_accords=on|off` (off) : ajoute `ui_diag_accords.lua` à DiplomacyDealView.lua. Écrit
 //!   dans Lua.log les événements d'accord et de session, et l'état de l'écran d'accord (diagnostic
 //!   des accords croisés, docs/netcode/README.md) ;
+//! - `ui_avancement=on|off` (on) : ajoute `ui_avancement.lua` à WorldTracker.lua, et un libellé à
+//!   WorldTrackerResearch.xml et WorldTrackerCivic.xml : « x/y (+z) » (placé / coût, excédent lu par `avancement`) à droite du nom de
+//!   la technologie et du dogme en cours, dans le panneau en haut à gauche ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -73,6 +76,10 @@ const QUARTIERS_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_quartiers.lua"));
 const DEBORDEMENT_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
+/// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
+/// WorldTrackerCivic.xml).
+const AVANCEMENT_BLOCK: &str = include_str!("ui_avancement.lua");
+const AVANCEMENT_XML: &str = "<Label ID=\"BGD_Avancement\" Anchor=\"R,T\" Offset=\"0,6\" Style=\"FontNormal14\" String=\"\" Hidden=\"1\" />";
 const ACCORD_FIN_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_accord_fin.lua"));
 
@@ -86,6 +93,7 @@ static DIAG_ACCORDS: AtomicBool = AtomicBool::new(false);
 static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
 static ANNULER: AtomicBool = AtomicBool::new(true);
 static QUARTIERS: AtomicBool = AtomicBool::new(true);
+static AVANCEMENT: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -129,6 +137,10 @@ pub fn set_reduction_quartiers(on: bool) {
     QUARTIERS.store(on, Ordering::Relaxed);
 }
 
+pub fn set_avancement(on: bool) {
+    AVANCEMENT.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -148,6 +160,7 @@ fn active() -> bool {
         || DIAG_ACCORDS.load(Ordering::Relaxed)
         || ANNULER.load(Ordering::Relaxed)
         || QUARTIERS.load(Ordering::Relaxed)
+        || AVANCEMENT.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
@@ -806,6 +819,37 @@ pub fn patch_congres_attente(src: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// WorldCongressBetweenTurns.xml : le bouton `BGD_Revoter` sous la description de l'écran d'attente.
+/// WorldTrackerResearch.xml / WorldTrackerCivic.xml : libellé `BGD_Avancement` dans l'en-tête du
+/// panneau, après le bouton du nom (`ui_avancement.lua` le remplit).
+pub fn patch_avancement_xml(src: &[u8]) -> Result<Vec<u8>, String> {
+    let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
+    if text.contains("BGD_Avancement") {
+        return Err("déjà corrigé".into());
+    }
+    let at = text.find("ID=\"TitleButton\"").ok_or("TitleButton introuvable")?;
+    let end = text[at..].find("/>").ok_or("TitleButton non fermé")? + at + 2;
+    let mut out = String::with_capacity(text.len() + AVANCEMENT_XML.len() + 8);
+    out.push_str(&text[..end]);
+    out.push_str("\r\n\t\t\t\t");
+    out.push_str(AVANCEMENT_XML);
+    out.push_str(&text[end..]);
+    Ok(out.into_bytes())
+}
+
+/// WorldTracker.lua (jeu ou BSM) suivi de `ui_avancement.lua`.
+pub fn patch_avancement(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_avancement.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    for pat in ["function UpdateResearchPanel(", "function UpdateCivicsPanel(", "m_researchInstance", "m_civicsInstance"] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    Ok(append_blocks(src, &[AVANCEMENT_BLOCK]))
+}
+
 pub fn patch_congres_attente_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
     if text.contains("BGD_Revoter") {
@@ -1005,6 +1049,21 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         return match patch_congres_cibles(src) {
             Ok(text) => {
                 what.push("spectateurs retirés des cibles des résolutions, luxes recalculés à chaque session".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if AVANCEMENT.load(Ordering::Relaxed) && is_file(chunk, "WorldTracker.lua") {
+        return match patch_avancement(src) {
+            Ok(text) => {
+                what.push("avancement de la technologie et du dogme en cours".into());
+                if crate::avancement::publier(l) {
+                    what.push("excédents de science et de culture".into());
+                }
                 Some(text)
             }
             Err(e) => {
@@ -1239,6 +1298,18 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
         }
         return r;
     }
+    if AVANCEMENT.load(Ordering::Relaxed)
+        && (is_file(&name, "WorldTrackerResearch.xml") || is_file(&name, "WorldTrackerCivic.xml"))
+    {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match patch_avancement_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("ui : {name} : libellé d'avancement ajouté")),
+            Ok(_) => log(&format!("ui : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("ui : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
     if !BOUTONS.load(Ordering::Relaxed) || !is_file(&name, "CityBannerInstances.xml") {
         return r;
     }
@@ -1263,7 +1334,12 @@ pub unsafe fn on_gamecore_loaded() {
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
 
     // XML d'abord : le bloc Lua dépend des calques.
-    if BOUTONS.load(Ordering::Relaxed) || JOURNAL.load(Ordering::Relaxed) || crate::mods_ui::xml_needed() || crate::congres::pose() {
+    if BOUTONS.load(Ordering::Relaxed)
+        || JOURNAL.load(Ordering::Relaxed)
+        || AVANCEMENT.load(Ordering::Relaxed)
+        || crate::mods_ui::xml_needed()
+        || crate::congres::pose()
+    {
         // Si le proxy de démarrage est installé, la lecture est déjà détournée : on s'enchaîne.
         match exe::hook_read_xml(exe, hook_read_xml as *const () as usize) {
             Ok(h) => {
@@ -1636,6 +1712,35 @@ mod tests {
         );
         assert!(patch_congres_cibles(&new).is_err(), "pas deux fois");
         assert!(patch_congres_cibles(b"local x = 1").is_err());
+    }
+
+    #[test]
+    fn avancement_du_jeu_et_de_bsm() {
+        assert!(is_file(r"C:\x\Base\Assets\UI\WorldTracker.lua", "WorldTracker.lua"));
+        assert!(is_file(r"C:\x\UI\Replacements\worldtracker.lua", "WorldTracker.lua"));
+        assert!(!is_file(r"C:\x\WorldTracker_Expansion1.lua", "WorldTracker.lua"));
+        let bsm = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407\UI\Replacements\worldtracker.lua";
+        for path in [format!(r"{GAME}\Base\Assets\UI\WorldTracker.lua"), bsm.to_string()] {
+            let Some(src) = read(path) else { continue };
+            let new = patch_avancement(&src).unwrap();
+            assert!(new.starts_with(&src) && new.ends_with(AVANCEMENT_BLOCK.as_bytes()));
+            assert!(patch_avancement(&new).is_err(), "pas deux fois");
+        }
+        assert!(patch_avancement(b"local x = 1").is_err());
+        for path in [
+            format!(r"{GAME}\Base\Assets\UI\WorldTrackerResearch.xml"),
+            format!(r"{GAME}\Base\Assets\UI\WorldTrackerCivic.xml"),
+            format!(r"{GAME}\DLC\Expansion2\UI\Replacements\WorldTrackerResearch.xml"),
+        ] {
+            let Some(xml) = read(path) else { continue };
+            let new = String::from_utf8(patch_avancement_xml(&xml).unwrap()).unwrap();
+            // Le libellé, juste après le bouton du nom, dans la même instance.
+            let titre = new.find(r#"ID="TitleButton""#).unwrap();
+            let label = new.find(r#"<Label ID="BGD_Avancement""#).unwrap();
+            assert!(titre < label && label < new.find("</Instance>").unwrap());
+            assert_eq!(new.len(), xml.len() + 6 + AVANCEMENT_XML.len());
+            assert!(patch_avancement_xml(new.as_bytes()).is_err(), "pas deux fois");
+        }
     }
 
     #[test]
