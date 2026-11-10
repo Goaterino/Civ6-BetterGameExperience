@@ -2,6 +2,15 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Neu
+- **Fortschritt von Forschung und Ausrichtung**: Im Panel oben links zeigt **x/y** neben dem Namen
+  der aktuellen Technologie und Ausrichtung die bereits investierte Wissenschaft (Kultur) und die
+  Gesamtkosten, gefolgt von **(+z)**, wenn das Spiel Wissenschaft (Kultur) aus einer mit mehr als
+  ihren Kosten abgeschlossenen Technologie (Ausrichtung) als Überschuss behält. Eine Einstellung
+  schaltet es ab.
+
 ## BetterGameExperience 0.8.1
 
 ### Neu

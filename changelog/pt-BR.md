@@ -2,6 +2,14 @@
 
 [English](../CHANGELOG.md) · outros idiomas: veja o [registro em inglês](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Novidades
+- **Progresso da pesquisa e do princípio**: no painel superior esquerdo, ao lado do nome da
+  tecnologia e do princípio em andamento, **x/y** mostra a ciência (a cultura) já investida e o
+  custo total, seguido de **(+z)** quando o jogo guarda ciência (cultura) excedente de uma
+  tecnologia (um princípio) concluída com mais que o seu custo. Uma configuração permite desativá-lo.
+
 ## BetterGameExperience 0.8.1
 
 ### Novidades

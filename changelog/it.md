@@ -2,6 +2,14 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Novità
+- **Avanzamento di ricerca e civico**: nel pannello in alto a sinistra, accanto al nome della
+  tecnologia e del civico in corso, **x/y** indica la scienza (la cultura) già investita e il costo
+  totale, seguito da **(+z)** quando il gioco conserva scienza (cultura) in eccesso da una
+  tecnologia (un civico) completata con più del suo costo. Un'impostazione permette di disattivarlo.
+
 ## BetterGameExperience 0.8.1
 
 ### Novità

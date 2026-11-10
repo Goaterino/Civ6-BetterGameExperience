@@ -2,6 +2,14 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Novedades
+- **Progreso de investigación y principio**: en el panel superior izquierdo, junto al nombre de la
+  tecnología y el principio en curso, **x/y** muestra la ciencia (la cultura) ya invertida y el
+  coste total, seguido de **(+z)** cuando el juego guarda ciencia (cultura) sobrante de una
+  tecnología (un principio) terminada con más que su coste. Un ajuste permite desactivarlo.
+
 ## BetterGameExperience 0.8.1
 
 ### Novedades

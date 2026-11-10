@@ -4,6 +4,14 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.8.2
+
+### New
+- **Research and civic progress**: in the top-left panel, next to the name of the current
+  technology and civic, **x/y** shows the science (culture) already put in and the total cost,
+  followed by **(+z)** when the game keeps science (culture) in excess from a technology (civic)
+  finished with more than its cost. A setting turns it off.
+
 ## BetterGameExperience 0.8.1
 
 ### New
