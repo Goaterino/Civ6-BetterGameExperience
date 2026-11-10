@@ -84,10 +84,40 @@ donc un objet vide. Et le compte remis à 0 ne fait pas sauter les octets qui su
 message est lue décalée. Ces octets étaient déjà illisibles, et les comptes suivants restent bornés
 par la garde ; ce n'est pas pire qu'avant, mais le message appliqué est faux, pas seulement vide.
 
-**Reste ouvert** : si l'application d'un `NetPlayerInfo` ou d'un `NetGameConfig` vide (ou décalé)
-remplace la configuration vivante du joueur. Il faut remonter les appelants de
-`DeserializeNamedVariantMap` jusqu'au traitement du message. La machine touchée peut alors diverger
-des autres, ce qui reste mieux qu'un gel.
+**Un `NetPlayerInfo` ou un `NetGameConfig` vidé efface la configuration vivante** (vérifié le
+2026-11-10, `Civ6NetMessage.cpp`). Les deux messages lisent leur carte par
+`DeserializeNamedVariantMap` (appel virtuel `+0x1e8`), puis l'appliquent par l'entrée `+0x178` de la
+carte de configuration (`1407a6660`, `Data_TypedVariantMap.cpp`). Cette entrée commence, quand son
+quatrième argument est 0, par effacer la carte cible (`+0x160`, `1407a6550`) : toutes ses entrées si
+on ne lui passe pas de liste de clés changées, sinon ces clés seulement. Elle recopie ensuite la carte
+reçue.
+
+- `NetPlayerInfo` (lecture `140267c40` : identifiant du joueur, `fromCloud`, carte en
+  `message + 0x40`) : le traitement `140267330` appelle `140116630(configurations[id], carte, 0)`,
+  qui fait `+0x178(carte du joueur, carte reçue, null, 0)` puis reconstruit le joueur (`140116060`).
+  Sans liste de clés : **la configuration de ce joueur est effacée en entier** (civilisation,
+  dirigeant, nom, emplacement…) sur la machine qui a reçu le message abîmé.
+- `NetGameConfig` : le traitement `140266e00` appelle `1401033f0(configuration, message + 0x468,
+  liste)`, qui fait `+0x178(configuration de la partie, carte reçue, liste, 0)`. La liste
+  (`message + 0x38`) n'est passée que si `message + 0x458` est non nul (mise à jour partielle) ; sinon
+  **toute la configuration de la partie est effacée** et reconstruite à partir de rien
+  (`1401024f0`, puis chaque joueur par `140115f00`).
+
+La garde transforme donc, pour ces deux messages, un gel en configuration effacée sur une machine.
+Ce n'est probablement pas mieux qu'un gel en pleine partie : la machine touchée diverge des autres,
+ou plante plus loin. Le gel du 9 novembre venait d'un autre chemin (`TypedVariantMap::Deserialize`,
+format binaire, site « carte : entrées »), où vider la carte est moins grave ; ce sont les sites
+« carte nommée » qui posent problème.
+
+**À faire** : quand la garde agit pendant la lecture d'un `NetPlayerInfo` ou d'un `NetGameConfig`, ne
+pas appliquer le message. Piste : détourner aussi les deux traitements (`140267330`, `140266e00`)
+et les sauter si la garde a corrigé une lecture depuis le début de la lecture du message (compteur
+par thread, remis à zéro par la lecture `140267c40` et celle de `NetGameConfig`), avec une ligne au
+journal. À vérifier d'abord : que lecture et traitement d'un message se suivent sur le même thread.
+
+Au passage : le traitement de `NetPlayerInfo` ne vérifie l'identifiant du joueur que contre -1
+(`configurations + id × 0x40`, sans borne supérieure). Un message abîmé à cet endroit écrit hors du
+tableau. La garde ne couvre pas cette lecture.
 
 ## Corrigé avant le merge (`a887d26`)
 
