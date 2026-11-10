@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="zh_Hans_CN">
 			<Text>错误报告未能发送。压缩包已保存到：{1}。请通过 Discord 私信将其发送给 @goaterino。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="zh_Hans_CN">
+			<Text>为奇观建造提供 {1} [ICON_Production] 生产力，若为远古或古典时代的奇观则为 {2}。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

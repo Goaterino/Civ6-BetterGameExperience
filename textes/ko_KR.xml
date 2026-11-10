@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ko_KR">
 			<Text>버그 보고서를 보내지 못했습니다. 압축 파일 저장 위치: {1}. Discord 개인 메시지로 @goaterino 님에게 보내 주세요.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ko_KR">
+			<Text>불가사의 건설에 [ICON_Production] 생산력 +{1}. 고대 또는 고전 시대 불가사의라면 +{2}.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

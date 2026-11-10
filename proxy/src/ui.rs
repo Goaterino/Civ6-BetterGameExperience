@@ -338,6 +338,37 @@ pub fn patch_production_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+const IMHOTEP_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_imhotep.lua"));
+
+/// Ajoute `ui_imhotep.lua` à la fin du fichier, si `needle` (la fonction qu'il enveloppe) y est.
+fn patch_imhotep(src: &[u8], needle: &str) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if !has(needle) {
+        return Err(format!("{} introuvable", needle.trim_start()));
+    }
+    if has("Civ6RolloverProxy (src/ui_imhotep.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(IMHOTEP_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// L'effet d'Imhotep écrit 175 en dur, quelle que soit la vitesse (87 en vitesse en ligne) :
+/// `ui_imhotep.lua` enveloppe `PopulateData` de l'écran des personnages illustres. Octets laissés
+/// tels quels.
+pub fn patch_great_people(src: &[u8]) -> Result<Vec<u8>, String> {
+    patch_imhotep(src, "\nfunction PopulateData(")
+}
+
+/// Même texte dans la Civilopédie : `ui_imhotep.lua` enveloppe `GetModifierText`, que la page
+/// inclut (GameEffectsText.lua).
+pub fn patch_pedia_great_person(src: &[u8]) -> Result<Vec<u8>, String> {
+    patch_imhotep(src, "GetModifierText(")
+}
+
 const ENTREE_BLOCK: &str = include_str!("ui_entree.lua");
 
 /// `OnInputHandler` d'ActionPanel.lua lance « Action suivante » sur Entrée codée en dur, même quand
@@ -1007,7 +1038,7 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 11] = [
+const FIXES: [(&str, Fix, &str); 13] = [
     ("MPHOptions.lua", patch_popup_mph, POPUP_MPH_DONE),
     ("VotePanel.lua", patch_popup_mph, POPUP_MPH_DONE),
     ("DiplomacyActionView.lua", patch_diplomacy_action_view, DIPLOMATIE_DONE),
@@ -1019,6 +1050,8 @@ const FIXES: [(&str, Fix, &str); 11] = [
     ("CityPanel.lua", patch_city_panel_complet, "owningPlayerID corrigé, panneau redessiné quand la file change"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
     ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville, retirée au clic droit"),
+    ("GreatPeoplePopup.lua", patch_great_people, "effet d'Imhotep à la vitesse de la partie"),
+    ("CivilopediaPage_GreatPerson.lua", patch_pedia_great_person, "effet d'Imhotep à la vitesse de la partie"),
 ];
 
 /// Les cadres que les calques de ui_boutons.xml reproduisent : sans eux, les boutons déplacés ne
@@ -1917,6 +1950,26 @@ mod tests {
         assert!(patch_production_panel(b"function View(data) end").is_err());
         assert!(is_file(r"C:\x\Base\Assets\UI\Panels\ProductionPanel.lua", "ProductionPanel.lua"));
         assert!(!is_file("ui/replacements/productionpanel_bbg.lua", "ProductionPanel.lua"));
+    }
+
+    #[test]
+    fn imhotep() {
+        let popup = b"function GetDisplayPlayerID()\r\nend\r\nfunction PopulateData( data:table, isPast:boolean )\r\nend";
+        let new = patch_great_people(popup).unwrap();
+        assert!(new.starts_with(popup) && new.ends_with(IMHOTEP_BLOCK.as_bytes()));
+        assert!(patch_great_people(&new).is_err(), "pas deux fois");
+        assert!(patch_great_people(b"function View(data) end").is_err());
+        let pedia = b"include(\"GameEffectsText\")\r\nlocal text = GetModifierText(row.ModifierId, \"Summary\");";
+        assert!(patch_pedia_great_person(pedia).unwrap().ends_with(IMHOTEP_BLOCK.as_bytes()));
+        assert!(is_file(r"C:\x\Base\Assets\UI\Popups\GreatPeoplePopup.lua", "GreatPeoplePopup.lua"));
+        assert!(!is_file(r"C:\x\DLC\Babylon\UI\Replacements\GreatPeoplePopup_Babylon_Heroes.lua", "GreatPeoplePopup.lua"));
+        assert!(is_file(r"C:\x\Base\Assets\UI\Civilopedia\CivilopediaPage_GreatPerson.lua", "CivilopediaPage_GreatPerson.lua"));
+        if let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Popups\GreatPeoplePopup.lua")) {
+            assert!(patch_great_people(&src).is_ok());
+        }
+        if let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Civilopedia\CivilopediaPage_GreatPerson.lua")) {
+            assert!(patch_pedia_great_person(&src).is_ok());
+        }
     }
 
     #[test]

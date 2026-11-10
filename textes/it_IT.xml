@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="it_IT">
 			<Text>Non è stato possibile inviare la segnalazione del bug. L'archivio è stato salvato qui: {1}. Invialo a @goaterino in un messaggio privato su Discord.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="it_IT">
+			<Text>Fornisce {1} [ICON_Production] Produzione per la costruzione di meraviglie, {2} se la meraviglia appartiene all'Era Antica o Classica.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
