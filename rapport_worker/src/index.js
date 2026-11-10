@@ -206,6 +206,32 @@ async function publierDiscord(env, id, meta, octets, lien) {
 	if (!r.ok) throw new Error(`Discord ${r.status} : ${(await r.text()).slice(0, 300)}`);
 }
 
+// Prévient l'équipe sur Discord que le quota refuse des rapports : une fois par 24 heures au plus,
+// retenue par un objet du bucket hors de `rapports/` (ni compté ni supprimé par le plafond). Un
+// envoi en boucle n'ouvre donc qu'un fil par jour.
+const ALERTE_QUOTA = "etat/alerte_quota";
+export async function alerterQuota(env, raison, maintenant = Date.now()) {
+	try {
+		const vu = await env.RAPPORTS.head(ALERTE_QUOTA);
+		if (vu != null && maintenant - new Date(vu.uploaded).getTime() < 86400e3) return false;
+		await env.RAPPORTS.put(ALERTE_QUOTA, raison);
+		const r = await fetch(`${env.DISCORD_WEBHOOK}?wait=true`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				thread_name: "Bug report quota reached",
+				content: `**Bug report quota reached**\nNew reports are refused until older ones leave the 24-hour window: ${brut(raison, 200)}.\nPlayers keep their report on their Desktop. If this is not real traffic, look at the Worker logs.`,
+				allowed_mentions: { parse: [] },
+			}),
+		});
+		if (!r.ok) throw new Error(`Discord ${r.status} : ${(await r.text()).slice(0, 300)}`);
+		return true;
+	} catch (e) {
+		console.error(`alerte de quota : ${e.message}`);
+		return false;
+	}
+}
+
 async function recevoir(request, env) {
 	if ((request.headers.get("x-bge-cle") ?? "") !== (env.CLE_CLIENT || CLE_CLIENT)) return json({ erreur: "clé absente ou invalide" }, 403);
 	const ip = request.headers.get("cf-connecting-ip") ?? "?";
@@ -235,6 +261,7 @@ async function recevoir(request, env) {
 	const quota = quotaDepasse(env, objets, zip.byteLength);
 	if (quota != null) {
 		console.log(`rapport refusé : ${quota}`);
+		await alerterQuota(env, quota);
 		return json({ erreur: "trop de rapports aujourd'hui, réessayez demain" }, 503);
 	}
 	let id;

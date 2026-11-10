@@ -102,6 +102,10 @@ Bureau du joueur, et la raison va aux journaux (`rapport refusé : …`). Pour u
 c'est loin d'une journée normale ; à 1 Go par jour, il faut plus d'une semaine de déchets pour
 atteindre le plafond du bucket.
 
+Au premier refus, le Worker ouvre un fil « Bug report quota reached » dans le forum Discord, avec
+la raison : un quota épuisé par des envois en boucle bloque aussi les vrais rapports, et l'équipe
+doit le savoir. Une seule alerte par 24 heures, retenue par l'objet `etat/alerte_quota` du bucket.
+
 Le décompte se fait sur les rapports du bucket (date de dépôt de R2), avec la liste que le plafond
 lit déjà : ni KV ni Durable Object. Deux rapports reçus au même instant peuvent dépasser le quota
 d'un rapport. Pour changer les valeurs, ajouter `QUOTA_RAPPORTS = "100"` ou
