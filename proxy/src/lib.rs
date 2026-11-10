@@ -250,6 +250,21 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_rapports=") {
             mods_ui::set_rapports(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("ui_spectateur=") {
+            mods_ui::set_spectateur(v.trim() != "off");
+        }
+        // 1 Spectator.lua, 2 CityStates, 4 ruban, 8 icone, 16 popup du Congres ; 31 = tous.
+        if let Some(v) = line.trim().strip_prefix("ui_spectateur_fichiers=") {
+            let m = match v.trim() {
+                "all" => 31,
+                "aucun" => 0,
+                "data" => 1,
+                "ui" => 14,
+                "congres" => 16,
+                s => s.parse::<usize>().unwrap_or(31),
+            };
+            mods_ui::set_spectateur_fichiers(m);
+        }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");
         }
