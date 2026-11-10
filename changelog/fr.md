@@ -2,17 +2,44 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
-## BetterGameExperience 0.8.2
+## BetterGameExperience 0.9.0
+
+Comprend tout le contenu de la pré-release 0.8.1. En multijoueur, tous les humains doivent être en
+0.9.0 pour les correctifs **[tous les joueurs]** : un salon qui mélange 0.8.x et 0.9.0 les coupe.
+
+### Correctifs du multijoueur [tous les joueurs]
+- **Spectateurs (Better Spectator Mod)** : ils ne comptent plus comme des civilisations majeures et
+  sortent des listes de joueurs des scripts, des victoires et du score. BetterGameExperience
+  embarque ses propres versions des scripts de Better Spectator Mod, faites pour cela. Contribution
+  de banipouz.
+- **Désynchronisation due à un spectateur** : changer le joueur qu'observe un spectateur ne
+  désynchronise plus la partie (Better Spectator Mod l'écrivait dans les données de la partie, sur
+  la seule machine du spectateur).
+- **Spectateurs dans le bandeau des dirigeants** : les joueurs ne voient plus les spectateurs dans
+  le bandeau en haut à droite, où ils apparaissaient comme une IA, avec un portrait « ? », leur nom
+  et leurs rendements.
+- **Tour du spectateur après une pause** : après une pause de MPH, le tour du spectateur se termine
+  de nouveau tout seul, au lieu d'attendre qu'il le passe à la main.
+
+### Multijoueur
+- **Messages réseau abîmés** : un message abîmé, vu à la déconnexion d'un joueur, pouvait geler le
+  jeu jusqu'au manque de mémoire, quelques minutes plus tard. Les valeurs impossibles d'un tel
+  message sont maintenant écartées et la partie continue ; une ligne dans le chat le dit à tous. Une
+  configuration de partie ou de joueur abîmée n'est plus appliquée, au lieu d'effacer la
+  configuration. Protège les joueurs qui ont BetterGameExperience. Contribution de yodha.
+- **No First/Last moves avec un hôte spectateur** : le tour démarre maintenant dès que les joueurs
+  sont prêts, au lieu de les retenir jusqu'au délai de sécurité.
 
 ### Nouveautés
 - **Avancement de la recherche et du dogme** : dans le panneau en haut à gauche, à côté du nom de la
   technologie et du dogme en cours, **x/y** indique la science (la culture) déjà investie et le coût
   total, suivi de **(+z)** quand le jeu garde de la science (de la culture) en excédent d'une
   technologie (d'un dogme) terminée avec plus que son coût. Un réglage permet de le désactiver.
-
-## BetterGameExperience 0.8.1
-
-### Nouveautés
+- **Disable Advanced UI indicators (BGE)** : nouvelle option de partie, juste sous No First/Last
+  moves, décochée par défaut. Quand l'hôte la coche, aucun joueur ne voit l'avancement de la
+  recherche et du dogme (**x/y (+z)**) ni la production en réserve des villes, quels que soient ses
+  réglages. Elle est relue à chaque partie : passer à une partie sans l'option, sans relancer
+  Civ VI, les fait réapparaître.
 - **Annuler la production depuis le bandeau de ville** : un clic droit sur l'icône de production du
   bandeau d'une de vos villes retire l'élément en cours, comme dans le panneau de production.
 - **Quartiers en réduction** : dans la liste de production, un quartier dont le coût est réduit
@@ -36,9 +63,24 @@
   seulement file ouverte.
 - **Salon de MPH** : hors draft, le tableau des joueurs remonte dans l'espace vide que MPH réserve
   à son draft, et le « . » affiché au-dessus dans une partie rechargée disparaît.
+- **Écran diplomatique** : après la rencontre d'un joueur dont l'équipe manquait à la liste des
+  équipes du jeu, les icônes des dirigeants échouaient à chaque tour, et ouvrir l'écran diplomatique
+  pouvait masquer toute l'interface pour de bon. Les icônes fonctionnent de nouveau, et si l'écran
+  diplomatique ne s'ouvre pas, l'interface revient.
+- **Imhotep** : son effet affiche maintenant le montant à la vitesse de la partie (87, ou 175 pour
+  une merveille antique ou classique, en vitesse En ligne), dans l'écran des personnages illustres
+  et la Civilopédie, au lieu de 175 dans tous les cas.
+- **Pause de MPH** : le menu MULTIPLAYER HELPER et le vote de remap s'affichent maintenant au-dessus
+  de l'écran de pause de MPH, avec des boutons cliquables.
+- **Bandeau du haut** : les activités moyennes par ville sont arrondies à l'entier le plus proche,
+  et non plus à l'entier inférieur.
+- **Signaler un bug (BGE)** : la sauvegarde est maintenant jointe au rapport ; seules les
+  sauvegardes automatiques partaient.
 
 ### Réglages
-- Les trois nouveautés ont chacune un réglage dans l'onglet BetterGameExperience, activé par défaut.
+- Les nouveautés d'interface (annuler depuis le bandeau, quartiers en réduction, production en
+  réserve, avancement de la recherche et du dogme) et les scripts de Better Spectator Mod ont chacun
+  un réglage dans l'onglet BetterGameExperience, activé par défaut.
 
 ## BetterGameExperience 0.8.0
 

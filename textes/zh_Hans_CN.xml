@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="zh_Hans_CN">
 			<Text>所有玩家在同一时刻开始和结束回合。回合开始时，每个人都要等所有人加载完毕：可以查看地图，但指令会被暂缓，回合计时器也不会走。回合结束时，当主机的计时器归零，所有人的回合都会结束，即使自己的计时器还显示有剩余时间。所有玩家都需要安装相同版本的 BetterGameExperience。取代 MPH 的回合同步，该功能会被关闭。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="zh_Hans_CN">
+			<Text>为所有玩家隐藏 BetterGameExperience 的高级指示：当前科技与市政已投入的科技值、文化值及总花费 (x/y)，作为溢出保留的科技值与文化值 (+z)，以及城市储存的生产力。默认关闭。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="zh_Hans_CN">
 			<Text>所有玩家都安装了 BetterGameExperience {1}：POL 修正已启用。</Text>
 		</Row>

@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="de_DE">
 			<Text>Alle Spieler beginnen und beenden ihre Runde im selben Moment. Zu Rundenbeginn warten alle, bis jeder fertig geladen hat: Man kann die Karte ansehen, aber Befehle werden zurückgehalten und der Rundentimer läuft nicht. Am Ende, wenn der Timer des Hosts abläuft, endet die Runde für alle, auch wenn der eigene Timer noch Zeit anzeigt. Alle Spieler brauchen BetterGameExperience in derselben Version. Ersetzt die Rundensynchronisation von MPH, die abgeschaltet wird.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="de_DE">
+			<Text>Blendet die erweiterten Anzeigen von BetterGameExperience für alle Spieler aus: bereits investierte Wissenschaft und Kultur sowie Gesamtkosten der aktuellen Technologie und Ausrichtung (x/y), überschüssig gespeicherte Wissenschaft und Kultur (+z) und die von Städten gespeicherte Produktion. Standardmäßig aus.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="de_DE">
 			<Text>Alle Spieler haben BetterGameExperience {1}: POL-Korrekturen aktiv.</Text>
 		</Row>

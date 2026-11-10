@@ -1,5 +1,6 @@
--- Test hors jeu de src/option_partie.lua : la ligne de l'option « No First/Last moves (BGE) »
--- ajoutée à la table Parameters avant chaque lecture des options de partie.
+-- Test hors jeu de src/option_partie.lua : les lignes des options « No First/Last moves (BGE) » et
+-- « Disable Advanced UI indicators (BGE) » ajoutées à la table Parameters avant chaque lecture des
+-- options de partie.
 --   lua startup_proxy/tests/test_option_partie.lua
 local function ReadFile(path)
 	local f = assert(io.open(path, "rb"));
@@ -58,33 +59,44 @@ do
 	local env, rows, journal, discovered = NewScreen("fr_FR");
 	local r = env.SetupParameters.Data_DiscoverParameters({});
 	Check("lecture d'origine appelée, résultat rendu", r == "liste" and discovered() == 1);
-	Check("une ligne ajoutée", #rows == 1 and rows[1].ParameterId == "BGD_DEPART_SIMULTANE");
+	Check("deux lignes ajoutées, dans l'ordre", #rows == 2 and rows[1].ParameterId == "BGD_DEPART_SIMULTANE"
+		and rows[2].ParameterId == "BGD_INDICATEURS_OFF");
 	Check("libellé « No First/Last moves (BGE) », aide en français", rows[1].Name == "No First/Last moves (BGE)"
 		and rows[1].Description:find("^Tous les joueurs commencent et finissent") ~= nil);
 	Check("position 43 dans les options", rows[1].SortIndex == 43);
 	Check("réseau seulement, option de partie booléenne, cochée par défaut",
 		rows[1].sql:find("'bool', 1, 'Game', %?1, 'GameOptions', 0, 0, 0, 1, %?4") ~= nil and rows[1].DefaultValue == 1);
 	Check("cache des requêtes vidé", next(env.QueryCache) == nil);
-	Check("journal", #journal == 1 and journal[1] == "option : BGD_DEPART_SIMULTANE ajoutée à Parameters");
+	Check("libellé « Disable Advanced UI indicators (BGE) », aide en français, juste en dessous (44)",
+		rows[2].Name == "Disable Advanced UI indicators (BGE)" and rows[2].SortIndex == 44
+		and rows[2].Description:find("^Masque pour tous les joueurs les indicateurs avancés") ~= nil);
+	Check("indicateurs : réseau seulement, booléenne, décochée par défaut",
+		rows[2].sql:find("'bool', 0, 'Game', %?1, 'GameOptions', 0, 0, 0, 1, %?4") ~= nil and rows[2].DefaultValue == 0);
+	Check("journal", #journal == 2 and journal[1] == "option : BGD_DEPART_SIMULTANE ajoutée à Parameters"
+		and journal[2] == "option : BGD_INDICATEURS_OFF ajoutée à Parameters");
 	env.SetupParameters.Data_DiscoverParameters({});
-	Check("pas de doublon à la lecture suivante", #rows == 1 and discovered() == 2);
+	Check("pas de doublon à la lecture suivante", #rows == 2 and discovered() == 2);
 end
 
 do
 	local env, rows = NewScreen("en_US");
 	env.SetupParameters.Data_DiscoverParameters({});
 	Check("même libellé, aide en anglais", rows[1].Name == "No First/Last moves (BGE)" and rows[1].Description:find("^Every player starts and ends") ~= nil);
+	Check("indicateurs : aide en anglais", rows[2].Description:find("^Hides BetterGameExperience's advanced indicators") ~= nil);
 end
 
 do
 	-- Ligne d'une version précédente, décochée par défaut, restée dans la base.
-	local env, rows, journal = NewScreen("fr_FR", false, { { ParameterId = "BGD_DEPART_SIMULTANE", DefaultValue = 0 } });
+	local env, rows, journal = NewScreen("fr_FR", false, { { ParameterId = "BGD_DEPART_SIMULTANE", DefaultValue = 0 },
+		{ ParameterId = "BGD_INDICATEURS_OFF", DefaultValue = 1 } });
 	env.SetupParameters.Data_DiscoverParameters({});
-	Check("ancienne ligne : cochée par défaut, sans doublon", #rows == 1 and rows[1].DefaultValue == 1);
+	Check("ancienne ligne : cochée par défaut, sans doublon", #rows == 2 and rows[1].DefaultValue == 1);
+	Check("ancienne ligne des indicateurs : décochée par défaut", rows[2].DefaultValue == 0);
 	Check("ancienne ligne : cache vidé, journal", next(env.QueryCache) == nil
-		and #journal == 1 and journal[1] == "option : BGD_DEPART_SIMULTANE : cochée par défaut");
+		and #journal == 2 and journal[1] == "option : BGD_DEPART_SIMULTANE : cochée par défaut"
+		and journal[2] == "option : BGD_INDICATEURS_OFF : décochée par défaut");
 	env.SetupParameters.Data_DiscoverParameters({});
-	Check("ancienne ligne : une seule mise à jour", #journal == 1);
+	Check("ancienne ligne : une seule mise à jour", #journal == 2);
 end
 
 do

@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="en_US">
 			<Text>Every player starts and ends their turn at the same moment. At the start of the turn, everyone waits until all players have finished loading: you can look at the map, but orders are held and the turn timer does not run. At the end, when the host's turn timer runs out, the turn ends for everyone, even if their own timer still shows time left. Every player needs BetterGameExperience, at the same version. Replaces MPH's turn synchronisation, which is turned off.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="en_US">
+			<Text>Hides BetterGameExperience's advanced indicators for every player: science and culture already put in and total cost of the current technology and civic (x/y), science and culture kept in excess (+z), and the production stored by cities. Off by default.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="en_US">
 			<Text>All players have BetterGameExperience {1}: POL fixes enabled.</Text>
 		</Row>

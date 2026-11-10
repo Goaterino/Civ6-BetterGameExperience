@@ -18,8 +18,9 @@ local DEBORDEMENT = TEXTES .. ReadFile(dir .. "/../src/ui_debordement.lua");
 local LOCAL, AUTRE = 0, 1;
 
 local function NewMachine(blocks, reserves)
-	local m = { ops = {}, queue = { [LOCAL] = 1, [AUTRE] = 1 }, sounds = 0 };
+	local m = { ops = {}, queue = { [LOCAL] = 1, [AUTRE] = 1 }, sounds = 0, config = {} };
 	local env = setmetatable({}, { __index = _G });
+	env.GameConfiguration = { GetValue = function(k) return m.config[k]; end };
 	env.Mouse = { eLClick = "L", eRClick = "R" };
 	env.Game = { GetLocalPlayer = function() return LOCAL; end };
 	env.Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end, Lookup = function(s) return s; end };
@@ -120,6 +121,25 @@ do
 	Check("réserve : rien pour la ville d'un autre joueur", autre.TurnsLeft.text == nil);
 end
 
+-- Option de partie « Disable Advanced UI indicators (BGE) » : lue à chaque redessin.
+do
+	local m = NewMachine({ DEBORDEMENT }, { ["0:65536"] = 12 });
+	m.config.BGD_INDICATEURS_OFF = true;
+	m.queue[LOCAL] = 0;
+	local banner, inst = m.Banner(LOCAL);
+	Check("option : bandeau sans réserve", inst.TurnsLeft.text == "" and inst.Button.tip == "LOC_CITY_BANNER_NO_PRODUCTION");
+	m.config.BGD_INDICATEURS_OFF = false;
+	banner:UpdateProduction(m.cities[LOCAL]);
+	Check("option décochée ensuite : réserve de retour", inst.TurnsLeft.text == "+12");
+	m.config.BGD_INDICATEURS_OFF = 1;
+	banner:UpdateProduction(m.cities[LOCAL]);
+	Check("option cochée ensuite (valeur 1) : « +12 » effacé", inst.TurnsLeft.text == "");
+	m.config.BGD_INDICATEURS_OFF = nil;
+	m.env.GameConfiguration = nil;
+	banner:UpdateProduction(m.cities[LOCAL]);
+	Check("sans GameConfiguration : réserve affichée", inst.TurnsLeft.text == "+12");
+end
+
 -- Sans la fonction native (relevé non posé) : le bloc ne change rien.
 do
 	local m = NewMachine({ DEBORDEMENT });
@@ -171,6 +191,12 @@ do
 	env.BGD_Debordement = function() return 9.9; end;
 	env.View({});
 	Check("panneau : file vide, pas de « +9 » sur l'ancienne production", progress.text == "[ICON_Production]45 / 120" and tip == TXT);
+	hash = 1234;
+	refill = false;
+	env.View({});
+	env.GameConfiguration = { GetValue = function(k) return k == "BGD_INDICATEURS_OFF" and true or nil; end };
+	env.View({});
+	Check("panneau : option cochée, « +9 » et infobulles retirés", progress.text == "[ICON_Production]45 / 120" and tip == "" and progress.tip == "");
 end
 
 -- Panneau de la ville (CityPanel) : ligne ajoutée aux statistiques de la production.
@@ -195,6 +221,10 @@ do
 	env.BGD_Debordement = function() return 0; end;
 	env.ViewMain({ CurrentProductionStats = "" });
 	Check("panneau de ville : sans réserve, statistiques seules", stat.text == "");
+	env.BGD_Debordement = function() return 21.4; end;
+	env.GameConfiguration = { GetValue = function(k) return k == "BGD_INDICATEURS_OFF" and 1 or nil; end };
+	env.ViewMain({ CurrentProductionStats = "120 [ICON_Production]" });
+	Check("panneau de ville : option cochée, statistiques seules", stat.text == "120 [ICON_Production]");
 end
 
 -- Panneau de ville : redessiné quand la file change (ui_panneau_ville.lua).
