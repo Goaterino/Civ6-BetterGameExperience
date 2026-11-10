@@ -15,6 +15,11 @@
   production affichent la production que la ville garde en réserve (débordement d'un élément
   terminé, ou tour passé sans rien produire ; le jeu en garde au plus un tour), ajoutée à sa
   production du tour suivant. Sur le bandeau d'une ville sans production, elle s'affiche en **+N**.
+- **BGE Check** : dans un salon multijoueur, l'hôte a un bouton **BGE CHECK**, à côté du MOD CHECK
+  de MPH, qui demande à chaque joueur sa version de BetterGameExperience et écrit le bilan dans le
+  chat : même version, autre version, installé mais désactivé, ou sans réponse.
+- **Message d'arrivée** : à l'ouverture d'un salon avec BetterGameExperience activé, le chat
+  l'annonce, avec votre version exacte.
 
 ### Corrections de l'interface
 - **Panneau de la ville après le retrait de la production** : le panneau en bas à droite se met à
