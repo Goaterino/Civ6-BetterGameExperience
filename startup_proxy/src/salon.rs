@@ -138,7 +138,9 @@ fn version_du_fichier() -> Option<String> {
             return v.clone();
         }
     }
-    let v = std::fs::read(&chemin).ok().and_then(|data| version_marquee(&data));
+    // Une lecture ratée (fichier verrouillé un instant) n'est pas retenue : le salon suivant réessaie.
+    let data = std::fs::read(&chemin).ok()?;
+    let v = version_marquee(&data);
     *c = Some((cle, v.clone()));
     v
 }
