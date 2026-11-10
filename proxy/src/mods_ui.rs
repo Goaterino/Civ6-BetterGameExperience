@@ -36,6 +36,10 @@ static NOTIFICATIONS: AtomicBool = AtomicBool::new(true);
 static BANDEAU: AtomicBool = AtomicBool::new(true);
 static POLITIQUES: AtomicBool = AtomicBool::new(true);
 static RAPPORTS: AtomicBool = AtomicBool::new(true);
+static SPECTATEUR: AtomicBool = AtomicBool::new(true);
+// Quels scripts remplacer : 1 Spectator.lua, 2 CityStates, 4 ruban, 8 icone, 16 popup du Congres.
+// Sert a isoler un fichier qui pose probleme ; 31 = tous.
+static SPECTATEUR_FICHIERS: AtomicUsize = AtomicUsize::new(31);
 
 pub fn set_charges(on: bool) {
     CHARGES.store(on, Ordering::Relaxed);
@@ -55,6 +59,26 @@ pub fn set_politiques(on: bool) {
 pub fn set_rapports(on: bool) {
     RAPPORTS.store(on, Ordering::Relaxed);
 }
+pub fn set_spectateur(on: bool) {
+    SPECTATEUR.store(on, Ordering::Relaxed);
+}
+pub fn set_spectateur_fichiers(masque: usize) {
+    SPECTATEUR_FICHIERS.store(masque, Ordering::Relaxed);
+}
+
+/// Le popup du Congres est remplace par celui du proxy spectateur : les blocs de `ui`, ecrits
+/// pour le popup vanilla, n'ont plus a s'y ajouter.
+/// Un script du mod BSM a ete compile dans ce processus : le mod est donc dans le parametrage
+/// de la partie. Le popup du Congres, fichier du jeu de base, n'est remplace que dans ce cas.
+static BSM_VU: AtomicBool = AtomicBool::new(false);
+
+pub fn bsm_vu() -> bool {
+    BSM_VU.load(Ordering::Relaxed)
+}
+
+pub fn popup_spectateur_actif() -> bool {
+    on(&SPECTATEUR) && SPECTATEUR_FICHIERS.load(Ordering::Relaxed) & 16 != 0 && bsm_vu()
+}
 
 fn on(flag: &AtomicBool) -> bool {
     flag.load(Ordering::Relaxed)
@@ -62,7 +86,7 @@ fn on(flag: &AtomicBool) -> bool {
 
 /// Une reprise au moins est active : l'accroche Lua doit être posée.
 pub fn any() -> bool {
-    [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS].iter().any(|f| on(f))
+    [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS, &SPECTATEUR].iter().any(|f| on(f))
 }
 
 /// Une reprise a besoin de la lecture XML.
@@ -73,13 +97,14 @@ pub fn xml_needed() -> bool {
 pub fn journal_reglages() -> String {
     let s = |f: &AtomicBool| if on(f) { "on" } else { "off" };
     format!(
-        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}",
+        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}, spectateur {}",
         s(&CHARGES),
         s(&ROUTES),
         s(&NOTIFICATIONS),
         s(&BANDEAU),
         s(&POLITIQUES),
-        s(&RAPPORTS)
+        s(&RAPPORTS),
+        s(&SPECTATEUR)
     )
 }
 
@@ -115,8 +140,24 @@ const RAPPORTS_XML: &str = include_str!("mods/rapports/reportscreen.xml");
 const LISTE: &str = include_str!("mods/rapports/liste.lua");
 const TEXTES: &str = include_str!("mods/textes.tsv");
 
+// Better Spectator Mod : nos versions des scripts, substituees a la compilation. Rien n'est ecrit
+// sur le disque ; le mod reste tel quel, active ou non.
+const SPECTATEUR_DATA: &[u8] = include_bytes!("mods/spectateur/spectator.lua");
+const SPECTATEUR_RIBBON: &[u8] = include_bytes!("mods/spectateur/diplomacyribbon_spec.lua");
+const SPECTATEUR_ICONE: &[u8] = include_bytes!("mods/spectateur/leadericon.lua");
+const SPECTATEUR_CITYSTATES: &[u8] = include_bytes!("mods/spectateur/citystates.lua");
+const SPECTATEUR_CONGRES: &[u8] = include_bytes!("mods/spectateur/worldcongresspopup_spec.lua");
+
 /// Better Spectator Mod : son script du bandeau, que TopPanel Extension Pro évinçait.
 const BSM_ID: &str = "c6e5ad32-0600-4a98-a7cd-5854a1abcaaf";
+
+/// Le chunk appartient-il au mod BSM ? Le dossier varie : Workshop (identifiant numerique),
+/// archive locale, ou copie de dev.
+fn dans_bsm(chunk: &str) -> bool {
+    const MARQUEURS: [&[u8]; 3] = [b"1916397407", b"betterspectatormod", b"spec_v1.2"];
+    let p = chunk.as_bytes();
+    MARQUEURS.iter().any(|m| p.windows(m.len()).any(|w| w.eq_ignore_ascii_case(*m)))
+}
 
 fn has(src: &[u8], pat: &str) -> bool {
     src.windows(pat.len()).any(|w| w == pat.as_bytes())
@@ -145,6 +186,34 @@ fn fichier_du_jeu(rel: &str) -> Result<Vec<u8>, String> {
 /// Le script entier à compiler à la place de celui de l'exe, et ce qu'on a fait (journal).
 pub fn remplacer(chunk: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), String>> {
     let vide = |quoi: &str| Some(Ok((format!("-- BetterGameDLLs : {quoi}, neutralisé par le proxy.\r\n").into_bytes(), format!("{quoi} neutralisé"))));
+    if dans_bsm(chunk) {
+        // Presence du mod dans la partie, meme si ses remplacements sont desactives.
+        BSM_VU.store(true, Ordering::Relaxed);
+    }
+    if on(&SPECTATEUR) {
+        let fichier = |bit: usize| SPECTATEUR_FICHIERS.load(Ordering::Relaxed) & bit != 0;
+        if dans_bsm(chunk) {
+            // is_file compare le nom sans tenir compte de la casse : le jeu compile
+            // "LeaderIcon.lua" alors que le fichier s'appelle "leadericon.lua".
+            if fichier(1) && is_file(chunk, "Spectator.lua") {
+                return Some(Ok((SPECTATEUR_DATA.to_vec(), "Better Spectator Mod : Spectator.lua du proxy".into())));
+            }
+            if fichier(4) && is_file(chunk, "diplomacyribbon_spec.lua") {
+                return Some(Ok((SPECTATEUR_RIBBON.to_vec(), "Better Spectator Mod : ruban diplomatique du proxy".into())));
+            }
+            if fichier(8) && is_file(chunk, "LeaderIcon.lua") {
+                return Some(Ok((SPECTATEUR_ICONE.to_vec(), "Better Spectator Mod : icone de leader du proxy".into())));
+            }
+            if fichier(2) && is_file(chunk, "CityStates.lua") {
+                return Some(Ok((SPECTATEUR_CITYSTATES.to_vec(), "Better Spectator Mod : CityStates du proxy".into())));
+            }
+        }
+        // La cible n'a pas d'entree ReplaceUIScript pour le popup du Congres : c'est le fichier
+        // du jeu qui est compile, on le remplace directement.
+        if fichier(16) && is_file(chunk, "WorldCongressPopup.lua") {
+            return Some(Ok((SPECTATEUR_CONGRES.to_vec(), "popup du Congres du proxy".into())));
+        }
+    }
     if on(&RAPPORTS) {
         if is_file(chunk, "ReportScreen.lua") {
             let quoi = if has(src, "Better Report Screen") && !has(src, "BetterGameDLLs") {
