@@ -31,6 +31,9 @@
 //! - `ui_diag_accords=on|off` (off) : ajoute `ui_diag_accords.lua` à DiplomacyDealView.lua. Écrit
 //!   dans Lua.log les événements d'accord et de session, et l'état de l'écran d'accord (diagnostic
 //!   des accords croisés, docs/netcode/README.md) ;
+//! - `ui_avancement=on|off` (on) : ajoute `ui_avancement.lua` à WorldTracker.lua, et un libellé à
+//!   WorldTrackerResearch.xml et WorldTrackerCivic.xml : « x/y (+z) » (placé / coût, excédent lu par `avancement`) à droite du nom de
+//!   la technologie et du dogme en cours, dans le panneau en haut à gauche ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -67,6 +70,16 @@ const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
 const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
+/// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
+const ANNULER_BLOCK: &str = include_str!("ui_banniere_annuler.lua");
+const QUARTIERS_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_quartiers.lua"));
+const DEBORDEMENT_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
+/// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
+/// WorldTrackerCivic.xml).
+const AVANCEMENT_BLOCK: &str = include_str!("ui_avancement.lua");
+const AVANCEMENT_XML: &str = "<Label ID=\"BGD_Avancement\" Anchor=\"R,T\" Offset=\"0,6\" Style=\"FontNormal14\" String=\"\" Hidden=\"1\" />";
 const ACCORD_FIN_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_accord_fin.lua"));
 
@@ -78,6 +91,9 @@ static OPTI: AtomicBool = AtomicBool::new(true);
 static MERVEILLES: AtomicBool = AtomicBool::new(true);
 static DIAG_ACCORDS: AtomicBool = AtomicBool::new(false);
 static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
+static ANNULER: AtomicBool = AtomicBool::new(true);
+static QUARTIERS: AtomicBool = AtomicBool::new(true);
+static AVANCEMENT: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -113,6 +129,18 @@ pub fn set_epingles(on: bool) {
     OPTI.store(on, Ordering::Relaxed);
 }
 
+pub fn set_banniere_annuler(on: bool) {
+    ANNULER.store(on, Ordering::Relaxed);
+}
+
+pub fn set_reduction_quartiers(on: bool) {
+    QUARTIERS.store(on, Ordering::Relaxed);
+}
+
+pub fn set_avancement(on: bool) {
+    AVANCEMENT.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -130,6 +158,10 @@ fn active() -> bool {
         || OPTI.load(Ordering::Relaxed)
         || MERVEILLES.load(Ordering::Relaxed)
         || DIAG_ACCORDS.load(Ordering::Relaxed)
+        || ANNULER.load(Ordering::Relaxed)
+        || QUARTIERS.load(Ordering::Relaxed)
+        || AVANCEMENT.load(Ordering::Relaxed)
+        || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
         || crate::spectateurs::poses()
@@ -212,6 +244,29 @@ pub fn patch_city_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out.into_bytes())
 }
 
+const PANNEAU_VILLE_BLOCK: &str = include_str!("ui_panneau_ville.lua");
+
+/// CityPanel.lua : la faute d'`owningPlayerID` (`patch_city_panel`), puis `ui_panneau_ville.lua`,
+/// qui redessine le panneau quand la file change (production retirée, file vidée). La faute peut
+/// manquer (corrigée par un mod) : le bloc est ajouté quand même.
+pub fn patch_city_panel_complet(src: &[u8]) -> Result<Vec<u8>, String> {
+    const MARQUE: &[u8] = b"Civ6RolloverProxy (src/ui_panneau_ville.lua)";
+    if src.windows(MARQUE.len()).any(|w| w == MARQUE) {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = match patch_city_panel(src) {
+        Ok(t) => t,
+        Err(e) => {
+            log(&format!("ui : CityPanel.lua : owningPlayerID laissé tel quel : {e}"));
+            src.to_vec()
+        }
+    };
+    out.extend_from_slice(b"
+");
+    out.extend_from_slice(PANNEAU_VILLE_BLOCK.as_bytes());
+    Ok(out)
+}
+
 const FLAG_BLOCK: &str = include_str!("ui_drapeaux.lua");
 
 /// En visée d'une ville ou d'un quartier, un clic gauche sur le drapeau d'une unité étrangère ne
@@ -253,12 +308,21 @@ const PRODUCTION_BLOCK: &str = include_str!("ui_production.lua");
 
 /// Les variables locales de ProductionPanel.lua que lit `ui_production.lua`, et la fonction qu'il
 /// enveloppe.
-const PRODUCTION_NAMES: [&str; 5] =
-    ["local LISTMODE", "local m_isQueueOpen", "local m_hasProductionToShow", "local m_CurrentListMode", "\nfunction View("];
+const PRODUCTION_NAMES: [&str; 6] = [
+    "local LISTMODE",
+    "local m_isQueueOpen",
+    "local m_hasProductionToShow",
+    "local m_CurrentListMode",
+    "local m_productionTab",
+    "\nfunction View(",
+];
 
-/// En changeant de ville, la production en cours du panneau gardait la visibilité de la ville
-/// précédente : cachée après une ville sans production. `ui_production.lua`, ajouté à la fin du
-/// fichier pour lire ses variables locales, enveloppe `View` et applique la règle des onglets.
+/// Deux défauts du panneau de production, corrigés par `ui_production.lua`, ajouté à la fin du
+/// fichier pour lire ses variables locales :
+/// - en changeant de ville, la production en cours gardait la visibilité de la ville précédente
+///   (cachée après une ville sans production) : on enveloppe `View` et applique la règle des onglets ;
+/// - onglet Production, le clic droit sur la production en cours ne la retirait pas (bouton
+///   désactivé par l'onglet, BET-13) : on le réactive après chaque passage sur l'onglet.
 /// Octets laissés tels quels, comme pour les drapeaux.
 pub fn patch_production_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
@@ -272,6 +336,37 @@ pub fn patch_production_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(PRODUCTION_BLOCK.as_bytes());
     Ok(out)
+}
+
+const IMHOTEP_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_imhotep.lua"));
+
+/// Ajoute `ui_imhotep.lua` à la fin du fichier, si `needle` (la fonction qu'il enveloppe) y est.
+fn patch_imhotep(src: &[u8], needle: &str) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if !has(needle) {
+        return Err(format!("{} introuvable", needle.trim_start()));
+    }
+    if has("Civ6RolloverProxy (src/ui_imhotep.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(IMHOTEP_BLOCK.as_bytes());
+    Ok(out)
+}
+
+/// L'effet d'Imhotep écrit 175 en dur, quelle que soit la vitesse (87 en vitesse en ligne) :
+/// `ui_imhotep.lua` enveloppe `PopulateData` de l'écran des personnages illustres. Octets laissés
+/// tels quels.
+pub fn patch_great_people(src: &[u8]) -> Result<Vec<u8>, String> {
+    patch_imhotep(src, "\nfunction PopulateData(")
+}
+
+/// Même texte dans la Civilopédie : `ui_imhotep.lua` enveloppe `GetModifierText`, que la page
+/// inclut (GameEffectsText.lua).
+pub fn patch_pedia_great_person(src: &[u8]) -> Result<Vec<u8>, String> {
+    patch_imhotep(src, "GetModifierText(")
 }
 
 const ENTREE_BLOCK: &str = include_str!("ui_entree.lua");
@@ -354,6 +449,92 @@ pub fn patch_in_game(src: &[u8]) -> Result<Vec<u8>, String> {
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(RACCOURCIS_BLOCK.as_bytes());
+    Ok(out)
+}
+
+const DIPLOMATIE_BLOCK: &str = include_str!("ui_diplomatie.lua");
+const DIPLOMATIE_DONE: &str = "écran diplomatique refermé si son ouverture échoue";
+
+/// Interface masquée pour toujours après une erreur à l'ouverture de l'écran diplomatique (rapport
+/// BGE-DB5687). `ui_diplomatie.lua`, ajouté à la fin de DiplomacyActionView.lua, referme l'écran.
+pub fn patch_diplomacy_action_view(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ["local ms_bIsViewInitialized", "\nfunction OnOpenDiplomacyActionView(", "\nfunction Close("].iter().find(|n| !has(n)) {
+        return Err(format!("{} introuvable", missing.trim_start()));
+    }
+    if has("Civ6RolloverProxy (src/ui_diplomatie.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    Ok(append_blocks(src, &[DIPLOMATIE_BLOCK]))
+}
+
+/// Table qui remplace `Teams` devant `#` : une équipe absente rend une liste vide au lieu de nil.
+const EQUIPES_DEF: &[u8] = b"BGD_EquipesSures = BGD_EquipesSures or setmetatable({}, { __index = function(_, k) return (Teams ~= nil and Teams[k]) or {}; end }); ";
+
+/// `#Teams[id]` plante quand l'équipe de la configuration du joueur n'est pas dans `Teams` (rapport
+/// BGE-DB5687 : LeaderIcon.lua:143, bandeau des dirigeants arrêté et écran diplomatique bloqué).
+/// Dans tout script, `#Teams[` devient `#BGD_EquipesSures[` ; la définition est ajoutée sur la
+/// première ligne (après un BOM), sans saut de ligne : les numéros de ligne ne changent pas.
+pub fn patch_equipes(src: &[u8]) -> Option<Vec<u8>> {
+    const PAT: &[u8] = b"#Teams[";
+    const NEW: &[u8] = b"#BGD_EquipesSures[";
+    if !src.windows(PAT.len()).any(|w| w == PAT) {
+        return None;
+    }
+    let bom = if src.starts_with(b"\xEF\xBB\xBF") { 3 } else { 0 };
+    let mut out = Vec::with_capacity(src.len() + EQUIPES_DEF.len() + 256);
+    out.extend_from_slice(&src[..bom]);
+    out.extend_from_slice(EQUIPES_DEF);
+    let mut i = bom;
+    while i < src.len() {
+        if src[i..].starts_with(PAT) {
+            out.extend_from_slice(NEW);
+            i += PAT.len();
+        } else {
+            out.push(src[i]);
+            i += 1;
+        }
+    }
+    Some(out)
+}
+
+/// Remplace `ContextPtr:SetHide(` dans les panneaux de MPH : afficher met le contexte dans la file
+/// des popups, masquer l'en retire. Écrit sur une seule ligne, en tête : les numéros de ligne restent.
+const POPUP_MPH_DEF: &[u8] = b"include(\"PopupPriorityLoader_\", true); BGD_PopupMPH = function(h) if h then if UIManager:IsInPopupQueue(ContextPtr) then UIManager:DequeuePopup(ContextPtr); end; ContextPtr:SetHide(true); elseif UIManager:IsInPopupQueue(ContextPtr) then ContextPtr:SetHide(false); else UIManager:QueuePopup(ContextPtr, PopupPriority.InGameTopOptionsMenu or ((PopupPriority.PausePanel or PopupPriority.Utmost) + 3)); end end; ";
+const POPUP_MPH_DONE: &str = "panneau de MPH affiché au-dessus de la pause";
+
+/// La pause de MPH (PausePanel) est une popup de priorité `PausePanel` (Utmost + 2) ; le menu
+/// MULTIPLAYER HELPER (MPHOptions.lua) et le vote de remap (VotePanel.lua) sont de simples contextes
+/// ajoutés à InGame, affichés par `ContextPtr:SetHide(false)` : toute popup passe au-dessus, et le
+/// cadre de la pause (ConsumeMouse) cache leurs boutons. Leurs `ContextPtr:SetHide(` passent par la
+/// file des popups, à la priorité du menu Échap (`InGameTopOptionsMenu`, Utmost + 5).
+pub fn patch_popup_mph(src: &[u8]) -> Result<Vec<u8>, String> {
+    const PAT: &[u8] = b"ContextPtr:SetHide(";
+    const NEW: &[u8] = b"BGD_PopupMPH(";
+    let has = |pat: &[u8]| src.windows(pat.len()).any(|w| w == pat);
+    if !has(b"MPH Remap Panel") && !has(b"MPH very own In Game option menu") {
+        return Err("pas le panneau de MPH".into());
+    }
+    if has(b"BGD_PopupMPH") {
+        return Err("déjà corrigé".into());
+    }
+    if !has(PAT) {
+        return Err("ContextPtr:SetHide introuvable".into());
+    }
+    let bom = if src.starts_with(b"\xEF\xBB\xBF") { 3 } else { 0 };
+    let mut out = Vec::with_capacity(src.len() + POPUP_MPH_DEF.len() + 64);
+    out.extend_from_slice(&src[..bom]);
+    out.extend_from_slice(POPUP_MPH_DEF);
+    let mut i = bom;
+    while i < src.len() {
+        if src[i..].starts_with(PAT) {
+            out.extend_from_slice(NEW);
+            i += PAT.len();
+        } else {
+            out.push(src[i]);
+            i += 1;
+        }
+    }
     Ok(out)
 }
 
@@ -755,6 +936,37 @@ pub fn patch_congres_attente(src: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// WorldCongressBetweenTurns.xml : le bouton `BGD_Revoter` sous la description de l'écran d'attente.
+/// WorldTrackerResearch.xml / WorldTrackerCivic.xml : libellé `BGD_Avancement` dans l'en-tête du
+/// panneau, après le bouton du nom (`ui_avancement.lua` le remplit).
+pub fn patch_avancement_xml(src: &[u8]) -> Result<Vec<u8>, String> {
+    let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
+    if text.contains("BGD_Avancement") {
+        return Err("déjà corrigé".into());
+    }
+    let at = text.find("ID=\"TitleButton\"").ok_or("TitleButton introuvable")?;
+    let end = text[at..].find("/>").ok_or("TitleButton non fermé")? + at + 2;
+    let mut out = String::with_capacity(text.len() + AVANCEMENT_XML.len() + 8);
+    out.push_str(&text[..end]);
+    out.push_str("\r\n\t\t\t\t");
+    out.push_str(AVANCEMENT_XML);
+    out.push_str(&text[end..]);
+    Ok(out.into_bytes())
+}
+
+/// WorldTracker.lua (jeu ou BSM) suivi de `ui_avancement.lua`.
+pub fn patch_avancement(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_avancement.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    for pat in ["function UpdateResearchPanel(", "function UpdateCivicsPanel(", "m_researchInstance", "m_civicsInstance"] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    Ok(append_blocks(src, &[AVANCEMENT_BLOCK]))
+}
+
 pub fn patch_congres_attente_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
     if text.contains("BGD_Revoter") {
@@ -826,15 +1038,20 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 8] = [
+const FIXES: [(&str, Fix, &str); 13] = [
+    ("MPHOptions.lua", patch_popup_mph, POPUP_MPH_DONE),
+    ("VotePanel.lua", patch_popup_mph, POPUP_MPH_DONE),
+    ("DiplomacyActionView.lua", patch_diplomacy_action_view, DIPLOMATIE_DONE),
     ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
     ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
     ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
     ("CityStates.lua", patch_city_states, EMISSAIRES_DONE),
     ("ActionPanel.lua", patch_action_panel, "Entrée suit la touche de « Action suivante »"),
-    ("CityPanel.lua", patch_city_panel, "owningPlayerID corrigé"),
+    ("CityPanel.lua", patch_city_panel_complet, "owningPlayerID corrigé, panneau redessiné quand la file change"),
     ("UnitFlagManager.lua", patch_unit_flags, "clic sur un drapeau en visée d'une ville ou d'un quartier"),
-    ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville"),
+    ("ProductionPanel.lua", patch_production_panel, "production en cours affichée au changement de ville, retirée au clic droit"),
+    ("GreatPeoplePopup.lua", patch_great_people, "effet d'Imhotep à la vitesse de la partie"),
+    ("CivilopediaPage_GreatPerson.lua", patch_pedia_great_person, "effet d'Imhotep à la vitesse de la partie"),
 ];
 
 /// Les cadres que les calques de ui_boutons.xml reproduisent : sans eux, les boutons déplacés ne
@@ -909,7 +1126,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     if is_file(chunk, "WorldCongressPopup.lua") {
         publish_pol(l);
         publish_revote(l);
-        let spectateurs = crate::spectateurs::poses();
+        // Le popup de BSM repris par le proxy (`mods_ui::remplacer`) gère déjà le spectateur : sa
+        // fenêtre reste consultable, sans bulletin. `ui_congres.lua` (lecture seule) y ferait
+        // double emploi ; le retour au vote, lui, s'y ajoute comme au popup du jeu.
+        let spectateurs = crate::spectateurs::poses() && !crate::mods_ui::est_popup_spectateur(src);
         return match patch_congres(src, spectateurs) {
             Ok(text) => {
                 if spectateurs {
@@ -954,6 +1174,21 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         return match patch_congres_cibles(src) {
             Ok(text) => {
                 what.push("spectateurs retirés des cibles des résolutions, luxes recalculés à chaque session".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if AVANCEMENT.load(Ordering::Relaxed) && is_file(chunk, "WorldTracker.lua") {
+        return match patch_avancement(src) {
+            Ok(text) => {
+                what.push("avancement de la technologie et du dogme en cours".into());
+                if crate::avancement::publier(l) {
+                    what.push("excédents de science et de culture".into());
+                }
                 Some(text)
             }
             Err(e) => {
@@ -1030,7 +1265,7 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
             // Mesure de ui_mouvements.lua : horloge à la milliseconde (os.clock est à la seconde).
             publish_clock(l);
         }
-        return match patch(src) {
+        let fixed = match patch(src) {
             Ok(text) => {
                 what.push(done.into());
                 Some(text)
@@ -1040,6 +1275,14 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 None
             }
         };
+        if file == "ProductionPanel.lua" {
+            return production_extras(l, fixed.as_deref().unwrap_or(src), what).or(fixed);
+        }
+        if file == "CityPanel.lua" && crate::debordement::pose() && crate::debordement::publier(l) {
+            what.push("production en réserve".into());
+            return Some(append_blocks(fixed.as_deref().unwrap_or(src), &[DEBORDEMENT_BLOCK]));
+        }
+        return fixed;
     }
     if !is_file(chunk, "CityBannerManager.lua") {
         return None;
@@ -1059,7 +1302,45 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
             if RECENTRAGE.load(Ordering::Relaxed) { "gardé" } else { "retiré" }
         ));
     }
-    new
+    let mut blocks: Vec<&str> = Vec::new();
+    if ANNULER.load(Ordering::Relaxed) {
+        blocks.push(ANNULER_BLOCK);
+        what.push("clic droit sur la production du bandeau : retrait".into());
+    }
+    if crate::debordement::pose() && crate::debordement::publier(l) {
+        blocks.push(DEBORDEMENT_BLOCK);
+        what.push("production en réserve sur le bandeau".into());
+    }
+    if blocks.is_empty() {
+        return new;
+    }
+    Some(append_blocks(new.as_deref().unwrap_or(src), &blocks))
+}
+
+/// Le texte suivi des blocs, chacun sur sa ligne. Octets laissés tels quels.
+fn append_blocks(src: &[u8], blocks: &[&str]) -> Vec<u8> {
+    let mut out = src.to_vec();
+    for b in blocks {
+        out.extend_from_slice(b"
+");
+        out.extend_from_slice(b.as_bytes());
+    }
+    out
+}
+
+/// ProductionPanel.lua : blocs des réglages `ui_reduction_quartiers` (badge des quartiers en
+/// réduction) et `ui_debordement` (production en réserve), après `ui_production.lua`. None si aucun.
+unsafe fn production_extras(l: *mut c_void, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
+    let mut blocks: Vec<&str> = Vec::new();
+    if QUARTIERS.load(Ordering::Relaxed) {
+        blocks.push(QUARTIERS_BLOCK);
+        what.push("badge des quartiers en réduction".into());
+    }
+    if crate::debordement::pose() && crate::debordement::publier(l) {
+        blocks.push(DEBORDEMENT_BLOCK);
+        what.push("production en réserve".into());
+    }
+    (!blocks.is_empty()).then(|| append_blocks(src, &blocks))
 }
 
 /// Trois étapes : le texte entier remplacé par une reprise de mod (`mods_ui::remplacer`), les
@@ -1098,6 +1379,10 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
         }
         Some(Err(e)) => log(&format!("ui : {chunk} : reprise de mod laissée de côté : {e}")),
         None => {}
+    }
+    if let Some(t) = patch_equipes(text.as_deref().unwrap_or(src)) {
+        text = Some(t);
+        what.push("équipes absentes de Teams tolérées".into());
     }
     let Some(text) = text else { return real(l, buf, size, name) };
     if mods {
@@ -1142,6 +1427,18 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
         }
         return r;
     }
+    if AVANCEMENT.load(Ordering::Relaxed)
+        && (is_file(&name, "WorldTrackerResearch.xml") || is_file(&name, "WorldTrackerCivic.xml"))
+    {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match patch_avancement_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("ui : {name} : libellé d'avancement ajouté")),
+            Ok(_) => log(&format!("ui : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("ui : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
     if !BOUTONS.load(Ordering::Relaxed) || !is_file(&name, "CityBannerInstances.xml") {
         return r;
     }
@@ -1166,7 +1463,12 @@ pub unsafe fn on_gamecore_loaded() {
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
 
     // XML d'abord : le bloc Lua dépend des calques.
-    if BOUTONS.load(Ordering::Relaxed) || JOURNAL.load(Ordering::Relaxed) || crate::mods_ui::xml_needed() || crate::congres::pose() {
+    if BOUTONS.load(Ordering::Relaxed)
+        || JOURNAL.load(Ordering::Relaxed)
+        || AVANCEMENT.load(Ordering::Relaxed)
+        || crate::mods_ui::xml_needed()
+        || crate::congres::pose()
+    {
         // Si le proxy de démarrage est installé, la lecture est déjà détournée : on s'enchaîne.
         match exe::hook_read_xml(exe, hook_read_xml as *const () as usize) {
             Ok(h) => {
@@ -1385,6 +1687,10 @@ mod tests {
         assert!(!new.contains("owningPlayerID"));
         assert_eq!(new.len(), src.len() - 1, "owning → owner, rien d'autre");
         assert!(patch_city_panel(new.as_bytes()).is_err(), "pas deux fois");
+        let complet = patch_city_panel_complet(&src).unwrap();
+        assert!(complet.starts_with(new.as_bytes()), "faute corrigée, puis le bloc");
+        assert!(complet.ends_with(PANNEAU_VILLE_BLOCK.as_bytes()));
+        assert!(patch_city_panel_complet(&complet).is_err(), "bloc pas deux fois");
     }
 
     fn check_flags(path: String) {
@@ -1430,6 +1736,53 @@ mod tests {
         assert!(String::from_utf8_lossy(&bytes).contains("m_kScreenSlideAnim.OnInputHandler( input, OnClose );"));
         assert!(patch_city_states(&bytes).is_err(), "pas deux fois");
         assert!(!is_file(r"C:\x\CityStates_Expansion2.lua", "CityStates.lua"));
+    }
+
+    #[test]
+    fn diplomatie_refermee_si_l_ouverture_echoue() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\DiplomacyActionView.lua")) else { return };
+        let bytes = patch_diplomacy_action_view(&src).unwrap();
+        assert!(bytes.starts_with(&src) && bytes.ends_with(DIPLOMATIE_BLOCK.as_bytes()));
+        assert!(patch_diplomacy_action_view(&bytes).is_err(), "pas deux fois");
+        assert!(!is_file(r"C:\x\DiplomacyActionView_Expansion2.lua", "DiplomacyActionView.lua"));
+        assert!(!is_file(r"C:\x\diplomacyactionview_MPH.lua", "DiplomacyActionView.lua"));
+    }
+
+    #[test]
+    fn equipes_absentes_de_teams() {
+        assert!(patch_equipes(b"local n = #Players;").is_none());
+        let out = patch_equipes(b"\xEF\xBB\xBFlocal a = 1\nif #Teams[t] > 1 then end\nx = #Teams[Teams[1][1]]").unwrap();
+        let text = String::from_utf8_lossy(&out);
+        assert!(out.starts_with(b"\xEF\xBB\xBFBGD_EquipesSures = "));
+        assert!(!text.contains("#Teams["));
+        assert!(text.contains("if #BGD_EquipesSures[t] > 1 then") && text.contains("#BGD_EquipesSures[Teams[1][1]]"));
+        assert_eq!(text.matches('\n').count(), 2, "numéros de ligne gardés");
+        for path in [
+            format!(r"{GAME}\Base\Assets\UI\Instances\LeaderIcon.lua"),
+            format!(r"{GAME}\Base\Assets\UI\DiplomacyActionView.lua"),
+            format!(r"{GAME}\DLC\Expansion2\UI\Additions\EraProgressPanel.lua"),
+            format!(r"{BSM}\UI\Replacements\leadericon.lua"),
+        ] {
+            let Some(src) = read(path) else { continue };
+            let out = patch_equipes(&src).unwrap();
+            assert!(!out.windows(7).any(|w| w == b"#Teams["));
+            assert_eq!(out.iter().filter(|&&b| b == b'\n').count(), src.iter().filter(|&&b| b == b'\n').count());
+        }
+    }
+
+    #[test]
+    fn panneaux_de_mph_en_popup() {
+        for file in ["MPHOptions.lua", "VotePanel.lua"] {
+            let Some(src) = read(format!(r"{MPH}\ui\Additions\{file}")) else { continue };
+            let out = patch_popup_mph(&src).unwrap();
+            let text = String::from_utf8_lossy(&out);
+            assert_eq!(text.matches("ContextPtr:SetHide(").count(), 2, "{file} : seulement dans la définition");
+            assert!(text.matches("BGD_PopupMPH(").count() >= 3, "{file}");
+            assert_eq!(out.iter().filter(|&&b| b == b'\n').count(), src.iter().filter(|&&b| b == b'\n').count());
+            assert!(patch_popup_mph(&out).is_err(), "pas deux fois");
+            assert!(is_file(&format!(r"{MPH}\ui\Additions\{file}"), file));
+        }
+        assert!(patch_popup_mph(b"ContextPtr:SetHide(true)").is_err(), "VotePanel.lua d'un autre mod");
     }
 
     #[test]
@@ -1515,6 +1868,17 @@ mod tests {
         assert!(!is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressPopup.lua", "WorldCongress.lua"));
     }
 
+    /// Popup du Congrès de BSM repris par le proxy : le retour au vote s'y ajoute, pas la lecture
+    /// seule (ce popup gère déjà le spectateur).
+    #[test]
+    fn congres_popup_bsm() {
+        let bsm = include_bytes!("mods/spectateur/worldcongresspopup_spec.lua");
+        assert!(crate::mods_ui::est_popup_spectateur(bsm));
+        let vote = patch_congres(bsm, false).unwrap();
+        assert!(vote.starts_with(bsm) && vote.ends_with(VOTE_BLOCK.as_bytes()));
+        assert!(patch_congres(&vote, false).is_err(), "pas deux fois");
+    }
+
     #[test]
     fn cibles_du_congres_du_jeu() {
         let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\Scripts\WorldCongress.lua")) else { return };
@@ -1535,6 +1899,35 @@ mod tests {
         );
         assert!(patch_congres_cibles(&new).is_err(), "pas deux fois");
         assert!(patch_congres_cibles(b"local x = 1").is_err());
+    }
+
+    #[test]
+    fn avancement_du_jeu_et_de_bsm() {
+        assert!(is_file(r"C:\x\Base\Assets\UI\WorldTracker.lua", "WorldTracker.lua"));
+        assert!(is_file(r"C:\x\UI\Replacements\worldtracker.lua", "WorldTracker.lua"));
+        assert!(!is_file(r"C:\x\WorldTracker_Expansion1.lua", "WorldTracker.lua"));
+        let bsm = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407\UI\Replacements\worldtracker.lua";
+        for path in [format!(r"{GAME}\Base\Assets\UI\WorldTracker.lua"), bsm.to_string()] {
+            let Some(src) = read(path) else { continue };
+            let new = patch_avancement(&src).unwrap();
+            assert!(new.starts_with(&src) && new.ends_with(AVANCEMENT_BLOCK.as_bytes()));
+            assert!(patch_avancement(&new).is_err(), "pas deux fois");
+        }
+        assert!(patch_avancement(b"local x = 1").is_err());
+        for path in [
+            format!(r"{GAME}\Base\Assets\UI\WorldTrackerResearch.xml"),
+            format!(r"{GAME}\Base\Assets\UI\WorldTrackerCivic.xml"),
+            format!(r"{GAME}\DLC\Expansion2\UI\Replacements\WorldTrackerResearch.xml"),
+        ] {
+            let Some(xml) = read(path) else { continue };
+            let new = String::from_utf8(patch_avancement_xml(&xml).unwrap()).unwrap();
+            // Le libellé, juste après le bouton du nom, dans la même instance.
+            let titre = new.find(r#"ID="TitleButton""#).unwrap();
+            let label = new.find(r#"<Label ID="BGD_Avancement""#).unwrap();
+            assert!(titre < label && label < new.find("</Instance>").unwrap());
+            assert_eq!(new.len(), xml.len() + 6 + AVANCEMENT_XML.len());
+            assert!(patch_avancement_xml(new.as_bytes()).is_err(), "pas deux fois");
+        }
     }
 
     #[test]
@@ -1571,6 +1964,26 @@ mod tests {
         assert!(patch_production_panel(b"function View(data) end").is_err());
         assert!(is_file(r"C:\x\Base\Assets\UI\Panels\ProductionPanel.lua", "ProductionPanel.lua"));
         assert!(!is_file("ui/replacements/productionpanel_bbg.lua", "ProductionPanel.lua"));
+    }
+
+    #[test]
+    fn imhotep() {
+        let popup = b"function GetDisplayPlayerID()\r\nend\r\nfunction PopulateData( data:table, isPast:boolean )\r\nend";
+        let new = patch_great_people(popup).unwrap();
+        assert!(new.starts_with(popup) && new.ends_with(IMHOTEP_BLOCK.as_bytes()));
+        assert!(patch_great_people(&new).is_err(), "pas deux fois");
+        assert!(patch_great_people(b"function View(data) end").is_err());
+        let pedia = b"include(\"GameEffectsText\")\r\nlocal text = GetModifierText(row.ModifierId, \"Summary\");";
+        assert!(patch_pedia_great_person(pedia).unwrap().ends_with(IMHOTEP_BLOCK.as_bytes()));
+        assert!(is_file(r"C:\x\Base\Assets\UI\Popups\GreatPeoplePopup.lua", "GreatPeoplePopup.lua"));
+        assert!(!is_file(r"C:\x\DLC\Babylon\UI\Replacements\GreatPeoplePopup_Babylon_Heroes.lua", "GreatPeoplePopup.lua"));
+        assert!(is_file(r"C:\x\Base\Assets\UI\Civilopedia\CivilopediaPage_GreatPerson.lua", "CivilopediaPage_GreatPerson.lua"));
+        if let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Popups\GreatPeoplePopup.lua")) {
+            assert!(patch_great_people(&src).is_ok());
+        }
+        if let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Civilopedia\CivilopediaPage_GreatPerson.lua")) {
+            assert!(patch_pedia_great_person(&src).is_ok());
+        }
     }
 
     #[test]

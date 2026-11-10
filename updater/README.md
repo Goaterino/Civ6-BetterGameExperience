@@ -60,8 +60,12 @@ emplacement fixe, il s'appelle `BetterGameExperience.exe`.
 - **Compatibilité** : un installeur de la v0.3.0 ou d'avant refuse les releases suivantes (fichiers
   inconnus) et demande de télécharger le nouvel installeur depuis la page de la release.
 - **Droits** : si le dossier du jeu n'est pas modifiable (Program Files), seule la pose est relancée
-  en administrateur (`--apply`, invite UAC, sans fenêtre), qui revérifie signature et SHA-256 avant
-  de copier.
+  en administrateur (`--apply`, invite UAC, sans fenêtre). Ce processus vérifie d'abord que le
+  dossier reçu est bien celui du jeu (sinon il s'arrête sans rien écrire), puis revérifie la
+  signature du manifeste et le SHA-256. Chaque DLL est lue une seule fois dans
+  `%TEMP%\BetterGameExperience`, contrôlée en mémoire, et ce sont ces octets-là qui sont écrits :
+  un autre processus de l'utilisateur ne peut pas la remplacer entre le contrôle et la copie. La
+  pose sans administrateur fait de même.
 - **Emplacement fixe** : à l'ouverture de sa fenêtre et après chaque installation, l'installeur se copie dans
   `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`, s'il n'y tourne pas déjà. La notification du
   jeu le lance là, et l'option de lancement Steam le désigne : peu importe où le joueur a

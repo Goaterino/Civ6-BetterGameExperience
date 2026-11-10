@@ -32,3 +32,6 @@ namespace_id = "1701"
 # DISCORD_TAG = "123456789012345678"
 # Plafond du bucket en octets (9,5 Go par défaut).
 # PLAFOND_OCTETS = "9500000000"
+# Quota sur 24 heures glissantes (60 rapports et 1 Go par défaut ; README.md, « Quota par jour »).
+# QUOTA_RAPPORTS = "60"
+# QUOTA_OCTETS = "1000000000"

@@ -7,7 +7,8 @@
 //
 // Liaisons (wrangler.toml) : RAPPORTS (bucket R2), LIMITE (limite par IP, facultative).
 // Secret : DISCORD_WEBHOOK (webhook du salon forum). Variables facultatives : DISCORD_TAG (ID d'un
-// tag du forum, posé sur chaque fil), PLAFOND_OCTETS (taille maximale du bucket, 9,5 Go par défaut).
+// tag du forum, posé sur chaque fil), PLAFOND_OCTETS (taille maximale du bucket, 9,5 Go par défaut),
+// QUOTA_RAPPORTS et QUOTA_OCTETS (rapports acceptés sur 24 heures glissantes).
 
 export const MAX_OCTETS = 50 * 1024 * 1024;
 // Clé que chaque rapport doit porter (en-tête X-BGE-Cle), gravée dans winmm.dll
@@ -19,6 +20,16 @@ export const CLE_CLIENT = "16ea4c738b288eb2852868d2670e169e";
 // de ranger un rapport, les plus anciens sont supprimés tant que le total, nouveau compris, le
 // dépasserait. PLAFOND_OCTETS (variable) le remplace.
 export const PLAFOND_OCTETS = 9.5e9;
+// Quota sur 24 heures glissantes, tous joueurs confondus : au-delà, les rapports sont refusés (503)
+// au lieu de faire partir les anciens. La clé et la limite par IP n'arrêtent pas un envoi de déchets
+// répété depuis plusieurs adresses ; le quota borne ce qu'il range dans R2 et poste dans Discord.
+// Compté sur les rapports du bucket (date de dépôt de R2), sans autre stockage. QUOTA_RAPPORTS et
+// QUOTA_OCTETS (variables) le remplacent.
+export const QUOTA_RAPPORTS = 60;
+export const QUOTA_OCTETS = 1e9;
+// meta.json décompressé, au plus : quelques Ko d'ordinaire (description de 1 000 caractères au plus,
+// liste des fichiers).
+export const MAX_META = 1024 * 1024;
 const ID = /^BGE-[0-9A-F]{6}$/;
 
 function json(data, status = 200) {
@@ -44,19 +55,45 @@ export async function lireMeta(zip) {
 		const lnom = v.getUint16(26, true);
 		const lextra = v.getUint16(28, true);
 		const nom = new TextDecoder().decode(zip.subarray(30, 30 + lnom));
-		if (nom !== "meta.json" || taille > 1024 * 1024) return null;
+		if (nom !== "meta.json" || taille > MAX_META) return null;
 		const debut = 30 + lnom + lextra;
 		let data = zip.subarray(debut, debut + taille);
 		if (methode === 8) {
-			const flux = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-			data = new Uint8Array(await new Response(flux).arrayBuffer());
+			data = await decompresser(data, MAX_META);
+			if (data == null) return null;
 		} else if (methode !== 0) {
 			return null;
 		}
-		return JSON.parse(new TextDecoder().decode(data));
+		const meta = JSON.parse(new TextDecoder().decode(data));
+		return meta != null && typeof meta === "object" && !Array.isArray(meta) ? meta : null;
 	} catch {
 		return null;
 	}
+}
+
+// Deflate brut décompressé morceau par morceau : null dès que la sortie passerait `max` octets (une
+// bombe de décompression ne remplit pas la mémoire).
+async function decompresser(data, max) {
+	const lecteur = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+	const morceaux = [];
+	let total = 0;
+	for (;;) {
+		const { done, value } = await lecteur.read();
+		if (done) break;
+		total += value.byteLength;
+		if (total > max) {
+			await lecteur.cancel().catch(() => {});
+			return null;
+		}
+		morceaux.push(value);
+	}
+	const out = new Uint8Array(total);
+	let i = 0;
+	for (const m of morceaux) {
+		out.set(m, i);
+		i += m.byteLength;
+	}
+	return out;
 }
 
 // Texte d'un joueur dans un message Discord : sans mise en forme ni mention.
@@ -104,10 +141,12 @@ export function resume(id, meta, octets, lien) {
 	return lignes.join("\n");
 }
 
-// Fait de la place pour `entrant` octets : liste les rapports (1 000 par page), puis supprime les
-// plus anciens tant que le total dépasserait le plafond. Rend les numéros supprimés.
-export async function faireDeLaPlace(env, entrant) {
-	const plafond = Number(env.PLAFOND_OCTETS) > 0 ? Number(env.PLAFOND_OCTETS) : PLAFOND_OCTETS;
+function nombre(v, defaut) {
+	return Number(v) > 0 ? Number(v) : defaut;
+}
+
+// Les rapports du bucket (1 000 par page) : clé, taille, date de dépôt.
+export async function listerRapports(env) {
 	const objets = [];
 	let cursor;
 	do {
@@ -115,6 +154,27 @@ export async function faireDeLaPlace(env, entrant) {
 		objets.push(...page.objects);
 		cursor = page.truncated ? page.cursor : undefined;
 	} while (cursor);
+	return objets;
+}
+
+// Quota des 24 dernières heures : rend la raison du refus si le rapport de `entrant` octets le
+// dépasserait, sinon null.
+export function quotaDepasse(env, objets, entrant, maintenant = Date.now()) {
+	const quotaRapports = nombre(env.QUOTA_RAPPORTS, QUOTA_RAPPORTS);
+	const quotaOctets = nombre(env.QUOTA_OCTETS, QUOTA_OCTETS);
+	const recents = objets.filter((o) => maintenant - new Date(o.uploaded).getTime() < 86400e3);
+	const octets = recents.reduce((t, o) => t + o.size, 0);
+	if (recents.length + 1 > quotaRapports) return `${recents.length} rapport(s) en 24 h, quota de ${quotaRapports}`;
+	if (octets + entrant > quotaOctets) return `${octets} octets en 24 h, quota de ${quotaOctets}`;
+	return null;
+}
+
+// Fait de la place pour `entrant` octets : supprime les plus anciens rapports tant que le total
+// dépasserait le plafond. `objets` : la liste déjà lue, sinon le bucket est listé. Rend les numéros
+// supprimés.
+export async function faireDeLaPlace(env, entrant, objets) {
+	const plafond = nombre(env.PLAFOND_OCTETS, PLAFOND_OCTETS);
+	objets = [...(objets ?? (await listerRapports(env)))];
 	let total = objets.reduce((t, o) => t + o.size, 0);
 	if (total + entrant <= plafond) return [];
 	objets.sort((a, b) => new Date(a.uploaded) - new Date(b.uploaded));
@@ -146,6 +206,32 @@ async function publierDiscord(env, id, meta, octets, lien) {
 	if (!r.ok) throw new Error(`Discord ${r.status} : ${(await r.text()).slice(0, 300)}`);
 }
 
+// Prévient l'équipe sur Discord que le quota refuse des rapports : une fois par 24 heures au plus,
+// retenue par un objet du bucket hors de `rapports/` (ni compté ni supprimé par le plafond). Un
+// envoi en boucle n'ouvre donc qu'un fil par jour.
+const ALERTE_QUOTA = "etat/alerte_quota";
+export async function alerterQuota(env, raison, maintenant = Date.now()) {
+	try {
+		const vu = await env.RAPPORTS.head(ALERTE_QUOTA);
+		if (vu != null && maintenant - new Date(vu.uploaded).getTime() < 86400e3) return false;
+		await env.RAPPORTS.put(ALERTE_QUOTA, raison);
+		const r = await fetch(`${env.DISCORD_WEBHOOK}?wait=true`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				thread_name: "Bug report quota reached",
+				content: `**Bug report quota reached**\nNew reports are refused until older ones leave the 24-hour window: ${brut(raison, 200)}.\nPlayers keep their report on their Desktop. If this is not real traffic, look at the Worker logs.`,
+				allowed_mentions: { parse: [] },
+			}),
+		});
+		if (!r.ok) throw new Error(`Discord ${r.status} : ${(await r.text()).slice(0, 300)}`);
+		return true;
+	} catch (e) {
+		console.error(`alerte de quota : ${e.message}`);
+		return false;
+	}
+}
+
 async function recevoir(request, env) {
 	if ((request.headers.get("x-bge-cle") ?? "") !== (env.CLE_CLIENT || CLE_CLIENT)) return json({ erreur: "clé absente ou invalide" }, 403);
 	const ip = request.headers.get("cf-connecting-ip") ?? "?";
@@ -167,15 +253,25 @@ async function recevoir(request, env) {
 	if (zip.byteLength < 22 || zip[0] !== 0x50 || zip[1] !== 0x4b || zip[2] !== 3 || zip[3] !== 4) {
 		return json({ erreur: "ce n'est pas un zip" }, 400);
 	}
+	// Sans meta.json lisible en première entrée, ce n'est pas un rapport du jeu : refusé avant tout
+	// rangement, toute suppression et tout message.
+	const meta = await lireMeta(zip);
+	if (meta == null) return json({ erreur: "meta.json absent ou illisible" }, 400);
+	const objets = await listerRapports(env);
+	const quota = quotaDepasse(env, objets, zip.byteLength);
+	if (quota != null) {
+		console.log(`rapport refusé : ${quota}`);
+		await alerterQuota(env, quota);
+		return json({ erreur: "trop de rapports aujourd'hui, réessayez demain" }, 503);
+	}
 	let id;
 	for (let i = 0; i < 5 && id == null; i++) {
 		const essai = `BGE-${aleatoire(3)}`;
 		if ((await env.RAPPORTS.head(`rapports/${essai}.zip`)) == null) id = essai;
 	}
 	if (id == null) return json({ erreur: "numéro de rapport indisponible" }, 503);
-	await faireDeLaPlace(env, zip.byteLength);
+	await faireDeLaPlace(env, zip.byteLength, objets);
 	const cle = aleatoire(16);
-	const meta = await lireMeta(zip);
 	await env.RAPPORTS.put(`rapports/${id}.zip`, zip, {
 		httpMetadata: { contentType: "application/zip" },
 		customMetadata: { cle, version: request.headers.get("x-bge-version") ?? "", recu: new Date().toISOString() },

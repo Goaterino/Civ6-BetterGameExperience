@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ru_RU">
 			<Text>Каждое сообщение игры</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="ru_RU">
+			<Text>Только Всемирный конгресс</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ru_RU">
+			<Text>Всё, кроме Всемирного конгресса</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ru_RU">
 			<Text>Общие</Text>
 		</Row>
@@ -128,6 +134,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="ru_RU">
 			<Text>Чудо, убранное из очереди производства перестановкой, возвращается в неё обычными командами игры: без рассинхронизации, даже с игроками без прокси.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="ru_RU">
+			<Text>Правый щелчок по производству на баннере города отменяет его</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="ru_RU">
+			<Text>Правый щелчок по значку производства на баннере вашего города убирает текущий элемент, как правый щелчок в панели производства. Обычная команда игры: без рассинхронизации.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="ru_RU">
+			<Text>Отметка районов со скидкой</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ru_RU">
+			<Text>В списке производства районы со сниженной стоимостью (таких районов у вас меньше среднего) показывают скидку; она обновляется сразу после размещения района. Только отображение.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ru_RU">
+			<Text>Запасённое производство</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ru_RU">
+			<Text>Показывает производство, которое город держит в запасе (излишек, не больше одного хода) и которое добавится к его производству на следующем ходу: на баннере города, в панели города и в панели производства. Только отображение.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ru_RU">
+			<Text>Скидка на район: -{1}% (таких районов у вас меньше среднего).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="ru_RU">
+			<Text>+{1} [ICON_Production] в запасе, добавятся к производству следующего хода (не больше одного хода производства).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="ru_RU">
 			<Text>Доходы империи обновляются после губернатора или великого человека</Text>
 		</Row>
@@ -152,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="ru_RU">
 			<Text>На основе NotificationClear (336tarot). Кнопка на панели уведомлений одним щелчком закрывает те, которые вы можете закрыть сами. Заменяет мод, если он включён.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="ru_RU">
+			<Text>Прогресс исследования и цивика</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="ru_RU">
+			<Text>Рядом с названием текущей технологии и цивика, на панели в левом верхнем углу, показывает уже вложенную науку (культуру) , полную стоимость и в скобках излишек науки (культуры) от завершённой технологии (цивика), например 120/260 (+15). Только отображение.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="ru_RU">
 			<Text>Расширенная верхняя панель</Text>
 		</Row>
@@ -169,6 +205,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ru_RU">
 			<Text>На основе Better Report Screen (Infixo). Переработанный экран отчётов с вкладками «Сделки», «Отряды», «Политика», «Города-государства» и «Города» и эффектом каждой политики и города-государства, исправленным, как на карточках. Заменяет мод, если он включён.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="ru_RU">
+			<Text>Better Spectator Mod для зрителей</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="ru_RU">
+			<Text>Заменяет скрипты интерфейса Better Spectator Mod (города-государства, дипломатическая лента, значки лидеров, Всемирный конгресс) версиями прокси, написанными для зрителей, исключённых из числа главных цивилизаций. Только если у всех игроков есть прокси; уровень зрителей всегда следует этому правилу.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ru_RU">
 			<Text>Журнал загруженных скриптов и XML</Text>
@@ -193,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ru_RU">
 			<Text>Записывает в Lua.log отправленные и полученные предложения сделок и то, что показывает экран сделки, чтобы разобраться в перекрёстных сделках между людьми.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="ru_RU">
+			<Text>Заменяемые скрипты Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="ru_RU">
+			<Text>Диагностика: какие скрипты интерфейса Better Spectator Mod заменяет прокси, чтобы выделить проблемный.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ru_RU">
 			<Text>Показывать сигналы одновременного начала и конца хода</Text>
@@ -310,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ru_RU">
 			<Text>No First/Last moves отключено: всем игрокам нужен BetterGameExperience одной и той же версии.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ru_RU">
+			<Text>У {1} включён BetterGameExperience {2}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ru_RU">
+			<Text>BGE Check: у всех игроков включён BetterGameExperience {1} ({2}).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="ru_RU">
+			<Text>BGE Check (хост: {1}). Та же версия: {2}. Другая версия: {3}. Установлен, но неактивен: {4}. Нет ответа (без BetterGameExperience): {5}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="ru_RU">
+			<Text>Запрашивает у каждого игрока его версию BetterGameExperience и публикует итог в чате для всех.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ru_RU">
 			<Text>приказы задержаны: ход ещё не начался для всех игроков.</Text>
@@ -562,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ru_RU">
 			<Text>Не удалось отправить отчёт об ошибке. Архив сохранён здесь: {1}. Отправьте его @goaterino в личном сообщении в Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ru_RU">
+			<Text>Дает {1} ед. [ICON_Production] производства для строительства чуда, {2}, если чудо относится к Древнему миру или Античности.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

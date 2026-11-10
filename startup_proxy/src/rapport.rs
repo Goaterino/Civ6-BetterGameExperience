@@ -138,7 +138,7 @@ pub fn patch_menu_xml(src: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// Fin du contexte : la dernière balise fermante `</Context>` ou `</ContextDefaults>`.
-fn fin_du_contexte(text: &str) -> Result<usize, String> {
+pub(crate) fn fin_du_contexte(text: &str) -> Result<usize, String> {
     ["</ContextDefaults>", "</Context>"].iter().filter_map(|f| text.rfind(f)).max().ok_or_else(|| "fin du contexte introuvable".to_string())
 }
 
@@ -177,7 +177,7 @@ fn ajouter_popup(text: &mut String) -> Result<(), String> {
 }
 
 /// Début et fin de l'élément qui porte `ancre` dans sa balise ouvrante, enfants compris.
-fn element(text: &str, ancre: &str) -> Option<(usize, usize)> {
+pub(crate) fn element(text: &str, ancre: &str) -> Option<(usize, usize)> {
     let at = text.find(ancre)?;
     let debut = text[..at].rfind('<')?;
     let nom: String = text[debut + 1..].chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '_').collect();
@@ -382,16 +382,35 @@ fn dos_time(secs: u64) -> (u16, u16) {
     (heure, date)
 }
 
+/// Une entrée du zip, déjà compressée : `construire_zip` ne la recompresse pas à chaque essai.
+pub struct Entree {
+    nom: String,
+    methode: u16,
+    crc: u32,
+    /// Taille avant compression.
+    taille: usize,
+    corps: Vec<u8>,
+}
+
+pub fn comprimer(nom: &str, data: &[u8]) -> Entree {
+    let packed = miniz_oxide::deflate::compress_to_vec(data, 6);
+    let (methode, corps) = if packed.len() < data.len() { (8, packed) } else { (0, data.to_vec()) };
+    Entree { nom: nom.to_string(), methode, crc: crc32(data), taille: data.len(), corps }
+}
+
 pub fn zip(entrees: &[(String, Vec<u8>)], secs: u64) -> Vec<u8> {
+    let e: Vec<Entree> = entrees.iter().map(|(nom, data)| comprimer(nom, data)).collect();
+    assembler(&e.iter().collect::<Vec<_>>(), secs)
+}
+
+pub fn assembler(entrees: &[&Entree], secs: u64) -> Vec<u8> {
     let (heure, date) = dos_time(secs);
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity(entrees.iter().map(|e| e.corps.len() + 2 * e.nom.len() + 76).sum::<usize>() + 22);
     let mut central = Vec::new();
-    for (nom, data) in entrees {
-        let packed = miniz_oxide::deflate::compress_to_vec(data, 6);
-        let (methode, corps): (u16, &[u8]) = if packed.len() < data.len() { (8, &packed) } else { (0, data) };
-        let crc = crc32(data);
+    for e in entrees {
+        let (methode, corps, crc) = (e.methode, &e.corps[..], e.crc);
         let offset = out.len() as u32;
-        let nom = nom.as_bytes();
+        let nom = e.nom.as_bytes();
         let tete = |sig: u32, central: bool| {
             let mut h = Vec::with_capacity(46 + nom.len());
             h.extend_from_slice(&sig.to_le_bytes());
@@ -405,7 +424,7 @@ pub fn zip(entrees: &[(String, Vec<u8>)], secs: u64) -> Vec<u8> {
             h.extend_from_slice(&date.to_le_bytes());
             h.extend_from_slice(&crc.to_le_bytes());
             h.extend_from_slice(&(corps.len() as u32).to_le_bytes());
-            h.extend_from_slice(&(data.len() as u32).to_le_bytes());
+            h.extend_from_slice(&(e.taille as u32).to_le_bytes());
             h.extend_from_slice(&(nom.len() as u16).to_le_bytes());
             h.extend_from_slice(&0u16.to_le_bytes()); // extra
             if central {
@@ -652,19 +671,24 @@ fn infos_proxy() -> Vec<(&'static str, String)> {
 }
 
 /// Le zip du rapport : autosaves retirés, du plus ancien au plus récent, tant qu'il dépasse `MAX_ZIP`.
+/// Chaque fichier est compressé une fois ; seul `meta.json`, qui liste les fichiers gardés, est
+/// refait à chaque essai.
 fn construire_zip(lua: &[(String, String)], collecte: Collecte) -> Vec<u8> {
     let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
-    let mut saves = collecte.saves;
+    let infos = infos_proxy();
+    let comprimees = |v: Vec<(String, Vec<u8>)>| v.iter().map(|(n, d)| comprimer(n, d)).collect::<Vec<Entree>>();
+    let base = comprimees(collecte.base);
+    let mut saves = comprimees(collecte.saves);
     loop {
-        let mut entrees: Vec<(String, Vec<u8>)> = collecte.base.iter().chain(saves.iter()).cloned().collect();
-        let liste: Vec<(String, usize)> = entrees.iter().map(|(n, d)| (n.clone(), d.len())).collect();
-        entrees.insert(0, ("meta.json".into(), meta_json(lua, &infos_proxy(), &liste).into_bytes()));
-        let z = zip(&entrees, secs);
+        let liste: Vec<(String, usize)> = base.iter().chain(saves.iter()).map(|e| (e.nom.clone(), e.taille)).collect();
+        let meta = comprimer("meta.json", meta_json(lua, &infos, &liste).as_bytes());
+        let entrees: Vec<&Entree> = std::iter::once(&meta).chain(base.iter()).chain(saves.iter()).collect();
+        let z = assembler(&entrees, secs);
         if z.len() <= MAX_ZIP || saves.is_empty() {
             return z;
         }
-        let (nom, _) = saves.pop().unwrap();
-        log(&format!("rapport : {} retiré, zip trop gros ({} octets)", nom, z.len()));
+        let e = saves.pop().unwrap();
+        log(&format!("rapport : {} retiré, zip trop gros ({} octets)", e.nom, z.len()));
     }
 }
 
@@ -969,5 +993,28 @@ mod tests {
         assert_eq!(&z[..4], b"PK\x03\x04");
         assert_eq!(&z[z.len() - 22..z.len() - 18], b"PK\x05\x06");
         assert_eq!(u16::from_le_bytes([z[z.len() - 12], z[z.len() - 11]]), 2);
+    }
+
+    /// Ce que le relais exige (rapport_worker/src/index.js, `lireMeta`) : meta.json en première
+    /// entrée, taille compressée dans l'en-tête local, brut ou en deflate, 1 Mo au plus décompressé.
+    #[test]
+    fn meta_lisible_par_le_relais() {
+        let lua = vec![("description".to_string(), "é\"\\\n".repeat(250)), ("tour".to_string(), "87".to_string())];
+        let fichiers: Vec<(String, usize)> = (0..200).map(|i| (format!("logs/f{i}.log"), i)).collect();
+        let meta = meta_json(&lua, &[("bge_version", "0.8.0".into())], &fichiers).into_bytes();
+        for meta in [meta, b"{}".to_vec()] {
+            let z = zip(&[("meta.json".into(), meta.clone()), ("logs/Lua.log".into(), vec![b'x'; 5000])], 1_700_000_000);
+            let u16_a = |i: usize| u16::from_le_bytes([z[i], z[i + 1]]);
+            let taille = u32::from_le_bytes(z[18..22].try_into().unwrap()) as usize;
+            assert_eq!((&z[..4], &z[30..39], u16_a(26), u16_a(28)), (&b"PK\x03\x04"[..], &b"meta.json"[..], 9, 0));
+            let corps = &z[39..39 + taille];
+            let clair = match u16_a(8) {
+                8 => miniz_oxide::inflate::decompress_to_vec(corps).unwrap(),
+                0 => corps.to_vec(),
+                m => panic!("méthode {m}"),
+            };
+            assert_eq!(clair, meta);
+            assert!(clair.len() <= 1024 * 1024 && clair.starts_with(b"{"));
+        }
     }
 }

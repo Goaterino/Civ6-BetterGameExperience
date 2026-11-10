@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="en_US">
 			<Text>Every game message</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="en_US">
+			<Text>World Congress only</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="en_US">
+			<Text>All but the World Congress</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="en_US">
 			<Text>General</Text>
 		</Row>
@@ -128,6 +134,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="en_US">
 			<Text>A wonder removed from the production queue by a swap is put back, through normal game commands: no desync, even against players without the proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="en_US">
+			<Text>Right-click the city banner production to cancel it</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="en_US">
+			<Text>A right-click on the production icon of one of your city banners removes the item being produced, like a right-click in the production panel. Normal game command: no desync.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="en_US">
+			<Text>Discounted districts badge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="en_US">
+			<Text>In the production list, districts whose cost is currently reduced (fewer of that district than your average) show their discount, updated as soon as a district is placed. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="en_US">
+			<Text>Stored production</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="en_US">
+			<Text>Shows the production a city keeps in reserve (overflow, at most one turn), which is added to its production next turn: on the city banner, in the city panel and in the production panel. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
+			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="en_US">
+			<Text>+{1} [ICON_Production] in reserve, added to next turn's production (at most one turn of production).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="en_US">
 			<Text>Empire yields updated after a governor or great person</Text>
 		</Row>
@@ -152,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="en_US">
 			<Text>Based on NotificationClear (336tarot). A button in the notification panel dismisses in one click those you can dismiss yourself. Replaces the mod if it is active.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="en_US">
+			<Text>Research and civic progress</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="en_US">
+			<Text>Next to the name of the current technology and civic, in the top-left panel, shows the science (culture) already put in, the total cost and, in brackets, the science (culture) kept in excess from a finished technology (civic), for example 120/260 (+15). Display only.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="en_US">
 			<Text>Extended top panel</Text>
 		</Row>
@@ -169,6 +205,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="en_US">
 			<Text>Based on Better Report Screen (Infixo). Reworked report screen, with Deals, Units, Policies, City-States and Cities tabs, and the effect of each policy and city-state, fixed like the cards. Replaces the mod if it is active.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="en_US">
+			<Text>Better Spectator Mod for spectators</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="en_US">
+			<Text>Replaces the interface scripts of Better Spectator Mod (city-states, diplomacy ribbon, leader icons, World Congress) with the proxy's versions, made for spectators taken out of the major civilizations. Only when every player has the proxy; the spectator level itself always follows that rule.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="en_US">
 			<Text>Log loaded scripts and XML</Text>
@@ -193,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="en_US">
 			<Text>Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="en_US">
+			<Text>Better Spectator Mod scripts replaced</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="en_US">
+			<Text>Diagnostic: which interface scripts of Better Spectator Mod the proxy replaces, to isolate one that misbehaves.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="en_US">
 			<Text>Show simultaneous turn start and end signals</Text>
@@ -310,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="en_US">
 			<Text>No First/Last moves disabled: every player needs BetterGameExperience, at the same version.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="en_US">
+			<Text>{1} has BetterGameExperience {2} enabled.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="en_US">
+			<Text>BGE Check: every player has BetterGameExperience {1} enabled ({2}).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="en_US">
+			<Text>BGE Check (host: {1}). Same version: {2}. Other version: {3}. Installed but inactive: {4}. No answer (without BetterGameExperience): {5}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="en_US">
+			<Text>Asks every player which BetterGameExperience version they have, then posts the result in the chat for everyone.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="en_US">
 			<Text>orders held: the turn has not started for every player yet.</Text>
@@ -562,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="en_US">
 			<Text>The bug report could not be sent. The archive was saved here: {1}. Send it to @goaterino in a private message on Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="en_US">
+			<Text>Grants {1} [ICON_Production] Production towards wonder construction, {2} if the wonder is from the Ancient or Classical Era.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

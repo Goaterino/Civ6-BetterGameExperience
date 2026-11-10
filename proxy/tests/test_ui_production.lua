@@ -12,10 +12,17 @@ local function ReadFile(path)
 	return s;
 end
 local BLOCK = ReadFile(dir .. "/../src/ui_production.lua");
+-- Les blocs que le proxy ajoute ensuite selon les réglages (ui_reduction_quartiers, ui_debordement).
+local TEXTES = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua");
+local EXTRAS = TEXTES .. ReadFile(dir .. "/../src/ui_quartiers.lua") .. "\r\n" .. TEXTES .. ReadFile(dir .. "/../src/ui_debordement.lua");
 local PANEL_PATH = arg[1]
 	or [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Assets\UI\Panels\ProductionPanel.lua]];
+local okPanel, PANEL = pcall(ReadFile, PANEL_PATH);
+if not okPanel then
+	print("ProductionPanel.lua introuvable (" .. PANEL_PATH .. "), test sauté");
+	return;
+end
 -- HavokScript accepte des annotations de type (`local x:number`) que Lua 5.4 refuse : on les retire.
-local PANEL = ReadFile(PANEL_PATH);
 for _, t in ipairs({ "table", "number", "string", "boolean", "object" }) do
 	PANEL = PANEL:gsub("%s*:%s*" .. t .. "%f[^%w_(]", "");
 end
@@ -35,6 +42,8 @@ local function NewControl()
 	local c = { hidden = false };
 	return setmetatable(c, { __index = function(_, k)
 		if k == "SetHide" then return function(self, h) self.hidden = h; end; end
+		if k == "SetDisabled" then return function(self, d) self.disabled = d; end; end
+		if k == "RegisterCallback" then return function(self, ev, f) rawset(self, "cb_" .. tostring(ev), f); end; end
 		if k == "IsHidden" then return function(self) return self.hidden; end; end
 		if k == "IsStopped" then return function() return true; end; end
 		if k == "GetTextControl" then return function() return NewControl(); end; end
@@ -44,7 +53,7 @@ local function NewControl()
 end
 
 -- Une machine : le panneau chargé, deux villes dont on règle la production.
-local function NewPanel(withBlock)
+local function NewPanel(withBlock, extras)
 	local m = { selected = A, current = { [A] = 0, [B] = 0 }, handlers = {} };
 	local function City(id)
 		return {
@@ -57,6 +66,19 @@ local function NewPanel(withBlock)
 
 	local env = setmetatable({}, { __index = function(_, k) return _G[k] ~= nil and _G[k] or Any; end });
 	env.include = function() end;
+	env.Mouse = { eLClick = "L", eRClick = "R", eMouseEnter = "E" };
+	-- TabSupport.lua : chaque onglet garde sa fonction dans CallbackFunc, rappelée par SelectTab.
+	env.CreateTabs = function()
+		local tabs = {};
+		tabs.AddTab = function(c, f)
+			rawset(c, "CallbackFunc", function() tabs.selectedControl = c; f(c); end);
+			c:RegisterCallback(env.Mouse.eLClick, c.CallbackFunc);
+		end;
+		tabs.SelectTab = function(c) c.CallbackFunc(); end;
+		return setmetatable(tabs, { __index = Any });
+	end;
+	m.removed = {};
+	env.RemoveQueueItem = function(i) m.removed[#m.removed + 1] = i; end;
 	env.IsTutorialRunning = function() return false; end;
 	env.Controls = setmetatable({}, { __index = function(t, k) local c = NewControl(); rawset(t, k, c); return c; end });
 	env.ContextPtr = setmetatable({ IsHidden = function() return false; end }, { __index = Any });
@@ -73,6 +95,7 @@ local function NewPanel(withBlock)
 
 	local chunk = PANEL;
 	if withBlock then chunk = chunk .. "\r\n" .. BLOCK; end
+	if extras then chunk = chunk .. "\r\n" .. EXTRAS; end
 	local f = assert(load(chunk, "ProductionPanel.lua", "t", env));
 	f();
 	-- Les listes et la file ne servent pas ici ; on garde PopulateCurrentProduction, qui met à jour
@@ -159,6 +182,61 @@ for _, tab in ipairs({ "OnTabChangePurchase", "OnTabChangePurchaseFaith", "OnTab
 	m.env[tab]();
 	m.Select(B);
 	Check(tab .. " : rien de montré", not m.Shown() and not m.NoProductionShown());
+end
+
+-- BET-13 : clic droit sur la production en cours, onglet Production.
+local function ProductionTab(m)
+	for _, name in ipairs({ "ProductionTab", "MiniProductionTab" }) do
+		local c = m.env.Controls[name];
+		if rawget(c, "CallbackFunc") ~= nil then return c; end
+	end
+end
+do
+	local m = NewPanel(false);
+	local tab = ProductionTab(m);
+	tab.cb_L();
+	Check("sans le bloc : bouton désactivé dans l'onglet Production (le défaut)", m.env.Controls.CurrentProductionButton.disabled == true);
+end
+do
+	local m = NewPanel(true);
+	local button = m.env.Controls.CurrentProductionButton;
+	Check("clic droit : bouton actif dès l'ouverture", button.disabled == false);
+	local tab = ProductionTab(m);
+	m.env.OnTabChangeQueue();
+	tab.cb_L();
+	Check("clic droit : bouton actif après retour sur l'onglet Production", button.disabled == false);
+	button.cb_R();
+	Check("clic droit : retire l'élément en tête", #m.removed == 1 and m.removed[1] == 0);
+	local clicked = 0;
+	m.env.OnItemClicked = function() clicked = clicked + 1; end;
+	button.cb_L();
+	Check("clic gauche hors de la file : rien", clicked == 0);
+	m.env.OnTabChangeQueue();
+	button.cb_L();
+	Check("clic gauche dans la file : sélection pour un échange", clicked == 1);
+	button.disabled = true;
+	m.env.Controls.QueueTab.CallbackFunc = nil;
+	tab.CallbackFunc();
+	Check("SelectTab (par programme) : bouton réactivé", button.disabled == false);
+end
+
+-- Tous les blocs à la suite : le panneau se charge et garde son comportement.
+do
+	local printed = {};
+	local print_jeu = print;
+	print = function(s) printed[#printed + 1] = tostring(s); end;
+	local ok, shown = pcall(function()
+		local m = NewPanel(true, true);
+		m.current[B] = 42;
+		m.env.Refresh();
+		m.env.OnTabChangeQueue();
+		m.Select(B);
+		return m.Shown();
+	end);
+	print = print_jeu;
+	local echec = not ok and tostring(shown) or nil;
+	for _, s in ipairs(printed) do if s:find("echec", 1, true) then echec = s; end end
+	Check("avec ui_quartiers et ui_debordement : chargé sans échec" .. (echec and (" (" .. echec .. ")") or ""), ok and shown == true and echec == nil);
 end
 
 if failures > 0 then

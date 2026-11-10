@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="zh_Hans_CN">
 			<Text>每条游戏消息</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="zh_Hans_CN">
+			<Text>仅世界议会</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="zh_Hans_CN">
+			<Text>除世界议会外全部</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="zh_Hans_CN">
 			<Text>常规</Text>
 		</Row>
@@ -128,6 +134,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="zh_Hans_CN">
 			<Text>因交换而被移出生产队列的奇观，会通过正常的游戏指令放回：不会不同步，即使对方没有代理。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="zh_Hans_CN">
+			<Text>右键单击城市横幅上的生产以取消</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="zh_Hans_CN">
+			<Text>右键单击你的城市横幅上的生产图标，会像在生产面板中右键单击一样移除正在生产的项目。正常的游戏指令：不会不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="zh_Hans_CN">
+			<Text>折扣区域标记</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="zh_Hans_CN">
+			<Text>在生产列表中，成本降低的区域（该类区域数量少于你的平均值）会显示折扣，放置区域后立即更新。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="zh_Hans_CN">
+			<Text>储备的生产力</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>在城市横幅、城市面板和生产面板中显示城市储备的生产力（溢出部分，最多一回合），它会加到下一回合的生产中。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
+			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="zh_Hans_CN">
+			<Text>储备 +{1} [ICON_Production]，将加到下一回合的生产中（最多一回合的生产力）。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="zh_Hans_CN">
 			<Text>总督或伟人之后更新帝国产出</Text>
 		</Row>
@@ -152,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="zh_Hans_CN">
 			<Text>基于 NotificationClear（336tarot）。通知面板中的按钮可一键关闭所有你能自行关闭的通知。如果该模组已启用，则取代它。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="zh_Hans_CN">
+			<Text>科技与市政进度</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>在左上角面板中，当前科技和市政名称旁显示已投入的科技值（文化值）、总花费，以及括号内已完成科技（市政）溢出的科技值（文化值），例如 120/260 (+15)。仅影响显示。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="zh_Hans_CN">
 			<Text>扩展顶部栏</Text>
 		</Row>
@@ -169,6 +205,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="zh_Hans_CN">
 			<Text>基于 Better Report Screen（Infixo）。重做的报告界面，含交易、单位、政策、城邦和城市标签页，并显示每项政策和每个城邦的效果，与政策卡一样经过修正。如果该模组已启用，则取代它。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="zh_Hans_CN">
+			<Text>观战者用 Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="zh_Hans_CN">
+			<Text>将 Better Spectator Mod 的界面脚本（城邦、外交栏、领袖图标、世界议会）替换为代理的版本，这些版本专为不再算作主要文明的观战者编写。仅当所有玩家都装有代理时生效；观战者等级也始终遵循此规则。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="zh_Hans_CN">
 			<Text>记录已加载的脚本和 XML</Text>
@@ -193,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="zh_Hans_CN">
 			<Text>将发送和收到的交易提议以及交易界面显示的内容写入 Lua.log，用于分析人类玩家之间交错的交易。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="zh_Hans_CN">
+			<Text>替换的 Better Spectator Mod 脚本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="zh_Hans_CN">
+			<Text>诊断：选择代理替换哪些 Better Spectator Mod 界面脚本，以找出有问题的脚本。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="zh_Hans_CN">
 			<Text>显示同时开始与结束回合的信号</Text>
@@ -310,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="zh_Hans_CN">
 			<Text>No First/Last moves 已关闭：所有玩家都需要安装相同版本的 BetterGameExperience。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="zh_Hans_CN">
+			<Text>{1} 已启用 BetterGameExperience {2}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="zh_Hans_CN">
+			<Text>BGE Check：所有玩家都已启用 BetterGameExperience {1}（{2}）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="zh_Hans_CN">
+			<Text>BGE Check（主机：{1}）。相同版本：{2}。其他版本：{3}。已安装但未启用：{4}。无回应（没有 BetterGameExperience）：{5}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="zh_Hans_CN">
+			<Text>询问每位玩家的 BetterGameExperience 版本，然后在聊天中向所有人公布结果。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="zh_Hans_CN">
 			<Text>指令已暂缓：还不是所有玩家的回合都已开始。</Text>
@@ -562,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="zh_Hans_CN">
 			<Text>错误报告未能发送。压缩包已保存到：{1}。请通过 Discord 私信将其发送给 @goaterino。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="zh_Hans_CN">
+			<Text>为奇观建造提供 {1} [ICON_Production] 生产力，若为远古或古典时代的奇观则为 {2}。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

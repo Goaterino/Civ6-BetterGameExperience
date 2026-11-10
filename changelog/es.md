@@ -2,6 +2,46 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Novedades
+- **Progreso de investigación y principio**: en el panel superior izquierdo, junto al nombre de la
+  tecnología y el principio en curso, **x/y** muestra la ciencia (la cultura) ya invertida y el
+  coste total, seguido de **(+z)** cuando el juego guarda ciencia (cultura) sobrante de una
+  tecnología (un principio) terminada con más que su coste. Un ajuste permite desactivarlo.
+
+## BetterGameExperience 0.8.1
+
+### Novedades
+- **Cancelar la producción desde el estandarte de la ciudad**: un clic derecho en el icono de
+  producción del estandarte de una de tus ciudades retira el elemento en curso, como en el panel de
+  producción.
+- **Distritos con descuento**: en la lista de producción, un distrito cuyo coste está reducido
+  (tienes menos distritos de ese tipo que tu media) muestra su descuento, por ejemplo **-40%**. Se
+  actualiza en cuanto se coloca un distrito, ya que colocar uno puede acabar con el descuento. Los
+  distritos que no cuentan en la media, como el Thành de Vietnam, también se indican.
+- **Producción en reserva**: el estandarte de la ciudad, el panel de la ciudad y el panel de
+  producción muestran la producción que la ciudad guarda en reserva (excedente de un elemento
+  terminado, o un turno sin producir; el juego guarda como máximo un turno), que se suma a su
+  producción del turno siguiente. En el estandarte de una ciudad sin producción aparece como **+N**.
+- **BGE Check**: en una sala multijugador, el anfitrión tiene un botón **BGE CHECK**, junto al MOD
+  CHECK de MPH, que pide a cada jugador su versión de BetterGameExperience y escribe el resultado en
+  el chat: misma versión, otra versión, instalado pero desactivado o sin respuesta.
+- **Mensaje de llegada**: al abrir una sala con BetterGameExperience activado, el chat lo anuncia,
+  con tu versión exacta.
+
+### Correcciones de la interfaz
+- **Panel de la ciudad tras retirar la producción**: el panel de abajo a la derecha se actualiza al
+  retirar el único elemento de la cola, en lugar de seguir mostrándolo.
+- **Clic derecho en la producción actual**: ahora también la retira desde la pestaña Producción, no
+  solo con la cola abierta.
+- **Sala de MPH**: fuera de un draft, la lista de jugadores sube al espacio vacío que MPH reserva
+  para su draft, y desaparece el « . » que aparecía encima en una partida recargada.
+
+### Ajustes
+- Las tres novedades tienen cada una un ajuste en la pestaña BetterGameExperience, activado por
+  defecto.
+
 ## BetterGameExperience 0.8.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.8.0. La corrección de los acuerdos al

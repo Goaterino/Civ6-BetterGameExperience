@@ -6,7 +6,8 @@ lui qui fait charger le proxy de GameCore à la place de l'original (voir
 [Le chargement du proxy de GameCore](#le-chargement-du-proxy-de-gamecore)). Il ajoute à l'écran
 d'options du jeu un onglet **BetterGameExperience**, qui édite les réglages du proxy de GameCore
 (`rollover_proxy.cfg`). Dans le salon multijoueur, il annonce sa version aux autres joueurs, et
-l'hôte établit si tous ont le proxy (voir [Le salon multijoueur](#le-salon-multijoueur--qui-a-le-proxy-)).
+l'hôte établit si tous ont le proxy ; chacun dit à tous, en arrivant, qu'il a BetterGameExperience
+activé, et l'hôte peut lancer un BGE Check (voir [Le salon multijoueur](#le-salon-multijoueur--qui-a-le-proxy-)).
 Au menu principal, il propose les nouvelles versions (voir
 [La notification de mise à jour](#la-notification-de-mise-à-jour)). En partie, le menu Échap gagne
 un bouton qui envoie un rapport de bug (voir [Le signalement d'un bug](#le-signalement-dun-bug)).
@@ -192,6 +193,16 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   nil et la raison si le proxy de GameCore n'est pas installé, si `actif=off`, ou, une fois chargé,
   s'il n'a pas posé ses correctifs POL (bit 16 de `RolloverProxyStatus`). Elle ne s'annonce pas, et
   compte donc comme sans BetterGameExperience.
+- **Les deux DLL à la même version.** La version annoncée est celle de `winmm.dll`, mais les
+  correctifs POL sont ceux de `BGD_GameCore_XP2.dll` : après une installation partielle (une seule
+  des deux mise à jour), le salon serait vert alors que les joueurs n'appliquent pas les mêmes
+  règles. Avant de s'annoncer, ce proxy lit donc la `VERSION` du proxy de GameCore : son export
+  `BgdVersion` s'il est chargé, sinon, au premier salon d'une session, la marque
+  `BgdVersion=<version>` de son fichier (relue seulement s'il change). Si elle diffère de la sienne,
+  ou si le proxy de GameCore n'en a pas (antérieur à l'export), la machine ne s'annonce pas. Le
+  journal le dit : `salon : versions différentes : winmm.dll 0.8.0, BGD_GameCore_XP2.dll 0.7.1
+  (installation partielle ?)`. Les deux DLL compilent le même `proxy/src/version.rs` : une release
+  les produit au même commit, donc à la même version.
 - **Les jetons.** Les configurations de joueur sont enregistrées avec la partie : une sauvegarde
   rechargée rapporte les annonces et le verdict d'une session précédente, peut-être chez des
   joueurs qui n'ont plus le proxy. Chaque ouverture du salon, et chaque migration d'hôte, tire donc
@@ -221,6 +232,36 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
     qu'une annonce restée d'une sauvegarde ne fait pas. Un client arrivé après l'annonce d'un autre
     ne la voit pas changer : les deux peuvent alors écrire le même message, mais il n'en manque
     jamais.
+- **L'annonce d'arrivée.** À chaque ouverture du salon (pas à une migration d'hôte), une machine dont
+  BetterGameExperience est actif (celle qui s'annonce, voir « Qui s'annonce ») écrit à tous, en vert :
+  `BGE - Bob has BetterGameExperience 0.9.0 enabled.`, avec la version exacte, traduit chez les
+  joueurs équipés (`Bob a BetterGameExperience 0.9.0 activé.`). Elle part au premier tic du
+  minuteur du salon (environ 0,5 s après l'ouverture), ou tout de suite si le minuteur manque.
+  Proxy désactivé dans les options (`actif=off`) : pas d'annonce.
+- **Le BGE Check.** Un bouton **BGE CHECK**, distinct du « MOD CHECK » de MPH (qui vérifie les mods) :
+  il ne vérifie que BetterGameExperience. Visible seulement chez l'hôte, et seulement si
+  BetterGameExperience est actif chez lui, dans un salon en réseau (ni hotseat, ni PlayByCloud) ;
+  caché pendant le draft de MPH, dont le bouton RESET occupe la même place.
+  - **Le XML.** Après la lecture de `StagingRoom.xml` (celui du jeu ou de MPH), `patch_staging_xml`
+    ([src/salon.rs](src/salon.rs)) ajoute `BGD_CheckButton` juste après `BackButton`, dans la barre
+    du haut : `Anchor="L,C" Offset="180,0" Size="150,38"`, le miroir du `MOD CHECK` de MPH
+    (`Anchor="R,C"`, même décalage et même taille) par rapport à l'axe vertical du centre de
+    l'écran. À la fin du contexte, le minuteur `BGD_SalonMinuteur` (une `SlideAnim` d'environ
+    0,5 s, comme celui du suivi des rapports). Sans `BackButton`, le fichier reste tel quel et le
+    journal le dit (`salon : StagingRoom.xml laissé tel quel : …`) : ni bouton, ni minuteur.
+  - **Le protocole**, comme celui du départ simultané, par messages privés cachés : l'hôte tire un
+    jeton et envoie à chaque humain connecté `.bgd_check <jeton>`. Le bloc de chaque machine équipée
+    répond à l'hôte, même désactivé, `.bgd_version <jeton> <version installée> <1|0>` (1 :
+    BetterGameExperience actif ; `Civ6Proxy_VersionInstallee()` donne la version même désactivé).
+    Une réponse d'un autre jeton, ou une demande qui ne vient pas de l'hôte, est ignorée. Les
+    messages `.bgd_` ne s'affichent pas chez qui a BetterGameExperience ; un joueur sans le proxy les
+    voit, comme les signaux de MPH quand on n'a pas MPH.
+  - **Le bilan**, pour tous, quand tous ont répondu (ou sont partis), sinon au bout de 12 tics
+    (environ 6 s) ; le bouton est grisé jusque-là. En vert :
+    `BGE - BGE Check: every player has BetterGameExperience 0.9.0 enabled (Hôte, Bob).` ; sinon, en
+    rouge : `BGE - BGE Check (host: 0.9.0). Same version: Hôte. Other version: Bob (0.8.0). Installed
+    but inactive: Zoé (0.9.0). No answer (without BetterGameExperience): Léo.` (`-` pour une liste
+    vide). Le BGE Check ne change ni l'annonce ni le verdict : il ne fait qu'informer.
 - **L'état lu par le proxy de GameCore.** `BgdPolActifs`, export de ce proxy, rend 1 si les
   correctifs POL sont actifs pour la partie en cours. L'interface le tient à jour par
   `Civ6Proxy_FixerPol` :
@@ -236,10 +277,23 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   prêt sans s'être annoncé, l'hôte écrit en rouge : `BGE - Léo : arrivée sans BetterGameExperience (ou
   d'une autre version) alors que les correctifs POL sont actifs. Sa partie va se désynchroniser.`
 - **Le journal** : `salon : bloc chargé`, `salon : pas d'annonce : <raison>`,
+  `salon : versions différentes : …` (une fois par raison),
   `pol : correctifs POL actifs|désactivés (<raison>)` à chaque changement de l'état,
   `partie : verdict relayé : …`, `salon : annonce …, verdict …`,
-  `salon : message : …`, `salon : lancement : correctifs POL actifs|désactivés` (la conclusion de
+  `salon : message : …`, `salon : BGE Check : demande <jeton> à <n> joueur(s)`,
+  `salon : BGE Check : réponse <version> (actif|inactif)`,
+  `salon : lancement : correctifs POL actifs|désactivés` (la conclusion de
   chaque machine), et toute erreur du bloc, qui n'est jamais propagée au salon.
+- **Correctif : mise en page du salon de MPH.** MPH descend le tableau des joueurs de 66 px
+  (`PrimaryPanelStack` à `Offset="3,180"`, contre `3,114` dans le jeu de base) pour loger son draft
+  (phase, consignes, bans, votes de carte). Hors draft, cet espace reste vide, et une partie
+  rechargée y montre son libellé de phase (`PhaseLabel`) sans texte, dont la valeur du XML est
+  « . ». À chaque tic du minuteur, `BGD.MiseEnPage` vide ce « . » et, tant qu'aucun contrôle du
+  draft n'est visible (liste `BGD.DRAFT`, ou un libellé de phase écrit), remonte le tableau de
+  52 px en l'agrandissant d'autant ; le bandeau des colonnes (`HeaderStack`, un contrôle à part)
+  et la version de MPH (`PhaseLabel_Version`) remontent avec lui. Dès qu'un contrôle du draft paraît, la mise en page de MPH revient.
+  `Resize` (changement de résolution) est enveloppé pour garder la place rendue. Sans les
+  contrôles de MPH (salon du jeu de base), rien ne bouge.
 - **Correctif : cités-États d'une partie chargée.** Le salon de MPH affiche tout emplacement sous
   le maximum de joueurs de la carte (plafonné à 50, contre 12 dans le jeu de base), et ce maximum
   n'est pas recalculé au chargement d'une partie. Les cités-États reçoivent alors un menu de
@@ -264,9 +318,10 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   pour le chargement.
 
 **Risque connu :** au premier salon d'une session, le proxy de GameCore n'est pas encore chargé. La
-machine s'annonce si le fichier de réglages le permet ; si, au lancement, le détour ne peut pas être
-posé (jeu mis à jour sans le proxy), elle n'appliquera pas les correctifs que les autres
-appliquent. Le journal le dit (`citoyens : version inattendue`).
+machine s'annonce si le fichier de réglages le permet et si la marque de version de son fichier est
+la bonne ; si, au lancement, le détour ne peut pas être posé (jeu mis à jour sans le proxy), elle
+n'appliquera pas les correctifs que les autres appliquent. Le journal le dit (`citoyens : version
+inattendue`).
 
 ## La notification de mise à jour
 

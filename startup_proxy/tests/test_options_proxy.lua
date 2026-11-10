@@ -15,8 +15,12 @@ end
 local BLOCK = ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua") .. ReadFile(dir .. "/../src/options_proxy.lua");
 local OPTIONS_PATH = arg[1]
 	or [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Assets\UI\Options.lua]];
+local okOptions, OPTIONS = pcall(ReadFile, OPTIONS_PATH);
+if not okOptions then
+	print("Options.lua introuvable (" .. OPTIONS_PATH .. "), test sauté");
+	return;
+end
 -- HavokScript accepte des annotations de type (`local x:number`) que Lua 5.4 refuse : on les retire.
-local OPTIONS = ReadFile(OPTIONS_PATH);
 for _, t in ipairs({ "table", "number", "string", "boolean", "object" }) do
 	OPTIONS = OPTIONS:gsub("%s*:%s*" .. t .. "%f[^%w_(]", "");
 end
@@ -183,7 +187,7 @@ do
 		if not stacks[b.parent] then rows = -100; end
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; else titles = titles + 1; end
 	end
-	Check("26 réglages et 7 titres (crédits compris), dans le panneau", rows == 26 and titles == 7);
+	Check("30 réglages et 7 titres (crédits compris), dans le panneau", rows == 30 and titles == 7);
 
 	-- Options avancées : performances et diagnostic, cachées par défaut derrière un bouton.
 	local function StackOf(name)
@@ -253,7 +257,7 @@ do
 	for _, b in ipairs(m.built) do
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; end
 	end
-	Check("release : 22 réglages", rows == 22);
+	Check("release : 26 réglages", rows == 26);
 	Check("release : réglages de diagnostic absents", m.Row("Journal des scripts et XML chargés") == nil
 		and m.Row("Mesure du coût des épingles") == nil and m.Row("Diagnostic des accords entre joueurs") == nil
 		and m.Row("Profil des zones de l'exe") == nil);
