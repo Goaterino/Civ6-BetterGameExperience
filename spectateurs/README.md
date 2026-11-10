@@ -215,11 +215,34 @@ Deux points qui ne se déduisent pas :
 - l'objet reçu par ce getter **n'est pas le CvPlayer** : c'est un wrapper de `0x20` octets où l'ID du
   joueur est à `+0x00`. À `+0xD8` on lit un pointeur partagé, identique pour tous les joueurs ;
 - la pose vole **14 octets** : `sub rsp,28h`, `mov rcx,[rcx+10h]` et `mov edx,[rip+0A2393Eh]`. La
-  globale lue par la troisième instruction n'est pas encore initialisée à la pose : le trampoline la
-  relit à l'exécution (`mov r11,imm64` / `mov edx,[r11]`).
+  troisième est relative à RIP : copiée telle quelle dans le trampoline, elle lirait ailleurs. Le
+  trampoline la refait en absolu (`mov r11,imm64` / `mov edx,[r11]`).
 
-Le détour est posé séparément des autres : si les octets attendus manquent, seul le niveau reste
-inchangé, et le journal le dit.
+Les octets du niveau sont vérifiés à part : s'ils manquent, les cinq détours ci-dessus restent posés et
+le journal le dit. S'il manque ceux des cinq autres, le niveau n'est pas posé non plus (il lit la même
+base). Comme eux, il est retiré au déchargement du proxy.
+
+### Verrouillé derrière POL
+
+Le niveau change la simulation, et il ne marche qu'avec le `Data/Spectator.lua` du proxy : celui de
+BSM ne cherche les spectateurs que parmi les majeurs, il ne les trouverait plus. Les deux sont un seul
+correctif POL, qui ne dépend que d'états communs à toutes les machines de la partie :
+
+- `Data/Spectator.lua` (script de gameplay) n'est substitué que si les correctifs POL sont actifs à
+  sa compilation. Ils sont fixés par le verdict de l'hôte dans le salon, avant le chargement, y
+  compris pour qui rejoint en cours de partie ; aucun réglage local (`ui_spectateur`,
+  `ui_spectateur_fichiers`) n'y touche ;
+- le détour ne rend `CIVILIZATION_LEVEL_SPECTATOR` que si ce script a été compilé dans la partie
+  (drapeau remis à zéro à chaque `DllCreateGameContext`), si les correctifs POL sont actifs, et si le
+  leader du joueur est `LEADER_SPECTATOR`. Le journal note le premier joueur ainsi reclassé.
+
+Les scripts d'interface repris (`CityStates`, ruban, icône, popup du Congrès) sont écrits pour des
+spectateurs hors des majeurs : ils ne sont substitués qu'avec les correctifs POL eux aussi. Sans POL,
+une partie avec BSM se comporte comme avant cette reprise. `ui_spectateur=off` ne coupe que ces
+scripts d'interface, sur la seule machine qui le règle.
+
+Sur le popup du Congrès de BSM, le proxy ajoute le retour au vote (`ui_congres_vote.lua`), comme au
+popup du jeu, mais pas la lecture seule (`ui_congres.lua`) : ce popup gère déjà le spectateur.
 
 ## Refaire
 

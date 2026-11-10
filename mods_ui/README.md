@@ -26,6 +26,8 @@ versions à la compilation (voir `spectateurs/README.md#le-niveau-de-civilisatio
 `UI/Replacements/leadericon.lua` et `UI/Replacements/worldcongresspopup_spec.lua`. La reconnaissance
 se fait sur le nom de fichier, sans tenir compte de la casse, et le popup du Congrès est remplacé
 depuis le fichier du jeu, faute d'entrée `ReplaceUIScript` dans le mod.
+`Data/Spectator.lua` est un script de gameplay : contrairement aux autres reprises, ces cinq
+substitutions ne se font qu'avec les correctifs POL actifs (voir `spectateurs/README.md#verrouillé-derrière-pol`).
 
 ## Ce que fait chaque mod
 
