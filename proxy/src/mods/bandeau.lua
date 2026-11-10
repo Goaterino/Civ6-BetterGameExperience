@@ -201,10 +201,14 @@ do
 		return FoodSurplusNum, Round(growthModifier, 2);
 	end
 
+	-- Excédents calculés par RefreshFood pendant un RefreshYields, par identifiant de ville : la
+	-- population ne les recalcule pas. Vidé à la fin de RefreshYields.
+	local m_FoodSurplus = {};
+
 	-- Croissance par tour : excédent sur le seuil de croissance.
 	local function GetPopulationPerTurn(pCity)
 		local growthThreshold = pCity:GetGrowth():GetGrowthThreshold();
-		local FoodSurPlus = GetFoodSurplus(pCity);
+		local FoodSurPlus = m_FoodSurplus[pCity:GetID()] or GetFoodSurplus(pCity);
 		return FoodSurPlus / growthThreshold;
 	end
 
@@ -216,6 +220,7 @@ do
 		for _, pCity in Players[Game.GetLocalPlayer()]:GetCities():Members() do
 			local pCityFood = pCity:GetYield(YieldTypes.FOOD);
 			local pFoodSurplus, growthModifier = GetFoodSurplus(pCity);
+			m_FoodSurplus[pCity:GetID()] = pFoodSurplus;
 			pTotalFood = pTotalFood + pCityFood;
 			pTotalFoodSurplus = pTotalFoodSurplus + pFoodSurplus;
 			table.insert(Food_Info.CitysInfo, {
@@ -323,35 +328,48 @@ do
 			and pLocal:GetDiplomacy():HasMet(playerID);
 	end
 
-	-- Luxe que le joueur local pourrait céder au premier partenaire.
-	local function IsTradableResources(Resource)
+	-- Ce que DealManager dit cessible, gardé le temps d'un RefreshLuxuryResourcesType : une demande
+	-- par joueur au lieu d'une par (joueur, luxe). m_Cessibles.locales : ressources que le joueur
+	-- local peut céder au premier partenaire ; m_Cessibles[joueur] : celles que ce partenaire peut
+	-- céder en plus d'un exemplaire. Clés : Index de la ressource.
+	local m_Cessibles = {};
+
+	local function RessourcesCessibles(fromPlayerID, toPlayerID, plusDUn)
 		local localPlayerID = Game.GetLocalPlayer();
-		for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
-			if IsPartner(playerID) then
-				local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, localPlayerID, playerID);
-				local possibleResources = DealManager.GetPossibleDealItems(localPlayerID, playerID, DealItemTypes.RESOURCES, pForDeal);
-				if possibleResources ~= nil then
-					for _, entry in ipairs(possibleResources) do
-						if GameInfo.Resources[entry.ForType] == Resource then return true; end
-					end
-				end
-				break;
+		local otherPlayerID = (fromPlayerID == localPlayerID) and toPlayerID or fromPlayerID;
+		local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, localPlayerID, otherPlayerID);
+		local possibleResources = DealManager.GetPossibleDealItems(fromPlayerID, toPlayerID, DealItemTypes.RESOURCES, pForDeal);
+		local cessibles = {};
+		if possibleResources ~= nil then
+			for _, entry in ipairs(possibleResources) do
+				local row = GameInfo.Resources[entry.ForType];
+				if row ~= nil and (not plusDUn or entry.MaxAmount > 1) then cessibles[row.Index] = true; end
 			end
 		end
-		return false;
+		return cessibles;
+	end
+
+	-- Luxe que le joueur local pourrait céder au premier partenaire.
+	local function IsTradableResources(Resource)
+		if m_Cessibles.locales == nil then
+			m_Cessibles.locales = {};
+			local localPlayerID = Game.GetLocalPlayer();
+			for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
+				if IsPartner(playerID) then
+					m_Cessibles.locales = RessourcesCessibles(localPlayerID, playerID, false);
+					break;
+				end
+			end
+		end
+		return m_Cessibles.locales[Resource.Index] == true;
 	end
 
 	-- Le partenaire peut-il céder plus d'un exemplaire de ce luxe ?
 	local function PopulateAvailableResources(otherPlayerID, Resource)
-		local localPlayerID = Game.GetLocalPlayer();
-		local pForDeal = DealManager.GetWorkingDeal(DealDirection.OUTGOING, localPlayerID, otherPlayerID);
-		local possibleResources = DealManager.GetPossibleDealItems(otherPlayerID, localPlayerID, DealItemTypes.RESOURCES, pForDeal);
-		if possibleResources ~= nil then
-			for _, entry in ipairs(possibleResources) do
-				if GameInfo.Resources[entry.ForType] == Resource and entry.MaxAmount > 1 then return true; end
-			end
+		if m_Cessibles[otherPlayerID] == nil then
+			m_Cessibles[otherPlayerID] = RessourcesCessibles(otherPlayerID, Game.GetLocalPlayer(), true);
 		end
-		return false;
+		return m_Cessibles[otherPlayerID][Resource.Index] == true;
 	end
 
 	local function IsNewLuxury(resource)
@@ -382,6 +400,7 @@ do
 	local function RefreshLuxuryResourcesType()
 		m_LuxuryResourcesTypeYieldButton = m_LuxuryResourcesTypeYieldButton or m_YieldButtonSingleManager:GetInstance();
 		g_LocalplayerLuxury = {};
+		m_Cessibles = {};
 		local Morestr = L("LOC_TOP_PANEL_MORE_LUXURY_NAME");
 		local sLuxuryResourceListText = "";
 		local pLuxuryTotalAmount = 0;
@@ -434,6 +453,7 @@ do
 		m_LuxuryResourcesTypeYieldButton.YieldBacking:SetToolTipString(sToolTip);
 		m_LuxuryResourcesTypeYieldButton.YieldBacking:SetColorByName("ChatMessage_Whisper");
 		m_LuxuryResourcesTypeYieldButton.YieldButtonStack:CalculateSize();
+		m_Cessibles = {};
 	end
 
 	-- Ressources stratégiques d'un coéquipier, pour l'infobulle d'une ressource.
@@ -603,6 +623,7 @@ do
 		RefreshFood();
 		RefreshProduction();
 		RefreshPopulation();
+		m_FoodSurplus = {};
 		RefreshLuxuryResourcesType();
 		Controls.YieldStack:CalculateSize();
 		Controls.StaticInfoStack:CalculateSize();

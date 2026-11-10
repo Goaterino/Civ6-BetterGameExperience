@@ -40,7 +40,9 @@ pub fn actifs() -> bool {
     }
     let f: extern "system" fn() -> u32 = unsafe { std::mem::transmute(p) };
     let on = f() != 0;
-    if LAST.swap(on as u8, Ordering::Relaxed) != on as u8 {
+    // Lecture d'abord : appelée depuis les fils de l'IA, une écriture à chaque appel ferait
+    // passer la ligne de cache d'un cœur à l'autre.
+    if LAST.load(Ordering::Relaxed) != on as u8 && LAST.swap(on as u8, Ordering::Relaxed) != on as u8 {
         log(&format!("pol : correctifs POL {}", if on { "actifs" } else { "coupés" }));
     }
     on
