@@ -551,6 +551,9 @@
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="de_DE">
 			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE" Language="de_DE">
+			<Text>Beschädigte Netzwerknachricht blockiert: Sie hätte das Spiel eingefroren.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="de_DE">
 			<Text>Beschreiben Sie das Problem: was passiert ist, wann, und was Sie stattdessen erwartet haben.</Text>
 		</Row>

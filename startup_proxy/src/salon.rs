@@ -133,6 +133,14 @@ unsafe extern "C-unwind" fn lua_pol_state(l: *mut std::ffi::c_void) -> i32 {
     1
 }
 
+/// `Civ6Proxy_GardeMessages()` → le nombre de lectures que la garde des messages réseau a corrigées
+/// depuis le dernier appel (messages.rs), remis à 0.
+unsafe extern "C-unwind" fn lua_garde(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, crate::messages::a_annoncer().min(i32::MAX as u32) as i32);
+    1
+}
+
 unsafe extern "C-unwind" fn lua_token(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
     push_str(h, l, &new_token());
@@ -154,7 +162,11 @@ pub const NATIVES: Natives = &[
 ];
 
 const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
-const PARTIE_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_pol_state, b"Civ6Proxy_PolActifs\0")];
+const PARTIE_NATIVES: Natives = &[
+    (lua_log, b"Civ6Proxy_Journal\0"),
+    (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
+    (lua_garde, b"Civ6Proxy_GardeMessages\0"),
+];
 const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0")];
 
 /// Appelée par l'accroche sur StagingRoom.lua : pose les natives, puis rend le texte à compiler.

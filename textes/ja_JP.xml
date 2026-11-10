@@ -551,6 +551,9 @@
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ja_JP">
 			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ja_JP">
+			<Text>破損したネットワークメッセージをブロックしました。ゲームがフリーズするところでした。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ja_JP">
 			<Text>問題を説明してください：何が起きたか、いつ起きたか、本来どうなるはずだったか。</Text>
 		</Row>

@@ -551,6 +551,9 @@
 		<Row Tag="LOC_BGD_CHAT_RAPPORT_ECHEC" Language="ko_KR">
 			<Text>{1}: 버그 보고서를 보내지 못해 해당 플레이어의 컴퓨터에 저장했습니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ko_KR">
+			<Text>손상된 네트워크 메시지를 차단했습니다. 게임이 멈출 뻔했습니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ko_KR">
 			<Text>문제를 설명해 주세요: 무슨 일이 언제 일어났는지, 원래 어떻게 될 것으로 예상했는지.</Text>
 		</Row>

@@ -20,7 +20,8 @@
 //! vtable +0x30 du lecteur). On la détourne : après la lecture d'origine, si l'adresse de retour est
 //! l'un des six sites et que la valeur lue est impossible (plus de 100 000 entrées, ou un tampon de
 //! plus de 16 Mo), elle est remplacée par 0. La boucle ne tourne pas, le message est consommé vide,
-//! la partie continue. Une valeur plausible n'est jamais touchée.
+//! la partie continue. Une valeur plausible n'est jamais touchée. En jeu, le joueur le dit à tous
+//! dans le chat (`partie.lua`, `Civ6Proxy_GardeMessages()`).
 //!
 //! Noms : projet Ghidra `civ6-netcode`, signets « Gel 2026-11-09 ». Les mêmes règles, posées par
 //! un hook externe pendant la mise au point, ont tourné sur deux parties entières de dix joueurs
@@ -93,6 +94,8 @@ const FONCTIONS: &[(&str, u64, [u8; 12])] = &[
 static EXE: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static CORRECTIONS: AtomicU32 = AtomicU32::new(0);
+/// Corrections pas encore annoncées dans le chat (`a_annoncer`).
+static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
 
@@ -131,6 +134,12 @@ pub fn absurde(regle: Regle, valeur: u32, drapeaux: u32) -> Option<&'static str>
     }
 }
 
+/// Les corrections faites depuis le dernier appel, remises à 0 : `Civ6Proxy_GardeMessages()`, que
+/// `partie.lua` interroge en jeu pour le dire dans le chat.
+pub fn a_annoncer() -> u32 {
+    A_ANNONCER.swap(0, Ordering::Relaxed)
+}
+
 type Lecture = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut u8, usize) -> usize;
 
 /// La lecture détournée. Le bout d'assembleur `bgd_messages_lecture_stub` l'appelle avec, en
@@ -150,6 +159,7 @@ unsafe extern "C" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut
             let drapeaux = if site.regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
             if let Some(motif) = absurde(site.regle, valeur, drapeaux) {
                 std::ptr::write_unaligned(dest as *mut u32, 0);
+                A_ANNONCER.fetch_add(1, Ordering::Relaxed);
                 let total = CORRECTIONS.fetch_add(1, Ordering::Relaxed) + 1;
                 if total <= 20 || total % 100 == 0 {
                     log(&format!(
@@ -251,6 +261,13 @@ mod tests {
         assert_eq!(mode("garde_messages=off\r\n"), Mode::Off);
         assert_eq!(mode("garde_messages=test\r\n"), Mode::Test);
         assert_eq!(mode("garde_messages=off\ngarde_messages=on\n"), Mode::On, "la dernière occurrence compte");
+    }
+
+    #[test]
+    fn annonce_remise_a_zero() {
+        A_ANNONCER.store(3, Ordering::Relaxed);
+        assert_eq!(a_annoncer(), 3);
+        assert_eq!(a_annoncer(), 0, "une correction n'est annoncée qu'une fois");
     }
 
     #[test]
