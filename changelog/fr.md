@@ -2,6 +2,14 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Nouveautés
+- **Avancement de la recherche et du dogme** : dans le panneau en haut à gauche, à côté du nom de la
+  technologie et du dogme en cours, **x/y** indique la science (la culture) déjà investie et le coût
+  total, suivi de **(+z)** quand le jeu garde de la science (de la culture) en excédent d'une
+  technologie (d'un dogme) terminée avec plus que son coût. Un réglage permet de le désactiver.
+
 ## BetterGameExperience 0.8.1
 
 ### Nouveautés

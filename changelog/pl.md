@@ -2,6 +2,14 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Nowości
+- **Postęp badań i ustroju**: w panelu w lewym górnym rogu, obok nazwy bieżącej technologii i idei,
+  **x/y** pokazuje już włożoną naukę (kulturę) i całkowity koszt, a **(+z)** nadwyżkę nauki
+  (kultury), którą gra zachowuje z technologii (idei) ukończonej ponad jej koszt. Można to wyłączyć
+  w ustawieniach.
+
 ## BetterGameExperience 0.8.1
 
 ### Nowości
