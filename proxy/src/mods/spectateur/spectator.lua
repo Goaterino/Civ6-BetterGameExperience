@@ -267,7 +267,10 @@ function DoObserverPlayer(id:number)
 			else		
 			PlayerManager.SetLocalObserverTo(1000)
 		end
-		Game:SetProperty("SPEC_LAST_ID",id)
+		-- BGE : plus de Game:SetProperty("SPEC_LAST_ID", id). Cet appel vient de l'interface du
+		-- spectateur, sur sa seule machine : la propriété de partie divergeait des autres
+		-- (désynchro au contrôle de fin de tour). Spectator_UI.lua, corrigé par le proxy, garde
+		-- le dernier joueur observé de son côté.
 	end
 	--print("Turned to Observer: Turn:",currentTurn,"PlayerID:",id)
 	
@@ -337,7 +340,7 @@ function OnTurnStarted()
 			end
 		end
 	end
-	Game:SetProperty("SPEC_LAST_ID",id)
+	-- BGE : Game:SetProperty("SPEC_LAST_ID", id) retiré (fonction jamais branchée, id non défini).
 	--print("Turned to Observer: Turn:",currentTurn,"Spec ID:",tmpspecid,"Last Observed ID:",tmpspeclast,"IsLocalObserver?",bspec)
 	
 end
