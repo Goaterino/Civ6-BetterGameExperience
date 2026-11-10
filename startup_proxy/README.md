@@ -385,6 +385,61 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
   (…)`, `<zip> écrit (… octets)`, `envoyé, numéro …` ou `envoi impossible : …`, et toute erreur du
   bloc, qui n'est jamais propagée au menu.
 
+## La garde des messages réseau
+
+[src/messages.rs](src/messages.rs).
+
+**Le gel.** Le 9 novembre 2026, à la déconnexion d'un joueur, pendant le vidage de la file des
+messages entrants (`FNetSession`), un message compressé est arrivé abîmé : zlib le refuse
+(« invalid distance too far back »). Le jeu ignore l'erreur de décompression et désérialise ce qui
+suit. Dans `Data_Variant.cpp`, `TypedVariantMap::Deserialize` lit alors un compte d'entrées sur
+4 octets, ici `0x61746143` (« Cata » lu comme un entier), et boucle dessus sans aucune borne ni
+contrôle de lecture, en allouant à chaque tour : image figée, 5 Go de mémoire par minute, puis
+plantage par manque de mémoire dix minutes plus tard (écriture à l'adresse 0x18, une allocation
+nulle utilisée telle quelle). Le vidage mémoire, la décompilation et le message extrait sont gardés
+hors dépôt.
+
+**Six lectures non bornées**, toutes par la lecture de champ du sérialiseur (`14099f9d0`, vtable
++0x30 du lecteur ; noms du projet Ghidra `civ6-netcode`, signets « Gel 2026-11-09 ») :
+
+| fonction | lecture | retour |
+|---|---|---|
+| `DeserializeTypedVariantMap` (`1407a1e20`) | compte des paires clé/valeur | `1407a1f44` |
+| idem | compte des entrées (la boucle du gel) | `1407a209f` |
+| `DeserializeNamedVariantMap` (`1407adf50`, racine de `NetPlayerInfo` et `NetGameConfig`) | compte, ou mot de drapeaux si négatif | `1407adfe3` |
+| idem | compte après les drapeaux | `1407ae03a` |
+| `DeserializeVariantList` (`1407ad890`) | compte | `1407ad901` |
+| `DeserializeDataVariant` (`1407a3450`) | longueur, allouée élément × longueur pour un tampon brut | `1407a34f4` |
+
+**La garde.** Le proxy détourne la lecture de champ dès DllMain. Après la lecture d'origine, si
+l'adresse de retour est l'un des six sites et que la valeur lue est impossible — plus de 100 000
+entrées, ou un tampon brut de plus de 16 Mo (4 Ko pour un scalaire) — elle est remplacée par 0 : la
+boucle ne tourne pas, le message est consommé vide, la partie continue. Dans la carte nommée, un
+premier mot négatif est un mot de drapeaux, pas un compte : il est laissé. Une valeur plausible
+n'est jamais touchée ; le coût est de quelques instructions par champ lu.
+
+- Journal : `messages : garde posée (lecture de champ en exe+…, 6 sites)`, puis à chaque correction
+  `messages : <site> : compte impossible (0x61746143, drapeaux 0x0) remplacé par 0 (n corrections)`
+  (les 20 premières, puis une sur 100).
+- Avec l'interrupteur général `actif=off`, rien n'est posé, comme pour le reste du mod
+  (`messages : garde non posée (actif=off)`). `garde_messages=off` dans `rollover_proxy.cfg`
+  désactive la garde seule (`on` par défaut ; réglage sans entrée dans l'onglet, que `install.ps1`
+  n'écrit pas). `garde_messages=test` la laisse active et injecte
+  une fois le compte du gel à la première lecture « carte : entrées » : dans une partie jouée seul,
+  le journal doit montrer `messages : test : compte du gel (0x61746143) injecté…` puis
+  `… remplacé par 0 (1 corrections)`, et la partie continue (la carte visée est vidée, sans effet
+  visible). Remettre `on` ensuite.
+- Adresses de `CivilizationVI_DX12.exe` du 5 novembre 2026, vérifiées octet par octet (prologue de
+  la lecture, début des quatre fonctions, `call [rax+30h]` avant chaque retour) : sur un autre exe
+  (DX11, autre build), rien n'est posé et le journal dit `messages : … octets inattendus …, garde
+  absente`. `cargo test` vérifie l'empreinte sur l'exe installé.
+- Les mêmes règles, posées par un hook externe pendant la mise au point, ont tourné sur deux
+  parties entières de dix joueurs (57 et 105 tours, 108 000 messages reçus, des déconnexions dont
+  deux départs de l'hôte avec migration) sans se déclencher à tort.
+
+Ce qui abîme le message en amont (réassemblage des morceaux pendant le vidage de la file, erreur de
+décompression ignorée) n'est pas corrigé : la garde empêche seulement le gel.
+
 ## Compiler, tester, installer
 
 ```bash

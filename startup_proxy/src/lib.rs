@@ -7,8 +7,9 @@
 //!
 //! Ce proxy charge le proxy de GameCore à la place de l'original (`chargeur`), ajoute à l'écran
 //! d'options un onglet qui édite ses réglages (`options`), et annonce sa version aux autres joueurs
-//! du salon multijoueur (`salon`), et ajoute au menu Échap un bouton qui envoie un rapport de bug
-//! (`rapport`). Journal commun aux deux proxys :
+//! du salon multijoueur (`salon`), ajoute au menu Échap un bouton qui envoie un rapport de bug
+//! (`rapport`), et borne les comptes lus par le désérialiseur des messages réseau, contre le gel à
+//! la déconnexion d'un joueur (`messages`). Journal commun aux deux proxys :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
 // Modules communs avec le proxy de GameCore, qui y trouvent `crate::win` et `crate::patch`.
@@ -30,6 +31,7 @@ mod options;
 mod maj;
 mod salon;
 mod rapport;
+mod messages;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]
@@ -97,6 +99,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         if name.starts_with("civilizationvi") {
             chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
             options::install();
+            messages::install();
             #[cfg(feature = "diag")]
             zones::install();
         }
