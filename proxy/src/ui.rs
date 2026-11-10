@@ -421,6 +421,52 @@ pub fn patch_in_game(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+const DIPLOMATIE_BLOCK: &str = include_str!("ui_diplomatie.lua");
+const DIPLOMATIE_DONE: &str = "écran diplomatique refermé si son ouverture échoue";
+
+/// Interface masquée pour toujours après une erreur à l'ouverture de l'écran diplomatique (rapport
+/// BGE-DB5687). `ui_diplomatie.lua`, ajouté à la fin de DiplomacyActionView.lua, referme l'écran.
+pub fn patch_diplomacy_action_view(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ["local ms_bIsViewInitialized", "\nfunction OnOpenDiplomacyActionView(", "\nfunction Close("].iter().find(|n| !has(n)) {
+        return Err(format!("{} introuvable", missing.trim_start()));
+    }
+    if has("Civ6RolloverProxy (src/ui_diplomatie.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    Ok(append_blocks(src, &[DIPLOMATIE_BLOCK]))
+}
+
+/// Table qui remplace `Teams` devant `#` : une équipe absente rend une liste vide au lieu de nil.
+const EQUIPES_DEF: &[u8] = b"BGD_EquipesSures = BGD_EquipesSures or setmetatable({}, { __index = function(_, k) return (Teams ~= nil and Teams[k]) or {}; end }); ";
+
+/// `#Teams[id]` plante quand l'équipe de la configuration du joueur n'est pas dans `Teams` (rapport
+/// BGE-DB5687 : LeaderIcon.lua:143, bandeau des dirigeants arrêté et écran diplomatique bloqué).
+/// Dans tout script, `#Teams[` devient `#BGD_EquipesSures[` ; la définition est ajoutée sur la
+/// première ligne (après un BOM), sans saut de ligne : les numéros de ligne ne changent pas.
+pub fn patch_equipes(src: &[u8]) -> Option<Vec<u8>> {
+    const PAT: &[u8] = b"#Teams[";
+    const NEW: &[u8] = b"#BGD_EquipesSures[";
+    if !src.windows(PAT.len()).any(|w| w == PAT) {
+        return None;
+    }
+    let bom = if src.starts_with(b"\xEF\xBB\xBF") { 3 } else { 0 };
+    let mut out = Vec::with_capacity(src.len() + EQUIPES_DEF.len() + 256);
+    out.extend_from_slice(&src[..bom]);
+    out.extend_from_slice(EQUIPES_DEF);
+    let mut i = bom;
+    while i < src.len() {
+        if src[i..].starts_with(PAT) {
+            out.extend_from_slice(NEW);
+            i += PAT.len();
+        } else {
+            out.push(src[i]);
+            i += 1;
+        }
+    }
+    Some(out)
+}
+
 const MOUVEMENTS_BLOCK: &str = include_str!("ui_mouvements.lua");
 
 /// Pas de zone de déplacement pour une unité posée sur un quartier défendable ennemi : le parcours de
@@ -921,7 +967,8 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 8] = [
+const FIXES: [(&str, Fix, &str); 9] = [
+    ("DiplomacyActionView.lua", patch_diplomacy_action_view, DIPLOMATIE_DONE),
     ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
     ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
     ("InGame.lua", patch_in_game, RACCOURCIS_DONE),
@@ -1254,6 +1301,10 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
         }
         Some(Err(e)) => log(&format!("ui : {chunk} : reprise de mod laissée de côté : {e}")),
         None => {}
+    }
+    if let Some(t) = patch_equipes(text.as_deref().unwrap_or(src)) {
+        text = Some(t);
+        what.push("équipes absentes de Teams tolérées".into());
     }
     let Some(text) = text else { return real(l, buf, size, name) };
     if mods {
@@ -1607,6 +1658,38 @@ mod tests {
         assert!(String::from_utf8_lossy(&bytes).contains("m_kScreenSlideAnim.OnInputHandler( input, OnClose );"));
         assert!(patch_city_states(&bytes).is_err(), "pas deux fois");
         assert!(!is_file(r"C:\x\CityStates_Expansion2.lua", "CityStates.lua"));
+    }
+
+    #[test]
+    fn diplomatie_refermee_si_l_ouverture_echoue() {
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\DiplomacyActionView.lua")) else { return };
+        let bytes = patch_diplomacy_action_view(&src).unwrap();
+        assert!(bytes.starts_with(&src) && bytes.ends_with(DIPLOMATIE_BLOCK.as_bytes()));
+        assert!(patch_diplomacy_action_view(&bytes).is_err(), "pas deux fois");
+        assert!(!is_file(r"C:\x\DiplomacyActionView_Expansion2.lua", "DiplomacyActionView.lua"));
+        assert!(!is_file(r"C:\x\diplomacyactionview_MPH.lua", "DiplomacyActionView.lua"));
+    }
+
+    #[test]
+    fn equipes_absentes_de_teams() {
+        assert!(patch_equipes(b"local n = #Players;").is_none());
+        let out = patch_equipes(b"\xEF\xBB\xBFlocal a = 1\nif #Teams[t] > 1 then end\nx = #Teams[Teams[1][1]]").unwrap();
+        let text = String::from_utf8_lossy(&out);
+        assert!(out.starts_with(b"\xEF\xBB\xBFBGD_EquipesSures = "));
+        assert!(!text.contains("#Teams["));
+        assert!(text.contains("if #BGD_EquipesSures[t] > 1 then") && text.contains("#BGD_EquipesSures[Teams[1][1]]"));
+        assert_eq!(text.matches('\n').count(), 2, "numéros de ligne gardés");
+        for path in [
+            format!(r"{GAME}\Base\Assets\UI\Instances\LeaderIcon.lua"),
+            format!(r"{GAME}\Base\Assets\UI\DiplomacyActionView.lua"),
+            format!(r"{GAME}\DLC\Expansion2\UI\Additions\EraProgressPanel.lua"),
+            format!(r"{BSM}\UI\Replacements\leadericon.lua"),
+        ] {
+            let Some(src) = read(path) else { continue };
+            let out = patch_equipes(&src).unwrap();
+            assert!(!out.windows(7).any(|w| w == b"#Teams["));
+            assert_eq!(out.iter().filter(|&&b| b == b'\n').count(), src.iter().filter(|&&b| b == b'\n').count());
+        }
     }
 
     #[test]

@@ -270,7 +270,11 @@ do
 		Population_Info.TotalPopulation = Locale.ToNumber(pTotalPopulation, "#####.#");
 		Population_Info.PopulationPerTurn = Locale.ToNumber(Round(pTotalPopulationPerTurn, 1), "#####.#");
 		local average = 0;
-		if #Population_Info.CitysInfo > 0 then average = math.floor(pTotalAmenities / #Population_Info.CitysInfo); end
+		-- Moyenne à l'entier le plus proche (demis loin de zéro) : -0,4 donne 0, -0,6 donne -1, 2,5 donne 3.
+		if #Population_Info.CitysInfo > 0 then
+			local m = pTotalAmenities / #Population_Info.CitysInfo;
+			average = (m >= 0) and math.floor(m + 0.5) or -math.floor(-m + 0.5);
+		end
 		local color = "StatNormalCS";
 		if average >= 3 then
 			color = "StatGoodCS";
