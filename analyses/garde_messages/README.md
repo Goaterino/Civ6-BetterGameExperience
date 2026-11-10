@@ -1,7 +1,8 @@
 # Revue de la garde des messages réseau (branche `yodha-desync-issue`)
 
 Relecture du 2026-11-10 des deux commits de yodha sur `origin/yodha-desync-issue` (`e475b2a`, `46da9f6`,
-partis de `f2ffb40`), avant leur merge dans main. La branche n'est pas encore mergée. Les points
+partis de `f2ffb40`), avant leur merge dans main. Corrigée (`a887d26`) puis mergée dans main le 2026-11-10 (`ac47b48`,
+CI verte). Les points
 Ghidra ont été vérifiés le même jour sur l'exe `CivilizationVI_DX12.exe` du 5 novembre 2026 (projet
 local `~/Tools/ghidra-projects/civ6exe1105` ; le projet `civ6exe` est d'un exe antérieur, ses
 adresses sont décalées) : voir [Vérifié dans Ghidra](#vérifié-dans-ghidra).
@@ -88,7 +89,13 @@ remplace la configuration vivante du joueur. Il faut remonter les appelants de
 `DeserializeNamedVariantMap` jusqu'au traitement du message. La machine touchée peut alors diverger
 des autres, ce qui reste mieux qu'un gel.
 
-## À corriger avant le merge
+## Corrigé avant le merge (`a887d26`)
+
+Tout est fait. Le point 1 et le point 2 autrement que proposé : la garde est un correctif de bug,
+donc sans réglage en release (toujours posée, sauf `actif=off`) ; `garde_messages` (`on`, `off`,
+`test`) n'est lu qu'avec la feature `diag`, et n'apparaît dans l'onglet qu'en diagnostic
+(`-GardeMessages` dans `proxy/install.ps1`). Le mode `test` n'existe donc pas en release ; il n'est
+pas refusé hors partie solo (le test prévu se fait dans une partie en réseau jouée seul).
 
 1. **Le mode `test` abîme un vrai message** : il injecte le compte du gel dans le premier vrai message
    « carte : entrées », que la garde vide ensuite (configuration de la partie au chargement, par
