@@ -70,6 +70,35 @@ pub extern "system" fn RolloverProxyStatus() -> u32 {
     STATUS.load(Ordering::Relaxed)
 }
 
+/// `BgdVersion=<VERSION>` terminée par un NUL : la marque que le proxy de démarrage cherche dans ce
+/// fichier tant qu'il n'est pas chargé (premier salon d'une session). `BgdVersion` en rend la fin.
+const LONGUEUR_MARQUE: usize = version::MARQUE.len() + version::VERSION.len() + 1;
+#[used]
+static MARQUE_VERSION: [u8; LONGUEUR_MARQUE] = {
+    let (m, v) = (version::MARQUE.as_bytes(), version::VERSION.as_bytes());
+    let mut out = [0u8; LONGUEUR_MARQUE];
+    let mut i = 0;
+    while i < m.len() {
+        out[i] = m[i];
+        i += 1;
+    }
+    let mut j = 0;
+    while j < v.len() {
+        out[i + j] = v[j];
+        j += 1;
+    }
+    out
+};
+
+/// Export lu par le proxy de démarrage avant de s'annoncer dans le salon : `version::VERSION`, en
+/// chaîne terminée par un NUL. Les correctifs POL sont ceux de ce proxy-ci : une version différente
+/// de celle de `winmm.dll` (installation partielle), ou un proxy plus ancien sans cet export, et la
+/// machine ne s'annonce pas (startup_proxy/src/salon.rs).
+#[no_mangle]
+pub extern "system" fn BgdVersion() -> *const u8 {
+    MARQUE_VERSION[version::MARQUE.len()..].as_ptr()
+}
+
 /// Export de test : charge l'originale et pose les détours sans appeler aucune fonction du jeu.
 #[no_mangle]
 pub extern "system" fn RolloverProxyLoadOriginal() -> usize {
@@ -235,4 +264,16 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
         _ => {}
     }
     1
+}
+
+#[cfg(test)]
+mod tests {
+    /// Ce que lit le proxy de démarrage (startup_proxy/src/salon.rs) : l'export, et la marque du fichier.
+    #[test]
+    fn version_exportee() {
+        let v = unsafe { std::ffi::CStr::from_ptr(super::BgdVersion() as *const std::ffi::c_char) };
+        assert_eq!(v.to_str().unwrap(), super::version::VERSION);
+        let marque = format!("{}{}\0", super::version::MARQUE, super::version::VERSION);
+        assert_eq!(&super::MARQUE_VERSION[..], marque.as_bytes());
+    }
 }

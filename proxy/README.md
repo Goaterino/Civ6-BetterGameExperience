@@ -105,7 +105,7 @@ cd proxy && cargo build --release
 ```
 
 **Test hors jeu.** Il vérifie :
-- les exports, identiques à ceux de l'original, plus les trois du proxy ;
+- les exports, identiques à ceux de l'original, plus les quatre du proxy (dont `BgdVersion`) ;
 - le chargement de l'original et la lecture de la configuration ;
 - les sauts écrits aux deux sites ;
 - la remise des octets d'origine au déchargement.
@@ -494,7 +494,9 @@ Analyse : [production_turns/README.md](../production_turns/README.md).
   `BgdPolActifs` du proxy de démarrage rend 1 (tous les joueurs ont la même version, ou partie
   locale). Sinon, ou sans le proxy de démarrage, l'originale. Le détour posé lève le bit 16 de
   `RolloverProxyStatus` ; avec `actif=off`, il n'est pas posé, et le proxy de démarrage ne
-  s'annonce pas dans le salon.
+  s'annonce pas dans le salon. Il ne s'annonce pas non plus si la version de ce proxy (export
+  `BgdVersion`, ou marque `BgdVersion=<version>` du fichier tant qu'il n'est pas chargé) n'est pas
+  la sienne : installation partielle, ou proxy plus ancien que cet export.
 - **Le journal.** `citoyens : détour posé en 0x18010f050, BetterGameExperience 0.2.0`,
   `pol : correctifs POL actifs|coupés` (état lu par [src/pol.rs](src/pol.rs), commun aux
   correctifs POL), et les 30 premiers écarts de chaque partie avec le choix de l'originale

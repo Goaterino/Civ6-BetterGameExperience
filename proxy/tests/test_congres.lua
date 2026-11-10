@@ -17,6 +17,13 @@ end
 local GAME = [[C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\DLC\Expansion2\]];
 local CONGRESS_PATH = arg[1] or (GAME .. [[Scripts\WorldCongress.lua]]);
 local POPUP_PATH = arg[2] or (GAME .. [[UI\Additions\WorldCongressPopup.lua]]);
+-- Sans les fichiers du jeu (CI, autre machine), le test est sauté.
+for _, path in ipairs({ CONGRESS_PATH, POPUP_PATH }) do
+	if not pcall(ReadFile, path) then
+		print("fichier du jeu introuvable (" .. path .. "), test sauté");
+		return;
+	end
+end
 
 -- HavokScript accepte des annotations de type que Lua 5.4 refuse : on les retire.
 local function Strip(text)

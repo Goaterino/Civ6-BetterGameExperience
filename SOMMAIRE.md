@@ -89,3 +89,13 @@ python -m venv .venv
 ```
 
 Les commandes des README se lancent depuis la racine du dépôt.
+
+## Tests continus
+
+[ci.yml](.github/workflows/ci.yml), à chaque push et pull request, sans secret : `cargo test` des
+trois crates sur Windows (proxy et startup_proxy avec et sans la feature `diag`), les tests Lua
+(`lua5.4 proxy/tests/test_*.lua`, `startup_proxy/tests/test_*.lua`, `textes/test_textes.lua`,
+depuis la racine), ceux du [relais des rapports](rapport_worker/README.md#tests) et
+`textes/gen_textes.py --check --strict`. Les tests Lua qui lisent des fichiers du jeu les cherchent
+dans le dossier Steam par défaut (ou le chemin passé en argument) et sont sautés sans eux
+(« test sauté ») : la CI ne les exécute pas, ils restent à lancer sur une machine qui a le jeu.
