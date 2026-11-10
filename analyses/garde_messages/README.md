@@ -1,9 +1,10 @@
 # Revue de la garde des messages réseau (branche `yodha-desync-issue`)
 
 Relecture du 2026-11-10 des deux commits de yodha sur `origin/yodha-desync-issue` (`e475b2a`, `46da9f6`,
-partis de `f2ffb40`), avant leur merge dans main. La branche n'est pas encore mergée. Ce qui reste à
-trancher demande le projet Ghidra `civ6-netcode` (signets « Gel 2026-11-09 ») et l'exe
-`CivilizationVI_DX12.exe` du 5 novembre 2026 : voir [À vérifier dans Ghidra](#à-vérifier-dans-ghidra).
+partis de `f2ffb40`), avant leur merge dans main. La branche n'est pas encore mergée. Les points
+Ghidra ont été vérifiés le même jour sur l'exe `CivilizationVI_DX12.exe` du 5 novembre 2026 (projet
+local `~/Tools/ghidra-projects/civ6exe1105` ; le projet `civ6exe` est d'un exe antérieur, ses
+adresses sont décalées) : voir [Vérifié dans Ghidra](#vérifié-dans-ghidra).
 
 ## Ce que fait la branche
 
@@ -42,34 +43,50 @@ seulement.
   `[rsp+0x20]`, `rcx`/`rdx`/`r8`/`r9` intacts, directives SEH : correct.
 - **Pas de verrou POL nécessaire** : la garde ne change pas la simulation, elle ne touche qu'un message
   qui aurait gelé le jeu.
-- **Pas vérifié** : la compilation Rust (aucune CI n'a tourné sur la branche, et le poste de la revue
-  ne compile pas pour Windows) ; les adresses, faute d'exe sur ce poste.
+- **Les adresses** : l'empreinte (prologue de la lecture, débuts des quatre fonctions, `ff 50 30`
+  avant chacun des six retours) correspond octet par octet à l'exe DX12 installé (5 novembre 2026).
+- **Pas vérifié** : la compilation Rust (aucune CI n'a tourné sur la branche).
 
-## À vérifier dans Ghidra
+## Vérifié dans Ghidra
 
-**Où sont les drapeaux à la lecture de la longueur** (`DeserializeDataVariant`, retour `1407a34f4`).
-Le commentaire de `Regle::Longueur` dit la longueur « lue juste après ses drapeaux (destination + 4) »,
-ce qui met les drapeaux à `dest - 4` ; le code les lit à `dest + 4` (`dest.add(4)`). Il faut regarder
-dans la fonction où l'appel de `1407a34f1` écrit la longueur, et où se trouve le mot de drapeaux lu
-juste avant. Si le code se trompe, il lit autre chose que les drapeaux : un tampon brut légitime de
-plus de 4 096 octets (chaîne, tableau) peut être pris pour un scalaire et sa longueur remise à 0, le
-message étant alors vidé sans erreur. C'est le défaut le plus grave possible de la branche. Les tests
-de `absurde` ne le voient pas : ils reçoivent les drapeaux en paramètre.
+**Les drapeaux sont bien à `dest + 4` : le code est juste.** `DeserializeDataVariant` (`1407a3450`)
+lit d'abord les drapeaux dans `variant + 0xC` (appel de `1407a34ad`), puis la longueur dans
+`variant + 8` (appel de `1407a34f1`, la destination vue par la garde). Les drapeaux sont donc à
+`dest + 4`, et lus avant la longueur : `dest.add(4)` lit la bonne valeur. Seul le commentaire de
+`Regle::Longueur` (« lue juste après ses drapeaux ») se lit comme une position en mémoire ; à
+reformuler (« lue après ses drapeaux, qui la suivent en mémoire »). Le masque `0x5e000000` est exactement
+celui des branches du jeu : bit 25 carte typée, 27 et 26 objets, 28 liste, 30 carte nommée ; bit 24
+tampon brut ; sinon scalaire (8 octets si bit 31, 4 sinon).
 
-**Ce que devient un message vidé.** Le désérialiseur continue après un compte remis à 0 : le message
-est appliqué, vide. Pour `NetPlayerInfo` et `NetGameConfig` (racines lues par
-`DeserializeNamedVariantMap`), il faut savoir si l'application remplace la configuration ou la complète.
-Si elle la remplace, la machine qui a reçu le message abîmé peut diverger des autres, ce qui reste
-mieux qu'un gel, mais doit être su (et dit dans le chat).
+Deux nuances, sans gravité :
+- **Scalaire** : le jeu ne se sert pas de la longueur, il lit toujours 4 octets (`140099280`) ou 8
+  (`1400992e0`). La règle « scalaire > 4 096 » ne protège donc d'aucune boucle ni allocation ; elle
+  ne change que la longueur stockée d'un variant aberrant. Inoffensive, elle pourrait être retirée.
+- **Tampon brut** : le jeu calcule `(drapeaux & 0xffffff) × longueur` sur 32 bits (débordement
+  possible) ; la garde calcule sur 64 bits, elle est donc plus stricte. Si l'allocation échoue, le jeu
+  saute les octets (`1407a3410`) ; une longueur remise à 0 ne saute rien.
 
-**La signature de `ReadSerializerField`.** Le détour suppose quatre arguments (lecteur, descripteur,
-destination, octets) et aucun sur la pile ; un cinquième ne serait pas transmis par `lecture` à la
-lecture d'origine.
+**La signature de `ReadSerializerField` est confirmée** (`14099f9d0`) : quatre arguments (lecteur,
+descripteur, destination, octets), rien sur la pile. Elle construit un petit tampon (`1409974d0`),
+appelle la lecture virtuelle `+0x28` du lecteur, puis le détruit (`140997510`) ; sa valeur de retour
+n'est pas utilisée par les appelants, le `usize` renvoyé par `lecture` est sans effet.
 
-**Les exceptions.** `lecture` est `extern "C"` : si la lecture d'origine lève une exception C++ (fin de
-flux, par exemple), elle ne peut pas traverser ce cadre Rust et le processus s'arrête. Voir si
-`ReadSerializerField` ou ses appelants lèvent (`_CxxThrowException`) ; dans le doute, déclarer
-`lecture` et le type `Lecture` en `extern "C-unwind"`, comme les natives Lua du proxy de démarrage.
+**Les exceptions : aucune levée dans le désérialiseur.** Des 308 appels à `_CxxThrowException`
+(`140ea8bbc`), aucun n'est dans les fonctions de `Data_Variant.cpp` (`1407a…`) ni dans celles du
+sérialiseur (`14099…`). Reste la lecture virtuelle `+0x28`, dont l'implémentation n'a pas été suivie.
+`extern "C-unwind"` reste une assurance gratuite, plus un point bloquant.
+
+**Ce que devient un message vidé : le contenu est remplacé, pas complété.** Avant de relire, la carte
+typée libère toutes ses entrées et vide son arbre (`1407a1e20`), la carte nommée se vide (appel
+virtuel `+0x160`, `1407adf50`), la liste aussi (`1407acea0`, `1407ad890`). Un compte remis à 0 donne
+donc un objet vide. Et le compte remis à 0 ne fait pas sauter les octets qui suivaient : la suite du
+message est lue décalée. Ces octets étaient déjà illisibles, et les comptes suivants restent bornés
+par la garde ; ce n'est pas pire qu'avant, mais le message appliqué est faux, pas seulement vide.
+
+**Reste ouvert** : si l'application d'un `NetPlayerInfo` ou d'un `NetGameConfig` vide (ou décalé)
+remplace la configuration vivante du joueur. Il faut remonter les appelants de
+`DeserializeNamedVariantMap` jusqu'au traitement du message. La machine touchée peut alors diverger
+des autres, ce qui reste mieux qu'un gel.
 
 ## À corriger avant le merge
 
@@ -81,8 +98,9 @@ flux, par exemple), elle ne peut pas traverser ce cadre Rust et le processus s'a
    `cles_communes_avec_le_proxy` ne lit pas `messages.rs` (seulement `lib.rs`, `maj.rs`, `zones.rs`),
    donc ne le voit pas. À ajouter à l'onglet (`demarrage = true`), la valeur `test` en diagnostic, et
    `messages.rs` aux fichiers lus par le test.
-3. **`extern "C-unwind"`** pour `lecture` (voir plus haut), sauf si Ghidra montre qu'aucune exception
-   ne peut en sortir.
+3. **`extern "C-unwind"`** pour `lecture` et le type `Lecture` : aucune levée trouvée dans le
+   désérialiseur, mais l'assurance ne coûte rien (comme les natives Lua du proxy de démarrage).
+   Reformuler au passage le commentaire de `Regle::Longueur` (voir plus haut).
 4. **Formulation** : « would have frozen **your** game » se lit, chez celui qui reçoit, comme sa
    propre partie. « my game » ou une tournure neutre ; la traduction française est déjà neutre.
 5. **CI** : la faire tourner sur le résultat du merge (tests Rust de `startup_proxy` sous Windows)
