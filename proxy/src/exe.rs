@@ -81,8 +81,12 @@ pub unsafe fn write_slot(slot: usize, value: usize) -> bool {
 
 /// Le chemin finit-il par `/nom` ou `\nom` (ou est-il `nom`), sans tenir compte de la casse ?
 pub fn is_file(path: &str, name: &str) -> bool {
-    let (p, n) = (path.to_ascii_lowercase(), name.to_ascii_lowercase());
-    p == n || p.ends_with(&format!("/{n}")) || p.ends_with(&format!("\\{n}"))
+    // Sans allocation : appelée des dizaines de fois par script compilé.
+    let (p, n) = (path.as_bytes(), name.as_bytes());
+    if p.len() < n.len() || !p[p.len() - n.len()..].eq_ignore_ascii_case(n) {
+        return false;
+    }
+    p.len() == n.len() || matches!(p[p.len() - n.len() - 1], b'/' | b'\\')
 }
 
 /// Tampon du jeu rempli par la lecture d'un fichier (voir `1409971c0`, qui le réserve).
@@ -150,19 +154,29 @@ pub const XML_PROLOGUE: usize = 23;
 const JMP_LEN: usize = 14;
 const JMP_ABS: [u8; 6] = [0xff, 0x25, 0, 0, 0, 0];
 
-/// Positions de la signature. Avec `detoured`, les 14 premiers octets doivent être le saut absolu
-/// d'un détour déjà posé, au lieu du début du prologue.
+/// Positions de la signature en un seul passage : (intacte, déjà détournée). Détournée, ses 14
+/// premiers octets sont le saut absolu d'un détour déjà posé, au lieu du début du prologue.
+pub fn find_sigs(hay: &[u8]) -> (Vec<usize>, Vec<usize>) {
+    let (mut intactes, mut detournees) = (Vec::new(), Vec::new());
+    for (at, w) in hay.windows(XML_SIG.len()).enumerate() {
+        // La suite, commune aux deux formes, d'abord : elle écarte presque toutes les positions.
+        let suite = |i: usize| XML_SIG_FREE.contains(&i) || w[i] == XML_SIG[i];
+        if !(JMP_LEN..XML_SIG.len()).all(suite) {
+            continue;
+        }
+        if w[..JMP_LEN] == XML_SIG[..JMP_LEN] {
+            intactes.push(at);
+        } else if w.starts_with(&JMP_ABS) {
+            detournees.push(at);
+        }
+    }
+    (intactes, detournees)
+}
+
+/// Positions de la signature, intacte ou (`detoured`) déjà détournée.
 pub fn find_sig(hay: &[u8], detoured: bool) -> Vec<usize> {
-    hay.windows(XML_SIG.len())
-        .enumerate()
-        .filter(|(_, w)| {
-            if detoured && !w.starts_with(&JMP_ABS) {
-                return false;
-            }
-            w.iter().zip(XML_SIG.iter()).enumerate().all(|(i, (a, b))| (detoured && i < JMP_LEN) || XML_SIG_FREE.contains(&i) || a == b)
-        })
-        .map(|(i, _)| i)
-        .collect()
+    let (intactes, detournees) = find_sigs(hay);
+    if detoured { detournees } else { intactes }
 }
 
 /// Détour posé sur la lecture XML.
@@ -182,7 +196,8 @@ pub struct XmlHook {
 pub unsafe fn hook_read_xml(exe: usize, hook: usize) -> Result<XmlHook, String> {
     let (start, size) = text_section(exe).ok_or("section .text de l'exe introuvable")?;
     let text = std::slice::from_raw_parts(start as *const u8, size);
-    let (at, chained) = match (&find_sig(text, false)[..], &find_sig(text, true)[..]) {
+    let (intactes, detournees) = find_sigs(text);
+    let (at, chained) = match (&intactes[..], &detournees[..]) {
         ([at], []) => (start + at, false),
         ([], [at]) => (start + at, true),
         (a, b) => return Err(format!("lecture XML trouvée {} fois, et {} fois déjà détournée, au lieu d'une", a.len(), b.len())),

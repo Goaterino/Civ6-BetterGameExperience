@@ -73,8 +73,10 @@ pub fn choisir(cands: &[(i32, i32, i32)], k_max: usize, seuil: i32) -> Option<Ve
     prev[0] = Some((0, 0));
     // parent[i × cells + case] : c d'avant si l'emplacement i a été pris pour atteindre cette case.
     let mut parent = vec![u16::MAX; n * cells];
+    // Deux tables échangées à chaque emplacement, plutôt qu'une allocation par emplacement.
+    let mut cur = prev.clone();
     for (i, &(f, fa, o)) in cands.iter().enumerate() {
-        let mut cur = prev.clone();
+        cur.copy_from_slice(&prev);
         for k in 1..=k_max {
             for c0 in 0..width {
                 let Some((bf, bo)) = prev[(k - 1) * width + c0] else { continue };
@@ -87,7 +89,7 @@ pub fn choisir(cands: &[(i32, i32, i32)], k_max: usize, seuil: i32) -> Option<Ve
                 }
             }
         }
-        prev = cur;
+        std::mem::swap(&mut prev, &mut cur);
     }
     let pick = |cs: &mut dyn Iterator<Item = usize>| {
         let cs: Vec<usize> = cs.collect();

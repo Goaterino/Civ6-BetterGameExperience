@@ -233,7 +233,9 @@ unsafe extern "system" fn hook(this: usize, plot: usize, yield_type: usize, play
         if !quiet {
             IN_WAIT_CALLS.fetch_add(1, Ordering::Relaxed);
         }
-        key(plot, yield_type, player, flag).filter(|_| is_map_plot(plot))
+        // Fast et Quiet : la case n'est vérifiée qu'avant de ranger (plus bas). Une valeur trouvée
+        // vient d'une case déjà vérifiée dans cette même attente : pas besoin de le refaire.
+        key(plot, yield_type, player, flag).filter(|_| matches!(m, Mode::Fast | Mode::Quiet) || is_map_plot(plot))
     };
     let r = match (m, k) {
         (_, None) => original(this, plot, yield_type, player, flag),
@@ -255,24 +257,25 @@ unsafe extern "system" fn hook(this: usize, plot: usize, yield_type: usize, play
             }
             o
         }
-        (_, Some(k)) => {
-            if !quiet {
-                KEYED.fetch_add(1, Ordering::Relaxed);
+        (_, Some(k)) => match lookup(k, generation) {
+            Some(v) => {
+                if !quiet {
+                    KEYED.fetch_add(1, Ordering::Relaxed);
+                    HITS.fetch_add(1, Ordering::Relaxed);
+                }
+                v as usize
             }
-            match lookup(k, generation) {
-                Some(v) => {
+            None => {
+                let o = original(this, plot, yield_type, player, flag);
+                if is_map_plot(plot) {
                     if !quiet {
-                        HITS.fetch_add(1, Ordering::Relaxed);
+                        KEYED.fetch_add(1, Ordering::Relaxed);
                     }
-                    v as usize
-                }
-                None => {
-                    let o = original(this, plot, yield_type, player, flag);
                     store(k, generation, o as u32);
-                    o
                 }
+                o
             }
-        }
+        },
     };
     if !quiet {
         TICKS.fetch_add((win::qpc() - t0) as u64, Ordering::Relaxed);
