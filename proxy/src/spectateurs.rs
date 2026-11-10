@@ -149,22 +149,22 @@ unsafe fn est_spectateur(base: usize, id: u32) -> bool {
 }
 
 /// Les éléments `[début, fin)` d'une liste du PlayerManager.
-unsafe fn liste<T: Copy>(gj: usize, decalage: usize) -> Vec<T> {
+unsafe fn liste<T: Copy>(gj: usize, decalage: usize) -> impl Iterator<Item = T> {
     let debut: usize = rd(gj + decalage);
     let fin: usize = rd(gj + decalage + 8);
-    if fin <= debut {
-        return Vec::new();
-    }
-    (debut..fin).step_by(std::mem::size_of::<T>()).map(|a| rd::<T>(a)).collect()
+    // Bornes lues une fois, éléments lus au passage : pas d'allocation par appel.
+    (debut..fin.max(debut)).step_by(std::mem::size_of::<T>()).map(|a| unsafe { rd::<T>(a) })
 }
 
 /// `N` sans les spectateurs : les majeurs ayant vécu, moins ceux dont le leader est spectateur.
 unsafe fn n_corrige(base: usize, gj: usize) -> i32 {
-    let joueurs: Vec<usize> = liste(gj, GJ_MAJEURS_AYANT_VECU);
-    let n = joueurs.len() as i32;
-    let corrige = joueurs.iter().filter(|&&j| !est_spectateur(base, rd(j + J_ID))).count() as i32;
+    let (mut n, mut corrige) = (0i32, 0i32);
+    for j in liste::<usize>(gj, GJ_MAJEURS_AYANT_VECU) {
+        n += 1;
+        corrige += !est_spectateur(base, rd(j + J_ID)) as i32;
+    }
     let cle = n << 16 | corrige;
-    if DERNIER_N.swap(cle, Ordering::Relaxed) != cle && corrige != n {
+    if DERNIER_N.load(Ordering::Relaxed) != cle && DERNIER_N.swap(cle, Ordering::Relaxed) != cle && corrige != n {
         log(&format!("spectateurs : tourisme divisé par {corrige} majeurs au lieu de {n} ({} spectateurs)", n - corrige));
     }
     corrige
