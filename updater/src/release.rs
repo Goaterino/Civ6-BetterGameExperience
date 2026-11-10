@@ -159,14 +159,25 @@ pub fn fetch_files(m: &Manifest, work: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Relit une release déjà téléchargée dans `work` (côté administrateur, avant d'installer) :
-/// signature du manifeste et SHA-256 de chaque fichier.
-pub fn load(work: &Path) -> Result<Manifest, String> {
+/// Relit une release déjà téléchargée dans `work` (avant d'installer, en administrateur ou non) :
+/// signature du manifeste, puis chaque fichier lu une seule fois et contrôlé par son SHA-256. Ce sont
+/// ces octets-là que l'installation écrit, sans relire `work` (`%TEMP%`, modifiable par tout
+/// processus de l'utilisateur) entre le contrôle et la copie.
+pub fn load(work: &Path) -> Result<(Manifest, Vec<Vec<u8>>), String> {
     let m = verify_manifest(work)?;
-    for f in &m.files {
-        check_file(work, f)?;
+    let data = m.files.iter().map(|f| read_checked(work, f)).collect::<Result<_, _>>()?;
+    Ok((m, data))
+}
+
+/// Le contenu du fichier `f` dans `work`, s'il a le SHA-256 du manifeste.
+pub fn read_checked(work: &Path, f: &File) -> Result<Vec<u8>, String> {
+    let path = work.join(&f.name);
+    let data = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    if sha256_hex(&data) == f.sha256 {
+        Ok(data)
+    } else {
+        Err(lang::f(tx::X_SHA_256_DIFFERS_FROM_THE, &[&f.name]))
     }
-    Ok(m)
 }
 
 fn verify_manifest(work: &Path) -> Result<Manifest, String> {
@@ -182,16 +193,16 @@ fn verify_manifest(work: &Path) -> Result<Manifest, String> {
 }
 
 fn check_file(work: &Path, f: &File) -> Result<(), String> {
-    if sha256(&work.join(&f.name))? == f.sha256 {
-        Ok(())
-    } else {
-        Err(lang::f(tx::X_SHA_256_DIFFERS_FROM_THE, &[&f.name]))
-    }
+    read_checked(work, f).map(drop)
 }
 
 pub fn sha256(path: &Path) -> Result<String, String> {
     let data = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    Ok(Sha256::digest(data).iter().map(|b| format!("{b:02x}")).collect())
+    Ok(sha256_hex(&data))
+}
+
+pub fn sha256_hex(data: &[u8]) -> String {
+    Sha256::digest(data).iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// `BGD_DIST`, s'il est défini, remplace GitHub par un dossier local (tests).
@@ -240,6 +251,22 @@ mod tests {
         assert!(!is_newer("0.4.0", "0.4.0"));
         assert!(!is_newer("0.4.0", "0.5.0-rc.1"));
         assert!(!is_newer("dev", "0.4.0"));
+    }
+
+    #[test]
+    fn fichier_lu_une_fois_et_controle() {
+        let work = std::env::temp_dir().join(format!("bgd_release_lu_{}", std::process::id()));
+        fs::create_dir_all(&work).unwrap();
+        fs::write(work.join("a.dll"), b"contenu signe").unwrap();
+        let bon = File { name: "a.dll".into(), dest: "x".into(), sha256: sha256_hex(b"contenu signe") };
+        assert_eq!(read_checked(&work, &bon).unwrap(), b"contenu signe");
+        assert!(check_file(&work, &bon).is_ok());
+        let faux = File { sha256: sha256_hex(b"autre"), ..bon };
+        assert!(read_checked(&work, &faux).is_err());
+        let absent = File { name: "b.dll".into(), dest: "x".into(), sha256: String::new() };
+        assert!(read_checked(&work, &absent).is_err());
+        assert_eq!(sha256_hex(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+        fs::remove_dir_all(&work).unwrap();
     }
 
     #[test]

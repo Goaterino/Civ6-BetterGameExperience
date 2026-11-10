@@ -132,14 +132,21 @@ for rva in PILE_RVAS:
     assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
     print(f"empilement : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
-# Le proxy n'exporte que les noms de l'originale, plus DllMain et les deux exports de diagnostic.
+# Le proxy n'exporte que les noms de l'originale, plus DllMain, les deux exports de diagnostic et sa
+# version (BgdVersion, lue par le proxy de démarrage).
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from gen_exports import exports  # noqa: E402
 
 extra = set(exports(proxy)) - set(exports(original))
 missing = set(exports(original)) - set(exports(proxy))
 assert not missing, f"exports manquants : {sorted(missing)}"
-assert extra == {"DllMain", "RolloverProxyStatus", "RolloverProxyLoadOriginal"}, f"exports en trop : {sorted(extra)}"
+assert extra == {"DllMain", "RolloverProxyStatus", "RolloverProxyLoadOriginal", "BgdVersion"}, f"exports en trop : {sorted(extra)}"
+lib.BgdVersion.restype = ctypes.c_char_p
+version = lib.BgdVersion().decode()
+src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src/version.rs"), encoding="utf-8").read()
+assert f'VERSION: &str = "{version}";' in src, f"BgdVersion rend {version!r}, pas la VERSION de version.rs"
+assert f"BgdVersion={version}\0".encode() in open(proxy, "rb").read(), "marque BgdVersion= absente du fichier"
+print(f"version : {version} (export et marque du fichier)")
 print(f"exports : les {len(exports(original))} de l'originale, plus {sorted(extra)}")
 
 # Déchargement du proxy (l'originale reste) : les octets d'origine doivent revenir à chaque site.

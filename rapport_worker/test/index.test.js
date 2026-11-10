@@ -3,17 +3,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
-import worker, { lireMeta, brut, steamId, faireDeLaPlace, CLE_CLIENT, MAX_OCTETS, PLAFOND_OCTETS } from "../src/index.js";
+import worker, { lireMeta, brut, steamId, faireDeLaPlace, quotaDepasse, CLE_CLIENT, MAX_OCTETS, PLAFOND_OCTETS, QUOTA_RAPPORTS, QUOTA_OCTETS, MAX_META } from "../src/index.js";
 
-// Un zip comme celui du proxy : meta.json en premier, en deflate.
-function zip(meta) {
-	const data = deflateRawSync(Buffer.from(JSON.stringify(meta)));
-	const nom = Buffer.from("meta.json");
+// Un zip comme celui du proxy : meta.json en premier, en deflate (ou brut, méthode 0). `texte`
+// remplace le JSON de `meta`, `nom` le nom de l'entrée.
+function zip(meta, { methode = 8, texte, nom: nomEntree = "meta.json" } = {}) {
+	const clair = Buffer.from(texte ?? JSON.stringify(meta));
+	const data = methode === 8 ? deflateRawSync(clair) : clair;
+	const nom = Buffer.from(nomEntree);
 	const h = Buffer.alloc(30);
 	h.writeUInt32LE(0x04034b50, 0);
 	h.writeUInt16LE(20, 4);
-	h.writeUInt16LE(8, 8);
+	h.writeUInt16LE(methode, 8);
 	h.writeUInt32LE(data.length, 18);
+	h.writeUInt32LE(clair.length, 22);
 	h.writeUInt16LE(nom.length, 26);
 	const fin = Buffer.alloc(22);
 	fin.writeUInt32LE(0x06054b50, 0);
@@ -40,8 +43,8 @@ function env(options = {}) {
 		PLAFOND_OCTETS: options.plafond,
 		LIMITE: { limit: async () => ({ success: !options.limite }) },
 		RAPPORTS: {
-			head: async (k) => (objets.has(k) ? {} : null),
-			put: async (k, v, o) => objets.set(k, { data: v, size: v.byteLength, uploaded: new Date(Date.now() + objets.size), ...o }),
+			head: async (k) => (objets.has(k) ? { uploaded: objets.get(k).uploaded } : null),
+			put: async (k, v, o) => objets.set(k, { data: v, size: v.byteLength ?? v.length, uploaded: new Date(Date.now() + objets.size), ...o }),
 			delete: async (ks) => { for (const k of [].concat(ks)) objets.delete(k); },
 			// Pages de 2 objets, pour essayer la pagination.
 			list: async ({ prefix, cursor }) => {
@@ -176,15 +179,100 @@ test("plafond du bucket : les plus anciens partent d'abord", async () => {
 	assert.ok(e.objets.has(`rapports/${id}.zip`) && e.objets.has("autre/x"));
 });
 
-test("message en anglais, sans meta.json lisible", async () => {
+test("message en anglais", async () => {
 	const e = env();
-	await worker.fetch(envoi(zip({ ...META, multijoueur: "0" })), e);
-	assert.ok(e.discord[0].corps.content.includes("**Game:** single player"), e.discord[0].corps.content);
-	const brutZip = new Uint8Array(30); brutZip.set([0x50, 0x4b, 3, 4]);
-	await worker.fetch(envoi(brutZip), e);
-	const c = e.discord[1].corps.content;
-	assert.ok(c.includes("meta.json unreadable") && c.includes("> *(no description)*") && c.includes("**Download:**"), c);
+	await worker.fetch(envoi(zip({ ...META, multijoueur: "0", description: "" })), e);
+	const c = e.discord[0].corps.content;
+	assert.ok(c.includes("**Game:** single player"), c);
+	assert.ok(c.includes("> *(no description)*") && c.includes("**Download:**"), c);
 	assert.ok(!/[àéèêç]|joueur|tour |Télécharger|Partie/.test(c), "pas de français : " + c);
+});
+
+test("refus : zip sans meta.json lisible, avant toute suppression, tout rangement et tout message", async () => {
+	// Bucket plein : un envoi accepté ferait partir l'ancien rapport.
+	const e = env({ plafond: 100 });
+	e.objets.set("rapports/BGE-000001.zip", { data: new Uint8Array(0), size: 100, uploaded: new Date(Date.now() - 1000) });
+	const brutZip = new Uint8Array(30); brutZip.set([0x50, 0x4b, 3, 4]);
+	const refus = [
+		brutZip,
+		zip(META, { nom: "logs/Lua.log" }),
+		zip(null, { texte: "pas du json" }),
+		zip(null, { texte: "[1, 2]" }),
+		zip(null, { texte: "42" }),
+	];
+	for (const z of refus) {
+		const r = await worker.fetch(envoi(z), e);
+		assert.equal(r.status, 400);
+		assert.match((await r.json()).erreur, /meta\.json/);
+	}
+	assert.deepEqual([...e.objets.keys()], ["rapports/BGE-000001.zip"]);
+	assert.equal(e.discord.length, 0);
+});
+
+test("meta.json : brut ou en deflate, décompressé dans la limite", async () => {
+	assert.deepEqual(await lireMeta(zip(META, { methode: 0 })), META);
+	// Juste sous la limite : lu.
+	const gros = { ...META, bourrage: " ".repeat(MAX_META - 2000) };
+	assert.deepEqual(await lireMeta(zip(gros)), gros);
+	// Bombe de décompression : quelques Ko en deflate, 64 Mo une fois décompressés.
+	const bombe = zip(null, { texte: `{"x": "${" ".repeat(64 << 20)}"}` });
+	assert.ok(bombe.byteLength < 200_000, `${bombe.byteLength} octets`);
+	assert.equal(await lireMeta(bombe), null);
+	// Un octet de trop.
+	assert.equal(await lireMeta(zip(null, { texte: `{"x": "${" ".repeat(MAX_META)}"}` })), null);
+});
+
+test("quota sur 24 heures : refusé au-delà, sans rien supprimer", async () => {
+	assert.equal(QUOTA_RAPPORTS, 60);
+	assert.equal(QUOTA_OCTETS, 1e9);
+	const maintenant = Date.parse("2026-11-10T12:00:00Z");
+	const o = (size, heures) => ({ key: "rapports/x.zip", size, uploaded: new Date(maintenant - heures * 3600e3) });
+	const env0 = {};
+	assert.equal(quotaDepasse(env0, [], 10, maintenant), null);
+	// Les rapports de plus de 24 heures ne comptent pas.
+	assert.equal(quotaDepasse(env0, Array.from({ length: 100 }, () => o(1, 25)), 10, maintenant), null);
+	assert.equal(quotaDepasse(env0, Array.from({ length: 59 }, () => o(1, 1)), 10, maintenant), null);
+	assert.match(quotaDepasse(env0, Array.from({ length: 60 }, () => o(1, 1)), 10, maintenant), /quota de 60/);
+	assert.equal(quotaDepasse(env0, [o(999_999_990, 23)], 10, maintenant), null);
+	assert.match(quotaDepasse(env0, [o(999_999_990, 23)], 11, maintenant), /quota de 1000000000/);
+	// Les variables remplacent les valeurs du code.
+	assert.match(quotaDepasse({ QUOTA_RAPPORTS: "2" }, [o(1, 1), o(1, 2)], 10, maintenant), /quota de 2/);
+	assert.match(quotaDepasse({ QUOTA_OCTETS: "100" }, [o(95, 1)], 10, maintenant), /quota de 100/);
+
+	// Par l'envoi : 2 rapports par jour, le troisième est refusé ; l'ancien n'est jamais supprimé.
+	const e = { ...env({ plafond: 1e6 }), QUOTA_RAPPORTS: "2" };
+	e.objets.set("rapports/BGE-000001.zip", { data: new Uint8Array(0), size: 10, uploaded: new Date(Date.now() - 2 * 86400e3) });
+	const logs = console.log;
+	console.log = () => {};
+	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 200);
+	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 200);
+	const r = await worker.fetch(envoi(zip(META)), e);
+	// L'équipe est prévenue une fois : le refus suivant n'ouvre pas de second fil.
+	assert.equal(e.discord.length, 3);
+	assert.equal(e.discord[2].corps.thread_name, "Bug report quota reached");
+	assert.match(e.discord[2].corps.content, /quota de 2/);
+	assert.deepEqual(e.discord[2].corps.allowed_mentions, { parse: [] });
+	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 503);
+	assert.equal(e.discord.length, 3);
+	// Une alerte de plus de 24 heures ne retient plus la suivante.
+	e.objets.get("etat/alerte_quota").uploaded = new Date(Date.now() - 25 * 3600e3);
+	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 503);
+	assert.equal(e.discord.length, 4);
+	console.log = logs;
+	assert.equal(r.status, 503);
+	assert.equal([...e.objets.keys()].filter((k) => k.startsWith("rapports/")).length, 3);
+	assert.ok(e.objets.has("rapports/BGE-000001.zip"));
+	// Quota en octets : refusé avant que le plafond du bucket ne fasse partir quoi que ce soit.
+	const e2 = { ...env({ plafond: 1000 }), QUOTA_OCTETS: "500" };
+	e2.objets.set("rapports/BGE-000002.zip", { data: new Uint8Array(0), size: 900, uploaded: new Date(Date.now() - 2 * 86400e3) });
+	console.log = () => {};
+	const gros = zip({ ...META, bourrage: Array.from({ length: 400 }, (_, i) => (i * 7919) % 1000).join(",") });
+	const r2 = await worker.fetch(envoi(gros), e2);
+	console.log = logs;
+	assert.ok(gros.byteLength > 500);
+	assert.equal(r2.status, 503);
+	assert.deepEqual([...e2.objets.keys()], ["rapports/BGE-000002.zip", "etat/alerte_quota"]);
+	assert.equal(e2.discord.length, 1);
 });
 
 test("Steam ID : celui du jeu, sinon celui de Windows, sinon inconnu", () => {

@@ -5,6 +5,12 @@
 
 pub const VERSION: &str = "0.8.0";
 
+/// Préfixe de la marque `BgdVersion=<VERSION>` gravée dans le proxy de GameCore (export `BgdVersion`,
+/// proxy/src/lib.rs). Les deux DLL compilent ce fichier : le proxy de démarrage compare leur
+/// `VERSION` avant de s'annoncer dans le salon, par l'export si ce proxy est chargé, sinon en
+/// cherchant la marque dans le fichier.
+pub const MARQUE: &str = "BgdVersion=";
+
 /// Numéro de la release GitHub qui a produit ces DLL : `BGD_RELEASE`, posé par le workflow de release
 /// (.github/workflows/release.yml). Aucun pour une compilation locale, qui ne cherche donc pas de
 /// mise à jour (`startup_proxy/src/maj.rs`).

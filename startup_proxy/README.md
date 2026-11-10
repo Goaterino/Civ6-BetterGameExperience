@@ -192,6 +192,16 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   nil et la raison si le proxy de GameCore n'est pas installé, si `actif=off`, ou, une fois chargé,
   s'il n'a pas posé ses correctifs POL (bit 16 de `RolloverProxyStatus`). Elle ne s'annonce pas, et
   compte donc comme sans BetterGameExperience.
+- **Les deux DLL à la même version.** La version annoncée est celle de `winmm.dll`, mais les
+  correctifs POL sont ceux de `BGD_GameCore_XP2.dll` : après une installation partielle (une seule
+  des deux mise à jour), le salon serait vert alors que les joueurs n'appliquent pas les mêmes
+  règles. Avant de s'annoncer, ce proxy lit donc la `VERSION` du proxy de GameCore : son export
+  `BgdVersion` s'il est chargé, sinon, au premier salon d'une session, la marque
+  `BgdVersion=<version>` de son fichier (relue seulement s'il change). Si elle diffère de la sienne,
+  ou si le proxy de GameCore n'en a pas (antérieur à l'export), la machine ne s'annonce pas. Le
+  journal le dit : `salon : versions différentes : winmm.dll 0.8.0, BGD_GameCore_XP2.dll 0.7.1
+  (installation partielle ?)`. Les deux DLL compilent le même `proxy/src/version.rs` : une release
+  les produit au même commit, donc à la même version.
 - **Les jetons.** Les configurations de joueur sont enregistrées avec la partie : une sauvegarde
   rechargée rapporte les annonces et le verdict d'une session précédente, peut-être chez des
   joueurs qui n'ont plus le proxy. Chaque ouverture du salon, et chaque migration d'hôte, tire donc
@@ -236,6 +246,7 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   prêt sans s'être annoncé, l'hôte écrit en rouge : `BGE - Léo : arrivée sans BetterGameExperience (ou
   d'une autre version) alors que les correctifs POL sont actifs. Sa partie va se désynchroniser.`
 - **Le journal** : `salon : bloc chargé`, `salon : pas d'annonce : <raison>`,
+  `salon : versions différentes : …` (une fois par raison),
   `pol : correctifs POL actifs|désactivés (<raison>)` à chaque changement de l'état,
   `partie : verdict relayé : …`, `salon : annonce …, verdict …`,
   `salon : message : …`, `salon : lancement : correctifs POL actifs|désactivés` (la conclusion de
@@ -264,9 +275,10 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   pour le chargement.
 
 **Risque connu :** au premier salon d'une session, le proxy de GameCore n'est pas encore chargé. La
-machine s'annonce si le fichier de réglages le permet ; si, au lancement, le détour ne peut pas être
-posé (jeu mis à jour sans le proxy), elle n'appliquera pas les correctifs que les autres
-appliquent. Le journal le dit (`citoyens : version inattendue`).
+machine s'annonce si le fichier de réglages le permet et si la marque de version de son fichier est
+la bonne ; si, au lancement, le détour ne peut pas être posé (jeu mis à jour sans le proxy), elle
+n'appliquera pas les correctifs que les autres appliquent. Le journal le dit (`citoyens : version
+inattendue`).
 
 ## La notification de mise à jour
 

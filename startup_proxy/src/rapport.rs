@@ -970,4 +970,27 @@ mod tests {
         assert_eq!(&z[z.len() - 22..z.len() - 18], b"PK\x05\x06");
         assert_eq!(u16::from_le_bytes([z[z.len() - 12], z[z.len() - 11]]), 2);
     }
+
+    /// Ce que le relais exige (rapport_worker/src/index.js, `lireMeta`) : meta.json en première
+    /// entrée, taille compressée dans l'en-tête local, brut ou en deflate, 1 Mo au plus décompressé.
+    #[test]
+    fn meta_lisible_par_le_relais() {
+        let lua = vec![("description".to_string(), "é\"\\\n".repeat(250)), ("tour".to_string(), "87".to_string())];
+        let fichiers: Vec<(String, usize)> = (0..200).map(|i| (format!("logs/f{i}.log"), i)).collect();
+        let meta = meta_json(&lua, &[("bge_version", "0.8.0".into())], &fichiers).into_bytes();
+        for meta in [meta, b"{}".to_vec()] {
+            let z = zip(&[("meta.json".into(), meta.clone()), ("logs/Lua.log".into(), vec![b'x'; 5000])], 1_700_000_000);
+            let u16_a = |i: usize| u16::from_le_bytes([z[i], z[i + 1]]);
+            let taille = u32::from_le_bytes(z[18..22].try_into().unwrap()) as usize;
+            assert_eq!((&z[..4], &z[30..39], u16_a(26), u16_a(28)), (&b"PK\x03\x04"[..], &b"meta.json"[..], 9, 0));
+            let corps = &z[39..39 + taille];
+            let clair = match u16_a(8) {
+                8 => miniz_oxide::inflate::decompress_to_vec(corps).unwrap(),
+                0 => corps.to_vec(),
+                m => panic!("méthode {m}"),
+            };
+            assert_eq!(clair, meta);
+            assert!(clair.len() <= 1024 * 1024 && clair.starts_with(b"{"));
+        }
+    }
 }
