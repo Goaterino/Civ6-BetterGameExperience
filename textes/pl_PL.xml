@@ -311,6 +311,18 @@
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="pl_PL">
 			<Text>No First/Last moves wyłączone: wszyscy gracze muszą mieć BetterGameExperience w tej samej wersji.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="pl_PL">
+			<Text>{1} ma włączony BetterGameExperience {2}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="pl_PL">
+			<Text>BGE Check: wszyscy gracze mają włączony BetterGameExperience {1} ({2}).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="pl_PL">
+			<Text>BGE Check (host: {1}). Ta sama wersja: {2}. Inna wersja: {3}. Zainstalowany, ale nieaktywny: {4}. Brak odpowiedzi (bez BetterGameExperience): {5}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="pl_PL">
+			<Text>Pyta każdego gracza o jego wersję BetterGameExperience, a następnie publikuje wynik na czacie dla wszystkich.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="pl_PL">
 			<Text>rozkazy wstrzymane: tura nie zaczęła się jeszcze dla wszystkich graczy.</Text>
 		</Row>

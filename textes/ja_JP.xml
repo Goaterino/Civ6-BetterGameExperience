@@ -311,6 +311,18 @@
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ja_JP">
 			<Text>No First/Last moves 無効: 全プレイヤーが同じバージョンの BetterGameExperience を持っている必要があります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ja_JP">
+			<Text>{1} は BetterGameExperience {2} を有効にしています。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ja_JP">
+			<Text>BGE Check: 全プレイヤーが BetterGameExperience {1} を有効にしています ({2})。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="ja_JP">
+			<Text>BGE Check (ホスト: {1})。同じバージョン: {2}。別のバージョン: {3}。インストール済みだが無効: {4}。応答なし (BetterGameExperience なし): {5}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="ja_JP">
+			<Text>各プレイヤーに BetterGameExperience のバージョンを問い合わせ、結果を全員のチャットに表示します。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ja_JP">
 			<Text>命令を保留中: まだ全プレイヤーのターンが始まっていません。</Text>
 		</Row>
