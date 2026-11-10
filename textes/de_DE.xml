@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="de_DE">
 			<Text>Der Fehlerbericht konnte nicht gesendet werden. Das Archiv wurde hier gespeichert: {1}. Senden Sie es per Privatnachricht auf Discord an @goaterino.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="de_DE">
+			<Text>Gewährt {1} [ICON_Production] Produktion für den Bau von Weltwundern, {2}, wenn das Weltwunder aus der Antike oder der Klassik stammt.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

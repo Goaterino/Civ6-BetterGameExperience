@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ja_JP">
 			<Text>バグレポートを送信できませんでした。アーカイブの保存先: {1}。Discord の個人メッセージで @goaterino に送ってください。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ja_JP">
+			<Text>遺産の建造に [ICON_Production] 生産力+{1}。古代または古典時代の遺産の場合は+{2}。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

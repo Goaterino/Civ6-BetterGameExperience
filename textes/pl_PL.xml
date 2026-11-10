@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="pl_PL">
 			<Text>Nie udało się wysłać zgłoszenia błędu. Archiwum zapisano tutaj: {1}. Wyślij je do @goaterino w prywatnej wiadomości na Discordzie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="pl_PL">
+			<Text>Zapewnia {1} pkt. [ICON_Production] produkcji na budowę cudu, {2}, jeśli cud pochodzi z ery starożytnej lub klasycznej.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

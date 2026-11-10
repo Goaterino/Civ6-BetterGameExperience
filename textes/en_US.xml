@@ -602,5 +602,8 @@
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="en_US">
 			<Text>The bug report could not be sent. The archive was saved here: {1}. Send it to @goaterino in a private message on Discord.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="en_US">
+			<Text>Grants {1} [ICON_Production] Production towards wonder construction, {2} if the wonder is from the Ancient or Classical Era.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
