@@ -68,7 +68,7 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 			local fichier = {};
 			fichier.Name = "BGE_rapport";
 			fichier.Location = SaveLocations.LOCAL_STORAGE;
-			fichier.Type = Network.GetGameConfigSaveType();
+			fichier.Type = Network.GetGameConfigurationSaveType();
 			fichier.IsAutosave = false;
 			fichier.IsQuicksave = false;
 			Network.SaveGame(fichier);
@@ -102,7 +102,18 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 		Ajouter("multijoueur", function() return EnLigne() and 1 or 0; end);
 		Ajouter("hote", function() return Network.IsGameHost() and 1 or 0; end);
 		Ajouter("en_pause", function() return GameConfiguration.IsPaused() and 1 or 0; end);
-		Ajouter("humains", function() return #GameConfiguration.GetMultiplayerPlayerIDs(); end);
+		-- GetMultiplayerPlayerIDs rend tous les emplacements (IA et vides compris) : on ne garde que
+		-- les emplacements occupés par un humain.
+		Ajouter("humains", function()
+			local n = 0;
+			for _, pid in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+				local pc = PlayerConfigurations[pid];
+				if pc ~= nil and pc:IsHuman() and pc:GetSlotStatus() == SlotStatus.SS_TAKEN then
+					n = n + 1;
+				end
+			end
+			return n;
+		end);
 		Ajouter("langue", function() return Locale.GetCurrentLanguage().Type; end);
 		Ajouter("description", function() return description; end);
 		return table.concat(champs, "\n");

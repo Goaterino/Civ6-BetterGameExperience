@@ -2,6 +2,47 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Neu
+- **Fortschritt von Forschung und Ausrichtung**: Im Panel oben links zeigt **x/y** neben dem Namen
+  der aktuellen Technologie und Ausrichtung die bereits investierte Wissenschaft (Kultur) und die
+  Gesamtkosten, gefolgt von **(+z)**, wenn das Spiel Wissenschaft (Kultur) aus einer mit mehr als
+  ihren Kosten abgeschlossenen Technologie (Ausrichtung) als Überschuss behält. Eine Einstellung
+  schaltet es ab.
+
+## BetterGameExperience 0.8.1
+
+### Neu
+- **Produktion im Stadtbanner abbrechen**: Ein Rechtsklick auf das Produktionssymbol im Banner
+  einer eurer Städte entfernt das aktuelle Element, wie im Produktionsfenster.
+- **Vergünstigte Bezirke**: In der Produktionsliste zeigt ein Bezirk mit gesenkten Kosten (weniger
+  Bezirke dieses Typs als euer Durchschnitt) seinen Rabatt an, zum Beispiel **-40%**. Die Anzeige
+  wird aktualisiert, sobald ein Bezirk platziert wird, denn ein neuer Bezirk kann den Rabatt
+  beenden. Bezirke, die nicht in den Durchschnitt eingehen, wie das Thành Vietnams, werden auch
+  angezeigt.
+- **Gespeicherte Produktion**: Stadtbanner, Stadtfenster und Produktionsfenster zeigen die
+  Produktion, die eine Stadt in Reserve hält (Überschuss eines fertigen Elements oder eine Runde
+  ohne Produktion; das Spiel bewahrt höchstens eine Runde auf) und die in der nächsten Runde zu
+  ihrer Produktion hinzukommt. Im Banner einer Stadt ohne Produktion erscheint sie als **+N**.
+- **BGE Check**: In einer Mehrspieler-Lobby hat der Host neben dem MOD CHECK von MPH einen Knopf
+  **BGE CHECK**, der jeden Spieler nach seiner BetterGameExperience-Version fragt und das Ergebnis
+  in den Chat schreibt: gleiche Version, andere Version, installiert aber deaktiviert oder keine
+  Antwort.
+- **Ankunftsmeldung**: Beim Öffnen einer Lobby mit aktiviertem BetterGameExperience meldet der
+  Chat dies, mit Ihrer genauen Version.
+
+### Korrekturen der Oberfläche
+- **Stadtfenster nach dem Entfernen der Produktion**: Das Fenster unten rechts wird aktualisiert,
+  wenn das einzige Element der Warteschlange entfernt wird, statt es weiter anzuzeigen.
+- **Rechtsklick auf die aktuelle Produktion**: Er entfernt sie jetzt auch im Reiter Produktion,
+  nicht nur bei geöffneter Warteschlange.
+- **MPH-Lobby**: Außerhalb eines Drafts rückt die Spielerliste in den leeren Platz auf, den MPH
+  für seinen Draft freihält, und der einzelne « . » darüber in einem geladenen Spiel verschwindet.
+
+### Einstellungen
+- Die drei Neuerungen haben je eine Einstellung im Reiter BetterGameExperience, standardmäßig aktiv.
+
 ## BetterGameExperience 0.8.0
 
 Im Mehrspielermodus müssen alle menschlichen Spieler 0.8.0 haben. Die Korrektur für Abkommen am

@@ -2,6 +2,48 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.8.2
+
+### Novità
+- **Avanzamento di ricerca e civico**: nel pannello in alto a sinistra, accanto al nome della
+  tecnologia e del civico in corso, **x/y** indica la scienza (la cultura) già investita e il costo
+  totale, seguito da **(+z)** quando il gioco conserva scienza (cultura) in eccesso da una
+  tecnologia (un civico) completata con più del suo costo. Un'impostazione permette di disattivarlo.
+
+## BetterGameExperience 0.8.1
+
+### Novità
+- **Annullare la produzione dallo stendardo della città**: un clic destro sull'icona di produzione
+  dello stendardo di una delle tue città rimuove l'elemento in corso, come nel pannello di
+  produzione.
+- **Distretti scontati**: nell'elenco di produzione, un distretto con costo ridotto (hai meno
+  distretti di quel tipo della tua media) mostra lo sconto, per esempio **-40%**. Si aggiorna non
+  appena viene posizionato un distretto, perché posizionarne uno può far perdere lo sconto. Anche i
+  distretti che non contano nella media, come il Thành del Vietnam, sono indicati.
+- **Produzione in riserva**: lo stendardo della città, il pannello della città e il pannello di
+  produzione mostrano la produzione che la città tiene in riserva (eccedenza di un elemento
+  completato, o un turno senza produrre; il gioco ne conserva al massimo un turno), aggiunta alla
+  sua produzione del turno successivo. Sullo stendardo di una città senza produzione appare come
+  **+N**.
+- **BGE Check**: in una sala d'attesa multigiocatore, l'host ha un pulsante **BGE CHECK**, accanto
+  al MOD CHECK di MPH, che chiede a ogni giocatore la sua versione di BetterGameExperience e scrive
+  il risultato in chat: stessa versione, altra versione, installato ma disattivato o nessuna
+  risposta.
+- **Messaggio di arrivo**: all'apertura di una sala d'attesa con BetterGameExperience attivo, la
+  chat lo annuncia, con la tua versione esatta.
+
+### Correzioni dell'interfaccia
+- **Pannello della città dopo aver rimosso la produzione**: il pannello in basso a destra si
+  aggiorna quando si rimuove l'unico elemento della coda, invece di mostrarlo ancora.
+- **Clic destro sulla produzione in corso**: ora la rimuove anche dalla scheda Produzione, non solo
+  con la coda aperta.
+- **Sala d'attesa di MPH**: fuori da un draft, l'elenco dei giocatori risale nello spazio vuoto che
+  MPH riserva al suo draft, e il « . » mostrato sopra in una partita ricaricata scompare.
+
+### Impostazioni
+- Le tre novità hanno ciascuna un'impostazione nella scheda BetterGameExperience, attiva per
+  impostazione predefinita.
+
 ## BetterGameExperience 0.8.0
 
 In multigiocatore, tutti i giocatori umani devono avere la 0.8.0. La correzione degli accordi a fine

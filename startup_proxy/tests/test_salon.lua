@@ -37,7 +37,9 @@ end
 -- après le chargement d'une sauvegarde).
 local function NewLobby(joueurs, options)
 	options = options or {};
-	local lobby = { machines = {}, chat = {}, host = 0, tokens = 0 };
+	-- `chat` : les messages visibles, hors annonces d'arrivée (`annonces`) et messages cachés
+	-- « .bgd_ » (`caches`) ; `tout` : tous, dans l'ordre.
+	local lobby = { machines = {}, chat = {}, annonces = {}, caches = {}, tout = {}, host = 0, tokens = 0 };
 
 	for id = 0, #joueurs - 1 do
 		local m = { id = id, values = {}, events = {}, luaEvents = {} };
@@ -75,7 +77,27 @@ local function NewLobby(joueurs, options)
 			Lookup = function(s) return s; end,
 		};
 		env.SlotStatus = { SS_TAKEN = 1, SS_OPEN = 2 };
-		env.ChatTargetTypes = { CHATTARGET_ALL = -1 };
+		env.ChatTargetTypes = { CHATTARGET_ALL = -1, CHATTARGET_PLAYER = -3 };
+		-- `options.controles` : le XML du salon a le bouton et le minuteur (Controls), comme en jeu.
+		if options.controles then
+			local function Ctrl()
+				local c = { cache = false, inactif = false, callbacks = {} };
+				function c:SetHide(v) self.cache = v; end
+				function c:IsHidden() return self.cache; end
+				function c:SetDisabled(v) self.inactif = v; end
+				function c:SetText(t) self.texte = t; end
+				function c:SetToolTipString(t) self.aide = t; end
+				function c:RegisterCallback(ev, f) self.callbacks[ev] = f; end
+				function c:RegisterEndCallback(f) self.fin = f; end
+				function c:SetToBeginning() end
+				function c:Play() self.joue = true; end
+				return c;
+			end
+			env.Controls = { BGD_CheckButton = Ctrl(), BGD_SalonMinuteur = Ctrl() };
+			if options.reset then env.Controls.ResetButton = Ctrl(); env.Controls.ResetButton.cache = options.reset == "cache"; end
+			env.Mouse = { eLClick = 1, eMouseEnter = 2 };
+			env.UI = { PlaySound = function() end };
+		end
 		env.GameConfiguration = {
 			IsNetworkMultiplayer = function() return not options.hotseat; end,
 			IsHotseat = function() return options.hotseat == true; end,
@@ -106,7 +128,24 @@ local function NewLobby(joueurs, options)
 			GetLocalPlayerID = function() return id; end,
 			IsPlayerConnected = function(pid) return joueurs[pid + 1].absent ~= true; end,
 			BroadcastPlayerInfo = function() Broadcast(id); end,
-			SendChat = function(text, target, to) table.insert(lobby.chat, { from = id, text = text, target = target }); end,
+			SendChat = function(text, target, to)
+				local c = { from = id, to = to, text = text, target = target };
+				table.insert(lobby.tout, c);
+				if string.sub(text, 1, 5) == ".bgd_" then
+					table.insert(lobby.caches, c);
+				elseif text:find("has BetterGameExperience .- enabled%.%[ENDCOLOR%]$") then
+					table.insert(lobby.annonces, c);
+				else
+					table.insert(lobby.chat, c);
+				end
+				-- Remis à tous (CHATTARGET_ALL) ou au seul destinataire (privé), l'expéditeur compris.
+				if lobby.coupe then return; end
+				for _, d in pairs(lobby.machines) do
+					if target ~= -3 or d.id == to or d.id == id then
+						if d.env.Events then d.events.MultiplayerChat.Fire(id, to, text, target); end
+					end
+				end
+			end,
 		};
 		env.StartLaunchCountdown = function() m.countdowns = (m.countdowns or 0) + 1; end
 		if j.proxy ~= false then
@@ -119,6 +158,9 @@ local function NewLobby(joueurs, options)
 			env.Civ6Proxy_FixerPol = function(actif) m.pol = (actif == 1); end
 			env.Civ6Proxy_Jeton = function() lobby.tokens = lobby.tokens + 1; return "j" .. lobby.tokens; end
 			env.Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end
+			env.Civ6Proxy_VersionInstallee = function() return j.version or "0.1.0"; end
+			-- `options.avant` : globales et contrôles du StagingRoom.lua de MPH, posés avant le bloc.
+			if options.avant then options.avant(env); end
 			local chunk = assert(load(BLOCK, "=salon.lua", "t", env));
 			chunk();
 		end
@@ -131,6 +173,18 @@ local function NewLobby(joueurs, options)
 			local ev = (id == lobby.host) and m.luaEvents.HostGame_ShowStagingRoom or m.luaEvents.JoiningRoom_ShowStagingRoom;
 			ev.Fire();
 		end
+	end
+	-- `n` tics du minuteur sur chaque machine où il tourne.
+	function lobby.tic(n)
+		for _ = 1, n or 1 do
+			for _, m in pairs(lobby.machines) do
+				local t = m.env.Controls and m.env.Controls.BGD_SalonMinuteur;
+				if t and t.joue and t.fin then t.joue = false; t.fin(); end
+			end
+		end
+	end
+	function lobby.bouton(id)
+		return lobby.machines[id].env.Controls.BGD_CheckButton;
 	end
 	function lobby.countdown()
 		for _, m in pairs(lobby.machines) do m.env.StartLaunchCountdown(); end
@@ -465,6 +519,189 @@ do
 	check(#log == n + 1 and log[n + 1]:find("joueur 8", 1, true), "cité-État : journalisé une fois");
 	check(env.GetPlayerParameterError(1) == erreurs[1], "civilisation majeure : erreur gardée");
 	check(env.GetPlayerParameterError(9) == erreurs[9], "cité-État, autre erreur : gardée");
+end
+
+-- 19. Annonce d'arrivée : chaque machine équipée et active dit à tous sa version, une fois par
+-- ouverture ; pas la machine désactivée, ni à une migration d'hôte ; rien en hotseat.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob", version = "0.0.9" }, { nom = "Zoé", indispo = "actif=off" }, { nom = "Léo", proxy = false } }, { lang = "en_US" });
+	l.open();
+	check(#l.annonces == 2, "deux annonces (" .. #l.annonces .. ")");
+	check(l.annonces[1].from == 0 and l.annonces[1].text == "[COLOR_GREEN]BGE - Hôte has BetterGameExperience 0.1.0 enabled.[ENDCOLOR]", "annonce de l'hôte : " .. tostring(l.annonces[1] and l.annonces[1].text));
+	check(l.annonces[2].from == 1 and l.annonces[2].text:find("Bob has BetterGameExperience 0.0.9 enabled.", 1, true), "version exacte de Bob");
+	check(l.annonces[1].target == -1, "pour tous");
+	l.host = 1;
+	for _, m in pairs(l.machines) do m.events.MultiplayerHostMigrated.Fire(1); end
+	check(#l.annonces == 2, "pas de nouvelle annonce à une migration");
+	l.open();
+	check(#l.annonces == 4, "nouvelle ouverture : nouvelles annonces");
+	local h = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { hotseat = true });
+	h.open();
+	check(#h.annonces == 0, "hotseat : pas d'annonce");
+	-- Traduite à l'arrivée chez un joueur français.
+	local env = setmetatable({ Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end } }, { __index = _G });
+	assert(load(ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua"), "=t", "t", env))();
+	check(env.BGD_TxtChat(l.annonces[1].text) == "[COLOR_GREEN]BGE - Hôte a BetterGameExperience 0.1.0 activé.[ENDCOLOR]", "annonce traduite : " .. tostring(env.BGD_TxtChat(l.annonces[1].text)));
+end
+
+-- 20. Avec le minuteur : l'annonce attend le premier tic.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true });
+	l.open();
+	check(#l.annonces == 0, "pas d'annonce avant le premier tic");
+	l.tic();
+	check(#l.annonces == 2, "annonces au premier tic");
+	l.tic(3);
+	check(#l.annonces == 2, "une seule fois");
+end
+
+-- 21. Bouton BGE Check : visible chez l'hôte actif seulement, et hors draft de MPH.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true });
+	l.open();
+	check(not l.bouton(0):IsHidden() and l.bouton(1):IsHidden(), "bouton chez l'hôte seul");
+	check(l.bouton(0).texte == "BGE CHECK" and l.bouton(0).aide ~= nil, "texte et aide du bouton");
+	local d = NewLobby({ { nom = "Hôte", indispo = "actif=off" }, { nom = "Bob" } }, { controles = true });
+	d.open();
+	check(d.bouton(0):IsHidden(), "hôte désactivé : pas de bouton");
+	local r = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true, reset = "visible" });
+	r.open();
+	check(r.bouton(0):IsHidden(), "RESET de MPH affiché : bouton caché");
+	local h = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true, hotseat = true });
+	h.open();
+	check(h.bouton(0):IsHidden(), "hotseat : pas de bouton");
+end
+
+-- 22. BGE Check, tous à jour : demandes et réponses cachées et privées, bilan vert, pour tous.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" }, { nom = "IA", ia = true, proxy = false } }, { controles = true, lang = "en_US" });
+	l.open();
+	l.tic();
+	l.bouton(0).callbacks[1]();
+	check(#l.caches == 4, "2 demandes, 2 réponses (" .. #l.caches .. ")");
+	for _, c in ipairs(l.caches) do
+		check(c.target == -3, "message caché en privé : " .. c.text);
+	end
+	check(l.caches[1].to == 1 and l.caches[1].text:find("^%.bgd_check %w+$"), "demande à Bob : " .. l.caches[1].text);
+	check(l.caches[2].to == 0 and l.caches[2].text:find("^%.bgd_version %w+ 0%.1%.0 1$"), "réponse de Bob : " .. l.caches[2].text);
+	local t = LastChat(l);
+	check(#l.chat == 1 and l.chat[1].from == 0 and l.chat[1].target == -1, "un bilan, de l'hôte, pour tous");
+	check(t == "[COLOR_GREEN]BGE - BGE Check: every player has BetterGameExperience 0.1.0 enabled (Hôte, Bob, Zoé).[ENDCOLOR]", "bilan vert : " .. t);
+	check(not l.bouton(0).inactif, "bouton de nouveau disponible");
+end
+
+-- 23. BGE Check, écarts : autre version, installé mais inactif, sans réponse (sans proxy) ; bilan
+-- au délai, et en français chez un joueur français.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob", version = "0.0.9" }, { nom = "Zoé", indispo = "actif=off" }, { nom = "Léo", proxy = false }, { nom = "Max" } }, { controles = true, lang = "en_US" });
+	l.open();
+	l.tic();
+	l.bouton(0).callbacks[1]();
+	check(#l.chat == 0, "Léo ne répond pas : pas encore de bilan");
+	check(l.bouton(0).inactif, "bouton grisé pendant le check");
+	l.bouton(0).callbacks[1]();
+	check(#l.caches == 7, "un second clic ne relance rien (" .. #l.caches .. ")");
+	l.tic(11);
+	check(#l.chat == 0, "pas de bilan avant le délai");
+	l.tic();
+	local t = LastChat(l);
+	check(#l.chat == 1, "bilan au délai");
+	check(t == "[COLOR_RED]BGE - BGE Check (host: 0.1.0). Same version: Hôte, Max. Other version: Bob (0.0.9). Installed but inactive: Zoé (0.1.0). No answer (without BetterGameExperience): Léo.[ENDCOLOR]", "bilan rouge : " .. t);
+	local env = setmetatable({ Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end } }, { __index = _G });
+	assert(load(ReadFile(dir .. "/../../textes/bgd_textes.lua") .. ReadFile(dir .. "/../../textes/bgd_texte.lua"), "=t", "t", env))();
+	check(env.BGD_TxtChat(t) == "[COLOR_RED]BGE - BGE Check (hôte : 0.1.0). Même version : Hôte, Max. Autre version : Bob (0.0.9). Installé mais inactif : Zoé (0.1.0). Sans réponse (sans BetterGameExperience) : Léo.[ENDCOLOR]", "bilan traduit : " .. tostring(env.BGD_TxtChat(t)));
+	check(not l.bouton(0).inactif, "bouton libéré après le bilan");
+	l.tic(20);
+	check(#l.chat == 1, "un seul bilan");
+end
+
+-- 24. Réponses refusées : jeton d'un autre check, demande qui ne vient pas de l'hôte ; un joueur
+-- parti pendant le check ne bloque pas le bilan.
+do
+	local joueurs = { { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } };
+	local l = NewLobby(joueurs, { controles = true, lang = "en_US" });
+	l.open();
+	l.tic();
+	l.machines[2].events.MultiplayerChat.Fire(1, 2, ".bgd_check abc", -3);
+	check(#l.caches == 0, "demande d'un client : ignorée");
+	l.coupe = true;  -- messages non remis : on les injecte à la main
+	l.bouton(0).callbacks[1]();
+	l.coupe = false;
+	l.machines[0].events.MultiplayerChat.Fire(1, 0, ".bgd_version autre 0.1.0 1", -3);
+	check(#l.chat == 0, "jeton d'un autre check : ignoré");
+	local jeton = l.caches[1].text:match("^%.bgd_check (%w+)$");
+	l.machines[0].events.MultiplayerChat.Fire(1, 0, ".bgd_version " .. jeton .. " 0.1.0 1", -3);
+	check(#l.chat == 0, "Zoé n'a pas répondu");
+	joueurs[3].absent = true;
+	l.tic();
+	check(#l.chat == 1 and LastChat(l):find("every player has BetterGameExperience 0.1.0 enabled (Hôte, Bob)", 1, true), "Zoé partie : bilan sans elle : " .. LastChat(l));
+end
+
+-- 25. Les messages « .bgd_ » ne s'affichent pas ; les autres passent, traduits.
+do
+	local recus = {};
+	local env = setmetatable({
+		OnChat = function(f, t, text) table.insert(recus, text); end,
+		Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end, Lookup = function(s) return s; end },
+	}, { __index = _G });
+	assert(load(BLOCK, "=salon.lua", "t", env))();
+	env.OnChat(1, 0, ".bgd_version j1 0.1.0 1");
+	env.OnChat(1, -1, "[COLOR_GREEN]BGE - Bob has BetterGameExperience 0.1.0 enabled.[ENDCOLOR]");
+	env.OnChat(1, -1, "salut");
+	check(#recus == 2 and recus[1] == "[COLOR_GREEN]BGE - Bob a BetterGameExperience 0.1.0 activé.[ENDCOLOR]" and recus[2] == "salut", "chat filtré : " .. table.concat(recus, " | "));
+end
+
+-- 26. Salon de MPH : hors draft, libellé « . » vidé et tableau remonté ; draft : mise en page de MPH.
+do
+	local function Ctrl(cache, y, h, texte)
+		local c = { cache = cache, y = y, h = h, texte = texte, calculs = 0 };
+		function c:SetHide(v) self.cache = v; end
+		function c:IsHidden() return self.cache; end
+		function c:SetText(t) self.texte = t; end
+		function c:GetText() return self.texte; end
+		function c:GetOffsetY() return self.y; end
+		function c:SetOffsetY(v) self.y = v; end
+		function c:GetSizeY() return self.h; end
+		function c:SetSizeY(v) self.h = v; end
+		function c:CalculateSize() self.calculs = self.calculs + 1; end
+		return c;
+	end
+	local grilles = 0;
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true, avant = function(env)
+		env.Controls.PhaseLabel = Ctrl(false, 99, 0, ".");
+		env.Controls.PhaseLabel_Version = Ctrl(false, 150, 0, "v180");
+		env.Controls.PrimaryPanelStack = Ctrl(false, 180, 0);
+		env.Controls.HeaderStack = Ctrl(false, 161, 28);
+		env.Controls.PrimaryStackGrid = Ctrl(false, 0, 320);
+		env.Controls.BanPullDown = Ctrl(true, 200, 46);
+		env.RealizeGridSize = function() grilles = grilles + 1; end
+		env.Resize = function() env.Controls.PrimaryStackGrid.h = 300; end
+	end });
+	local c = l.machines[0].env.Controls;
+	l.open();
+	l.tic();
+	check(c.PhaseLabel.texte == "", "libellé « . » vidé : " .. tostring(c.PhaseLabel.texte));
+	check(c.PrimaryPanelStack.y == 128 and c.PrimaryStackGrid.h == 372 and c.PhaseLabel_Version.y == 98 and c.HeaderStack.y == 109 and grilles > 0,
+		"tableau remonté : " .. c.PrimaryPanelStack.y .. " " .. c.PrimaryStackGrid.h .. " " .. c.PhaseLabel_Version.y);
+	l.tic();
+	check(c.PrimaryPanelStack.y == 128 and c.PrimaryStackGrid.h == 372, "une seule fois");
+	l.machines[0].env.Resize();
+	check(c.PrimaryStackGrid.h == 352, "redimensionnement de MPH : place rendue gardée : " .. c.PrimaryStackGrid.h);
+	c.BanPullDown.cache = false;
+	l.tic();
+	check(c.PrimaryPanelStack.y == 180 and c.PrimaryStackGrid.h == 300 and c.PhaseLabel_Version.y == 150 and c.HeaderStack.y == 161, "draft : mise en page de MPH");
+	c.BanPullDown.cache = true;
+	c.PhaseLabel.texte = "FFA Phase 3: Let's Go!";
+	l.tic();
+	check(c.PrimaryPanelStack.y == 180, "libellé de phase écrit : mise en page de MPH");
+end
+
+-- 27. Salon du jeu de base (sans les contrôles de MPH) : rien ne bouge, pas d'erreur.
+do
+	local l = NewLobby({ { nom = "Hôte" } }, { controles = true });
+	l.open();
+	l.tic();
+	check(not (l.machines[0].log or ""):find("erreur", 1, true), "salon de base : pas d'erreur");
 end
 
 if failures > 0 then

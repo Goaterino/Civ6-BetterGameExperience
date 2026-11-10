@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="fr_FR">
 			<Text>Chaque message du jeu</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="fr_FR">
+			<Text>Congrès mondial seulement</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="fr_FR">
+			<Text>Tout sauf le Congrès mondial</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="fr_FR">
 			<Text>Général</Text>
 		</Row>
@@ -128,6 +134,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="fr_FR">
 			<Text>Une merveille retirée de la file de production par un échange y est remise, par des commandes normales du jeu : pas de désynchronisation, même face à des joueurs sans proxy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="fr_FR">
+			<Text>Clic droit sur la production du bandeau de ville pour l'annuler</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="fr_FR">
+			<Text>Un clic droit sur l'icône de production du bandeau d'une de vos villes retire l'élément en cours, comme un clic droit dans le panneau de production. Commande normale du jeu : pas de désynchronisation.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="fr_FR">
+			<Text>Badge des quartiers en réduction</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="fr_FR">
+			<Text>Dans la liste de production, les quartiers dont le coût est réduit (moins de quartiers de ce type que votre moyenne) affichent leur réduction, mise à jour dès qu'un quartier est posé. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="fr_FR">
+			<Text>Production en réserve</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="fr_FR">
+			<Text>Affiche la production qu'une ville garde en réserve (débordement, au plus un tour), ajoutée à sa production du tour suivant : sur le bandeau de ville, dans le panneau de la ville et dans le panneau de production. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
+			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="fr_FR">
+			<Text>+{1} [ICON_Production] en réserve, ajoutés à la production du prochain tour (au plus un tour de production).</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="fr_FR">
 			<Text>Rendements d'empire à jour après un gouverneur ou un personnage illustre</Text>
 		</Row>
@@ -152,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="fr_FR">
 			<Text>D'après NotificationClear (336tarot). Un bouton du panneau des notifications ferme d'un clic celles qu'on peut fermer soi-même. Remplace le mod s'il est actif.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="fr_FR">
+			<Text>Avancement de la recherche et du dogme</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="fr_FR">
+			<Text>À côté du nom de la technologie et du dogme en cours, dans le panneau en haut à gauche, affiche la science (la culture) déjà investie, le coût total et, entre parenthèses, la science (la culture) gardée en excédent d'une technologie (d'un dogme) terminée, par exemple 120/260 (+15). Affichage seulement.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="fr_FR">
 			<Text>Bandeau du haut étendu</Text>
 		</Row>
@@ -169,6 +205,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="fr_FR">
 			<Text>D'après Better Report Screen (Infixo). Écran des rapports refait, avec les onglets Accords, Unités, Politiques, Cités-États et Villes, et l'effet de chaque politique et cité-État, corrigé comme les cartes. Remplace le mod s'il est actif.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="fr_FR">
+			<Text>Better Spectator Mod pour les spectateurs</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="fr_FR">
+			<Text>Remplace les scripts d'interface de Better Spectator Mod (cités-États, ruban diplomatique, icônes des dirigeants, Congrès mondial) par ceux du proxy, écrits pour des spectateurs sortis des civilisations majeures. Seulement si tous les joueurs ont le proxy ; le niveau des spectateurs suit toujours cette règle.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="fr_FR">
 			<Text>Journal des scripts et XML chargés</Text>
@@ -193,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="fr_FR">
 			<Text>Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="fr_FR">
+			<Text>Scripts de Better Spectator Mod remplacés</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="fr_FR">
+			<Text>Diagnostic : quels scripts d'interface de Better Spectator Mod le proxy remplace, pour isoler celui qui pose problème.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="fr_FR">
 			<Text>Afficher les signaux du départ et de la fin simultanés</Text>
@@ -310,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="fr_FR">
 			<Text>No First/Last moves désactivé : il faut que tous les joueurs aient BetterGameExperience, à la même version.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="fr_FR">
+			<Text>{1} a BetterGameExperience {2} activé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="fr_FR">
+			<Text>BGE Check : tous les joueurs ont BetterGameExperience {1} activé ({2}).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="fr_FR">
+			<Text>BGE Check (hôte : {1}). Même version : {2}. Autre version : {3}. Installé mais inactif : {4}. Sans réponse (sans BetterGameExperience) : {5}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="fr_FR">
+			<Text>Demande à chaque joueur sa version de BetterGameExperience, puis écrit le bilan dans le chat pour tous.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="fr_FR">
 			<Text>ordres retenus : le tour n'a pas encore commencé pour tous les joueurs.</Text>
@@ -562,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="fr_FR">
 			<Text>Le rapport de bug n'a pas pu être envoyé. L'archive est enregistrée ici : {1}. Envoyez-la à @goaterino en message privé sur Discord.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="fr_FR">
+			<Text>[ICON_Production] Production +{1} pour la construction de merveilles, portée à {2} si la merveille est de l'Antiquité ou de l'ère classique.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ja_JP">
 			<Text>ゲームのすべてのメッセージ</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="ja_JP">
+			<Text>世界議会のみ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ja_JP">
+			<Text>世界議会以外すべて</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="ja_JP">
 			<Text>全般</Text>
 		</Row>
@@ -128,6 +134,30 @@
 		<Row Tag="LOC_BGD_OPT_UI_MERVEILLES_AIDE" Language="ja_JP">
 			<Text>入れ替えによって生産キューから外れた遺産を、通常のゲームコマンドで戻します。プロキシを持たないプレイヤーとも同期ずれは起きません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_NOM" Language="ja_JP">
+			<Text>都市バナーの生産を右クリックで取り消す</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_BANNIERE_ANNULER_AIDE" Language="ja_JP">
+			<Text>自分の都市バナーの生産アイコンを右クリックすると、生産パネルでの右クリックと同じく、生産中の項目を取り除きます。通常のゲームコマンドなので同期ずれは起きません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_NOM" Language="ja_JP">
+			<Text>割引中の区域を表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ja_JP">
+			<Text>生産リストで、コストが割引されている区域 (その種類の区域数が平均より少ない) に割引率を表示します。区域を配置するとすぐに更新されます。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ja_JP">
+			<Text>蓄えられた生産力</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ja_JP">
+			<Text>都市が蓄えている生産力 (余剰分、最大 1 ターン分) を、都市バナー、都市パネル、生産パネルに表示します。これは次のターンの生産力に加算されます。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ja_JP">
+			<Text>区域の割引: -{1}% (この種類の区域数が平均より少ない)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEBORDEMENT" Language="ja_JP">
+			<Text>+{1} [ICON_Production] を保持中。次のターンの生産力に加算されます (最大 1 ターン分の生産力)。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_NOM" Language="ja_JP">
 			<Text>総督や偉人の後に帝国の産出量を更新</Text>
 		</Row>
@@ -152,6 +182,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="ja_JP">
 			<Text>NotificationClear (336tarot) に基づきます。通知パネルのボタンで、自分で閉じられる通知をワンクリックで閉じます。MOD が有効な場合はそれに置き換わります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="ja_JP">
+			<Text>研究と社会制度の進捗</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="ja_JP">
+			<Text>左上のパネルで、研究中のテクノロジーと社会制度の名前の横に、投入済みの科学力 (文化力) 、総コスト、括弧内に完了したテクノロジー (社会制度) から繰り越された余剰の科学力 (文化力) を表示します (例: 120/260 (+15))。表示のみ。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="ja_JP">
 			<Text>拡張された上部バー</Text>
 		</Row>
@@ -169,6 +205,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ja_JP">
 			<Text>Better Report Screen (Infixo) に基づきます。取引、ユニット、政策、都市国家、都市のタブを持つ新しいレポート画面で、各政策と都市国家の効果をカードと同じく修正して表示します。MOD が有効な場合はそれに置き換わります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="ja_JP">
+			<Text>観戦者向け Better Spectator Mod</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="ja_JP">
+			<Text>Better Spectator Mod のインターフェーススクリプト（都市国家、外交リボン、指導者アイコン、世界議会）を、主要文明から外された観戦者向けに書かれたプロキシ版に置き換えます。全プレイヤーがプロキシを持つ場合のみ。観戦者のレベルも常にこの規則に従います。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ja_JP">
 			<Text>読み込んだスクリプトと XML を記録</Text>
@@ -193,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ja_JP">
 			<Text>送受信した取引の提案と取引画面の表示内容を Lua.log に書き込み、人間同士の取引の行き違いを調べます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="ja_JP">
+			<Text>置き換える Better Spectator Mod のスクリプト</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="ja_JP">
+			<Text>診断：問題のあるスクリプトを切り分けるため、プロキシが置き換える Better Spectator Mod のインターフェーススクリプトを選びます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ja_JP">
 			<Text>同時開始・同時終了の信号を表示</Text>
@@ -310,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="ja_JP">
 			<Text>No First/Last moves 無効: 全プレイヤーが同じバージョンの BetterGameExperience を持っている必要があります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ja_JP">
+			<Text>{1} は BetterGameExperience {2} を有効にしています。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ja_JP">
+			<Text>BGE Check: 全プレイヤーが BetterGameExperience {1} を有効にしています ({2})。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="ja_JP">
+			<Text>BGE Check (ホスト: {1})。同じバージョン: {2}。別のバージョン: {3}。インストール済みだが無効: {4}。応答なし (BetterGameExperience なし): {5}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="ja_JP">
+			<Text>各プレイヤーに BetterGameExperience のバージョンを問い合わせ、結果を全員のチャットに表示します。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="ja_JP">
 			<Text>命令を保留中: まだ全プレイヤーのターンが始まっていません。</Text>
@@ -562,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_LOCAL_ECHEC" Language="ja_JP">
 			<Text>バグレポートを送信できませんでした。アーカイブの保存先: {1}。Discord の個人メッセージで @goaterino に送ってください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ja_JP">
+			<Text>遺産の建造に [ICON_Production] 生産力+{1}。古代または古典時代の遺産の場合は+{2}。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

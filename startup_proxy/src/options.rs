@@ -444,11 +444,27 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
     };
     let r = real(l, text.as_ptr(), text.len(), name);
     let (prefix, rest) = what.split_once(" : ").unwrap_or(("", what));
+    if r == 0 {
+        log(&format!("{prefix} : {chunk} : {rest}, compilation réussie"));
+        return r;
+    }
+    // Le script modifié ne compile pas (par exemple trop de locales au niveau du fichier) : on
+    // retire le message d'erreur et on compile l'original, pour ne jamais casser l'écran du jeu.
+    let erreur = match hks() {
+        Some(h) => {
+            let p = (h.to_lstring)(l, -1, std::ptr::null_mut());
+            let e = if p.is_null() { String::new() } else { CStr::from_ptr(p).to_string_lossy().into_owned() };
+            (h.set_top)(l, -2);
+            e
+        }
+        None => String::new(),
+    };
+    let r2 = real(l, buf, size, name);
     log(&format!(
-        "{prefix} : {chunk} : {rest}, compilation {}",
-        if r == 0 { "réussie".to_string() } else { format!("en échec ({r})") }
+        "{prefix} : {chunk} : {rest}, compilation en échec ({r} : {erreur}) ; original compilé à la place ({})",
+        if r2 == 0 { "réussi".to_string() } else { format!("en échec {r2}") }
     ));
-    r
+    r2
 }
 
 unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
@@ -467,6 +483,16 @@ unsafe extern "C" fn hook_read_xml(path: *const u16, buf: *mut GameBuf) -> i32 {
             Ok(Some(text)) if replace_buffer(b, &text) => log(&format!("maj : {name} : popup du menu ajouté")),
             Ok(Some(_)) => log(&format!("maj : {name} : allocation impossible, laissé tel quel")),
             Err(e) => log(&format!("maj : {name} laissé tel quel : {e}")),
+        }
+        return r;
+    }
+    if is_file(&name, crate::salon::XML) {
+        let b = &mut *buf;
+        let Some(src) = b.text() else { return r };
+        match crate::salon::patch_staging_xml(src) {
+            Ok(text) if replace_buffer(b, &text) => log(&format!("salon : {name} : bouton BGE Check et minuteur ajoutés")),
+            Ok(_) => log(&format!("salon : {name} : allocation impossible, laissé tel quel")),
+            Err(e) => log(&format!("salon : {name} laissé tel quel : {e}")),
         }
         return r;
     }

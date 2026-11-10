@@ -20,3 +20,42 @@ do
 		end
 	end
 end
+
+-- ===========================================================================
+-- Clic droit sur la production en cours, onglet Production (BET-13). Le jeu branche déjà le clic
+-- droit du bouton sur RemoveQueueItem(0), mais OnTabChangeProduction désactive le bouton, qui ne
+-- reçoit alors plus aucun clic : le retrait ne marchait que file ouverte. On réactive le bouton
+-- après chaque passage sur l'onglet Production. L'onglet garde sa propre copie de la fonction
+-- (TabSupport.lua, CallbackFunc, rappelée par SelectTab et par le clic) : c'est elle qu'on
+-- enveloppe. Le clic gauche, qui sélectionne l'élément pour un échange, ne fait rien hors de la
+-- file, comme quand le bouton était désactivé.
+-- ===========================================================================
+do
+	local Production_Ok, Production_Err = pcall(function()
+		local tab = m_productionTab;
+		if tab == nil or type(tab["CallbackFunc"]) ~= "function" then
+			print("Production : onglet introuvable, clic droit sur la production en cours inchangé");
+			return;
+		end
+		local Onglet_jeu = tab["CallbackFunc"];
+		tab["CallbackFunc"] = function(...)
+			Onglet_jeu(...);
+			if not m_isQueueOpen then
+				Controls.CurrentProductionButton:SetDisabled(false);
+			end
+		end
+		tab:RegisterCallback(Mouse.eLClick, tab["CallbackFunc"]);
+		Controls.CurrentProductionButton:RegisterCallback(Mouse.eLClick, function()
+			if m_isQueueOpen then
+				OnItemClicked(Controls, Controls.CurrentProductionButton);
+			end
+		end);
+		-- Le panneau est déjà sur l'onglet Production (Initialize l'a sélectionné avant ce bloc).
+		if not m_isQueueOpen and m_CurrentListMode == LISTMODE.PRODUCTION then
+			Controls.CurrentProductionButton:SetDisabled(false);
+		end
+	end);
+	if not Production_Ok then
+		print("Production echec " .. tostring(Production_Err));
+	end
+end

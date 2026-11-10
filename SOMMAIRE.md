@@ -30,6 +30,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   bonus plats de gouvernement (fascisme), corrigé dans le proxy ;
 - [wonder_queue](wonder_queue/README.md) : merveille retirée de la file de production après deux
   échanges, rattrapée par l'interface du proxy sans désynchro ;
+- production dans l'interface du proxy (voir [proxy/README.md](proxy/README.md)) : clic droit
+  sur la production en cours (onglet Production) et sur l'icône du bandeau de ville pour la
+  retirer, badge des quartiers en réduction, production en réserve (débordement) sur le bandeau ;
 - [empire_yields](empire_yields/README.md) : rendements d'empire du bandeau figés après un gouverneur ou
   un personnage illustre, rafraîchis par le proxy sans désynchro ;
 - [map_pins](map_pins/README.md) : lag des épingles de carte en multijoueur, reconstructions inutiles
@@ -51,11 +54,17 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   succès avec fuite comptés comme des succès (analyse statique) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
-  hook Frida et décodeur de config (analyse statique) ;
+  hook Frida et décodeur de config (analyse statique) ; branchement sur CivUp, bot de draft et
+  activité Discord ([hook_externe](analyses/lobby/hook_externe.md), conception) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
   pour une unité navale (correctif POL) ;
+- [littoral](analyses/littoral/README.md) : ville côtière qui ne peut plus produire ni acheter de
+  navire jusqu'au rechargement, et correctif POL proposé (analyse statique) ;
+- [garde_messages](analyses/garde_messages/README.md) : revue de la garde des messages réseau contre
+  le gel à la déconnexion d'un joueur (branche `yodha-desync-issue`, pas encore mergée), points
+  Ghidra vérifiés (lecture des drapeaux juste), corrections à faire avant le merge ;
 - défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
@@ -90,3 +99,13 @@ python -m venv .venv
 ```
 
 Les commandes des README se lancent depuis la racine du dépôt.
+
+## Tests continus
+
+[ci.yml](.github/workflows/ci.yml), à chaque push et pull request, sans secret : `cargo test` des
+trois crates sur Windows (proxy et startup_proxy avec et sans la feature `diag`), les tests Lua
+(`lua5.4 proxy/tests/test_*.lua`, `startup_proxy/tests/test_*.lua`, `textes/test_textes.lua`,
+depuis la racine), ceux du [relais des rapports](rapport_worker/README.md#tests) et
+`textes/gen_textes.py --check --strict`. Les tests Lua qui lisent des fichiers du jeu les cherchent
+dans le dossier Steam par défaut (ou le chemin passé en argument) et sont sautés sans eux
+(« test sauté ») : la CI ne les exécute pas, ils restent à lancer sur une machine qui a le jeu.

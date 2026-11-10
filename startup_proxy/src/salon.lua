@@ -9,6 +9,7 @@
 --   Civ6Proxy_Journal(texte)           -> écrit dans RolloverProxy.log
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0) : 0 à chaque
 --                                         ouverture du salon, puis notre conclusion du verdict
+--   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
 --
 -- Les configurations de joueur sont enregistrées avec la partie : une sauvegarde rechargée rapporte
 -- les annonces et le verdict d'une session précédente, peut-être chez des joueurs qui n'ont plus le
@@ -32,6 +33,17 @@
 --   client dont l'annonce a changé depuis l'ouverture du salon : une annonce restée d'une
 --   sauvegarde ne change pas. Un client arrivé après l'annonce d'un autre ne la voit pas changer :
 --   tous deux peuvent alors écrire, le même message. Il n'en manque jamais.
+-- À chaque ouverture du salon (pas à une migration d'hôte), une machine équipée et active dit à tous,
+-- en vert, qu'elle a BetterGameExperience et sa version exacte (« BGE - Bob has BetterGameExperience
+-- 0.9.0 enabled. »), une demi-seconde après l'ouverture (premier tic du minuteur, voir plus bas).
+-- Le BGE Check : un bouton de l'hôte, placé comme le « MOD CHECK » de MPH mais à gauche (symétrique
+-- par rapport au centre de l'écran), demande à chaque humain connecté sa version par un message
+-- privé caché « .bgd_check <jeton> ». Le bloc de chaque machine équipée répond, même désactivée, par
+-- « .bgd_version <jeton> <version installée> <1|0> » (1 : BetterGameExperience actif). Quand tous ont
+-- répondu, ou au bout de BGD_CHECK_DELAI tics, l'hôte écrit le bilan à tous. Les messages « .bgd_ »
+-- ne s'affichent pas chez qui a BetterGameExperience (enveloppe d'OnChat). Le proxy a ajouté au XML du
+-- salon le bouton (BGD_CheckButton) et un minuteur (BGD_SalonMinuteur, environ 0,5 s) ; sans eux,
+-- l'annonce part tout de suite et le bouton n'existe pas.
 -- Les messages partent en anglais (BGD_TxtAnglais), lisibles par ceux qui n'ont pas BetterGameDLLs ;
 -- chaque machine équipée les affiche dans sa langue (BGD_TxtChat, enveloppe d'OnChat en fin de bloc).
 -- On ne s'appuie que sur les événements du jeu et sur StartLaunchCountdown, présents dans
@@ -49,7 +61,13 @@ local BGD = {
 	instantane = {},   -- annonces de chaque joueur à l'ouverture du salon
 	message = nil,     -- dernier message envoyé dans le chat
 	ouvert = false,    -- salon ouvert : de l'ouverture au chargement de la partie (ou au départ)
+	annonce = false,   -- annonce « BetterGameExperience activé » à envoyer au prochain tic
+	check = nil,       -- hôte : BGE Check en cours { jeton, ordre, attendus, reponses, tics }
 };
+
+local BGD_CHECK_DEMANDE = ".bgd_check ";
+local BGD_CHECK_REPONSE = ".bgd_version ";
+local BGD_CHECK_DELAI = 12;  -- tics du minuteur (environ 6 s) avant le bilan sans toutes les réponses
 
 local function BGD_Journal(texte)
 	if Civ6Proxy_Journal ~= nil then
@@ -251,10 +269,220 @@ local function BGD_Protege(f)
 	end
 end
 
+-- Un message, tel quel, pour tous (annonce, bilan du BGE Check : pas de déduplication).
+local function BGD_Envoyer(texte)
+	Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
+	BGD_Journal("message : " .. texte);
+end
+
+local function BGD_Prive(texte, id)
+	Network.SendChat(texte, ChatTargetTypes.CHATTARGET_PLAYER or ChatTargetTypes.CHATTARGET_ALL, id);
+end
+
+local function BGD_Nom(id)
+	local cfg = PlayerConfigurations[id];
+	return cfg and Locale.Lookup(cfg:GetPlayerName()) or ("#" .. tostring(id));
+end
+
+-- Annonce d'arrivée : cette machine a BetterGameExperience actif, à telle version.
+local function BGD_Annoncer()
+	BGD.annonce = false;
+	if not BGD_Concerne() then return; end
+	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+end
+
+-- Salon d'une partie en réseau en direct, que BetterGameExperience soit actif ou non (réponse au BGE Check).
+local function BGD_SalonEnReseau()
+	return BGD.ouvert and GameConfiguration.IsNetworkMultiplayer()
+		and not GameConfiguration.IsHotseat() and not GameConfiguration.IsPlayByCloud();
+end
+
+local function BGD_Liste(t)
+	return #t > 0 and table.concat(t, ", ") or "-";
+end
+
+-- Hôte : bilan du BGE Check, pour tous. L'hôte est compté avec sa propre version.
+local function BGD_CheckBilan()
+	local c = BGD.check;
+	BGD.check = nil;
+	if c == nil then return; end
+	local memes, autres, inactifs, muets = { BGD_Nom(Network.GetLocalPlayerID()) }, {}, {}, {};
+	for _, id in ipairs(c.ordre) do
+		local r = c.reponses[id];
+		local nom = BGD_Nom(id);
+		if r == nil then
+			if Network.IsPlayerConnected(id) then table.insert(muets, nom); end
+		elseif not r.actif then
+			table.insert(inactifs, nom .. " (" .. r.version .. ")");
+		elseif r.version ~= BGD.version then
+			table.insert(autres, nom .. " (" .. r.version .. ")");
+		else
+			table.insert(memes, nom);
+		end
+	end
+	if #autres == 0 and #inactifs == 0 and #muets == 0 then
+		BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_CHECK_OK", BGD.version, BGD_Liste(memes)) .. "[ENDCOLOR]");
+	else
+		BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_CHECK_ECARTS", BGD.version,
+			BGD_Liste(memes), BGD_Liste(autres), BGD_Liste(inactifs), BGD_Liste(muets)) .. "[ENDCOLOR]");
+	end
+end
+
+-- Hôte : le bouton ne sert que dans un salon où BetterGameExperience est actif chez lui, minuteur
+-- présent (sans lui, pas de délai pour ceux qui ne répondent pas). Caché pendant le draft de MPH :
+-- son bouton RESET prend la même place.
+local function BGD_CheckBouton()
+	local b = Controls ~= nil and Controls.BGD_CheckButton;
+	if not b then return; end
+	local montrer = BGD_Concerne() and Network.IsGameHost() and Controls.BGD_SalonMinuteur ~= nil;
+	if montrer and Controls.ResetButton ~= nil and not Controls.ResetButton:IsHidden() then
+		montrer = false;
+	end
+	b:SetHide(not montrer);
+	b:SetDisabled(BGD.check ~= nil);
+end
+
+-- Hôte : clic sur le bouton BGE Check.
+local function BGD_CheckLancer()
+	if BGD.check ~= nil or not BGD_Concerne() or not Network.IsGameHost() then return; end
+	local c = { jeton = Civ6Proxy_Jeton(), ordre = BGD_AutresHumains(), attendus = {}, reponses = {}, tics = 0 };
+	BGD.check = c;
+	BGD_Journal("BGE Check : demande " .. c.jeton .. " à " .. #c.ordre .. " joueur(s)");
+	for _, id in ipairs(c.ordre) do
+		c.attendus[id] = true;
+		BGD_Prive(BGD_CHECK_DEMANDE .. c.jeton, id);
+	end
+	if #c.ordre == 0 then
+		BGD_CheckBilan();
+	end
+	BGD_CheckBouton();
+end
+
+-- Hôte : tous ceux qu'on attend ont-ils répondu (ou sont-ils partis) ?
+local function BGD_CheckComplet(c)
+	for _, id in ipairs(c.ordre) do
+		if c.reponses[id] == nil and Network.IsPlayerConnected(id) then return false; end
+	end
+	return true;
+end
+
+-- Messages cachés du BGE Check, sur chaque machine (Events.MultiplayerChat).
+local function BGD_CheckChat(fromPlayer, toPlayer, text)
+	if type(text) ~= "string" or string.sub(text, 1, 5) ~= ".bgd_" then return; end
+	if fromPlayer == Network.GetLocalPlayerID() or not BGD_SalonEnReseau() then return; end
+	local hote = Network.GetGameHostPlayerID();
+	if string.sub(text, 1, #BGD_CHECK_DEMANDE) == BGD_CHECK_DEMANDE then
+		local jeton = string.match(string.sub(text, #BGD_CHECK_DEMANDE + 1), "^(%w+)$");
+		if jeton == nil or fromPlayer ~= hote then return; end
+		local version = (Civ6Proxy_VersionInstallee ~= nil and Civ6Proxy_VersionInstallee()) or "?";
+		local actif = Civ6Proxy_Version() ~= nil;
+		BGD_Prive(BGD_CHECK_REPONSE .. jeton .. " " .. version .. " " .. (actif and "1" or "0"), hote);
+		BGD_Journal("BGE Check : réponse " .. version .. (actif and " (actif)" or " (inactif)"));
+	elseif string.sub(text, 1, #BGD_CHECK_REPONSE) == BGD_CHECK_REPONSE then
+		local c = BGD.check;
+		if c == nil or not Network.IsGameHost() or not c.attendus[fromPlayer] then return; end
+		local jeton, version, actif = string.match(string.sub(text, #BGD_CHECK_REPONSE + 1), "^(%w+) ([%w%.%+%-_%?]+) ([01])$");
+		if jeton ~= c.jeton then return; end
+		c.reponses[fromPlayer] = { version = version, actif = actif == "1" };
+		if BGD_CheckComplet(c) then
+			BGD_CheckBilan();
+			BGD_CheckBouton();
+		end
+	end
+end
+
+-- Salon de MPH : MPH descend le tableau des joueurs de 66 px (PrimaryPanelStack à 180 au lieu de
+-- 114 dans le jeu de base) pour y loger son draft (phase, consignes, bans, votes de carte), et une
+-- partie rechargée montre son libellé de phase sans texte, dont la valeur du XML est « . ». Hors
+-- draft, on vide ce libellé et on remonte le tableau de BGD.ESPACE px, agrandi d'autant (son bas ne
+-- bouge pas) ; le bandeau des colonnes (HeaderStack) et la version de MPH (PhaseLabel_Version)
+-- remontent avec lui. Dès qu'un contrôle du draft paraît, la mise en page de MPH revient.
+BGD.ESPACE = 52;
+BGD.DRAFT = { "PhaseButton", "ResetButton", "PhaseLabel_hint", "BanLabel", "BanPullDown",
+	"BanMadeLabel", "PickMadeLabel", "PickedMapLabel", "BanMapLabel", "BanMapPullDown", "MapPoolLabel",
+	"clockLabel", "RefreshLabel", "VoteMapScriptPullDown", "VoteMapAgePullDown", "VoteMapTempPullDown",
+	"VoteMapScriptLabel", "VoteMapAgeLabel", "VoteMapTempLabel" };
+BGD.mise = nil;  -- { y, version, gain } : positions de MPH et place rendue
+
+function BGD.DraftVisible()
+	for _, nom in ipairs(BGD.DRAFT) do
+		local c = Controls[nom];
+		if c ~= nil and not c:IsHidden() then return true; end
+	end
+	local phase = Controls.PhaseLabel;
+	if not phase:IsHidden() then
+		local t = phase:GetText();
+		if t ~= nil and t ~= "" and t ~= "." then return true; end
+	end
+	return false;
+end
+
+function BGD.MiseEnPage()
+	if Controls == nil or Controls.PhaseLabel == nil or Controls.PrimaryPanelStack == nil or Controls.PrimaryStackGrid == nil then
+		return;  -- pas le salon de MPH
+	end
+	local pile, grille = Controls.PrimaryPanelStack, Controls.PrimaryStackGrid;
+	if BGD.mise == nil then
+		-- Remontent ensemble : le tableau, le bandeau de ses colonnes (un contrôle à part) et la
+		-- version de MPH. Positions de MPH notées une fois.
+		BGD.mise = { y = pile:GetOffsetY(), gain = 0, origines = {} };
+		for _, nom in ipairs({ "PrimaryPanelStack", "HeaderStack", "PhaseLabel_Version" }) do
+			if Controls[nom] ~= nil then BGD.mise.origines[nom] = Controls[nom]:GetOffsetY(); end
+		end
+		if BGD.mise.y < 114 + BGD.ESPACE then
+			BGD_Journal("mise en page de MPH inattendue (tableau à " .. tostring(BGD.mise.y) .. ") : laissée telle quelle");
+		end
+	end
+	local m = BGD.mise;
+	if m.y < 114 + BGD.ESPACE then return; end
+	if not Controls.PhaseLabel:IsHidden() and Controls.PhaseLabel:GetText() == "." then
+		Controls.PhaseLabel:SetText("");
+	end
+	local gain = BGD.DraftVisible() and 0 or BGD.ESPACE;
+	if gain == m.gain then return; end
+	for nom, y in pairs(m.origines) do
+		Controls[nom]:SetOffsetY(y - gain);
+	end
+	grille:SetSizeY(grille:GetSizeY() + gain - m.gain);
+	m.gain = gain;
+	pile:CalculateSize();
+	if RealizeGridSize ~= nil then RealizeGridSize(); end
+end
+
+-- Un tic du minuteur (environ 0,5 s), tant que le salon est ouvert : annonce différée, bouton,
+-- délai du BGE Check.
+local function BGD_Tic()
+	if BGD.annonce then
+		BGD_Annoncer();
+	end
+	local c = BGD.check;
+	if c ~= nil then
+		c.tics = c.tics + 1;
+		if c.tics >= BGD_CHECK_DELAI or BGD_CheckComplet(c) then
+			BGD_CheckBilan();
+		end
+	end
+	BGD_CheckBouton();
+	BGD.MiseEnPage();
+end
+
+-- (Re)lance le minuteur ; sans lui, l'annonce part tout de suite.
+local function BGD_Armer()
+	local m = Controls ~= nil and Controls.BGD_SalonMinuteur;
+	if not m then
+		if BGD.annonce then BGD_Annoncer(); end
+		return;
+	end
+	m:SetToBeginning();
+	m:Play();
+	BGD_CheckBouton();
+	BGD.MiseEnPage();
+end
+
 -- Nouvelle ouverture du salon (partie créée, rejointe ou rechargée), ou nouvel hôte : nouveaux
 -- jetons, instantané des annonces présentes, puis la nôtre. Les autres se réannoncent en voyant le
 -- nouveau jeton de l'hôte.
-local function BGD_Ouverture()
+local function BGD_Ouverture(migration)
 	BGD.ouvert = true;
 	-- Correctifs POL coupés jusqu'au verdict ; disponibilité relue, elle change quand le proxy de
 	-- GameCore se charge (première partie) ou que ses réglages changent.
@@ -267,12 +495,15 @@ local function BGD_Ouverture()
 	BGD.perso = nil;
 	BGD.message = nil;
 	BGD.instantane = {};
+	BGD.check = nil;
+	BGD.annonce = (migration ~= true);
 	if BGD_Concerne() then
 		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 			BGD.instantane[id] = BGD_Valeur(id, BGD_CLE_VERSION);
 		end
 	end
 	BGD_Publier();
+	BGD_Armer();
 end
 
 -- Correctif : au chargement d'une partie, le salon de MPH affiche tout emplacement sous le maximum
@@ -387,9 +618,30 @@ else
 	LuaEvents.JoiningRoom_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
 	Events.MultiplayerHostMigrated.Add(BGD_Protege(function()
 		if BGD.ouvert then
-			BGD_Ouverture();
+			BGD_Ouverture(true);
 		end
 	end));
+	Events.MultiplayerChat.Add(BGD_Protege(BGD_CheckChat));
+	if Controls ~= nil and Controls.BGD_SalonMinuteur ~= nil then
+		local tic = BGD_Protege(BGD_Tic);
+		Controls.BGD_SalonMinuteur:RegisterEndCallback(function()
+			if BGD.ouvert then
+				tic();
+				Controls.BGD_SalonMinuteur:SetToBeginning();
+				Controls.BGD_SalonMinuteur:Play();
+			end
+		end);
+	else
+		BGD_Journal("minuteur absent du XML du salon : annonce immédiate, pas de bouton BGE Check");
+	end
+	if Controls ~= nil and Controls.BGD_CheckButton ~= nil then
+		local b = Controls.BGD_CheckButton;
+		b:SetText("BGE CHECK");
+		b:SetToolTipString(BGD_Txt("LOC_BGD_SALON_CHECK_AIDE"));
+		b:RegisterCallback(Mouse.eLClick, BGD_Protege(BGD_CheckLancer));
+		b:RegisterCallback(Mouse.eMouseEnter, function() UI.PlaySound("Main_Menu_Mouse_Over"); end);
+		b:SetHide(true);
+	end
 	-- Partie chargée, ou salon quitté : le salon se tait (voir BGD_Concerne).
 	local function fermeture()
 		BGD.ouvert = false;
@@ -402,15 +654,35 @@ else
 			BGD_Publier();
 		end
 	end));
+	-- Redimensionnement de MPH (changement de résolution) : il recalcule la hauteur du tableau
+	-- sans la place rendue, on la rajoute.
+	if type(Resize) == "function" then
+		BGD.ResizeBase = Resize;
+		Resize = function(...)
+			BGD.ResizeBase(...);
+			if BGD.mise ~= nil and BGD.mise.gain > 0 then
+				BGD_Protege(function()
+					Controls.PrimaryStackGrid:SetSizeY(Controls.PrimaryStackGrid:GetSizeY() + BGD.mise.gain);
+					Controls.PrimaryPanelStack:CalculateSize();
+					if RealizeGridSize ~= nil then RealizeGridSize(); end
+				end)();
+			end
+		end
+	end
 	BGD_Journal("bloc chargé");
 end
 
--- Messages de BetterGameDLLs reçus en anglais, affichés dans la langue du jeu. OnChat est la globale
+-- Messages de BetterGameDLLs reçus en anglais, affichés dans la langue du jeu ; messages « .bgd_ »
+-- cachés. OnChat est la globale
 -- de StagingRoom.lua (et de ses remplaçants), qu'OnMultiplayerChat appelle par son nom.
 if OnChat ~= nil and BGD_TxtChat ~= nil and BGD_SalonChat == nil then
 	BGD_SalonChat = true;
 	local BGD_OnChatBase = OnChat;
 	OnChat = function(fromPlayer, toPlayer, text, ...)
+		-- Messages cachés du BGE Check (.bgd_check, .bgd_version).
+		if type(text) == "string" and string.sub(text, 1, 5) == ".bgd_" then
+			return;
+		end
 		local ok, traduit = pcall(BGD_TxtChat, text);
 		if ok and traduit ~= nil then
 			text = traduit;
