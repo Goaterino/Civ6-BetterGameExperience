@@ -7,21 +7,31 @@
 //! (`0x61746143`, « Cata » lu comme un entier) et boucle dessus sans aucune borne ni contrôle de
 //! lecture, en allouant à chaque tour. Le jeu gèle, puis manque de mémoire dix minutes plus tard.
 //!
-//! Six lectures de compte ou de longueur de ce désérialiseur ne sont pas bornées :
+//! Sept lectures de compte ou de longueur ne sont pas bornées, six dans ce désérialiseur et une
+//! dans la lecture de `NetGameConfig` :
 //! - `DeserializeTypedVariantMap` (`1407a1e20`) : compte des paires clé/valeur, compte des entrées
 //!   (la boucle du gel) ;
 //! - `DeserializeNamedVariantMap` (`1407adf50`, la racine des messages `NetPlayerInfo` et
 //!   `NetGameConfig`) : compte, ou mot de drapeaux négatif suivi du compte ;
 //! - `DeserializeVariantList` (`1407ad890`) : compte ;
 //! - `DeserializeDataVariant` (`1407a3450`) : longueur, allouée élément × longueur pour un tampon
-//!   brut (bit 24 des drapeaux).
+//!   brut (bit 24 des drapeaux) ;
+//! - `140266140`, lecture des clés changées de `NetGameConfig` : compte, avec une recherche linéaire
+//!   à chaque tour.
 //!
 //! Toutes passent par la lecture de champ du sérialiseur, `ReadSerializerField` (`14099f9d0`,
 //! vtable +0x30 du lecteur). On la détourne : après la lecture d'origine, si l'adresse de retour est
-//! l'un des six sites et que la valeur lue est impossible (plus de 100 000 entrées, ou un tampon de
+//! l'un des sept sites et que la valeur lue est impossible (plus de 100 000 entrées, ou un tampon de
 //! plus de 16 Mo), elle est remplacée par 0. La boucle ne tourne pas, le message est consommé vide,
 //! la partie continue. Une valeur plausible n'est jamais touchée. En jeu, le joueur le dit à tous
 //! dans le chat (`partie.lua`, `Civ6Proxy_GardeMessages()`).
+//!
+//! Vider ne suffit pas pour `NetGameConfig` et `NetPlayerInfo` : leur traitement efface la
+//! configuration (de la partie, d'un joueur) avant d'y recopier la carte reçue, qui l'effacerait
+//! donc. Leur vtable est détournée : un message dont la lecture a demandé une correction n'est pas
+//! appliqué, la configuration reste celle d'avant. Le traitement de `NetPlayerInfo` ne borne pas
+//! l'identifiant du joueur (seulement -1) : un identifiant hors des emplacements n'est pas appliqué
+//! non plus (voir `MESSAGES`).
 //!
 //! Noms : projet Ghidra `civ6-netcode`, signets « Gel 2026-11-09 ». Les mêmes règles, posées par
 //! un hook externe pendant la mise au point, ont tourné sur deux parties entières de dix joueurs
@@ -74,13 +84,14 @@ struct Site {
     regle: Regle,
 }
 
-const SITES: [Site; 6] = [
+const SITES: [Site; 7] = [
     Site { nom: "carte : paires", retour: 0x1_407a_1f44, regle: Regle::Compte },
     Site { nom: "carte : entrées", retour: 0x1_407a_209f, regle: Regle::Compte },
     Site { nom: "carte nommée : compte", retour: 0x1_407a_dfe3, regle: Regle::CompteOuDrapeaux },
     Site { nom: "carte nommée : compte après drapeaux", retour: 0x1_407a_e03a, regle: Regle::Compte },
     Site { nom: "liste : compte", retour: 0x1_407a_d901, regle: Regle::Compte },
     Site { nom: "variant : longueur", retour: 0x1_407a_34f4, regle: Regle::Longueur },
+    Site { nom: "configuration : clés changées", retour: 0x1_4026_619b, regle: Regle::Compte },
 ];
 /// `call qword ptr [rax+30h]`, juste avant chaque adresse de retour.
 const APPEL: [u8; 3] = [0xff, 0x50, 0x30];
@@ -92,7 +103,58 @@ const FONCTIONS: &[(&str, u64, [u8; 12])] = &[
     ("DeserializeDataVariant", 0x1_407a_3450, [0x4c, 0x8b, 0xdc, 0x49, 0x89, 0x5b, 0x10, 0x49, 0x89, 0x73, 0x18, 0x57]),
     ("DeserializeNamedVariantMap", 0x1_407a_df50, [0x48, 0x8b, 0xc4, 0x55, 0x48, 0x8d, 0xa8, 0x38, 0xfe, 0xff, 0xff, 0x48]),
     ("DeserializeVariantList", 0x1_407a_d890, [0x48, 0x89, 0x5c, 0x24, 0x18, 0x48, 0x89, 0x6c, 0x24, 0x20, 0x56, 0x41]),
+    ("NetGameConfig : clés changées", 0x1_4026_6140, [0x48, 0x89, 0x5c, 0x24, 0x18, 0x48, 0x89, 0x74, 0x24, 0x20, 0x55, 0x57]),
 ];
+
+/// Un message dont le traitement efface une configuration avant d'y recopier la carte reçue
+/// (entrée `+0x178` de la carte, `1407a6660`, quatrième argument 0 : effacement par `+0x160`).
+struct Message {
+    nom: &'static str,
+    /// Sa vtable (`Civ6NetMessage.cpp`), posée par ses constructeurs.
+    vtable: u64,
+    /// Destructeur, texte, écriture, lecture, traitement.
+    entrees: [u64; 5],
+}
+const LIRE: usize = 3;
+const TRAITER: usize = 4;
+const MESSAGES: [Message; 2] = [
+    // Traitement `140266e00` : `1401033f0(configuration, carte, clés changées)`. Sans clé changée,
+    // toute la configuration de la partie est effacée puis reconstruite.
+    Message {
+        nom: "NetGameConfig",
+        vtable: 0x1_40fe_0020,
+        entrees: [0x1_4026_69c0, 0x1_4026_6ca0, 0x1_4026_7680, 0x1_4026_79d0, 0x1_4026_6e00],
+    },
+    // Traitement `140267330` : `140116630(emplacements + id × 0x40, carte, null)`, la configuration
+    // du joueur effacée puis recopiée. Identifiant en message + 0x38.
+    Message {
+        nom: "NetPlayerInfo",
+        vtable: 0x1_40fe_0048,
+        entrees: [0x1_4026_6aa0, 0x1_4026_6da0, 0x1_4026_7810, 0x1_4026_7c40, 0x1_4026_7330],
+    },
+];
+/// Le singleton de la configuration (lu par `1401008b0`) ; ses emplacements de joueurs, de 0x40
+/// octets, vont de `[+0x2e0]` à `[+0x2e8]`.
+const CONFIGURATION: u64 = 0x1_4231_00a0;
+const EMPLACEMENTS: usize = 0x2e0;
+/// `sub rsp,38h ; mov rax,[rip+0220f7e5]` : le singleton lu en `1423100a0`.
+const SINGLETON: (u64, [u8; 11]) = (0x1_4010_08b0, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0xf7, 0x20, 0x02]);
+/// Début du traitement de `NetPlayerInfo`, jusqu'au calcul `emplacements + id × 0x40` (`cmp
+/// [rcx+38h],-1` … `add rcx,[rax+2e0h]`).
+const TRAITEMENT_JOUEUR: (u64, [u8; 0x35]) = (
+    0x1_4026_7340,
+    [
+        0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89, 0xbc, 0x24,
+        0x90, 0x20, 0x00, 0x00, 0xe8, 0x53, 0x95, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40, 0x48, 0xc1, 0xe1, 0x06,
+        0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
+    ],
+);
+/// Messages lus avec une correction et pas encore traités (adresses). Borné : un message détruit
+/// sans traitement ne reste pas.
+static ABIMES: std::sync::Mutex<Vec<usize>> = std::sync::Mutex::new(Vec::new());
+const MAX_ABIMES: usize = 64;
+/// Lecture et traitement d'origine de chaque message de `MESSAGES`.
+static ORIGINES: [[AtomicUsize; 2]; 2] = [[AtomicUsize::new(0), AtomicUsize::new(0)], [AtomicUsize::new(0), AtomicUsize::new(0)]];
 
 static EXE: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
@@ -139,6 +201,18 @@ pub fn absurde(regle: Regle, valeur: u32, drapeaux: u32) -> Option<&'static str>
     }
 }
 
+/// L'identifiant d'un `NetPlayerInfo` est-il applicable ? -1 (aucun joueur) : le jeu ne fait rien ;
+/// sinon, un emplacement existant.
+pub fn joueur_valide(id: i32, emplacements: usize) -> bool {
+    id == -1 || usize::try_from(id).is_ok_and(|i| i < emplacements)
+}
+
+/// Une correction de plus (journal, chat) ; le total.
+fn compter() -> u32 {
+    A_ANNONCER.fetch_add(1, Ordering::Relaxed);
+    CORRECTIONS.fetch_add(1, Ordering::Relaxed) + 1
+}
+
 /// Les corrections faites depuis le dernier appel, remises à 0 : `Civ6Proxy_GardeMessages()`, que
 /// `partie.lua` interroge en jeu pour le dire dans le chat.
 pub fn a_annoncer() -> u32 {
@@ -152,7 +226,7 @@ type Lecture = unsafe extern "C-unwind" fn(*mut c_void, *mut c_void, *mut u8, us
 
 /// La lecture détournée. Le bout d'assembleur `bgd_messages_lecture_stub` l'appelle avec, en
 /// cinquième argument, l'adresse de retour de l'appelant de la lecture : le site dans le
-/// désérialiseur. Après la lecture d'origine, une valeur impossible à l'un des six sites devient 0.
+/// désérialiseur. Après la lecture d'origine, une valeur impossible à l'un des sept sites devient 0.
 unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut u8, n: usize, retour: usize) -> usize {
     let real: Lecture = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
     let r = real(lecteur, desc, dest, n);
@@ -167,8 +241,7 @@ unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, des
             let drapeaux = if site.regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
             if let Some(motif) = absurde(site.regle, valeur, drapeaux) {
                 std::ptr::write_unaligned(dest as *mut u32, 0);
-                A_ANNONCER.fetch_add(1, Ordering::Relaxed);
-                let total = CORRECTIONS.fetch_add(1, Ordering::Relaxed) + 1;
+                let total = compter();
                 if total <= 20 || total % 100 == 0 {
                     log(&format!(
                         "messages : {} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)",
@@ -204,6 +277,99 @@ extern "C-unwind" {
     fn bgd_messages_lecture_stub();
 }
 
+type Fonction = unsafe extern "C-unwind" fn(*mut u8, *mut c_void);
+
+/// Lecture d'un message de `MESSAGES` : s'il a fallu corriger une lecture pendant la sienne, il est
+/// noté abîmé. Le compteur est global : une correction faite au même instant sur un autre thread
+/// fait au pire écarter ce message aussi (la garde n'agit presque jamais).
+unsafe fn lire(i: usize, msg: *mut u8, lecteur: *mut c_void) {
+    let origine: Fonction = std::mem::transmute(ORIGINES[i][0].load(Ordering::Relaxed));
+    let avant = CORRECTIONS.load(Ordering::Relaxed);
+    origine(msg, lecteur);
+    let abime = CORRECTIONS.load(Ordering::Relaxed) != avant;
+    let mut liste = ABIMES.lock().unwrap_or_else(|e| e.into_inner());
+    // Une adresse réemployée par un nouveau message repart propre.
+    liste.retain(|&m| m != msg as usize);
+    if abime {
+        if liste.len() >= MAX_ABIMES {
+            liste.remove(0);
+        }
+        liste.push(msg as usize);
+        drop(liste);
+        log(&format!("messages : {} abîmé à la lecture, il ne sera pas appliqué", MESSAGES[i].nom));
+    }
+}
+
+/// Les emplacements de joueurs de la configuration, si elle existe déjà.
+unsafe fn emplacements() -> Option<usize> {
+    let exe = EXE.load(Ordering::Relaxed);
+    let configuration = *((exe + (CONFIGURATION - BASE) as usize) as *const usize);
+    if configuration == 0 {
+        return None;
+    }
+    let debut = *((configuration + EMPLACEMENTS) as *const usize);
+    let fin = *((configuration + EMPLACEMENTS + 8) as *const usize);
+    Some(fin.saturating_sub(debut) / 0x40)
+}
+
+/// Traitement d'un message de `MESSAGES` : pas appliqué s'il est abîmé, ni pour un `NetPlayerInfo`
+/// dont l'identifiant n'est pas un emplacement.
+unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
+    let abime = {
+        let mut liste = ABIMES.lock().unwrap_or_else(|e| e.into_inner());
+        let position = liste.iter().position(|&m| m == msg as usize);
+        position.map(|p| liste.remove(p)).is_some()
+    };
+    if abime {
+        log(&format!("messages : {} abîmé non appliqué, la configuration est gardée", MESSAGES[i].nom));
+        return;
+    }
+    if i == 1 {
+        let id = std::ptr::read_unaligned(msg.add(0x38) as *const i32);
+        if let Some(n) = emplacements() {
+            if !joueur_valide(id, n) {
+                let total = compter();
+                log(&format!("messages : NetPlayerInfo : joueur {id} hors des {n} emplacements, non appliqué ({total} corrections)"));
+                return;
+            }
+        }
+    }
+    let origine: Fonction = std::mem::transmute(ORIGINES[i][1].load(Ordering::Relaxed));
+    origine(msg, contexte);
+}
+
+unsafe extern "C-unwind" fn lire_config(msg: *mut u8, lecteur: *mut c_void) {
+    lire(0, msg, lecteur)
+}
+unsafe extern "C-unwind" fn traiter_config(msg: *mut u8, contexte: *mut c_void) {
+    traiter(0, msg, contexte)
+}
+unsafe extern "C-unwind" fn lire_joueur(msg: *mut u8, lecteur: *mut c_void) {
+    lire(1, msg, lecteur)
+}
+unsafe extern "C-unwind" fn traiter_joueur(msg: *mut u8, contexte: *mut c_void) {
+    traiter(1, msg, contexte)
+}
+
+/// Détourne lecture et traitement des messages de `MESSAGES` en remplaçant leurs entrées de vtable.
+/// Les vtables sont relogées par le chargeur avant DllMain : `verifier` les a comparées à l'exe chargé.
+unsafe fn installer_messages(exe: usize) -> Result<(), String> {
+    let detours: [[Fonction; 2]; 2] = [[lire_config, traiter_config], [lire_joueur, traiter_joueur]];
+    for (i, m) in MESSAGES.iter().enumerate() {
+        let vtable = (exe + (m.vtable - BASE) as usize) as *mut usize;
+        let mut old = 0u32;
+        if win::VirtualProtect(vtable.add(LIRE) as *mut c_void, 16, win::PAGE_EXECUTE_READWRITE, &mut old) == 0 {
+            return Err(format!("{} : VirtualProtect a échoué", m.nom));
+        }
+        ORIGINES[i][0].store(*vtable.add(LIRE), Ordering::Relaxed);
+        ORIGINES[i][1].store(*vtable.add(TRAITER), Ordering::Relaxed);
+        *vtable.add(LIRE) = detours[i][0] as usize;
+        *vtable.add(TRAITER) = detours[i][1] as usize;
+        win::VirtualProtect(vtable.add(LIRE) as *mut c_void, 16, old, &mut old);
+    }
+    Ok(())
+}
+
 /// Les octets attendus sont-ils tous là ? Sinon, la première différence.
 unsafe fn verifier(exe: usize) -> Result<(), String> {
     let lire = |adresse: u64, n: usize| std::slice::from_raw_parts((exe + (adresse - BASE) as usize) as *const u8, n);
@@ -218,6 +384,23 @@ unsafe fn verifier(exe: usize) -> Result<(), String> {
     for s in &SITES {
         if lire(s.retour - APPEL.len() as u64, APPEL.len()) != &APPEL[..] {
             return Err(format!("{} : pas d'appel de lecture avant {:#x}", s.nom, s.retour));
+        }
+    }
+    let empreintes: [(&str, u64, &[u8]); 2] = [
+        ("singleton de la configuration", SINGLETON.0, &SINGLETON.1),
+        ("traitement de NetPlayerInfo", TRAITEMENT_JOUEUR.0, &TRAITEMENT_JOUEUR.1),
+    ];
+    for (nom, adresse, octets) in empreintes {
+        if lire(adresse, octets.len()) != octets {
+            return Err(format!("{nom} : octets inattendus en {adresse:#x}"));
+        }
+    }
+    for m in &MESSAGES {
+        let vtable = (exe + (m.vtable - BASE) as usize) as *const usize;
+        for (k, entree) in m.entrees.iter().enumerate() {
+            if *vtable.add(k) != exe + (entree - BASE) as usize {
+                return Err(format!("{} : vtable inattendue en {:#x}", m.nom, m.vtable));
+            }
         }
     }
     Ok(())
@@ -256,6 +439,10 @@ pub unsafe fn install() {
         Ok(t) => {
             TRAMP.store(t, Ordering::Relaxed);
             log(&format!("messages : garde posée (lecture de champ en exe+{:#x}, {} sites)", at - exe, SITES.len()));
+            match installer_messages(exe) {
+                Ok(()) => log("messages : NetGameConfig et NetPlayerInfo abîmés écartés"),
+                Err(e) => log(&format!("messages : {e}, messages de configuration non surveillés")),
+            }
         }
         Err(e) => log(&format!("messages : {e}, garde absente")),
     }
@@ -281,6 +468,16 @@ mod tests {
         A_ANNONCER.store(3, Ordering::Relaxed);
         assert_eq!(a_annoncer(), 3);
         assert_eq!(a_annoncer(), 0, "une correction n'est annoncée qu'une fois");
+    }
+
+    #[test]
+    fn identifiant_du_joueur() {
+        assert!(joueur_valide(-1, 0), "aucun joueur : le jeu ne fait rien");
+        assert!(joueur_valide(0, 12));
+        assert!(joueur_valide(11, 12));
+        assert!(!joueur_valide(12, 12), "hors des emplacements");
+        assert!(!joueur_valide(0x6174_6143, 64), "identifiant abîmé");
+        assert!(!joueur_valide(-2, 64));
     }
 
     #[test]
@@ -327,6 +524,15 @@ mod tests {
         }
         for s in &SITES {
             assert_eq!(lire(s.retour - APPEL.len() as u64, APPEL.len()), &APPEL[..], "{}", s.nom);
+        }
+        assert_eq!(lire(SINGLETON.0, SINGLETON.1.len()), &SINGLETON.1[..], "singleton");
+        assert_eq!(lire(TRAITEMENT_JOUEUR.0, TRAITEMENT_JOUEUR.1.len()), &TRAITEMENT_JOUEUR.1[..], "traitement de NetPlayerInfo");
+        // Dans le fichier, les vtables portent les adresses à la base préférée (0x140000000).
+        for m in &MESSAGES {
+            for (k, entree) in m.entrees.iter().enumerate() {
+                let q = u64::from_le_bytes(lire(m.vtable + 8 * k as u64, 8).try_into().unwrap());
+                assert_eq!(q, *entree, "{} : entrée {k}", m.nom);
+            }
         }
         if let Ok(dx11) = std::fs::read(format!(r"{EXE_DIR}\CivilizationVI.exe")) {
             let same = offset(&dx11, LECTURE).is_some_and(|o| dx11[o..o + PROLOGUE.len()] == PROLOGUE);

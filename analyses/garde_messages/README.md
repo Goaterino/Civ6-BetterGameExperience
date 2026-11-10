@@ -109,15 +109,22 @@ ou plante plus loin. Le gel du 9 novembre venait d'un autre chemin (`TypedVarian
 format binaire, site « carte : entrées »), où vider la carte est moins grave ; ce sont les sites
 « carte nommée » qui posent problème.
 
-**À faire** : quand la garde agit pendant la lecture d'un `NetPlayerInfo` ou d'un `NetGameConfig`, ne
-pas appliquer le message. Piste : détourner aussi les deux traitements (`140267330`, `140266e00`)
-et les sauter si la garde a corrigé une lecture depuis le début de la lecture du message (compteur
-par thread, remis à zéro par la lecture `140267c40` et celle de `NetGameConfig`), avec une ligne au
-journal. À vérifier d'abord : que lecture et traitement d'un message se suivent sur le même thread.
+**Corrigé** (même jour) : les deux messages ne sont plus appliqués quand la garde a agi pendant leur
+lecture. Leurs fonctions forment des vtables de cinq entrées (destructeur, texte, écriture, lecture,
+traitement), `140fe0020` pour `NetGameConfig` (lecture `1402679d0`, traitement `140266e00`) et
+`140fe0048` pour `NetPlayerInfo` (lecture `140267c40`, traitement `140267330`), posées par leurs
+constructeurs. Le proxy remplace les entrées lecture et traitement : la lecture note le message
+abîmé si le compteur de corrections a bougé pendant elle ; le traitement d'un message noté ne fait
+rien. Repérer le message par son adresse ne suppose pas que lecture et traitement se suivent sur le
+même thread. Voir `startup_proxy/README.md`, « La garde des messages réseau ».
 
-Au passage : le traitement de `NetPlayerInfo` ne vérifie l'identifiant du joueur que contre -1
-(`configurations + id × 0x40`, sans borne supérieure). Un message abîmé à cet endroit écrit hors du
-tableau. La garde ne couvre pas cette lecture.
+Deux autres trous, corrigés en même temps :
+- La lecture des clés changées de `NetGameConfig` (`140266140`) lit un compte sans borne, puis
+  boucle dessus avec une recherche linéaire à chaque tour : septième site de la garde (retour
+  `14026619b`).
+- Le traitement de `NetPlayerInfo` ne vérifie l'identifiant du joueur que contre -1
+  (`emplacements + id × 0x40`, sans borne supérieure) : un identifiant abîmé écrivait hors du
+  tableau. Un identifiant hors des emplacements de la configuration n'est plus appliqué.
 
 ## Corrigé avant le merge (`a887d26`)
 
