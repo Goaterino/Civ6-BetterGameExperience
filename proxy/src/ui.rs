@@ -467,6 +467,46 @@ pub fn patch_equipes(src: &[u8]) -> Option<Vec<u8>> {
     Some(out)
 }
 
+/// Remplace `ContextPtr:SetHide(` dans les panneaux de MPH : afficher met le contexte dans la file
+/// des popups, masquer l'en retire. Écrit sur une seule ligne, en tête : les numéros de ligne restent.
+const POPUP_MPH_DEF: &[u8] = b"include(\"PopupPriorityLoader_\", true); BGD_PopupMPH = function(h) if h then if UIManager:IsInPopupQueue(ContextPtr) then UIManager:DequeuePopup(ContextPtr); end; ContextPtr:SetHide(true); elseif UIManager:IsInPopupQueue(ContextPtr) then ContextPtr:SetHide(false); else UIManager:QueuePopup(ContextPtr, PopupPriority.InGameTopOptionsMenu or ((PopupPriority.PausePanel or PopupPriority.Utmost) + 3)); end end; ";
+const POPUP_MPH_DONE: &str = "panneau de MPH affiché au-dessus de la pause";
+
+/// La pause de MPH (PausePanel) est une popup de priorité `PausePanel` (Utmost + 2) ; le menu
+/// MULTIPLAYER HELPER (MPHOptions.lua) et le vote de remap (VotePanel.lua) sont de simples contextes
+/// ajoutés à InGame, affichés par `ContextPtr:SetHide(false)` : toute popup passe au-dessus, et le
+/// cadre de la pause (ConsumeMouse) cache leurs boutons. Leurs `ContextPtr:SetHide(` passent par la
+/// file des popups, à la priorité du menu Échap (`InGameTopOptionsMenu`, Utmost + 5).
+pub fn patch_popup_mph(src: &[u8]) -> Result<Vec<u8>, String> {
+    const PAT: &[u8] = b"ContextPtr:SetHide(";
+    const NEW: &[u8] = b"BGD_PopupMPH(";
+    let has = |pat: &[u8]| src.windows(pat.len()).any(|w| w == pat);
+    if !has(b"MPH Remap Panel") && !has(b"MPH very own In Game option menu") {
+        return Err("pas le panneau de MPH".into());
+    }
+    if has(b"BGD_PopupMPH") {
+        return Err("déjà corrigé".into());
+    }
+    if !has(PAT) {
+        return Err("ContextPtr:SetHide introuvable".into());
+    }
+    let bom = if src.starts_with(b"\xEF\xBB\xBF") { 3 } else { 0 };
+    let mut out = Vec::with_capacity(src.len() + POPUP_MPH_DEF.len() + 64);
+    out.extend_from_slice(&src[..bom]);
+    out.extend_from_slice(POPUP_MPH_DEF);
+    let mut i = bom;
+    while i < src.len() {
+        if src[i..].starts_with(PAT) {
+            out.extend_from_slice(NEW);
+            i += PAT.len();
+        } else {
+            out.push(src[i]);
+            i += 1;
+        }
+    }
+    Ok(out)
+}
+
 const MOUVEMENTS_BLOCK: &str = include_str!("ui_mouvements.lua");
 
 /// Pas de zone de déplacement pour une unité posée sur un quartier défendable ennemi : le parcours de
@@ -967,7 +1007,9 @@ pub fn patch_congres_cibles(src: &[u8]) -> Result<Vec<u8>, String> {
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
 /// Corrections appliquées dès que l'accroche Lua est posée : fichier, correction, journal.
-const FIXES: [(&str, Fix, &str); 9] = [
+const FIXES: [(&str, Fix, &str); 11] = [
+    ("MPHOptions.lua", patch_popup_mph, POPUP_MPH_DONE),
+    ("VotePanel.lua", patch_popup_mph, POPUP_MPH_DONE),
     ("DiplomacyActionView.lua", patch_diplomacy_action_view, DIPLOMATIE_DONE),
     ("MinimapPanel.lua", patch_minimap_panel, "lentille du colon : cases proches d'une ville interdites"),
     ("SelectedUnit.lua", patch_selected_unit, "zone de déplacement sur un quartier ennemi défendable"),
@@ -1690,6 +1732,21 @@ mod tests {
             assert!(!out.windows(7).any(|w| w == b"#Teams["));
             assert_eq!(out.iter().filter(|&&b| b == b'\n').count(), src.iter().filter(|&&b| b == b'\n').count());
         }
+    }
+
+    #[test]
+    fn panneaux_de_mph_en_popup() {
+        for file in ["MPHOptions.lua", "VotePanel.lua"] {
+            let Some(src) = read(format!(r"{MPH}\ui\Additions\{file}")) else { continue };
+            let out = patch_popup_mph(&src).unwrap();
+            let text = String::from_utf8_lossy(&out);
+            assert_eq!(text.matches("ContextPtr:SetHide(").count(), 2, "{file} : seulement dans la définition");
+            assert!(text.matches("BGD_PopupMPH(").count() >= 3, "{file}");
+            assert_eq!(out.iter().filter(|&&b| b == b'\n').count(), src.iter().filter(|&&b| b == b'\n').count());
+            assert!(patch_popup_mph(&out).is_err(), "pas deux fois");
+            assert!(is_file(&format!(r"{MPH}\ui\Additions\{file}"), file));
+        }
+        assert!(patch_popup_mph(b"ContextPtr:SetHide(true)").is_err(), "VotePanel.lua d'un autre mod");
     }
 
     #[test]
