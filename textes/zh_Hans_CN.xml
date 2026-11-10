@@ -311,6 +311,18 @@
 		<Row Tag="LOC_BGD_CHAT_NFLM_DESACTIVE" Language="zh_Hans_CN">
 			<Text>No First/Last moves 已关闭：所有玩家都需要安装相同版本的 BetterGameExperience。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="zh_Hans_CN">
+			<Text>{1} 已启用 BetterGameExperience {2}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="zh_Hans_CN">
+			<Text>BGE Check：所有玩家都已启用 BetterGameExperience {1}（{2}）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CHECK_ECARTS" Language="zh_Hans_CN">
+			<Text>BGE Check（主机：{1}）。相同版本：{2}。其他版本：{3}。已安装但未启用：{4}。无回应（没有 BetterGameExperience）：{5}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_SALON_CHECK_AIDE" Language="zh_Hans_CN">
+			<Text>询问每位玩家的 BetterGameExperience 版本，然后在聊天中向所有人公布结果。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_ORDRES_RETENUS" Language="zh_Hans_CN">
 			<Text>指令已暂缓：还不是所有玩家的回合都已开始。</Text>
 		</Row>
