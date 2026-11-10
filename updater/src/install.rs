@@ -9,6 +9,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::game;
 use crate::lang::f;
 use crate::textes as tx;
 use crate::noms;
@@ -128,10 +129,16 @@ pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     }
 }
 
-/// Point d'entrée du processus administrateur : son erreur va dans `work`.
+/// Point d'entrée du processus administrateur : son erreur va dans `work`. Ses arguments viennent
+/// du processus utilisateur : le dossier du jeu est revérifié avant toute écriture.
 pub fn apply_elevated(action: &str, work: &Path, game: &Path) -> i32 {
     let action = if action == "uninstall" { Action::Uninstall } else { Action::Install };
-    match apply(action, game, work) {
+    let result = if game::is_game_dir(game) {
+        apply(action, game, work)
+    } else {
+        Err(f(tx::X_IS_NOT_THE_CIVILIZATION_VI, &[&game.display()]))
+    };
+    match result {
         Ok(()) => 0,
         Err(e) => {
             let _ = fs::write(work.join(ERROR_FILE), e);
@@ -143,7 +150,11 @@ pub fn apply_elevated(action: &str, work: &Path, game: &Path) -> i32 {
 fn apply(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     match action {
         // Relue ici : en administrateur, on ne se fie pas à ce que le processus utilisateur a vérifié.
-        Action::Install => install(game, work, &release::load(work)?),
+        // Chaque fichier est lu une fois, contrôlé, et ce sont ces octets qui sont écrits.
+        Action::Install => {
+            let (m, data) = release::load(work)?;
+            install(game, &m, &data)
+        }
         Action::Uninstall => uninstall(game),
     }
 }
@@ -188,18 +199,21 @@ fn check_foreign(game: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn install(game: &Path, work: &Path, m: &Manifest) -> Result<(), String> {
+/// Pose les fichiers de la release : `data[i]`, déjà contrôlé, est le contenu de `m.files[i]`
+/// (`release::load`).
+fn install(game: &Path, m: &Manifest, data: &[Vec<u8>]) -> Result<(), String> {
     // La release doit poser exactement nos cibles, aux mêmes endroits.
     let known = |f: &release::File| TARGETS.iter().any(|t| t.name == f.name && t.dest == f.dest);
-    if m.files.len() != TARGETS.len() || !m.files.iter().all(known) {
+    if m.files.len() != TARGETS.len() || data.len() != m.files.len() || !m.files.iter().all(known) {
         return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
     }
     check_foreign(game)?;
     restore_old(game)?;
     for t in &TARGETS {
+        let i = m.files.iter().position(|f| f.name == t.name).unwrap();
         let dll = t.path(game);
         let new = dll.with_extension("dll.new");
-        fs::copy(work.join(t.name), &new).map_err(|e| format!("{}: {e}", new.display()))?;
+        fs::write(&new, &data[i]).map_err(|e| format!("{}: {e}", new.display()))?;
         fs::rename(&new, &dll).map_err(|e| format!("{}: {e}", dll.display()))?;
     }
     Ok(())
@@ -275,6 +289,46 @@ mod tests {
         assert!(st.iter().any(|(n, s)| *n == noms::GAMECORE_PROXY && *s == State::Absent));
         assert!(check_foreign(&dir).is_err());
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// Release de deux fichiers, et leur contenu, comme `release::load` les rend.
+    fn release_de(contenus: [&[u8]; 2]) -> (Manifest, Vec<Vec<u8>>) {
+        let files = TARGETS
+            .iter()
+            .zip(contenus)
+            .map(|(t, c)| release::File { name: t.name.into(), dest: t.dest.into(), sha256: release::sha256_hex(c) })
+            .collect();
+        (Manifest { version: "9.9.9".into(), files }, contenus.iter().map(|c| c.to_vec()).collect())
+    }
+
+    #[test]
+    fn pose_des_octets_controles() {
+        let dir = game("pose", &[]);
+        // Le dossier de travail n'est pas relu : seuls les octets donnés sont écrits.
+        let (m, data) = release_de([b"proxy RolloverProxyStatus", b"demarrage StartupProxyStatus"]);
+        install(&dir, &m, &data).unwrap();
+        assert_eq!(read(&dir, "DLC/Expansion2/Binaries/Win64/BGD_GameCore_XP2.dll").unwrap(), data[0]);
+        assert_eq!(read(&dir, "Base/Binaries/Win64Steam/winmm.dll").unwrap(), data[1]);
+        assert!(read(&dir, "DLC/Expansion2/Binaries/Win64/BGD_GameCore_XP2.dll.new").is_none());
+        assert!(status(&dir, Some(&m)).iter().all(|(_, s)| *s == State::UpToDate));
+        // Une release qui ne pose pas exactement nos cibles est refusée.
+        assert!(install(&dir, &m, &data[..1]).is_err());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn administrateur_hors_du_jeu() {
+        let work = std::env::temp_dir().join(format!("bgd_install_work_{}", std::process::id()));
+        let faux = std::env::temp_dir().join(format!("bgd_install_faux_{}", std::process::id()));
+        let _ = fs::remove_dir_all(&faux);
+        fs::create_dir_all(&work).unwrap();
+        fs::create_dir_all(&faux).unwrap();
+        assert_eq!(apply_elevated("install", &work, &faux), 1);
+        assert_eq!(apply_elevated("uninstall", &work, &faux), 1);
+        assert!(fs::read_to_string(work.join(ERROR_FILE)).unwrap().contains(&faux.display().to_string()));
+        assert_eq!(fs::read_dir(&faux).unwrap().count(), 0, "rien d'écrit hors du jeu");
+        fs::remove_dir_all(&work).unwrap();
+        fs::remove_dir_all(&faux).unwrap();
     }
 
     #[test]

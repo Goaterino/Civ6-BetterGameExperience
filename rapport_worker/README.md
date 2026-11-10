@@ -10,9 +10,11 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
 
 - **`POST /rapport`** : le zip arrive dans le champ `archive` d'un formulaire multipart, avec
   l'en-tête `X-BGE-Cle`. Sans la bonne clé, le Worker répond 403 avant toute autre chose. Il
-  vérifie ensuite la limite par IP (3 rapports par minute), la taille (50 Mo au plus) et la signature du zip,
-  le range dans R2 sous `rapports/BGE-XXXXXX.zip`, lit son `meta.json` et ouvre un fil dans le salon
-  forum, en anglais : titre `BGE-XXXXXX · joueur · turn N`, la description écrite par le joueur
+  vérifie ensuite la limite par IP (3 rapports par minute), la taille (50 Mo au plus), la signature du
+  zip et son `meta.json` (première entrée, 1 Mo au plus décompressé, un objet JSON) : sans lui, ce
+  n'est pas un rapport du jeu, refusé (400) avant tout rangement et toute suppression. Puis le quota
+  de 24 heures (voir [Quota par jour](#quota-par-jour)). Il range le zip dans R2 sous
+  `rapports/BGE-XXXXXX.zip` et ouvre un fil dans le salon forum, en anglais : titre `BGE-XXXXXX · joueur · turn N`, la description écrite par le joueur
   juste sous le titre, puis le résumé de la partie (pseudo, Steam ID et lien vers son profil,
   partie, version de BGE, archive) et le lien de téléchargement. Il rend
   `{"id": "BGE-XXXXXX"}`, que le jeu montre au joueur.
@@ -22,7 +24,9 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
   se lit avec `strings` et servirait à spammer le salon, et un webhook n'accepte que 10 Mo de pièces
   jointes, moins qu'une sauvegarde tardive avec ses journaux. Le Worker garde le webhook secret.
 - Le bucket ne dépasse jamais 9,5 Go : les rapports les plus anciens sont supprimés d'abord (voir
-  [Plafond du bucket et rétention](#plafond-du-bucket-et-rétention)).
+  [Plafond du bucket et rétention](#plafond-du-bucket-et-rétention)), mais au plus 60 rapports et
+  1 Go sont acceptés par 24 heures : au-delà, les nouveaux sont refusés plutôt que d'effacer les
+  anciens.
 - Si Discord ne répond pas, le zip reste dans R2 et le joueur a son numéro : on le retrouve dans le
   bucket. L'erreur (`rapport BGE-… : Discord <code> : <réponse>`) va aux journaux du Worker : en direct
   avec `npx wrangler tail`, et gardés dans le tableau de bord (Workers > bge-rapports > Logs).
@@ -71,10 +75,11 @@ jusqu'à 100 000 requêtes par jour).
 
    Pour le tag du forum, décommenter `DISCORD_TAG` dans [wrangler.toml](wrangler.toml) avant de
    déployer.
-4. **Essai**, avec un zip quelconque (le Worker exige seulement un zip) :
+4. **Essai**, avec un rapport du jeu (un zip dont la première entrée est `meta.json`, par exemple un
+   de ceux que le proxy garde dans `%LOCALAPPDATA%`) et la clé des rapports :
 
    ```bash
-   curl -sS -F "archive=@essai.zip;type=application/zip" https://bge-rapports.<compte>.workers.dev/rapport
+   curl -sS -H "X-BGE-Cle: <CLE_CLIENT>" -F "archive=@BGE_rapport_1.zip;type=application/zip" https://bge-rapports.<compte>.workers.dev/rapport
    ```
 
    Il doit répondre `{"id":"BGE-…"}`, et un fil doit apparaître dans le forum.
@@ -85,6 +90,22 @@ jusqu'à 100 000 requêtes par jour).
 
    Pour essayer avant une release, avec une DLL déjà installée : ajouter
    `rapport_url=https://bge-rapports.<compte>.workers.dev/rapport` à `rollover_proxy.cfg`.
+
+## Quota par jour
+
+La clé se lit dans la DLL et la limite par IP se contourne avec plusieurs adresses : sans autre
+borne, des zips de 50 Mo envoyés en boucle rempliraient le bucket en quelques heures, feraient
+partir tous les vrais rapports (voir le plafond ci-dessous) et ouvriraient autant de fils Discord.
+Le Worker accepte donc au plus **60 rapports** et **1 Go** sur les 24 dernières heures, tous
+joueurs confondus. Au-delà, il répond 503 et ne supprime rien : le jeu garde le rapport sur le
+Bureau du joueur, et la raison va aux journaux (`rapport refusé : …`). Pour une petite communauté,
+c'est loin d'une journée normale ; à 1 Go par jour, il faut plus d'une semaine de déchets pour
+atteindre le plafond du bucket.
+
+Le décompte se fait sur les rapports du bucket (date de dépôt de R2), avec la liste que le plafond
+lit déjà : ni KV ni Durable Object. Deux rapports reçus au même instant peuvent dépasser le quota
+d'un rapport. Pour changer les valeurs, ajouter `QUOTA_RAPPORTS = "100"` ou
+`QUOTA_OCTETS = "2000000000"` sous `[vars]` dans [wrangler.toml](wrangler.toml), puis redéployer.
 
 ## Plafond du bucket et rétention
 
@@ -121,7 +142,8 @@ Hors Cloudflare, R2, la limite par IP et Discord simulés (Node 20 ou plus) :
 node --test rapport_worker/test/index.test.js
 ```
 
-Ils couvrent la lecture de `meta.json` dans le zip, le plafond du bucket (plus anciens supprimés
+Ils couvrent la lecture de `meta.json` dans le zip (brut ou en deflate, bombe de décompression),
+le refus d'un zip sans `meta.json` lisible, le quota de 24 heures, le plafond du bucket (plus anciens supprimés
 d'abord, pagination de la liste), le rangement, le fil Discord (titre, résumé,
 tag, mentions coupées), le téléchargement avec et sans la clé, Discord en panne, et les refus
 (limite, pas un zip, trop gros, mauvaise route). Le workflow de release les lance.
