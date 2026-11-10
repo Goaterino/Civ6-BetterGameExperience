@@ -1,0 +1,64 @@
+# Tests à chaque push et pull request (SOMMAIRE.md, « Tests continus ») : les trois crates Rust sur
+# Windows, comme le workflow de release, puis les tests Lua, ceux du relais des rapports et les textes
+# sur Linux. Sans secret ni écriture : les tests Lua qui ont besoin des fichiers du jeu sont sautés.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      # Même chaîne d'outils que la release : GNU, avec son éditeur de liens embarqué
+      # (startup_proxy/build.rs passe un .def à ld).
+      - name: Rust (GNU)
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
+          rustup default stable-x86_64-pc-windows-gnu
+
+      # Avec et sans les outils de diagnostic (feature `diag`, par défaut), comme la release.
+      - name: Tests
+        run: |
+          (cd proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
+          (cd startup_proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
+          (cd updater && cargo test --release --locked)
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Lua 5.4
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+      # Lancés depuis la racine du dépôt, comme l'indique l'en-tête de chaque test.
+      - name: Tests Lua
+        run: |
+          echec=0
+          for f in proxy/tests/test_*.lua startup_proxy/tests/test_*.lua textes/test_textes.lua; do
+            echo "::group::$f"
+            lua5.4 "$f" || { echo "::error file=$f::échec"; echec=1; }
+            echo "::endgroup::"
+          done
+          exit $echec
+
+      - name: Relais des rapports
+        run: cd rapport_worker && node --test test/index.test.js
+
+      # Fichiers générés à jour, chaque texte dans chaque langue (textes/README.md).
+      - name: Textes
+        run: python3 textes/gen_textes.py --check --strict

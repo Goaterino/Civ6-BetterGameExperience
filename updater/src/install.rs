@@ -210,7 +210,10 @@ fn install(game: &Path, m: &Manifest, data: &[Vec<u8>]) -> Result<(), String> {
     check_foreign(game)?;
     restore_old(game)?;
     for t in &TARGETS {
-        let i = m.files.iter().position(|f| f.name == t.name).unwrap();
+        // Un manifeste qui citerait deux fois la même cible n'a pas celle-ci.
+        let Some(i) = m.files.iter().position(|f| f.name == t.name) else {
+            return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
+        };
         let dll = t.path(game);
         let new = dll.with_extension("dll.new");
         fs::write(&new, &data[i]).map_err(|e| format!("{}: {e}", new.display()))?;
