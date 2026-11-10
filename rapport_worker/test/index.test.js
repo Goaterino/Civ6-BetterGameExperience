@@ -43,8 +43,8 @@ function env(options = {}) {
 		PLAFOND_OCTETS: options.plafond,
 		LIMITE: { limit: async () => ({ success: !options.limite }) },
 		RAPPORTS: {
-			head: async (k) => (objets.has(k) ? {} : null),
-			put: async (k, v, o) => objets.set(k, { data: v, size: v.byteLength, uploaded: new Date(Date.now() + objets.size), ...o }),
+			head: async (k) => (objets.has(k) ? { uploaded: objets.get(k).uploaded } : null),
+			put: async (k, v, o) => objets.set(k, { data: v, size: v.byteLength ?? v.length, uploaded: new Date(Date.now() + objets.size), ...o }),
 			delete: async (ks) => { for (const k of [].concat(ks)) objets.delete(k); },
 			// Pages de 2 objets, pour essayer la pagination.
 			list: async ({ prefix, cursor }) => {
@@ -247,11 +247,21 @@ test("quota sur 24 heures : refusé au-delà, sans rien supprimer", async () => 
 	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 200);
 	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 200);
 	const r = await worker.fetch(envoi(zip(META)), e);
+	// L'équipe est prévenue une fois : le refus suivant n'ouvre pas de second fil.
+	assert.equal(e.discord.length, 3);
+	assert.equal(e.discord[2].corps.thread_name, "Bug report quota reached");
+	assert.match(e.discord[2].corps.content, /quota de 2/);
+	assert.deepEqual(e.discord[2].corps.allowed_mentions, { parse: [] });
+	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 503);
+	assert.equal(e.discord.length, 3);
+	// Une alerte de plus de 24 heures ne retient plus la suivante.
+	e.objets.get("etat/alerte_quota").uploaded = new Date(Date.now() - 25 * 3600e3);
+	assert.equal((await worker.fetch(envoi(zip(META)), e)).status, 503);
+	assert.equal(e.discord.length, 4);
 	console.log = logs;
 	assert.equal(r.status, 503);
-	assert.equal(e.objets.size, 3);
+	assert.equal([...e.objets.keys()].filter((k) => k.startsWith("rapports/")).length, 3);
 	assert.ok(e.objets.has("rapports/BGE-000001.zip"));
-	assert.equal(e.discord.length, 2);
 	// Quota en octets : refusé avant que le plafond du bucket ne fasse partir quoi que ce soit.
 	const e2 = { ...env({ plafond: 1000 }), QUOTA_OCTETS: "500" };
 	e2.objets.set("rapports/BGE-000002.zip", { data: new Uint8Array(0), size: 900, uploaded: new Date(Date.now() - 2 * 86400e3) });
@@ -261,8 +271,8 @@ test("quota sur 24 heures : refusé au-delà, sans rien supprimer", async () => 
 	console.log = logs;
 	assert.ok(gros.byteLength > 500);
 	assert.equal(r2.status, 503);
-	assert.deepEqual([...e2.objets.keys()], ["rapports/BGE-000002.zip"]);
-	assert.equal(e2.discord.length, 0);
+	assert.deepEqual([...e2.objets.keys()], ["rapports/BGE-000002.zip", "etat/alerte_quota"]);
+	assert.equal(e2.discord.length, 1);
 });
 
 test("Steam ID : celui du jeu, sinon celui de Windows, sinon inconnu", () => {
