@@ -90,7 +90,13 @@ local function NewJeu(options)
 		GetLeaderTypeName = function() return "LEADER_CATHERINE_DE_MEDICI"; end,
 		GetNetworkIdentifer = function() return options.steam; end,
 		SetWantsPause = function(_, v) m.wantsPause = v; end,
+		IsHuman = function() return true; end,
+		GetSlotStatus = function() return "pris"; end,
 	};
+	-- Emplacement de configuration : humain ou IA, occupé ou non.
+	local function Emplacement(humain, statut)
+		return { IsHuman = function() return humain; end, GetSlotStatus = function() return statut; end };
+	end
 
 	local controls = { PopupRoot = {} };
 	if not options.sansBouton then controls.BGD_RapportButton = Control(); end
@@ -120,15 +126,18 @@ local function NewJeu(options)
 				IsNetworkMultiplayer = function() return multi; end,
 				IsPlayByCloud = function() return false; end,
 				IsPaused = function() return m.paused; end,
-				GetMultiplayerPlayerIDs = function() return { 0, 1 }; end,
+				-- Tous les emplacements : deux humains, une IA, un emplacement humain vide.
+				GetMultiplayerPlayerIDs = function() return { 0, 1, 2, 3 }; end,
 			},
-			PlayerConfigurations = { [0] = cfg },
+			PlayerConfigurations = { [0] = cfg, [1] = Emplacement(true, "pris"), [2] = Emplacement(false, "pris"),
+				[3] = Emplacement(true, "ouvert") },
+			SlotStatus = { SS_TAKEN = "pris", SS_OPEN = "ouvert" },
 			Network = {
 				GetLocalPlayerID = function() return 0; end,
 				IsGameHost = function() return true; end,
 				BroadcastPlayerInfo = function() m.broadcasts = m.broadcasts + 1; end,
 				SendChat = function(text, target, to) table.insert(m.chat, { text = text, target = target, to = to }); end,
-				GetGameConfigSaveType = function() return "multi"; end,
+				GetGameConfigurationSaveType = function() return "multi"; end,
 				SaveGame = function(f) table.insert(m.saves, f); end,
 			},
 			ChatTargetTypes = { CHATTARGET_ALL = -1 },
@@ -256,7 +265,8 @@ do
 	check(not m.Formulaire(), "formulaire fermé à l'envoi");
 	check(Dernier(m) == "[COLOR_Civ6Green]BGE - Testeur is sending the bug report...[ENDCOLOR]", "message d'envoi : " .. Dernier(m));
 	check(Traduit(Dernier(m)) == "[COLOR_Civ6Green]BGE - Testeur : envoi du rapport en cours...[ENDCOLOR]", "envoi traduit : " .. tostring(Traduit(Dernier(m))));
-	check(#m.saves == 1 and m.saves[1].Name == "BGE_rapport" and m.saves[1].IsQuicksave == false, "sauvegarde du rapport");
+	check(#m.saves == 1 and m.saves[1].Name == "BGE_rapport" and m.saves[1].IsQuicksave == false
+		and m.saves[1].Type == "multi", "sauvegarde du rapport");
 	check(#m.envois == 1, "envoi lancé");
 	local lignes = m.envois[1] or "";
 	for _, attendu in ipairs({ "tour=87", "joueur=Testeur", "steam_id=76561198000000042", "multijoueur=1", "hote=1", "en_pause=0",
