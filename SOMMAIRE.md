@@ -53,7 +53,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   succès avec fuite comptés comme des succès (analyse statique) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
-  hook Frida et décodeur de config (analyse statique) ;
+  hook Frida et décodeur de config (analyse statique) ; branchement sur CivUp, bot de draft et
+  activité Discord ([hook_externe](analyses/lobby/hook_externe.md), conception) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
