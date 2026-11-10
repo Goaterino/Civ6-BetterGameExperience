@@ -60,6 +60,10 @@ messages en anglais. Ceux qui l'ont les voient dans leur langue.
 **No First/Last moves (BGE)** est cochée par défaut dans les options de partie ; l'hôte peut la
 décocher avant le lancement. Tous les joueurs doivent avoir BetterGameExperience, à la même version.
 
+**Disable Advanced UI indicators (BGE)**, juste en dessous, est décochée par défaut. Quand l'hôte la
+coche, aucun joueur ne voit l'avancement de la recherche et du dogme (**x/y (+z)**) ni la production
+en réserve des villes, quels que soient ses propres réglages.
+
 ## Réglages
 
 Tout se règle dans **Options → BetterGameExperience** : un réglage par fonctionnalité, et un interrupteur

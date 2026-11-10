@@ -2,7 +2,33 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
-## BetterGameExperience 0.8.2
+## BetterGameExperience 0.9.0
+
+Enthält alles aus der Vorabversion 0.8.1. Im Mehrspielermodus brauchen alle menschlichen Spieler
+0.9.0 für die Korrekturen **[alle Spieler]**: Eine Lobby, die 0.8.x und 0.9.0 mischt, schaltet sie
+ab.
+
+### Mehrspielerkorrekturen [alle Spieler]
+- **Zuschauer (Better Spectator Mod)** zählen nicht mehr als Hauptzivilisationen: Sie stehen nicht
+  mehr in den Spielerlisten der Skripte, der Siege und der Punktzahl. BetterGameExperience bringt
+  dafür eigene Versionen der Skripte von Better Spectator Mod mit. Beitrag von banipouz.
+- **Desync durch einen Zuschauer**: Wechselt ein Zuschauer den beobachteten Spieler,
+  desynchronisiert das die Partie nicht mehr (Better Spectator Mod schrieb ihn in die Spieldaten,
+  nur auf dem Rechner des Zuschauers).
+- **Zuschauer in der Anführerleiste**: Spieler sehen Zuschauer nicht mehr in der Leiste oben rechts,
+  wo sie wie eine KI erschienen, mit einem « ? »-Porträt, ihrem Namen und ihren Erträgen.
+- **Zuschauerrunde nach einer Pause**: Nach einer Pause von MPH endet die Runde des Zuschauers
+  wieder von selbst, statt darauf zu warten, dass er sie von Hand beendet.
+
+### Mehrspieler
+- **Beschädigte Netzwerknachrichten**: Eine beschädigte Nachricht, gesehen beim Verbindungsabbruch
+  eines Spielers, konnte das Spiel einfrieren, bis ihm Minuten später der Speicher ausging.
+  Unmögliche Werte einer solchen Nachricht werden jetzt verworfen und die Partie läuft weiter; eine
+  Zeile im Chat sagt es allen. Eine beschädigte Spiel- oder Spielerkonfiguration wird nicht mehr
+  angewendet, statt die Konfiguration zu löschen. Schützt die Spieler, die BetterGameExperience
+  haben. Beitrag von yodha.
+- **No First/Last moves mit einem Zuschauer als Host**: Die Runde beginnt jetzt, sobald die Spieler
+  bereit sind, statt sie bis zur Sicherheitsfrist festzuhalten.
 
 ### Neu
 - **Fortschritt von Forschung und Ausrichtung**: Im Panel oben links zeigt **x/y** neben dem Namen
@@ -10,10 +36,11 @@
   Gesamtkosten, gefolgt von **(+z)**, wenn das Spiel Wissenschaft (Kultur) aus einer mit mehr als
   ihren Kosten abgeschlossenen Technologie (Ausrichtung) als Überschuss behält. Eine Einstellung
   schaltet es ab.
-
-## BetterGameExperience 0.8.1
-
-### Neu
+- **Disable Advanced UI indicators (BGE)**: neue Spieloption direkt unter No First/Last moves,
+  standardmäßig aus. Wenn der Host sie aktiviert, sieht kein Spieler den Fortschritt von Forschung
+  und Ausrichtung (**x/y (+z)**) oder die gespeicherte Produktion der Städte, unabhängig von seinen
+  Einstellungen. Sie wird in jeder Partie neu gelesen: In einer Partie ohne die Option erscheinen
+  sie wieder, ohne Civ VI neu zu starten.
 - **Produktion im Stadtbanner abbrechen**: Ein Rechtsklick auf das Produktionssymbol im Banner
   einer eurer Städte entfernt das aktuelle Element, wie im Produktionsfenster.
 - **Vergünstigte Bezirke**: In der Produktionsliste zeigt ein Bezirk mit gesenkten Kosten (weniger
@@ -39,9 +66,24 @@
   nicht nur bei geöffneter Warteschlange.
 - **MPH-Lobby**: Außerhalb eines Drafts rückt die Spielerliste in den leeren Platz auf, den MPH
   für seinen Draft freihält, und der einzelne « . » darüber in einem geladenen Spiel verschwindet.
+- **Diplomatiebildschirm**: Nach der Begegnung mit einem Spieler, dessen Team in der Teamliste des
+  Spiels fehlte, schlugen die Anführersymbole jede Runde fehl, und das Öffnen des
+  Diplomatiebildschirms konnte die ganze Oberfläche dauerhaft ausblenden. Die Symbole funktionieren
+  wieder, und wenn sich der Diplomatiebildschirm nicht öffnen lässt, kehrt die Oberfläche zurück.
+- **Imhotep**: Sein Effekt zeigt jetzt den Wert bei der Spielgeschwindigkeit (87, oder 175 für ein
+  antikes oder klassisches Weltwunder, bei Online-Geschwindigkeit), im Bildschirm der Großen
+  Persönlichkeiten und in der Zivilopädie, statt immer 175.
+- **MPH-Pause**: Das Menü MULTIPLAYER HELPER und die Remap-Abstimmung erscheinen jetzt über dem
+  Pausenbildschirm von MPH, mit anklickbaren Knöpfen.
+- **Obere Leiste**: Die durchschnittliche Annehmlichkeit pro Stadt wird auf die nächste ganze Zahl
+  gerundet statt abgerundet.
+- **Fehler melden (BGE)**: Der Spielstand wird dem Bericht jetzt beigefügt; nur die automatischen
+  Spielstände wurden gesendet.
 
 ### Einstellungen
-- Die drei Neuerungen haben je eine Einstellung im Reiter BetterGameExperience, standardmäßig aktiv.
+- Die neuen Oberflächenfunktionen (Abbrechen im Stadtbanner, verbilligte Bezirke, gespeicherte
+  Produktion, Fortschritt von Forschung und Ausrichtung) und die Skripte von Better Spectator Mod
+  haben je eine Einstellung im Reiter BetterGameExperience, standardmäßig an.
 
 ## BetterGameExperience 0.8.0
 

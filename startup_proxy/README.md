@@ -555,10 +555,11 @@ cd startup_proxy && cargo build --release
   ```bash
   lua startup_proxy/tests/test_maj.lua
   ```
-- Le bloc de l'option de partie « No First/Last moves (BGE) » (`option_partie.lua`, à la fin de
-  `SetupParameters.lua`) : ligne ajoutée à `Parameters` avant chaque lecture des options, sans
-  doublon, cache vidé, libellés français et
-  anglais, écriture refusée sans casser l'écran. Voir
+- Le bloc des options de partie « No First/Last moves (BGE) » (cochée par défaut) et « Disable
+  Advanced UI indicators (BGE) » (décochée par défaut, juste en dessous) (`option_partie.lua`, à la
+  fin de `SetupParameters.lua`) : lignes ajoutées à `Parameters` avant chaque lecture des options,
+  sans doublon, valeur par défaut remise sur une ligne d'une version précédente, cache vidé,
+  libellés français et anglais, écriture refusée sans casser l'écran. Voir
   [depart_tour/README.md](../depart_tour/README.md).
 
   ```bash

@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="pl_PL">
 			<Text>Wszyscy gracze zaczynają i kończą turę w tej samej chwili. Na początku tury każdy czeka, aż wszyscy skończą wczytywanie: można oglądać mapę, ale rozkazy są wstrzymane, a zegar tury nie biegnie. Na końcu, gdy zegar hosta dojdzie do zera, tura kończy się dla wszystkich, nawet jeśli własny zegar pokazuje jeszcze czas. Wszyscy gracze muszą mieć BetterGameExperience w tej samej wersji. Zastępuje synchronizację tury z MPH, która zostaje wyłączona.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="pl_PL">
+			<Text>Ukrywa przed wszystkimi graczami zaawansowane wskaźniki BetterGameExperience: nauka i kultura już włożone oraz całkowity koszt bieżącej technologii i idei (x/y), nauka i kultura zachowane jako nadwyżka (+z) oraz produkcja zachowana przez miasta. Domyślnie wyłączone.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="pl_PL">
 			<Text>Wszyscy gracze mają BetterGameExperience {1}: poprawki POL włączone.</Text>
 		</Row>

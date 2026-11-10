@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="pt_BR">
 			<Text>Todos os jogadores começam e terminam o turno no mesmo instante. No início do turno, cada um espera que todos terminem de carregar: dá para olhar o mapa, mas as ordens ficam retidas e o cronômetro não corre. No final, quando o cronômetro do anfitrião chega a zero, o turno termina para todos, mesmo que o próprio cronômetro ainda mostre tempo. Todos os jogadores precisam ter o BetterGameExperience, na mesma versão. Substitui a sincronização de turno do MPH, que é desativada.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="pt_BR">
+			<Text>Oculta de todos os jogadores os indicadores avançados do BetterGameExperience: ciência e cultura já investidas e custo total da tecnologia e do cívico atuais (x/y), ciência e cultura guardadas como excedente (+z), e a produção guardada pelas cidades. Desativada por padrão.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="pt_BR">
 			<Text>Todos os jogadores têm o BetterGameExperience {1}: correções POL ativas.</Text>
 		</Row>

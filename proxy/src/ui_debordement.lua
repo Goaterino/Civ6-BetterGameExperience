@@ -12,6 +12,7 @@
 -- - panneau de la ville (en bas à droite) : une ligne sous la production en cours ;
 -- - panneau de production : « +N » après la progression de la production en cours, et
 --   l'infobulle du cadre « aucune production ».
+-- Rien n'est montré quand l'hôte a coché l'option de partie « Disable Advanced UI indicators (BGE) ».
 -- Tout s'exécute sous pcall ; un échec écrit `Debordement echec <erreur>`.
 -- ===========================================================================
 do
@@ -21,9 +22,19 @@ local Debordement_Ok, Debordement_Err = pcall(function()
 	end
 	BGD_Debordement_Etat = true;
 
-	-- Production en réserve de la ville, arrondie à l'unité inférieure ; 0 si inconnue.
+	-- Option de partie « Disable Advanced UI indicators (BGE) » (BGD_INDICATEURS_OFF, cochée par
+	-- l'hôte) : rien n'est montré. Lue à chaque redessin, jamais retenue : une partie suivante sans
+	-- l'option, dans la même session du jeu, retrouve l'affichage, et inversement.
+	local function IndicateursCoupes()
+		if GameConfiguration == nil or GameConfiguration.GetValue == nil then return false; end
+		local ok, v = pcall(GameConfiguration.GetValue, "BGD_INDICATEURS_OFF");
+		return ok and (v == true or v == 1);
+	end
+
+	-- Production en réserve de la ville, arrondie à l'unité inférieure ; 0 si inconnue ou masquée
+	-- (les affichages effacent alors ce qu'un passage précédent aurait laissé).
 	local function Reserve(pCity)
-		if pCity == nil or pCity:GetOwner() ~= Game.GetLocalPlayer() then return 0; end
+		if pCity == nil or pCity:GetOwner() ~= Game.GetLocalPlayer() or IndicateursCoupes() then return 0; end
 		local v = BGD_Debordement(pCity:GetOwner(), pCity:GetID());
 		if type(v) ~= "number" or v < 1 then return 0; end
 		return math.floor(v);

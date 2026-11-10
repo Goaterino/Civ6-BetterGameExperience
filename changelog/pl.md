@@ -2,17 +2,42 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
-## BetterGameExperience 0.8.2
+## BetterGameExperience 0.9.0
+
+Zawiera wszystko z wersji przedpremierowej 0.8.1. W grze wieloosobowej wszyscy ludzcy gracze muszą
+mieć 0.9.0, aby działały poprawki **[wszyscy gracze]**: poczekalnia, w której są 0.8.x i 0.9.0, je
+wyłącza.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Obserwatorzy (Better Spectator Mod)**: nie liczą się już jako główne cywilizacje i znikają z
+  list graczy w skryptach, zwycięstwach i wyniku. BetterGameExperience zawiera do tego własne wersje
+  skryptów Better Spectator Mod. Wkład: banipouz.
+- **Desynchronizacja przez obserwatora**: zmiana gracza, którego ogląda obserwator, nie
+  desynchronizuje już gry (Better Spectator Mod zapisywał ją w danych gry, tylko na komputerze
+  obserwatora).
+- **Obserwatorzy na wstędze przywódców**: gracze nie widzą już obserwatorów na wstędze w prawym
+  górnym rogu, gdzie pojawiali się jak SI, z portretem « ? », nazwą i plonami.
+- **Tura obserwatora po pauzie**: po pauzie MPH tura obserwatora znów kończy się sama, zamiast
+  czekać, aż zakończy ją ręcznie.
+
+### Tryb wieloosobowy
+- **Uszkodzone wiadomości sieciowe**: uszkodzona wiadomość, widziana przy rozłączeniu gracza, mogła
+  zamrozić grę, aż po kilku minutach zabrakło pamięci. Niemożliwe wartości takiej wiadomości są
+  teraz odrzucane i gra toczy się dalej; wiersz na czacie mówi o tym wszystkim. Uszkodzona
+  konfiguracja gry lub gracza nie jest już stosowana, zamiast kasować konfigurację. Chroni graczy,
+  którzy mają BetterGameExperience. Wkład: yodha.
+- **No First/Last moves z obserwatorem jako hostem**: tura zaczyna się teraz, gdy tylko gracze są
+  gotowi, zamiast trzymać ich do limitu bezpieczeństwa.
 
 ### Nowości
 - **Postęp badań i ustroju**: w panelu w lewym górnym rogu, obok nazwy bieżącej technologii i idei,
   **x/y** pokazuje już włożoną naukę (kulturę) i całkowity koszt, a **(+z)** nadwyżkę nauki
   (kultury), którą gra zachowuje z technologii (idei) ukończonej ponad jej koszt. Można to wyłączyć
   w ustawieniach.
-
-## BetterGameExperience 0.8.1
-
-### Nowości
+- **Disable Advanced UI indicators (BGE)**: nowa opcja gry tuż pod No First/Last moves, domyślnie
+  wyłączona. Gdy host ją zaznaczy, żaden gracz nie widzi postępu badań i ustroju (**x/y (+z)**) ani
+  produkcji zachowanej przez miasta, niezależnie od własnych ustawień. Jest odczytywana w każdej
+  grze: w grze bez tej opcji wskaźniki wracają, bez ponownego uruchamiania Civ VI.
 - **Anulowanie produkcji z banera miasta**: prawy klik na ikonę produkcji w banerze jednego z twoich
   miast usuwa bieżący element, tak jak w panelu produkcji.
 - **Tańsze dzielnice**: na liście produkcji dzielnica o obniżonym koszcie (masz mniej dzielnic tego
@@ -36,9 +61,22 @@
   otwartej kolejce.
 - **Poczekalnia MPH**: poza draftem lista graczy przesuwa się w górę, w puste miejsce, które MPH
   rezerwuje na draft, a samotna « . » nad nią we wczytanej grze znika.
+- **Ekran dyplomacji**: po spotkaniu gracza, którego drużyny brakowało na liście drużyn gry, ikony
+  przywódców zawodziły co turę, a otwarcie ekranu dyplomacji mogło na dobre ukryć cały interfejs.
+  Ikony znów działają, a jeśli ekran dyplomacji się nie otworzy, interfejs wraca.
+- **Imhotep**: jego efekt pokazuje teraz wartość dla tempa gry (87 albo 175 dla cudu starożytnego
+  lub klasycznego, przy tempie Online), na ekranie wielkich ludzi i w Cywilopedii, zamiast zawsze
+  175.
+- **Pauza MPH**: menu MULTIPLAYER HELPER i głosowanie nad remapem pojawiają się teraz nad ekranem
+  pauzy MPH, z klikalnymi przyciskami.
+- **Górny pasek**: średnie udogodnienia na miasto są zaokrąglane do najbliższej liczby całkowitej, a
+  nie w dół.
+- **Zgłoś błąd (BGE)**: zapis gry jest teraz dołączany do zgłoszenia; wysyłane były tylko autozapisy.
 
 ### Ustawienia
-- Trzy nowości mają po jednym ustawieniu w karcie BetterGameExperience, domyślnie włączonym.
+- Nowe funkcje interfejsu (anulowanie z banera miasta, tańsze dzielnice, zachowana produkcja, postęp
+  badań i ustroju) oraz skrypty Better Spectator Mod mają każde ustawienie w zakładce
+  BetterGameExperience, domyślnie włączone.
 
 ## BetterGameExperience 0.8.0
 

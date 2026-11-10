@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="ja_JP">
 			<Text>全プレイヤーが同時にターンを開始し、同時に終了します。ターン開始時は全員の読み込みが終わるまで待機します。マップは見られますが、命令は保留され、ターンタイマーは進みません。終了時は、ホストのタイマーがゼロになると、自分のタイマーに時間が残っていても全員のターンが終わります。全プレイヤーが同じバージョンの BetterGameExperience を持っている必要があります。MPH のターン同期は無効になり、これに置き換わります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="ja_JP">
+			<Text>全プレイヤーに対して BetterGameExperience の詳細インジケーターを非表示にします: 研究中のテクノロジーと社会制度に投入済みの科学力・文化力と総コスト (x/y)、超過分として保持された科学力・文化力 (+z)、都市が蓄えている生産力。既定ではオフ。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="ja_JP">
 			<Text>全プレイヤーが BetterGameExperience {1} を使用中: POL 修正は有効です。</Text>
 		</Row>

@@ -55,6 +55,8 @@ local function NewMachine(opts)
 	env.print = function(s) table.insert(m.prints, s); end
 	env.PlayerTypes = { NONE = -1, OBSERVER = 63 };
 	env.Game = { GetLocalPlayer = function() return m.player; end };
+	m.config = {};
+	env.GameConfiguration = { GetValue = function(k) return m.config[k]; end };
 	env.Locale = { Lookup = function(s) return s; end, ToUpper = function(s) return string.upper(s); end };
 	env.GameInfo = {
 		Technologies = { [0] = { Name = "Pottery" }, [1] = { Name = "Scientific theory and much more stuff" } },
@@ -123,6 +125,26 @@ local function check(name, cond)
 		failures = failures + 1;
 		print("FAIL " .. name);
 	end
+end
+
+-- 0. Option de partie « Disable Advanced UI indicators (BGE) » : lue à chaque redessin, d'une
+--    partie à l'autre sans redémarrer le jeu.
+do
+	local m = NewMachine();
+	m.config.BGD_INDICATEURS_OFF = true;
+	m.env.UpdateResearchPanel();
+	m.env.UpdateCivicsPanel();
+	check("0 option cochée : rien en recherche", m.R.BGD_Avancement.hidden == true and m.R.BGD_Avancement.text == "");
+	check("0 option cochée : rien en dogme", m.C.BGD_Avancement.hidden == true and m.C.BGD_Avancement.text == "");
+	check("0 option cochée : panneau du jeu dessiné", m.appelsBase == 2);
+	m.config.BGD_INDICATEURS_OFF = false;
+	m.env.UpdateResearchPanel();
+	check("0 option décochée ensuite : x/y de retour", m.R.BGD_Avancement.hidden == false
+		and m.R.BGD_Avancement.text == "[COLOR:ResScienceLabelCS]37/120 (+15.3)[ENDCOLOR]");
+	m.config.BGD_INDICATEURS_OFF = 1;
+	m.env.UpdateResearchPanel();
+	check("0 option cochée ensuite (valeur 1) : x/y retiré, nom en entier", m.R.BGD_Avancement.hidden == true
+		and m.R.TitleButton.truncate == 225);
 end
 
 -- 1. Technologie en cours : « 37/120 » en couleur de science, nom raccourci à la place restante.

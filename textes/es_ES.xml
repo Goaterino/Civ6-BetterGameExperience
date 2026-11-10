@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="es_ES">
 			<Text>Todos los jugadores empiezan y terminan su turno en el mismo instante. Al principio del turno, cada uno espera a que todos hayan terminado de cargar: se puede mirar el mapa, pero las órdenes se retienen y el temporizador no corre. Al final, cuando el temporizador del anfitrión llega a cero, el turno termina para todos, aunque su temporizador aún muestre tiempo. Todos los jugadores necesitan BetterGameExperience, en la misma versión. Sustituye la sincronización de turno de MPH, que se desactiva.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="es_ES">
+			<Text>Oculta a todos los jugadores los indicadores avanzados de BetterGameExperience: ciencia y cultura ya invertidas y coste total de la tecnología y el principio actuales (x/y), ciencia y cultura guardadas como excedente (+z), y la producción que guardan las ciudades. Desactivada por defecto.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="es_ES">
 			<Text>Todos los jugadores tienen BetterGameExperience {1}: correcciones POL activas.</Text>
 		</Row>

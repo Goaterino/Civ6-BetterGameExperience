@@ -12,6 +12,7 @@
 -- changement de recherche, de rendement ou de tour (et le panneau XP1 / XP2 les enveloppe à son tour).
 -- Rien n'est montré pour une technologie ou un dogme terminé, ni quand rien n'est en cours. Le nom
 -- est raccourci (infobulle du nom complet) s'il chevaucherait le compteur.
+-- Rien n'est montré quand l'hôte a coché l'option de partie « Disable Advanced UI indicators (BGE) ».
 -- Tout s'exécute sous pcall ; un échec écrit `Avancement echec <erreur>`.
 -- ===========================================================================
 do
@@ -22,6 +23,15 @@ local Avancement_Ok, Avancement_Err = pcall(function()
 	BGD_Avancement_Pose = true;
 	-- Marge à droite du libellé (XML), écart avec le nom, largeur du nom dans le jeu (MAX_BEFORE_TRUNC_TITLE).
 	local MARGE, ECART, TITRE_MAX = 0, 8, 225;
+
+	-- Option de partie « Disable Advanced UI indicators (BGE) » (BGD_INDICATEURS_OFF, cochée par
+	-- l'hôte) : rien n'est montré. Lue à chaque redessin, jamais retenue : une partie suivante sans
+	-- l'option, dans la même session du jeu, retrouve l'affichage, et inversement.
+	local function IndicateursCoupes()
+		if GameConfiguration == nil or GameConfiguration.GetValue == nil then return false; end
+		local ok, v = pcall(GameConfiguration.GetValue, "BGD_INDICATEURS_OFF");
+		return ok and (v == true or v == 1);
+	end
 
 	-- Une décimale, sans « .0 ».
 	local function Points(v)
@@ -77,8 +87,11 @@ local Avancement_Ok, Avancement_Err = pcall(function()
 		end
 	end
 
-	-- Joueur local et son objet, ou nil (observateur, hors partie).
+	-- Joueur local et son objet, ou nil (observateur, hors partie, indicateurs coupés).
 	local function Joueur()
+		if IndicateursCoupes() then
+			return nil;
+		end
 		local ePlayer = Game.GetLocalPlayer();
 		if ePlayer == nil or ePlayer == PlayerTypes.NONE or ePlayer == PlayerTypes.OBSERVER then
 			return nil;

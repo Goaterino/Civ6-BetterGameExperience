@@ -1,7 +1,8 @@
 -- ===========================================================================
--- BetterGameDLLs : option de partie « No First/Last moves (BGD) » (BGD_DEPART_SIMULTANE), voir
--- depart_tour/README.md, ajoutée à la fin de SetupParameters.lua (ou de son remplaçant du même
--- nom, celui de MPH) par le proxy de démarrage (startup_proxy/src/salon.rs). Fonction native :
+-- BetterGameDLLs : options de partie « No First/Last moves (BGE) » (BGD_DEPART_SIMULTANE, voir
+-- depart_tour/README.md) et « Disable Advanced UI indicators (BGE) » (BGD_INDICATEURS_OFF),
+-- ajoutées à la fin de SetupParameters.lua (ou de son remplaçant du même nom, celui de MPH) par le
+-- proxy de démarrage (startup_proxy/src/salon.rs). Fonction native :
 --   Civ6Proxy_Journal(texte) -> écrit dans RolloverProxy.log
 --
 -- Les options de partie sont les lignes de la table Parameters de la base Configuration, lues par
@@ -9,8 +10,9 @@
 -- si elle manque (la base est reconstruite à chaque changement de mods), puis on vide le cache des
 -- requêtes de SetupParameters. Multijoueur en réseau seulement. Une machine sans BetterGameDLLs n'a
 -- pas la ligne : elle ne voit pas l'option et ignore la valeur, qui voyage dans la config de partie
--- comme toute clé de mod. La valeur seule n'active rien : il faut aussi que tous les humains aient
--- BetterGameDLLs à la même version (ui_depart.lua, en partie).
+-- comme toute clé de mod. Pour BGD_DEPART_SIMULTANE, la valeur seule n'active rien : il faut aussi
+-- que tous les humains aient BetterGameDLLs à la même version (ui_depart.lua, en partie).
+-- BGD_INDICATEURS_OFF s'applique seule : elle ne fait que masquer des affichages de BetterGameDLLs.
 -- Tout passe par pcall : en cas d'échec, l'option manque et le reste de l'écran est intact.
 -- ===========================================================================
 do
@@ -26,12 +28,18 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		end
 	end
 
-	-- Une seule option pour le départ et la fin simultanés (ui_depart.lua), cochée par défaut : l'hôte
-	-- peut la décocher.
+	-- Départ et fin simultanés (ui_depart.lua), cochée par défaut : l'hôte peut la décocher.
+	-- Indicateurs avancés coupés pour tous (BGD_INDICATEURS_OFF : x/y (+z) de la recherche et du
+	-- dogme, production en réserve ; ui_avancement.lua, ui_debordement.lua), décochée par défaut,
+	-- juste en dessous.
 	local OPTIONS = {
 		{
-			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGE)", ordre = 43,
+			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGE)", ordre = 43, defaut = 1,
 			aide = "LOC_BGD_OPTION_PARTIE_AIDE",
+		},
+		{
+			id = "BGD_INDICATEURS_OFF", nom = "Disable Advanced UI indicators (BGE)", ordre = 44, defaut = 0,
+			aide = "LOC_BGD_OPTION_INDICATEURS_AIDE",
 		},
 	};
 
@@ -43,13 +51,13 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 	local refusJournalise = false;
 	local function AjouterUne(o)
 		if Presente(o.id) then
-			-- Ligne écrite par une version précédente (décochée par défaut) dans une base pas encore
-			-- reconstruite : on remet la valeur par défaut.
+			-- Ligne écrite par une version précédente avec une autre valeur par défaut, dans une base pas
+			-- encore reconstruite : on remet celle-ci.
 			local r = DB.ConfigurationQuery("SELECT DefaultValue FROM Parameters WHERE ParameterId = ?1", o.id);
-			if r ~= nil and r[1] ~= nil and tostring(r[1].DefaultValue) ~= "1" then
-				pcall(DB.ConfigurationQuery, "UPDATE Parameters SET DefaultValue = 1 WHERE ParameterId = ?1", o.id);
+			if r ~= nil and r[1] ~= nil and tostring(r[1].DefaultValue) ~= tostring(o.defaut) then
+				pcall(DB.ConfigurationQuery, "UPDATE Parameters SET DefaultValue = " .. o.defaut .. " WHERE ParameterId = ?1", o.id);
 				QueryCache = {};
-				J(o.id .. " : cochée par défaut");
+				J(o.id .. (o.defaut == 1 and " : cochée par défaut" or " : décochée par défaut"));
 			end
 			return;
 		end
@@ -57,7 +65,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		DB.ConfigurationQuery("INSERT INTO Parameters (ParameterId, Name, Description, Domain, DefaultValue, "
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
-			.. "VALUES (?1, ?2, ?3, 'bool', 1, 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
+			.. "VALUES (?1, ?2, ?3, 'bool', " .. o.defaut .. ", 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
 			o.id, o.nom, BGD_Txt(o.aide), o.ordre);
 		local ok = Presente(o.id);
 		if ok then

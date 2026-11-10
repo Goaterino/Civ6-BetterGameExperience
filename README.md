@@ -55,6 +55,10 @@ them in their own language.
 **No First/Last moves (BGE)** is ticked by default in the game options; the host can untick it before
 launching. Every player needs BetterGameExperience, at the same version.
 
+**Disable Advanced UI indicators (BGE)**, just below, is unticked by default. When the host ticks it,
+no player sees the research and civic progress (**x/y (+z)**) or the stored production of cities,
+whatever their own settings.
+
 ## Settings
 
 Everything can be changed in **Options → BetterGameExperience**: one setting per feature, and a master

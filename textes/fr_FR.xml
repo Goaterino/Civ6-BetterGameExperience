@@ -341,6 +341,9 @@
 		<Row Tag="LOC_BGD_OPTION_PARTIE_AIDE" Language="fr_FR">
 			<Text>Tous les joueurs commencent et finissent leur tour au même instant. Au début du tour, chacun attend que tous aient fini de charger : on peut regarder la carte, mais les ordres sont retenus et le minuteur ne tourne pas. À la fin, quand le minuteur de l'hôte arrive à zéro, le tour se termine pour tout le monde, même si son minuteur affiche encore du temps. Il faut que tous les joueurs aient BetterGameExperience, à la même version. Remplace la synchronisation du tour de MPH, qui est coupée.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPTION_INDICATEURS_AIDE" Language="fr_FR">
+			<Text>Masque pour tous les joueurs les indicateurs avancés de BetterGameExperience : science et culture déjà placées et coût total de la technologie et du dogme en cours (x/y), science et culture gardées en excédent (+z), et production gardée en réserve par les villes. Décochée par défaut.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_TOUS" Language="fr_FR">
 			<Text>Tous les joueurs ont BetterGameExperience {1} : correctifs POL actifs.</Text>
 		</Row>

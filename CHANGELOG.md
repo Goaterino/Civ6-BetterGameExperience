@@ -4,17 +4,40 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
-## BetterGameExperience 0.8.2
+## BetterGameExperience 0.9.0
+
+Includes everything from the 0.8.1 pre-release. Multiplayer games need every human player on 0.9.0
+for the **[all players]** fixes: a lobby that mixes 0.8.x and 0.9.0 turns them off.
+
+### Multiplayer fixes [all players]
+- **Spectators (Better Spectator Mod)** no longer count as major civilizations: they are out of the
+  player lists used by scripts, victories and score. BetterGameExperience now ships its own versions
+  of Better Spectator Mod's scripts, made for this. Contributed by banipouz.
+- **Desync caused by a spectator**: changing the player a spectator watches no longer desyncs the
+  game (Better Spectator Mod wrote it into the game's data, on the spectator's machine only).
+- **Spectators in the leader ribbon**: players no longer see spectators in the ribbon at the top
+  right, where they appeared as an AI, with a « ? » portrait, their name and yields.
+- **Spectator's turn after a pause**: after an MPH pause, the spectator's turn ends on its own
+  again, instead of waiting for the spectator to end it by hand.
+
+### Multiplayer
+- **Damaged network messages**: a damaged message, seen when a player disconnected, could freeze the
+  game until it ran out of memory minutes later. Impossible values in such a message are now dropped
+  and the game goes on, and a line in the chat tells everyone. A damaged game or player
+  configuration is no longer applied, instead of erasing the configuration. This protects the
+  players who have BetterGameExperience. Contributed by yodha.
+- **No First/Last moves with a spectator host**: the turn now starts as soon as the players are
+  ready, instead of holding them until the safety delay.
 
 ### New
 - **Research and civic progress**: in the top-left panel, next to the name of the current
   technology and civic, **x/y** shows the science (culture) already put in and the total cost,
   followed by **(+z)** when the game keeps science (culture) in excess from a technology (civic)
   finished with more than its cost. A setting turns it off.
-
-## BetterGameExperience 0.8.1
-
-### New
+- **Disable Advanced UI indicators (BGE)**: a new game option, just below No First/Last moves,
+  unticked by default. When the host ticks it, no player sees the research and civic progress
+  (**x/y (+z)**) or the stored production of cities, whatever their own settings. It is read again
+  for each game, so moving on to a game without it, without restarting Civ VI, shows them again.
 - **Cancel production from the city banner**: right-click the production icon on the banner of
   one of your cities to remove the item being produced, as in the production panel.
 - **Discounted districts**: in the production list, a district whose cost is reduced (you have fewer
@@ -38,9 +61,23 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
   only when the queue is open.
 - **MPH lobby**: outside a draft, the player list moves back up into the empty space MPH keeps
   for its draft, and the stray « . » shown above it in a reloaded game is gone.
+- **Diplomacy screen**: after meeting a player whose team was missing from the game's team list, the
+  leader icons failed every turn, and opening the diplomacy screen could hide the whole interface
+  for good. The icons work again, and if the diplomacy screen fails to open, the interface comes
+  back.
+- **Imhotep**: his effect now shows the amount at the game's speed (87, or 175 for an Ancient or
+  Classical wonder, at Online speed), in the Great People screen and the Civilopedia, instead of 175
+  in every case.
+- **MPH pause**: the MULTIPLAYER HELPER menu and the remap vote now show above MPH's pause screen,
+  with buttons you can click.
+- **Top panel**: the average amenities per city are rounded to the nearest whole number instead of
+  down.
+- **Report a bug (BGE)**: the save is now attached to the report; only the autosaves were sent.
 
 ### Settings
-- The three new features each have a setting in the BetterGameExperience tab, on by default.
+- The new interface features (cancel from the banner, discounted districts, stored production,
+  research and civic progress) and Better Spectator Mod's scripts each have a setting in the
+  BetterGameExperience tab, on by default.
 
 ## BetterGameExperience 0.8.0
 
