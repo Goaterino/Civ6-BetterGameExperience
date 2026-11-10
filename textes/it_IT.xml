@@ -29,6 +29,12 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="it_IT">
 			<Text>Ogni messaggio del gioco</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="it_IT">
+			<Text>Solo il Congresso Mondiale</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="it_IT">
+			<Text>Tutto tranne il Congresso Mondiale</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_TITRE_GENERAL" Language="it_IT">
 			<Text>Generale</Text>
 		</Row>
@@ -200,6 +206,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="it_IT">
 			<Text>Basato su Better Report Screen (Infixo). Schermata dei rapporti rifatta, con le schede Accordi, Unità, Politiche, Città-stato e Città, e l'effetto di ogni politica e città-stato, corretto come le carte. Sostituisce la mod se è attiva.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="it_IT">
+			<Text>Better Spectator Mod per gli spettatori</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="it_IT">
+			<Text>Sostituisce gli script d'interfaccia di Better Spectator Mod (città-stato, nastro diplomatico, icone dei leader, Congresso Mondiale) con quelli del proxy, scritti per spettatori esclusi dalle civiltà maggiori. Solo se tutti i giocatori hanno il proxy; il livello degli spettatori segue sempre questa regola.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="it_IT">
 			<Text>Registra script e XML caricati</Text>
 		</Row>
@@ -223,6 +235,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="it_IT">
 			<Text>Scrive in Lua.log le proposte di accordo inviate e ricevute, e ciò che mostra la schermata degli accordi, per capire gli accordi incrociati tra umani.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="it_IT">
+			<Text>Script di Better Spectator Mod sostituiti</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="it_IT">
+			<Text>Diagnostica: quali script d'interfaccia di Better Spectator Mod il proxy sostituisce, per isolare quello che dà problemi.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="it_IT">
 			<Text>Mostra i segnali dell'inizio e della fine simultanei</Text>

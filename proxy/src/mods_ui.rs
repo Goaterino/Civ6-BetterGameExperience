@@ -36,6 +36,13 @@ static NOTIFICATIONS: AtomicBool = AtomicBool::new(true);
 static BANDEAU: AtomicBool = AtomicBool::new(true);
 static POLITIQUES: AtomicBool = AtomicBool::new(true);
 static RAPPORTS: AtomicBool = AtomicBool::new(true);
+/// Scripts d'interface de Better Spectator Mod repris (`ui_spectateur=`). Réglage local : il ne
+/// touche que l'interface, jamais Spectator.lua (script de gameplay, voir `remplacer`).
+static SPECTATEUR: AtomicBool = AtomicBool::new(true);
+// Quels scripts d'interface remplacer : 2 CityStates, 4 ruban, 8 icône, 16 popup du Congrès.
+// Sert à isoler un fichier qui pose problème ; 31 = tous. Le bit 1 (Spectator.lua) n'a plus
+// d'effet : ce script suit les correctifs POL, pas un réglage de la machine.
+static SPECTATEUR_FICHIERS: AtomicUsize = AtomicUsize::new(31);
 
 pub fn set_charges(on: bool) {
     CHARGES.store(on, Ordering::Relaxed);
@@ -55,6 +62,24 @@ pub fn set_politiques(on: bool) {
 pub fn set_rapports(on: bool) {
     RAPPORTS.store(on, Ordering::Relaxed);
 }
+pub fn set_spectateur(on: bool) {
+    SPECTATEUR.store(on, Ordering::Relaxed);
+}
+#[cfg(any(feature = "diag", test))]
+pub fn set_spectateur_fichiers(masque: usize) {
+    SPECTATEUR_FICHIERS.store(masque, Ordering::Relaxed);
+}
+
+/// Un script du mod BSM a été compilé dans ce processus : le mod est donc dans le paramétrage
+/// de la partie. Le popup du Congrès, fichier du jeu de base, n'est remplacé que dans ce cas.
+/// Propre à chaque machine (ordre des compilations) : il ne décide que de l'interface.
+static BSM_VU: AtomicBool = AtomicBool::new(false);
+
+/// Le texte est le popup du Congrès de BSM repris par le proxy (`remplacer`) : `ui` n'y ajoute que
+/// le retour au vote, ce popup gérant déjà le spectateur lui-même.
+pub fn est_popup_spectateur(src: &[u8]) -> bool {
+    src == SPECTATEUR_CONGRES
+}
 
 fn on(flag: &AtomicBool) -> bool {
     flag.load(Ordering::Relaxed)
@@ -62,7 +87,7 @@ fn on(flag: &AtomicBool) -> bool {
 
 /// Une reprise au moins est active : l'accroche Lua doit être posée.
 pub fn any() -> bool {
-    [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS].iter().any(|f| on(f))
+    [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS, &SPECTATEUR].iter().any(|f| on(f))
 }
 
 /// Une reprise a besoin de la lecture XML.
@@ -73,13 +98,14 @@ pub fn xml_needed() -> bool {
 pub fn journal_reglages() -> String {
     let s = |f: &AtomicBool| if on(f) { "on" } else { "off" };
     format!(
-        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}",
+        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}, spectateur {}",
         s(&CHARGES),
         s(&ROUTES),
         s(&NOTIFICATIONS),
         s(&BANDEAU),
         s(&POLITIQUES),
-        s(&RAPPORTS)
+        s(&RAPPORTS),
+        s(&SPECTATEUR)
     )
 }
 
@@ -115,8 +141,24 @@ const RAPPORTS_XML: &str = include_str!("mods/rapports/reportscreen.xml");
 const LISTE: &str = include_str!("mods/rapports/liste.lua");
 const TEXTES: &str = include_str!("mods/textes.tsv");
 
+// Better Spectator Mod : nos versions des scripts, substituees a la compilation. Rien n'est ecrit
+// sur le disque ; le mod reste tel quel, active ou non.
+const SPECTATEUR_DATA: &[u8] = include_bytes!("mods/spectateur/spectator.lua");
+const SPECTATEUR_RIBBON: &[u8] = include_bytes!("mods/spectateur/diplomacyribbon_spec.lua");
+const SPECTATEUR_ICONE: &[u8] = include_bytes!("mods/spectateur/leadericon.lua");
+const SPECTATEUR_CITYSTATES: &[u8] = include_bytes!("mods/spectateur/citystates.lua");
+const SPECTATEUR_CONGRES: &[u8] = include_bytes!("mods/spectateur/worldcongresspopup_spec.lua");
+
 /// Better Spectator Mod : son script du bandeau, que TopPanel Extension Pro évinçait.
 const BSM_ID: &str = "c6e5ad32-0600-4a98-a7cd-5854a1abcaaf";
+
+/// Le chunk appartient-il au mod BSM ? Le dossier varie : Workshop (identifiant numerique),
+/// archive locale, ou copie de dev.
+fn dans_bsm(chunk: &str) -> bool {
+    const MARQUEURS: [&[u8]; 3] = [b"1916397407", b"betterspectatormod", b"spec_v1.2"];
+    let p = chunk.as_bytes();
+    MARQUEURS.iter().any(|m| p.windows(m.len()).any(|w| w.eq_ignore_ascii_case(*m)))
+}
 
 fn has(src: &[u8], pat: &str) -> bool {
     src.windows(pat.len()).any(|w| w == pat.as_bytes())
@@ -145,6 +187,45 @@ fn fichier_du_jeu(rel: &str) -> Result<Vec<u8>, String> {
 /// Le script entier à compiler à la place de celui de l'exe, et ce qu'on a fait (journal).
 pub fn remplacer(chunk: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), String>> {
     let vide = |quoi: &str| Some(Ok((format!("-- BetterGameDLLs : {quoi}, neutralisé par le proxy.\r\n").into_bytes(), format!("{quoi} neutralisé"))));
+    let bsm = dans_bsm(chunk);
+    if bsm {
+        // Présence du mod dans la partie, même si ses remplacements sont désactivés.
+        BSM_VU.store(true, Ordering::Relaxed);
+    }
+    // Spectator.lua est un script de gameplay : il tourne sur chaque machine et change la
+    // simulation (il va avec le niveau des spectateurs, `spectateurs::hook_niveau`). Correctif
+    // POL, il ne dépend d'aucun réglage local : seulement des correctifs POL, fixés par le verdict
+    // de l'hôte avant le chargement de la partie, les mêmes partout.
+    if bsm && is_file(chunk, "Spectator.lua") {
+        if !crate::pol::actifs() {
+            return None;
+        }
+        crate::spectateurs::script_niveau_compile();
+        return Some(Ok((SPECTATEUR_DATA.to_vec(), "Better Spectator Mod : Spectator.lua du proxy (POL)".into())));
+    }
+    // Les scripts d'interface, écrits pour des spectateurs hors des majeurs : avec les correctifs
+    // POL seulement, sans quoi une partie se comporte comme sans cette reprise.
+    if on(&SPECTATEUR) && (bsm || is_file(chunk, "WorldCongressPopup.lua")) && crate::pol::actifs() {
+        let fichier = |bit: usize| SPECTATEUR_FICHIERS.load(Ordering::Relaxed) & bit != 0;
+        if bsm {
+            // is_file compare le nom sans tenir compte de la casse : le jeu compile
+            // "LeaderIcon.lua" alors que le fichier s'appelle "leadericon.lua".
+            if fichier(4) && is_file(chunk, "diplomacyribbon_spec.lua") {
+                return Some(Ok((SPECTATEUR_RIBBON.to_vec(), "Better Spectator Mod : ruban diplomatique du proxy".into())));
+            }
+            if fichier(8) && is_file(chunk, "LeaderIcon.lua") {
+                return Some(Ok((SPECTATEUR_ICONE.to_vec(), "Better Spectator Mod : icone de leader du proxy".into())));
+            }
+            if fichier(2) && is_file(chunk, "CityStates.lua") {
+                return Some(Ok((SPECTATEUR_CITYSTATES.to_vec(), "Better Spectator Mod : CityStates du proxy".into())));
+            }
+        }
+        // BSM n'a pas d'entrée ReplaceUIScript pour le popup du Congrès : c'est le fichier du jeu
+        // qui est compilé, on le remplace directement, si BSM est dans la partie.
+        if fichier(16) && BSM_VU.load(Ordering::Relaxed) && is_file(chunk, "WorldCongressPopup.lua") {
+            return Some(Ok((SPECTATEUR_CONGRES.to_vec(), "popup du Congres du proxy".into())));
+        }
+    }
     if on(&RAPPORTS) {
         if is_file(chunk, "ReportScreen.lua") {
             let quoi = if has(src, "Better Report Screen") && !has(src, "BetterGameDLLs") {
@@ -753,5 +834,28 @@ mod tests {
             assert!(EMBARQUES.iter().any(|(n, _)| *n == page), "{page}");
         }
         assert!(!lua.contains("include(\"BRSPage_") && !lua.contains("GlobalParameters.BRS_"));
+    }
+
+    /// Better Spectator Mod : reprise verrouillée par les correctifs POL. Dans le processus de test,
+    /// le proxy de démarrage est absent : POL coupés, rien n'est substitué, Spectator.lua (gameplay)
+    /// compris, quels que soient les réglages locaux.
+    #[test]
+    fn spectateur_verrouille_par_pol() {
+        assert!(!crate::pol::actifs());
+        const BSM: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407";
+        assert!(dans_bsm(&format!(r"{BSM}\Data\Spectator.lua")));
+        assert!(dans_bsm(r"C:\Mods\BetterSpectatorMod\UI\CityStates.lua"));
+        assert!(!dans_bsm(r"C:\x\Base\Assets\UI\CityStates.lua"));
+        set_spectateur(true);
+        set_spectateur_fichiers(31);
+        for f in [r"Data\Spectator.lua", r"UI\CityStates.lua", r"UI\Replacements\leadericon.lua", r"UI\diplomacyribbon_spec.lua"] {
+            assert!(remplacer(&format!(r"{BSM}\{f}"), b"-- x").is_none(), "{f} remplacé sans POL");
+        }
+        assert!(BSM_VU.load(Ordering::Relaxed));
+        assert!(remplacer(r"C:\x\Base\Assets\UI\Popups\WorldCongressPopup.lua", b"-- x").is_none());
+        assert!(est_popup_spectateur(SPECTATEUR_CONGRES) && !est_popup_spectateur(b"-- x"));
+        for text in [SPECTATEUR_DATA, SPECTATEUR_RIBBON, SPECTATEUR_ICONE, SPECTATEUR_CITYSTATES, SPECTATEUR_CONGRES] {
+            assert!(std::str::from_utf8(text).is_ok());
+        }
     }
 }
