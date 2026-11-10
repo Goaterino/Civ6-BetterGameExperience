@@ -107,6 +107,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_debordement", defaut = "on",
 		choix = PROXY_ON_OFF },
+	{ cle = "ui_avancement", defaut = "on",
+		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_CORRECTIFS" },
 	{ cle = "ui_merveilles", defaut = "on",

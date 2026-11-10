@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="en_US">
 			<Text>Based on NotificationClear (336tarot). A button in the notification panel dismisses in one click those you can dismiss yourself. Replaces the mod if it is active.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="en_US">
+			<Text>Research and civic progress</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="en_US">
+			<Text>Next to the name of the current technology and civic, in the top-left panel, shows the science (culture) already put in, the total cost and, in brackets, the science (culture) kept in excess from a finished technology (civic), for example 120/260 (+15). Display only.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="en_US">
 			<Text>Extended top panel</Text>
 		</Row>

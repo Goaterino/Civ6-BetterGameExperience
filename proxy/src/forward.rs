@@ -57,6 +57,7 @@ pub(crate) fn real_module() -> usize {
         crate::rendements_empire::on_gamecore_loaded(h);
         crate::tours::on_gamecore_loaded(h);
         crate::debordement::on_gamecore_loaded(h);
+        crate::avancement::on_gamecore_loaded(h);
         crate::wmd::on_gamecore_loaded(h);
         crate::mods_ui::on_gamecore_loaded(h);
         // Avant `ui` : l'accroche Lua n'est posée que si une fonctionnalité en a besoin.

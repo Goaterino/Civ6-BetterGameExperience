@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="ko_KR">
 			<Text>NotificationClear(336tarot) 기반. 알림 패널의 버튼으로 직접 닫을 수 있는 알림을 한 번에 닫습니다. 모드가 켜져 있으면 모드를 대체합니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="ko_KR">
+			<Text>연구 및 사회 제도 진행도</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="ko_KR">
+			<Text>왼쪽 위 패널에서 진행 중인 기술과 사회 제도 이름 옆에 이미 투입한 과학(문화), 전체 비용, 괄호 안에 완료한 기술(사회 제도)에서 남아 이월된 과학(문화)을 표시합니다 (예: 120/260 (+15)). 표시만 바뀝니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="ko_KR">
 			<Text>확장된 상단 바</Text>
 		</Row>

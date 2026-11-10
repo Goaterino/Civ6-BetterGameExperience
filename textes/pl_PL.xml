@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="pl_PL">
 			<Text>Na podstawie NotificationClear (336tarot). Przycisk w panelu powiadomień zamyka jednym kliknięciem te, które możesz zamknąć sam. Zastępuje moda, jeśli jest aktywny.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="pl_PL">
+			<Text>Postęp badań i ustroju</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="pl_PL">
+			<Text>Obok nazwy bieżącej technologii i idei, w panelu w lewym górnym rogu, pokazuje już włożoną naukę (kulturę) , całkowity koszt oraz w nawiasie nadwyżkę nauki (kultury) z ukończonej technologii (idei), na przykład 120/260 (+15). Tylko wyświetlanie.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="pl_PL">
 			<Text>Rozszerzony górny pasek</Text>
 		</Row>

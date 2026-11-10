@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="ru_RU">
 			<Text>На основе NotificationClear (336tarot). Кнопка на панели уведомлений одним щелчком закрывает те, которые вы можете закрыть сами. Заменяет мод, если он включён.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="ru_RU">
+			<Text>Прогресс исследования и цивика</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="ru_RU">
+			<Text>Рядом с названием текущей технологии и цивика, на панели в левом верхнем углу, показывает уже вложенную науку (культуру) , полную стоимость и в скобках излишек науки (культуры) от завершённой технологии (цивика), например 120/260 (+15). Только отображение.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="ru_RU">
 			<Text>Расширенная верхняя панель</Text>
 		</Row>

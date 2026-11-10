@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="it_IT">
 			<Text>Basato su NotificationClear (336tarot). Un pulsante del pannello delle notifiche chiude con un clic quelle che puoi chiudere da solo. Sostituisce la mod se è attiva.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="it_IT">
+			<Text>Avanzamento di ricerca e civico</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="it_IT">
+			<Text>Accanto al nome della tecnologia e del civico in corso, nel pannello in alto a sinistra, mostra la scienza (la cultura) già investita, il costo totale e, tra parentesi, la scienza (la cultura) in eccesso da una tecnologia (un civico) completata, per esempio 120/260 (+15). Solo visualizzazione.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="it_IT">
 			<Text>Barra superiore estesa</Text>
 		</Row>

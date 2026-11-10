@@ -176,6 +176,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_NOTIFICATIONS_AIDE" Language="zh_Hans_CN">
 			<Text>基于 NotificationClear（336tarot）。通知面板中的按钮可一键关闭所有你能自行关闭的通知。如果该模组已启用，则取代它。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_NOM" Language="zh_Hans_CN">
+			<Text>科技与市政进度</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_AVANCEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>在左上角面板中，当前科技和市政名称旁显示已投入的科技值（文化值）、总花费，以及括号内已完成科技（市政）溢出的科技值（文化值），例如 120/260 (+15)。仅影响显示。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_NOM" Language="zh_Hans_CN">
 			<Text>扩展顶部栏</Text>
 		</Row>
