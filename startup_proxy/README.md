@@ -454,7 +454,7 @@ plantage par manque de mémoire dix minutes plus tard (écriture à l'adresse 0x
 nulle utilisée telle quelle). Le vidage mémoire, la décompilation et le message extrait sont gardés
 hors dépôt.
 
-**Six lectures non bornées**, toutes par la lecture de champ du sérialiseur (`14099f9d0`, vtable
+**Sept lectures non bornées**, toutes par la lecture de champ du sérialiseur (`14099f9d0`, vtable
 +0x30 du lecteur ; noms du projet Ghidra `civ6-netcode`, signets « Gel 2026-11-09 ») :
 
 | fonction | lecture | retour |
@@ -465,17 +465,33 @@ hors dépôt.
 | idem | compte après les drapeaux | `1407ae03a` |
 | `DeserializeVariantList` (`1407ad890`) | compte | `1407ad901` |
 | `DeserializeDataVariant` (`1407a3450`) | longueur, allouée élément × longueur pour un tampon brut | `1407a34f4` |
+| lecture des clés changées de `NetGameConfig` (`140266140`) | compte, recherche linéaire à chaque tour | `14026619b` |
 
 **La garde.** Le proxy détourne la lecture de champ dès DllMain. Après la lecture d'origine, si
-l'adresse de retour est l'un des six sites et que la valeur lue est impossible — plus de 100 000
+l'adresse de retour est l'un des sept sites et que la valeur lue est impossible — plus de 100 000
 entrées, ou un tampon brut de plus de 16 Mo (4 Ko pour un scalaire) — elle est remplacée par 0 : la
 boucle ne tourne pas, le message est consommé vide, la partie continue. Dans la carte nommée, un
 premier mot négatif est un mot de drapeaux, pas un compte : il est laissé. Une valeur plausible
 n'est jamais touchée ; le coût est de quelques instructions par champ lu.
 
-- Journal : `messages : garde posée (lecture de champ en exe+…, 6 sites)`, puis à chaque correction
-  `messages : <site> : compte impossible (0x61746143, drapeaux 0x0) remplacé par 0 (n corrections)`
-  (les 20 premières, puis une sur 100).
+**Les messages de configuration ne sont pas appliqués.** Vider ne suffit pas pour `NetGameConfig`
+et `NetPlayerInfo` : leur traitement efface la configuration avant d'y recopier la carte reçue
+(entrée `+0x178` de la carte, `1407a6660`, quatrième argument 0). Une carte vidée par la garde
+effacerait donc toute la configuration de la partie (`NetGameConfig` sans clé changée) ou celle d'un
+joueur (`NetPlayerInfo`) sur la machine qui l'a reçue. Le proxy remplace lecture et traitement dans
+leurs vtables (`140fe0020` et `140fe0048`, cinq entrées : destructeur, texte, écriture, lecture,
+traitement) : un message dont la lecture a demandé une correction n'est pas appliqué, et la
+configuration reste celle d'avant. Le traitement de `NetPlayerInfo` ne vérifie l'identifiant du
+joueur que contre -1 et écrit en `emplacements + id × 0x40` : un identifiant hors des emplacements
+de la configuration (singleton `1423100a0`, emplacements de `[+0x2e0]` à `[+0x2e8]`) n'est pas
+appliqué non plus, et compte comme une correction.
+
+- Journal : `messages : garde posée (lecture de champ en exe+…, 7 sites)` et `messages :
+  NetGameConfig et NetPlayerInfo abîmés écartés`, puis à chaque correction `messages : <site> :
+  compte impossible (0x61746143, drapeaux 0x0) remplacé par 0 (n corrections)` (les 20 premières,
+  puis une sur 100). Pour un message de configuration : `messages : NetPlayerInfo abîmé à la
+  lecture, il ne sera pas appliqué`, puis `… abîmé non appliqué, la configuration est gardée` ; ou
+  `messages : NetPlayerInfo : joueur <id> hors des <n> emplacements, non appliqué`.
 - Chat : en jeu, `partie.lua` interroge `Civ6Proxy_GardeMessages()` (les lectures corrigées depuis
   le dernier appel) à chaque `GameCoreEventPublishComplete`. Après une correction, le joueur envoie
   à tous `BGE - Blocked a damaged network message that would have frozen my game.`, en rouge
@@ -494,7 +510,9 @@ n'est jamais touchée ; le coût est de quelques instructions par champ lu.
   doit arriver dans le chat à l'arrivée en jeu, et la partie continue (la carte visée est vidée,
   sans effet visible). En solo, il n'y a pas de chat : le journal seulement. Remettre `on` ensuite.
 - Adresses de `CivilizationVI_DX12.exe` du 5 novembre 2026, vérifiées octet par octet (prologue de
-  la lecture, début des quatre fonctions, `call [rax+30h]` avant chaque retour) : sur un autre exe
+  la lecture, début des cinq fonctions, `call [rax+30h]` avant chaque retour, les cinq entrées des
+  deux vtables, le singleton de la configuration, le début du traitement de `NetPlayerInfo`) ; les
+  vtables et le singleton ne sont touchés que si tout correspond. Sur un autre exe
   (DX11, autre build), rien n'est posé et le journal dit `messages : … octets inattendus …, garde
   absente`. `cargo test` vérifie l'empreinte sur l'exe installé.
 - Les mêmes règles, posées par un hook externe pendant la mise au point, ont tourné sur deux
@@ -502,7 +520,9 @@ n'est jamais touchée ; le coût est de quelques instructions par champ lu.
   deux départs de l'hôte avec migration) sans se déclencher à tort.
 
 Ce qui abîme le message en amont (réassemblage des morceaux pendant le vidage de la file, erreur de
-décompression ignorée) n'est pas corrigé : la garde empêche seulement le gel.
+décompression ignorée) n'est pas corrigé : la garde empêche seulement le gel. Le site des clés
+changées, les vtables et la borne de l'identifiant (ajoutés le 2026-11-10, d'après l'exe) n'ont pas
+encore tourné en partie.
 
 ## Compiler, tester, installer
 
