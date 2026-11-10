@@ -182,10 +182,15 @@ fn version_valide(octets: &[u8]) -> Option<String> {
 }
 
 /// StagingRoom.lua suivi du bloc du salon. Octets laissés tels quels, comme pour Options.lua.
+///
+/// Le bloc tourne dans sa propre fonction : ses locales ne comptent pas dans les registres de la
+/// fonction principale du script, déjà près de la limite chez MPH (146 locales au premier niveau ;
+/// HavokScript a refusé le script à 192 : « Function or expression requires too many registers »).
 pub fn patch_staging_lua(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(b"\r\n(function()\r\n");
     out.extend_from_slice(LUA_BLOCK.as_bytes());
+    out.extend_from_slice(b"\r\nend)();\r\n");
     out
 }
 
@@ -358,7 +363,8 @@ mod tests {
     #[test]
     fn bloc_ajoute() {
         let out = patch_staging_lua(b"Initialize();");
-        assert!(out.starts_with(b"Initialize();\r\n-- "));
+        assert!(out.starts_with(b"Initialize();\r\n(function()\r\n-- "));
+        assert!(out.ends_with(b"\r\nend)();\r\n"), "bloc dans sa propre fonction");
         assert!(LUA_BLOCK.contains("BGE - "));
         for &(_, name) in NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();

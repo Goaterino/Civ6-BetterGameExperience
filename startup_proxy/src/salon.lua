@@ -391,6 +391,64 @@ local function BGD_CheckChat(fromPlayer, toPlayer, text)
 	end
 end
 
+-- Salon de MPH : MPH descend le tableau des joueurs de 66 px (PrimaryPanelStack à 180 au lieu de
+-- 114 dans le jeu de base) pour y loger son draft (phase, consignes, bans, votes de carte), et une
+-- partie rechargée montre son libellé de phase sans texte, dont la valeur du XML est « . ». Hors
+-- draft, on vide ce libellé et on remonte le tableau de BGD.ESPACE px, agrandi d'autant (son bas ne
+-- bouge pas) ; le bandeau des colonnes (HeaderStack) et la version de MPH (PhaseLabel_Version)
+-- remontent avec lui. Dès qu'un contrôle du draft paraît, la mise en page de MPH revient.
+BGD.ESPACE = 52;
+BGD.DRAFT = { "PhaseButton", "ResetButton", "PhaseLabel_hint", "BanLabel", "BanPullDown",
+	"BanMadeLabel", "PickMadeLabel", "PickedMapLabel", "BanMapLabel", "BanMapPullDown", "MapPoolLabel",
+	"clockLabel", "RefreshLabel", "VoteMapScriptPullDown", "VoteMapAgePullDown", "VoteMapTempPullDown",
+	"VoteMapScriptLabel", "VoteMapAgeLabel", "VoteMapTempLabel" };
+BGD.mise = nil;  -- { y, version, gain } : positions de MPH et place rendue
+
+function BGD.DraftVisible()
+	for _, nom in ipairs(BGD.DRAFT) do
+		local c = Controls[nom];
+		if c ~= nil and not c:IsHidden() then return true; end
+	end
+	local phase = Controls.PhaseLabel;
+	if not phase:IsHidden() then
+		local t = phase:GetText();
+		if t ~= nil and t ~= "" and t ~= "." then return true; end
+	end
+	return false;
+end
+
+function BGD.MiseEnPage()
+	if Controls == nil or Controls.PhaseLabel == nil or Controls.PrimaryPanelStack == nil or Controls.PrimaryStackGrid == nil then
+		return;  -- pas le salon de MPH
+	end
+	local pile, grille = Controls.PrimaryPanelStack, Controls.PrimaryStackGrid;
+	if BGD.mise == nil then
+		-- Remontent ensemble : le tableau, le bandeau de ses colonnes (un contrôle à part) et la
+		-- version de MPH. Positions de MPH notées une fois.
+		BGD.mise = { y = pile:GetOffsetY(), gain = 0, origines = {} };
+		for _, nom in ipairs({ "PrimaryPanelStack", "HeaderStack", "PhaseLabel_Version" }) do
+			if Controls[nom] ~= nil then BGD.mise.origines[nom] = Controls[nom]:GetOffsetY(); end
+		end
+		if BGD.mise.y < 114 + BGD.ESPACE then
+			BGD_Journal("mise en page de MPH inattendue (tableau à " .. tostring(BGD.mise.y) .. ") : laissée telle quelle");
+		end
+	end
+	local m = BGD.mise;
+	if m.y < 114 + BGD.ESPACE then return; end
+	if not Controls.PhaseLabel:IsHidden() and Controls.PhaseLabel:GetText() == "." then
+		Controls.PhaseLabel:SetText("");
+	end
+	local gain = BGD.DraftVisible() and 0 or BGD.ESPACE;
+	if gain == m.gain then return; end
+	for nom, y in pairs(m.origines) do
+		Controls[nom]:SetOffsetY(y - gain);
+	end
+	grille:SetSizeY(grille:GetSizeY() + gain - m.gain);
+	m.gain = gain;
+	pile:CalculateSize();
+	if RealizeGridSize ~= nil then RealizeGridSize(); end
+end
+
 -- Un tic du minuteur (environ 0,5 s), tant que le salon est ouvert : annonce différée, bouton,
 -- délai du BGE Check.
 local function BGD_Tic()
@@ -405,6 +463,7 @@ local function BGD_Tic()
 		end
 	end
 	BGD_CheckBouton();
+	BGD.MiseEnPage();
 end
 
 -- (Re)lance le minuteur ; sans lui, l'annonce part tout de suite.
@@ -417,6 +476,7 @@ local function BGD_Armer()
 	m:SetToBeginning();
 	m:Play();
 	BGD_CheckBouton();
+	BGD.MiseEnPage();
 end
 
 -- Nouvelle ouverture du salon (partie créée, rejointe ou rechargée), ou nouvel hôte : nouveaux
@@ -594,6 +654,21 @@ else
 			BGD_Publier();
 		end
 	end));
+	-- Redimensionnement de MPH (changement de résolution) : il recalcule la hauteur du tableau
+	-- sans la place rendue, on la rajoute.
+	if type(Resize) == "function" then
+		BGD.ResizeBase = Resize;
+		Resize = function(...)
+			BGD.ResizeBase(...);
+			if BGD.mise ~= nil and BGD.mise.gain > 0 then
+				BGD_Protege(function()
+					Controls.PrimaryStackGrid:SetSizeY(Controls.PrimaryStackGrid:GetSizeY() + BGD.mise.gain);
+					Controls.PrimaryPanelStack:CalculateSize();
+					if RealizeGridSize ~= nil then RealizeGridSize(); end
+				end)();
+			end
+		end
+	end
 	BGD_Journal("bloc chargé");
 end
 

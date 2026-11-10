@@ -284,6 +284,16 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   `salon : BGE Check : réponse <version> (actif|inactif)`,
   `salon : lancement : correctifs POL actifs|désactivés` (la conclusion de
   chaque machine), et toute erreur du bloc, qui n'est jamais propagée au salon.
+- **Correctif : mise en page du salon de MPH.** MPH descend le tableau des joueurs de 66 px
+  (`PrimaryPanelStack` à `Offset="3,180"`, contre `3,114` dans le jeu de base) pour loger son draft
+  (phase, consignes, bans, votes de carte). Hors draft, cet espace reste vide, et une partie
+  rechargée y montre son libellé de phase (`PhaseLabel`) sans texte, dont la valeur du XML est
+  « . ». À chaque tic du minuteur, `BGD.MiseEnPage` vide ce « . » et, tant qu'aucun contrôle du
+  draft n'est visible (liste `BGD.DRAFT`, ou un libellé de phase écrit), remonte le tableau de
+  52 px en l'agrandissant d'autant ; le bandeau des colonnes (`HeaderStack`, un contrôle à part)
+  et la version de MPH (`PhaseLabel_Version`) remontent avec lui. Dès qu'un contrôle du draft paraît, la mise en page de MPH revient.
+  `Resize` (changement de résolution) est enveloppé pour garder la place rendue. Sans les
+  contrôles de MPH (salon du jeu de base), rien ne bouge.
 - **Correctif : cités-États d'une partie chargée.** Le salon de MPH affiche tout emplacement sous
   le maximum de joueurs de la carte (plafonné à 50, contre 12 dans le jeu de base), et ce maximum
   n'est pas recalculé au chargement d'une partie. Les cités-États reçoivent alors un menu de
