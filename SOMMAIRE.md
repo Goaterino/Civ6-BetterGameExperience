@@ -61,6 +61,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   pour une unité navale (correctif POL) ;
 - [littoral](analyses/littoral/README.md) : ville côtière qui ne peut plus produire ni acheter de
   navire jusqu'au rechargement, et correctif POL proposé (analyse statique) ;
+- [garde_messages](analyses/garde_messages/README.md) : revue de la garde des messages réseau contre
+  le gel à la déconnexion d'un joueur (branche `yodha-desync-issue`, pas encore mergée), points à
+  vérifier dans Ghidra ;
 - défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
