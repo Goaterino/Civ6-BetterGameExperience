@@ -2,6 +2,22 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.9.1
+
+Compatibile con la 0.9.0 in multigiocatore: giocatori con 0.9.0 e 0.9.1 giocano insieme con tutte le
+correzioni.
+
+### Correzioni dell'interfaccia
+- **Schermata dei rapporti**: le schede Rendite e Città funzionano di nuovo. Il calcolo dell'effetto
+  delle carte politica, caricato nella stessa schermata, sostituiva alcuni dei suoi dati e le
+  rompeva. Le schede Politiche e Città-stato non falliscono più su una riga con punti personaggio
+  illustre, e ordinare una colonna della scheda Città non fallisce più quando la scheda Rendite non
+  è stata aperta prima.
+- **Distretti scontati**: lo sconto mostrato è ora quello che il gioco applica. Il gioco aggiorna il
+  costo di un distretto solo in certi momenti (nuova tecnologia o nuovo progresso civico, nuova
+  città, distretto dello stesso tipo posizionato o completato), quindi l'elenco poteva mostrare uno
+  sconto che il gioco concedeva solo qualche turno dopo.
+
 ## BetterGameExperience 0.9.0
 
 Comprende tutto il contenuto della pre-release 0.8.1. In multigiocatore, tutti i giocatori umani

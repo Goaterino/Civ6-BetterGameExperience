@@ -2,6 +2,20 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.9.1
+
+Zgodna z 0.9.0 w grze wieloosobowej: gracze z 0.9.0 i 0.9.1 grają razem, ze wszystkimi poprawkami.
+
+### Poprawki interfejsu
+- **Ekran raportów**: karty Plony i Miasta znów działają. Obliczanie efektu kart doktryn, ładowane
+  na tym samym ekranie, zastępowało część jego danych i je psuło. Karty Doktryny i Miasta-państwa
+  nie zawodzą już na wierszu z punktami wybitnych postaci, a sortowanie kolumny karty Miasta nie
+  zawodzi już, gdy karta Plony nie została wcześniej otwarta.
+- **Tańsze dzielnice**: pokazywana zniżka to teraz ta, którą stosuje gra. Gra aktualizuje koszt
+  dzielnicy tylko w określonych momentach (nowa technologia lub idea, nowe miasto, dzielnica tego
+  samego typu postawiona lub ukończona), więc lista mogła pokazywać zniżkę, którą gra dawała dopiero
+  kilka tur później.
+
 ## BetterGameExperience 0.9.0
 
 Zawiera wszystko z wersji przedpremierowej 0.8.1. W grze wieloosobowej wszyscy ludzcy gracze muszą

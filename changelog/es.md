@@ -2,6 +2,22 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.9.1
+
+Compatible con la 0.9.0 en multijugador: jugadores con 0.9.0 y 0.9.1 juegan juntos con todas las
+correcciones.
+
+### Correcciones de la interfaz
+- **Pantalla de informes**: las pestañas Rendimientos y Ciudades vuelven a funcionar. El cálculo del
+  efecto de las cartas de política, cargado en la misma pantalla, reemplazaba algunos de sus datos y
+  las rompía. Las pestañas Políticas y Ciudades-estado ya no fallan en una fila con puntos de
+  personajes ilustres, y ordenar una columna de la pestaña Ciudades ya no falla cuando no se abrió
+  antes la pestaña Rendimientos.
+- **Distritos con descuento**: el descuento mostrado es ahora el que aplica el juego. El juego solo
+  actualiza el coste de un distrito en ciertos momentos (nueva tecnología o principio, nueva ciudad,
+  distrito del mismo tipo colocado o terminado), así que la lista podía mostrar un descuento que el
+  juego solo daba unos turnos más tarde.
+
 ## BetterGameExperience 0.9.0
 
 Incluye todo lo de la versión preliminar 0.8.1. En multijugador, todos los jugadores humanos deben

@@ -2,6 +2,22 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.9.1
+
+Compatible avec la 0.9.0 en multijoueur : des joueurs en 0.9.0 et en 0.9.1 jouent ensemble avec tous
+les correctifs.
+
+### Corrections de l'interface
+- **Écran des rapports** : les onglets Rendements et Villes fonctionnent de nouveau. Le calcul de
+  l'effet des cartes de politique, chargé dans le même écran, remplaçait certaines de ses données et
+  les cassait. Les onglets Politiques et Cités-États n'échouent plus sur une ligne avec des points de
+  grands personnages, et trier une colonne de l'onglet Villes n'échoue plus quand l'onglet
+  Rendements n'a pas été ouvert avant.
+- **Quartiers en réduction** : la réduction affichée est maintenant celle que le jeu applique. Le jeu
+  ne met à jour le coût d'un quartier qu'à certains moments (nouvelle technologie ou nouveau dogme,
+  nouvelle ville, quartier du même type posé ou terminé) : la liste pouvait annoncer une réduction
+  que le jeu n'accordait que quelques tours plus tard.
+
 ## BetterGameExperience 0.9.0
 
 Comprend tout le contenu de la pré-release 0.8.1. En multijoueur, tous les humains doivent être en

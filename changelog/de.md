@@ -2,6 +2,22 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.9.1
+
+Im Mehrspielermodus mit 0.9.0 kompatibel: Spieler mit 0.9.0 und 0.9.1 spielen zusammen, mit allen
+Korrekturen.
+
+### Korrekturen der Oberfläche
+- **Berichtsbildschirm**: Die Reiter Erträge und Städte funktionieren wieder. Die Berechnung der
+  Wirkung der Politikkarten, im selben Bildschirm geladen, ersetzte einige seiner Daten und machte
+  sie kaputt. Die Reiter Politiken und Stadtstaaten scheitern nicht mehr an einer Zeile mit
+  Großpersönlichkeitspunkten, und das Sortieren einer Spalte im Reiter Städte scheitert nicht mehr,
+  wenn der Reiter Erträge vorher nicht geöffnet wurde.
+- **Vergünstigte Bezirke**: Der angezeigte Rabatt ist jetzt der, den das Spiel anwendet. Das Spiel
+  aktualisiert die Kosten eines Bezirks nur zu bestimmten Zeitpunkten (neue Technologie oder
+  Ausrichtung, neue Stadt, Bezirk desselben Typs platziert oder fertiggestellt), daher konnte die
+  Liste einen Rabatt zeigen, den das Spiel erst einige Runden später gewährte.
+
 ## BetterGameExperience 0.9.0
 
 Enthält alles aus der Vorabversion 0.8.1. Im Mehrspielermodus brauchen alle menschlichen Spieler
