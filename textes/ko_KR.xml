@@ -626,16 +626,16 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ko_KR">
 			<Text>손상된 네트워크 메시지를 차단했습니다. 게임이 멈출 뻔했습니다.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="ko_KR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ko_KR">
 			<Text>{1}와(과) {2}이(가) 호스트를 통해 연결되어 있습니다(0 ms). 턴 전환 중에 직접 연결을 시도합니다.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="ko_KR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FIXED" Language="ko_KR">
 			<Text>{1}와(과) {2}이(가) 이제 직접 연결되었습니다. 0 ms 연결을 고쳤습니다.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="ko_KR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FAILED" Language="ko_KR">
 			<Text>{1}와(과) {2}을(를) 직접 연결하지 못했습니다. 계속 호스트를 통해 연결됩니다(0 ms). 다음 턴 전환 때 다시 시도합니다.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="ko_KR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_GAVE_UP" Language="ko_KR">
 			<Text>{3}번 시도했지만 {1}와(과) {2}을(를) 직접 연결하지 못했습니다. 계속 호스트를 통해 연결됩니다(0 ms). 게임에 한 번 다시 참가하면 보통 해결됩니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ko_KR">

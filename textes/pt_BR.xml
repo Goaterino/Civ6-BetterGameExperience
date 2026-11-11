@@ -626,16 +626,16 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pt_BR">
 			<Text>Mensagem de rede danificada bloqueada: ela teria congelado a partida.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="pt_BR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pt_BR">
 			<Text>{1} e {2} estão conectados pelo anfitrião (0 ms). Tentando conectá-los diretamente durante a troca de turno.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="pt_BR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FIXED" Language="pt_BR">
 			<Text>{1} e {2} agora estão conectados diretamente: conexão de 0 ms corrigida.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="pt_BR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FAILED" Language="pt_BR">
 			<Text>Não foi possível conectar {1} e {2} diretamente: continuam conectados pelo anfitrião (0 ms). Nova tentativa na próxima troca de turno.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="pt_BR">
+		<Row Tag="LOC_BGD_CHAT_RELINK_GAVE_UP" Language="pt_BR">
 			<Text>Não foi possível conectar {1} e {2} diretamente após {3} tentativas: continuam conectados pelo anfitrião (0 ms). Entrar de novo na partida uma vez geralmente resolve.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pt_BR">

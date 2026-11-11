@@ -16,10 +16,10 @@
 --    - l'hôte, quand tous les humains équipés et connectés sont prêts (lui compris), envoie
 --      `.bgd_depart <tour>` à chacun et part ; chacun part à réception. Après DELAI_HOTE secondes,
 --      l'hôte part sans les retardataires ;
---    - un joueur qui se reconnecte en plein tour se déclare prêt et reçoit aussitôt le départ ;
---    - si le proxy de démarrage refait le lien direct d'une paire relayée à 0 ms
---      (BGD_RelaisRetient, startup_proxy/src/partie.lua), le signal `.bgd_pret` attend la fin de la
---      tentative (45 s au plus) : personne ne joue pendant ce temps.
+--    - un joueur qui se reconnecte en plein tour se déclare prêt et reçoit aussitôt le départ.
+--    - If the startup proxy is re-linking a pair of players relayed through the host
+--      (BGD_RelinkHolding, startup_proxy/src/partie.lua), the `.bgd_pret` signal waits for the end
+--      of the attempt (45 s at most): nobody plays meanwhile.
 --    Les signaux passent par le chat, en message privé, et ChatPanel.lua les cache
 --    (ui_depart_chat.lua). Le proxy lève lui-même l'attente au bout de 120 s.
 -- 3. Même option, mêmes conditions, et minuteur de l'exe détourné : quand le
@@ -168,7 +168,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	D.annonce = false;
 	D.arme = false;       -- la prochaine activation du tour local sera retenue avant l'interface
 	D.retenu = false;     -- activation retenue par le proxy, déjà prise en compte ici
-	D.relais = false;     -- signal « prêt » retenu par une re-liaison de lien à 0 ms (partie.lua)
+	D.relink = false;     -- "ready" signal held while a relayed pair is re-linked (partie.lua)
 
 	local Partir, Evaluer, SurRetenue, EnvoyerPret;
 
@@ -197,7 +197,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		end
 		D.cumul = 0;
 		local ok, err = pcall(function()
-			if D.relais and not D.pret then
+			if D.relink and not D.pret then
 				EnvoyerPret();
 			end
 			if D.attente and Civ6RolloverProxy_DepartEtat ~= nil then
@@ -277,17 +277,17 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		if D.pret or D.chargement then
 			return;
 		end
-		-- Re-liaison d'une paire relayée à 0 ms en cours (partie.lua du proxy de démarrage,
-		-- BGD_RelaisRetient) : le signal attend son résultat, Tic redemande deux fois par seconde.
-		-- L'hôte, jamais dans une paire, attend au plus DELAI_HOTE ; la tentative dure au plus 45 s.
-		if BGD_RelaisRetient ~= nil and BGD_RelaisRetient() then
-			if not D.relais then
-				D.relais = true;
-				J("prêt retenu : re-liaison d'un lien à 0 ms en cours");
+		-- A relayed pair is being re-linked (the startup proxy's partie.lua, BGD_RelinkHolding): the
+		-- signal waits for the result, and Tic asks again twice a second. The host, never part of a
+		-- pair, waits at most DELAI_HOTE; an attempt lasts at most 45 s.
+		if BGD_RelinkHolding ~= nil and BGD_RelinkHolding() then
+			if not D.relink then
+				D.relink = true;
+				J("ready held: re-linking a pair relayed through the host");
 			end
 			return;
 		end
-		D.relais = false;
+		D.relink = false;
 		D.pret = true;
 		if Network.IsGameHost() then
 			D.pretDepuis = os.clock();
@@ -304,7 +304,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		end
 		D.tour = tour;
 		D.pret = false;
-		D.relais = false;
+		D.relink = false;
 		D.pretDepuis = nil;
 		D.avisRejets = 0;
 		if D.recu >= tour or D.parti >= tour then

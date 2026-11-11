@@ -626,16 +626,16 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="en_US">
 			<Text>Blocked a damaged network message that would have frozen my game.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="en_US">
+		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="en_US">
 			<Text>{1} and {2} are linked through the host (0 ms). Trying to connect them directly during the turn change.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="en_US">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FIXED" Language="en_US">
 			<Text>{1} and {2} are now connected directly: 0 ms link fixed.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="en_US">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FAILED" Language="en_US">
 			<Text>Could not connect {1} and {2} directly: they stay linked through the host (0 ms). Trying again at the next turn change.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="en_US">
+		<Row Tag="LOC_BGD_CHAT_RELINK_GAVE_UP" Language="en_US">
 			<Text>Could not connect {1} and {2} directly after {3} tries: they stay linked through the host (0 ms). Rejoining the game once usually fixes it.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="en_US">

@@ -626,16 +626,16 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ja_JP">
 			<Text>破損したネットワークメッセージをブロックしました。ゲームがフリーズするところでした。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="ja_JP">
+		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ja_JP">
 			<Text>{1}と{2}はホスト経由で接続されています（0 ms）。ターン切り替え中に直接接続を試みます。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="ja_JP">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FIXED" Language="ja_JP">
 			<Text>{1}と{2}は直接接続されました。0 msの接続を修正しました。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="ja_JP">
+		<Row Tag="LOC_BGD_CHAT_RELINK_FAILED" Language="ja_JP">
 			<Text>{1}と{2}を直接接続できませんでした。ホスト経由の接続（0 ms）のままです。次のターン切り替えで再試行します。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="ja_JP">
+		<Row Tag="LOC_BGD_CHAT_RELINK_GAVE_UP" Language="ja_JP">
 			<Text>{3}回試しましたが{1}と{2}を直接接続できませんでした。ホスト経由の接続（0 ms）のままです。一度ゲームに再参加すると、たいてい直ります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ja_JP">
