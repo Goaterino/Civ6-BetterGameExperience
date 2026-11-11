@@ -1,6 +1,10 @@
 -- BetterGameDLLs : Real Modifier Analysis de Better Report Screen 7.0 (Infixo), repris dans le proxy
--- (voir mods_ui/README.md). Chargé par BGD_ChargerRMA (commun.lua) dans son propre environnement,
--- une fois par contexte : ses fonctions vont dans BGD_RMA_Table. Corrections marquées « BGD : ».
+-- (voir mods_ui/README.md). Chargé par BGD_ChargerRMA (commun.lua) une fois par contexte, dans
+-- l'environnement du contexte hôte (écran des rapports, du gouvernement) : HavokScript n'isole pas
+-- un chunk par setfenv. Ses fonctions publiques vont dans BGD_RMA_Table. Pour ne pas écraser
+-- celles de l'hôte (GetCityData de CitySupport, GetYieldString de Civ6Common, Initialize…), toutes
+-- ses globales sont préfixées RMA_, et il travaille sur sa propre copie de YieldTypes.
+-- Corrections marquées « BGD : ».
 print("Loading Real Modifier Analysis.lua from Better Report Screen 7.0 (BetterGameDLLs)");
 -- ===========================================================================
 -- Real Modifier Analysis
@@ -10,7 +14,12 @@ print("Loading Real Modifier Analysis.lua from Better Report Screen 7.0 (BetterG
 
 -- exposing functions and variables
 local RMA = BGD_RMA_Table or {};
--- insert functions/objects into RMA in Initialize()
+-- insert functions/objects into RMA in RMA_Initialize()
+
+-- BGD : copie privée de YieldTypes. RMA y ajoute TOURISM, AMENITY, HOUSING et LOYALTY ; dans le
+-- mod, il avait son propre contexte. Ici, modifier la table du contexte hôte cassait la page des
+-- rendements de l'écran des rapports (YIELD_TOURISM inconnu de GetWorkedTileYieldData).
+local YieldTypes = (function(t) local c = {}; for k,v in pairs(t) do c[k] = v; end return c; end)(YieldTypes);
 
 -- Expansions check
 local bIsRiseAndFallMod:boolean = Modding.IsModActive("1B28771A-C749-434B-9053-D1380C553DE9"); -- Rise & Fall
@@ -23,7 +32,7 @@ local bIsRiseAndFall:boolean = (bIsRiseAndFallMod or bIsGatheringStorm); -- GS i
 -- ===========================================================================
 
 -- debug output routine
-function dprint(sStr,p1,p2,p3,p4,p5,p6)
+function RMA_dprint(sStr,p1,p2,p3,p4,p5,p6)
 	local sOutStr = sStr;
 	if p1 ~= nil then sOutStr = sOutStr.." [1] "..tostring(p1); end
 	if p2 ~= nil then sOutStr = sOutStr.." [2] "..tostring(p2); end
@@ -35,53 +44,53 @@ function dprint(sStr,p1,p2,p3,p4,p5,p6)
 end
 
 -- debug routine - print contents of a table of plot indices
-function dshowinttable(pTable:table)  -- For debugging purposes. LOT of table data being handled here.
+function RMA_dshowinttable(pTable:table)  -- For debugging purposes. LOT of table data being handled here.
 	-- for ease of reading they will be printed in rows by 10
-	dprint("Showing table (t,count)", pTable, table.count(pTable));
+	RMA_dprint("Showing table (t,count)", pTable, table.count(pTable));
 	local iSize = table.count(pTable);
-	if iSize == 0 then dprint("...nothing to show"); return; end
+	if iSize == 0 then RMA_dprint("...nothing to show"); return; end
 	for y = 0, math.floor((iSize-1)/10), 1 do
 		local sOutStr = "";
 		for x = 0,9,1 do
 			local idx = 10*y+x;
 			if idx < iSize then sOutStr = sOutStr..string.format("%5d", pTable[idx+1]); end
 		end
-		dprint("  row", y, sOutStr);
+		RMA_dprint("  row", y, sOutStr);
 	end
 end
 
 -- debug routine - prints a table (no recursion)
-function dshowtable(tTable:table)
+function RMA_dshowtable(tTable:table)
 	for k,v in pairs(tTable) do
 		print(k, type(v), tostring(v));
 	end
 end
 
 -- debug routine - prints a table, and tables inside recursively (up to 5 levels)
-function dshowrectable(tTable:table, iLevel:number)
+function RMA_dshowrectable(tTable:table, iLevel:number)
 	local level:number = 0;
 	if iLevel ~= nil then level = iLevel; end
 	for k,v in pairs(tTable) do
 		print(string.rep("---:",level), k, type(v), tostring(v));
-		if type(v) == "table" and level < 5 then dshowrectable(v, level+1); end
+		if type(v) == "table" and level < 5 then RMA_dshowrectable(v, level+1); end
 	end
 end
 
 -- debug routine - prints extended yields table in a compacted form (1 line, formatted)
-function dshowyields(pYields:table)
+function RMA_dshowyields(pYields:table)
 	local tOut:table = {}; table.insert(tOut, "  yields :");
 	for yield,value in pairs(pYields) do table.insert(tOut, string.format("%s %5.2f :", yield, value)); end
 	print(table.concat(tOut, " "));
 end
 
 -- debug routine - prints extended yields table in a compacted form (1 line, formatted)
-function dshowsubject(pSubject:table)
+function RMA_dshowsubject(pSubject:table)
 	print("    sub: ", pSubject.SubjectType, pSubject.Name);
 end
 
---dprint("Subjects are:"); for k,v in pairs(tSubjects) do print(k,v.SubjectType,v.Name); end -- debug
+--RMA_dprint("Subjects are:"); for k,v in pairs(tSubjects) do print(k,v.SubjectType,v.Name); end -- debug
 -- debug routne - prints all subjects in 1 line
-function dshowsubjects(pSubjects:table)
+function RMA_dshowsubjects(pSubjects:table)
 	local tOut:table = {};
 	for _,subject in pairs(pSubjects) do table.insert(tOut, subject.Name); end
 	print("Subjects:", table.count(pSubjects), table.concat(tOut, ","));
@@ -99,33 +108,33 @@ local m_NumTicks2: number = 0;
 local m_StartTime1: number = 0;
 local m_StartTime2: number = 0;
 
-function Timer1Reset()
+function RMA_Timer1Reset()
 	m_Timer1 = 0; m_NumTicks1 = 0;
 end
-function Timer2Reset()
+function RMA_Timer2Reset()
 	m_Timer2 = 0; m_NumTicks2 = 0;
 end
-function Timer1Start()
+function RMA_Timer1Start()
 	m_StartTime1 = GetTickCount();
 end
-function Timer2Start()
+function RMA_Timer2Start()
 	m_StartTime2 = GetTickCount();
 end
-function Timer1Tick()
+function RMA_Timer1Tick()
 	m_Timer1 = m_Timer1 + (GetTickCount()-m_StartTime1);
 	m_NumTicks1 = m_NumTicks1 + 1;
 	--print("Ticker1:", m_NumTicks1, m_Timer1); -- debug
 end
-function Timer2Tick()
+function RMA_Timer2Tick()
 	m_Timer2 = m_Timer2 + (GetTickCount()-m_StartTime2);
 	m_NumTicks2 = m_NumTicks2 + 1;
 	--print("Ticker2:", m_NumTicks2, m_Timer2); -- debug
 end
-function Timer1Stop(txt:string)
+function RMA_Timer1Stop(txt:string)
 	if m_NumTicks1 == 0 then print("Timer1: no ticks"); return; end
 	print("Timer1:", txt, math.floor(m_Timer1/MILISECS_PER_TICK), "milisecs", m_NumTicks1, "ticks", math.floor(m_Timer1/m_NumTicks1), "per tick");
 end
-function Timer2Stop(txt:string)
+function RMA_Timer2Stop(txt:string)
 	if m_NumTicks2 == 0 then print("Timer2: no ticks"); return; end
 	print("Timer2:", txt, math.floor(m_Timer2/MILISECS_PER_TICK), "milisecs", m_NumTicks2, "ticks", math.floor(m_Timer2/m_NumTicks2), "per tick");
 end
@@ -155,14 +164,14 @@ local SubjectTypes:table = {
 
 -- 230521 #13 Building_YieldDistrictCopies
 local tDistrictYieldCopies: table = {};
-function InitializeDistrictYieldCopies()
+function RMA_InitializeDistrictYieldCopies()
 	for row in GameInfo.Building_YieldDistrictCopies() do
 		if tDistrictYieldCopies[row.BuildingType] == nil then tDistrictYieldCopies[row.BuildingType] = {}; end
 		--table.insert(tDistrictYieldCopies[row.BuildingType], { Old = row.OldYieldType, New = row.NewYieldType}); -- too complex, assume 1=>1 copying
 		tDistrictYieldCopies[row.BuildingType][row.OldYieldType] = row.NewYieldType;
 	end
 end
-InitializeDistrictYieldCopies();
+RMA_InitializeDistrictYieldCopies();
 
 
 -- ===========================================================================
@@ -190,8 +199,8 @@ local YieldTypesOrder: table = {};
 for yield,yid in pairs(YieldTypes) do
 	YieldTypesOrder[yid] = yield;
 end 
--- BGD : points de personnages illustres, une clé PG_<classe> par classe (YieldTypes n'est pas
--- touché : la table est celle du contexte, et pCity:GetYield la parcourt). Les tables de rendements
+-- BGD : points de personnages illustres, une clé PG_<classe> par classe (pas dans YieldTypes :
+-- RMA_GetCityData passe ses valeurs à pCity:GetYield). Les tables de rendements
 -- de RMA portent ces clés en plus.
 local BGD_ClesPG: table = {};		-- { Cle, Icone } dans l'ordre de GreatPersonClasses
 local BGD_ClesRendement: table = {};	-- toutes les clés d'une table de rendements
@@ -204,78 +213,78 @@ if GameInfo.GreatPersonClasses ~= nil then
 	end
 end
 
---print("YieldTypes"); dshowtable(YieldTypes);
---print("YieldTypesMap"); dshowtable(YieldTypesMap);
---print("YieldTypesOrder"); --dshowtable(YieldTypesOrder);
---for yid,yield in ipairs(YieldTypesOrder) do dprint("YieldTypesOrder", yid, yield) end
+--print("YieldTypes"); RMA_dshowtable(YieldTypes);
+--print("YieldTypesMap"); RMA_dshowtable(YieldTypesMap);
+--print("YieldTypesOrder"); --RMA_dshowtable(YieldTypesOrder);
+--for yid,yield in ipairs(YieldTypesOrder) do RMA_dprint("YieldTypesOrder", yid, yield) end
 
 -- get a new table with all 0
-function YieldTableNew()
+function RMA_YieldTableNew()
 	local tNew:table = {};
 	for yield,_ in pairs(BGD_ClesRendement) do tNew[ yield ] = 0; end
 	return tNew;
 end
 
 -- set all values to 0
-function YieldTableClear(pYields:table)
+function RMA_YieldTableClear(pYields:table)
 	for yield,_ in pairs(BGD_ClesRendement) do pYields[ yield ] = 0; end
 end
 
 -- add two tables
-function YieldTableAdd(pYields:table, pYieldsToAdd:table)
+function RMA_YieldTableAdd(pYields:table, pYieldsToAdd:table)
 	for yield,_ in pairs(BGD_ClesRendement) do pYields[ yield ] = pYields[ yield ] + pYieldsToAdd[ yield ]; end
 end
 
 -- multiply by a given number
-function YieldTableMultiply(pYields:table, fModifier:number)
+function RMA_YieldTableMultiply(pYields:table, fModifier:number)
 	for yield,_ in pairs(BGD_ClesRendement) do pYields[ yield ] = pYields[ yield ] * fModifier; end
 end
 
 -- 230522 #3 multiply by a table of numbers
-function YieldTableMultiplyTable(pYields:table, pModifier:table)
+function RMA_YieldTableMultiplyTable(pYields:table, pModifier:table)
 	for yield,_ in pairs(BGD_ClesRendement) do pYields[ yield ] = pYields[ yield ] * pModifier[ yield ]; end
 end
 
 -- multiply by a percentage given as integer 0..100
-function YieldTablePercent(pYields:table, iPercent:number)
-	return YieldTableMultiply(pYields, iPercent/100.0);
+function RMA_YieldTablePercent(pYields:table, iPercent:number)
+	return RMA_YieldTableMultiply(pYields, iPercent/100.0);
 end
 
 -- get a specific yield, takes both YieldTypes and "YIELD_XXX" form
-function YieldTableGetYield(pYields:table, sYield:string)
+function RMA_YieldTableGetYield(pYields:table, sYield:string)
 	if YieldTypesMap[ sYield ] then return pYields[ YieldTypesMap[ sYield ] ];
 	else                            return pYields[ sYield ];                  end
 end
 
 -- set a specific yield, takes both YieldTypes and "YIELD_XXX" form
-function YieldTableSetYield(pYields:table, sYield:string, fValue:number)
+function RMA_YieldTableSetYield(pYields:table, sYield:string, fValue:number)
 	if YieldTypesMap[ sYield ] then pYields[ YieldTypesMap[ sYield ] ] = fValue;
 	else                            pYields[ sYield ] = fValue;                  end
 end
 
 -- returns a compacted string with yields info
-function YieldTableGetInfo(pYields:table)
+function RMA_YieldTableGetInfo(pYields:table)
 	local sYieldInfo:string = "";
 	for	_,yield in ipairs(YieldTypesOrder) do
-		if pYields[yield] ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..GetYieldString("YIELD_"..yield, pYields[yield]); end
+		if pYields[yield] ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..RMA_GetYieldString("YIELD_"..yield, pYields[yield]); end
 	end
 	-- BGD : points de personnages illustres, « [ICON_GreatEngineer]+x », comme les rendements
 	for _,pg in ipairs(BGD_ClesPG) do
 		local fPoints:number = pYields[pg.Cle] or 0;
-		if fPoints ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..pg.Icone..toPlusMinusString(fPoints); end
+		if fPoints ~= 0 then sYieldInfo = sYieldInfo..(sYieldInfo == "" and "" or " ")..pg.Icone..RMA_toPlusMinusString(fPoints); end
 	end
 	return sYieldInfo;
 end
 
 -- 2019-06-20 GS introduced multiple yields in one modifier, separated with comma
-function YieldTableSetMultipleYields(pYields:table, sYields:string, sValues:string)
+function RMA_YieldTableSetMultipleYields(pYields:table, sYields:string, sValues:string)
 	sYields = string.gsub(sYields, " ", ""); -- 230522 #3 Some of them have spaces inside, values are converted to number so it's not a problem
 	sYields = sYields..",";	sValues = sValues..",";
 	while string.len(sYields) > 0 and string.len(sValues) > 0 do
 		local iCommaYields:number = string.find(sYields, ",");
 		local iCommaValues:number = string.find(sValues, ",");
-		--print("YieldTableSetMultipleYields", sYields, iCommaYields, sValues, iCommaValues);
-		YieldTableSetYield(pYields, string.sub(sYields, 1, iCommaYields-1), tonumber(string.sub(sValues, 1, iCommaValues-1)));
+		--print("RMA_YieldTableSetMultipleYields", sYields, iCommaYields, sValues, iCommaValues);
+		RMA_YieldTableSetYield(pYields, string.sub(sYields, 1, iCommaYields-1), tonumber(string.sub(sValues, 1, iCommaValues-1)));
 		-- remove processed yield
 		sYields = string.sub(sYields, iCommaYields+1);
 		sValues = string.sub(sValues, iCommaValues+1);
@@ -287,7 +296,7 @@ end
 -- GENERIC FUNCTIONS AND HELPERS
 -- ===========================================================================
 
-function GetGameInfoIndex(sTableName:string, sTypeName:string) 
+function RMA_GetGameInfoIndex(sTableName:string, sTypeName:string) 
 	local tTable = GameInfo[sTableName];
 	if tTable then
 		local row = tTable[sTypeName];
@@ -298,7 +307,7 @@ function GetGameInfoIndex(sTableName:string, sTypeName:string)
 end
 
 -- check if 'value' exists in table 'pTable'; should work for any type of 'value' and table indices
-function IsInTable(pTable:table, value)
+function RMA_IsInTable(pTable:table, value)
 	for _,data in pairs(pTable) do
 		if data == value then return true; end
 	end
@@ -306,7 +315,7 @@ function IsInTable(pTable:table, value)
 end
 
 -- returns 'key' at which a given 'value' is stored in table 'pTable'; nil if not found; should work for any type of 'value' and table indices
-function GetTableKey(pTable:table, value)
+function RMA_GetTableKey(pTable:table, value)
 	for key,data in pairs(pTable) do
 		if data == value then return key; end
 	end
@@ -314,7 +323,7 @@ function GetTableKey(pTable:table, value)
 end
 
 -- changes "AA_BB_CC" string into "Aa Bb Cc"
-function Capitalize(sText:string)
+function RMA_Capitalize(sText:string)
 	--local str:string = sText:gsub("_", " ");
 	--return tostring( str:gsub("(%a)([%w_']*)", function(first,rest) return first:upper()..rest:lower() end) );
 	return sText; -- debug
@@ -330,7 +339,7 @@ end
 --	yieldType	A database YIELD_TYPE
 --	returns		The [ICON_yield] string
 -- ===========================================================================
-function GetYieldTextIcon( yieldType:string )
+function RMA_GetYieldTextIcon( yieldType:string )
 	local  iconString:string = "";
 	if		yieldType == nil or yieldType == ""	then
 		iconString = "Error:NIL";
@@ -353,7 +362,7 @@ end
 -- ===========================================================================
 --	Return the inline entry for a yield's color
 -- ===========================================================================
-function GetYieldTextColor( yieldType:string )
+function RMA_GetYieldTextColor( yieldType:string )
 	if     yieldType == nil or yieldType == "" then return "[COLOR:255,255,255,255]NIL ";
 	elseif yieldType == "YIELD_FOOD"		   then return "[COLOR:ResFoodLabelCS]";
 	elseif yieldType == "YIELD_PRODUCTION"	   then return "[COLOR:ResProductionLabelCS]";
@@ -372,13 +381,13 @@ end
 -- ===========================================================================
 -- Updated functions from Civ6Common, to include rounding to 1 decimal digit
 -- ===========================================================================
-function toPlusMinusString( value:number )
+function RMA_toPlusMinusString( value:number )
 	if value == 0 then return "0"; end
 	--return Locale.ToNumber(value, "+#,###.#;-#,###.#");
 	return Locale.ToNumber(math.floor((value*10)+0.5)/10, "+#,###.#;-#,###.#");
 end
 
-function toPlusMinusNoneString( value:number )
+function RMA_toPlusMinusNoneString( value:number )
 	if value == 0 then return " "; end
 	--return Locale.ToNumber(value, "+#,###.#;-#,###.#");
 	return Locale.ToNumber(math.floor((value*10)+0.5)/10, "+#,###.#;-#,###.#");
@@ -387,8 +396,8 @@ end
 -- ===========================================================================
 --	Return a string with a yield icon and a +/- based on yield amount.
 -- ===========================================================================
-function GetYieldString( yieldType:string, amount:number )
-	return GetYieldTextIcon(yieldType)..GetYieldTextColor(yieldType)..toPlusMinusString(amount).."[ENDCOLOR]";
+function RMA_GetYieldString( yieldType:string, amount:number )
+	return RMA_GetYieldTextIcon(yieldType)..RMA_GetYieldTextColor(yieldType)..RMA_toPlusMinusString(amount).."[ENDCOLOR]";
 end
 
 
@@ -397,7 +406,7 @@ end
 --	return a table indexed by buildingType, with a table of GameInfo.GreatWorks in that building
 -- ===========================================================================
 
-function GetGreatWorksForCity(pCity:table)
+function RMA_GetGreatWorksForCity(pCity:table)
 	local result:table = {};
 	if pCity then
 		local pCityBldgs:table = pCity:GetBuildings();
@@ -442,7 +451,7 @@ end
 -- ===========================================================================
 --	CONSTANTS
 -- ===========================================================================
-DATA_DOMINANT_RELIGION = "_DOMINANTRELIGION";
+RMA_DATA_DOMINANT_RELIGION = "_DOMINANTRELIGION";
 
 --YIELD_STATE = {
 	--NORMAL  = 0,
@@ -474,7 +483,7 @@ end
 --			progress
 --			cost
 -- ===========================================================================
-function GetCurrentProductionInfoOfCity( pCity:table, iconSize:number )
+function RMA_GetCurrentProductionInfoOfCity( pCity:table, iconSize:number )
 	local pBuildQueue	:table = pCity:GetBuildQueue();
 	if pBuildQueue == nil then
 		UI.DataError("No production queue in city!");
@@ -515,12 +524,12 @@ end
 
 -- ===========================================================================
 -- ===========================================================================
-function GetDistrictYieldText(district)
+function RMA_GetDistrictYieldText(district)
 	local yieldText = "";
 	for yield in GameInfo.Yields() do
 		local yieldAmount = district:GetYield(yield.Index);
 		if yieldAmount > 0 then
-			yieldText = yieldText .. GetYieldString( yield.YieldType, yieldAmount );
+			yieldText = yieldText .. RMA_GetYieldString( yield.YieldType, yieldAmount );
 		end
 	end
 	return yieldText;
@@ -530,7 +539,7 @@ end
 -- ===========================================================================
 --	Obtain the total resources for a given city.
 -- ===========================================================================
-function GetCityResourceData( pCity:table )
+function RMA_GetCityResourceData( pCity:table )
 
 	-- Loop through all the plots for a given city; tallying the resource amount.
 	local kResources : table = {};
@@ -556,7 +565,7 @@ end
 -- ===========================================================================
 -- Retrieve Governor data, if applicable
 -- Is established?, Count how many promotions a governor has
-function GetGovernorData(pCity:table)
+function RMA_GetGovernorData(pCity:table)
 	if not bIsRiseAndFall then return false, 0 end
 	local pGovernor:table = pCity:GetAssignedGovernor()
 	if not pGovernor then return false, 0 end
@@ -585,7 +594,7 @@ end
 --				.OutgoingRoutes - trade routes
 --				.IncomingRoutes - trade routes
 -- ===========================================================================
-function GetCityData( pCity:table )
+function RMA_GetCityData( pCity:table )
 
 	local ownerID				:number = pCity:GetOwner();
 	local pPlayer				:table	= Players[ownerID];
@@ -610,7 +619,7 @@ function GetCityData( pCity:table )
 		City					= pCity,
 		SubjectType				= SubjectTypes.City,
 		Name					= BGD_Lookup(pCity:GetName()),
-		Yields 					= YieldTableNew(), -- extended yields
+		Yields 					= RMA_YieldTableNew(), -- extended yields
 		ContinentType			= 0,
 		Districts				= {},		-- Per Entry Format: { Name, YieldType, YieldChange, Buildings={ Name,YieldType,YieldChange,isPillaged,isBuilt} }
 		FoodSurplus				= 0,
@@ -694,16 +703,16 @@ function GetCityData( pCity:table )
 	local pct							:number = 0;
 	local pctNextTurn					:number = 0;
 	local prodTurnsLeft					:number = -1;
-	local productionInfo				:table = nil; --GetCurrentProductionInfoOfCity( pCity, SIZE_PRODUCTION_ICON ); -- Infixo: NO PRODUCTION INFO YET
+	local productionInfo				:table = nil; --RMA_GetCurrentProductionInfoOfCity( pCity, SIZE_PRODUCTION_ICON ); -- Infixo: NO PRODUCTION INFO YET
 
 	-- extended yields
 	data.Yields.HOUSING = pCityGrowth:GetHousing();
 	data.Yields.AMENITY = pCityGrowth:GetAmenities();
 	
 	-- additional data
-	data.IsGovernorEstablished, data.NumGovernorPromotions = GetGovernorData(pCity)
+	data.IsGovernorEstablished, data.NumGovernorPromotions = RMA_GetGovernorData(pCity)
 	data.ContinentType = Map.GetPlot( pCity:GetX(), pCity:GetY() ):GetContinentType()
-	data.GreatWorks = GetGreatWorksForCity(pCity)
+	data.GreatWorks = RMA_GetGreatWorksForCity(pCity)
 	
 	-- If something is currently being produced, mark it in the queue.
 	if productionInfo ~= nil then
@@ -771,7 +780,7 @@ function GetCityData( pCity:table )
 		table.insert( data.Religions, thisReligion );		
 
 		if religionData.Religion == eDominantReligion and eDominantReligion > -1 then
-			data.Religions[DATA_DOMINANT_RELIGION] = thisReligion;
+			data.Religions[RMA_DATA_DOMINANT_RELIGION] = thisReligion;
 			for _,kFoundReligion in ipairs(pAllReligions) do
 				if kFoundReligion.Religion == eDominantReligion then
 					for _,belief in pairs(kFoundReligion.Beliefs) do
@@ -897,7 +906,7 @@ function GetCityData( pCity:table )
 	
 	-------------------------------------
 	-- 230522 CITY PLOTS
-	-- Loop through all the plots of the city, based on GetCityResourceData())
+	-- Loop through all the plots of the city, based on RMA_GetCityResourceData())
 	
 	local kResources: table = {};
 	local cityPlots : table = Map.GetCityPlots():GetPurchasedPlots(pCity)
@@ -931,7 +940,7 @@ function GetCityData( pCity:table )
 			kTempDistrictYields[yield.Index] = yield;
 		end
 		-- ==========
-		function GetDistrictYield( district:table, yieldType:string )
+		function RMA_GetDistrictYield( district:table, yieldType:string )
 			for i,yield in ipairs( kTempDistrictYields ) do
 				if yield.YieldType == yieldType then
 					return district:GetYield(i);
@@ -941,7 +950,7 @@ function GetCityData( pCity:table )
 		end
 
 		--I do not know why we make local functions, but I am keeping standard
-		function GetDistrictBonus( district:table, yieldType:string )
+		function RMA_GetDistrictBonus( district:table, yieldType:string )
 			for i,yield in ipairs( kTempDistrictYields ) do
 				if yield.YieldType == yieldType then
 					return district:GetAdjacencyYield(i);
@@ -961,33 +970,33 @@ function GetCityData( pCity:table )
 			SubjectType		= SubjectTypes.District,
 			Name			= data.Name..": "..BGD_Lookup(districtInfo.Name),
 			Plot 			= kPlot,
-			Yields   		= YieldTableNew(), -- district yields (from adjacency)
-			--AdjYields   = YieldTableNew(), -- adjacency bonus yields -- Infixo: ADJACENCY = STANDARD YIELD
+			Yields   		= RMA_YieldTableNew(), -- district yields (from adjacency)
+			--AdjYields   = RMA_YieldTableNew(), -- adjacency bonus yields -- Infixo: ADJACENCY = STANDARD YIELD
 			DistrictType 	= districtType,
 			CityCenter		= districtInfo.CityCenter,
 			OnePerCity		= districtInfo.OnePerCity,
 			-- not used yet
-			YieldBonus	= GetDistrictYieldText( district ),
+			YieldBonus	= RMA_GetDistrictYieldText( district ),
 			isPillaged  = pCityDistricts:IsPillaged(district:GetType()),
 			isBuilt		= district:IsComplete(),--pCityDistricts:HasDistrict(districtInfo.Index, true);
 			Icon		= "ICON_"..districtType,
 			Buildings	= {},
-			--Culture		= GetDistrictYield(district, "YIELD_CULTURE" ),			
-			--Faith		= GetDistrictYield(district, "YIELD_FAITH" ),
-			--Food		= GetDistrictYield(district, "YIELD_FOOD" ),
-			--Gold		= GetDistrictYield(district, "YIELD_GOLD" ),
-			--Production	= GetDistrictYield(district, "YIELD_PRODUCTION" ),
-			--Science		= GetDistrictYield(district, "YIELD_SCIENCE" ),
+			--Culture		= RMA_GetDistrictYield(district, "YIELD_CULTURE" ),			
+			--Faith		= RMA_GetDistrictYield(district, "YIELD_FAITH" ),
+			--Food		= RMA_GetDistrictYield(district, "YIELD_FOOD" ),
+			--Gold		= RMA_GetDistrictYield(district, "YIELD_GOLD" ),
+			--Production	= RMA_GetDistrictYield(district, "YIELD_PRODUCTION" ),
+			--Science		= RMA_GetDistrictYield(district, "YIELD_SCIENCE" ),
 			Tourism		= 0,
 			Maintenance = districtInfo.Maintenance,
 			--[[
 			AdjacencyBonus = {
-				Culture		= GetDistrictBonus(district, "YIELD_CULTURE"),
-				Faith		= GetDistrictBonus(district, "YIELD_FAITH"),
-				Food		= GetDistrictBonus(district, "YIELD_FOOD"),
-				Gold		= GetDistrictBonus(district, "YIELD_GOLD"),
-				Production	= GetDistrictBonus(district, "YIELD_PRODUCTION"),
-				Science		= GetDistrictBonus(district, "YIELD_SCIENCE"),
+				Culture		= RMA_GetDistrictBonus(district, "YIELD_CULTURE"),
+				Faith		= RMA_GetDistrictBonus(district, "YIELD_FAITH"),
+				Food		= RMA_GetDistrictBonus(district, "YIELD_FOOD"),
+				Gold		= RMA_GetDistrictBonus(district, "YIELD_GOLD"),
+				Production	= RMA_GetDistrictBonus(district, "YIELD_PRODUCTION"),
+				Science		= RMA_GetDistrictBonus(district, "YIELD_SCIENCE"),
 			},
 			--]]
 		};
@@ -1063,19 +1072,19 @@ function GetCityData( pCity:table )
 			--local production:number = YieldFind( kYields, "YIELD_PRODUCTION" );
 			--local science	:number = YieldFind( kYields, "YIELD_SCIENCE" );
 			-- extended yields
-			local extyields :table = YieldTableNew();
+			local extyields :table = RMA_YieldTableNew();
 			-- fix for certain policies based on building yields
 			-- pCity:GetBuildingYield does NOT return a base yield, only processed one, so if the policy is selected, then it calculates the effect twice
 			-- use the base data from DB
-			function GetBuildingBaseYield(sBuildingType:string, sYieldType:string)
-				--print("GetBuildingBaseYield", sBuildingType, sYieldType);
+			function RMA_GetBuildingBaseYield(sBuildingType:string, sYieldType:string)
+				--print("RMA_GetBuildingBaseYield", sBuildingType, sYieldType);
 				for row in GameInfo.Building_YieldChanges() do
 					if row.BuildingType == sBuildingType and row.YieldType == sYieldType then return row.YieldChange; end
 				end
 				return 0;
 			end
 			--for yield,yid in pairs(YieldTypes) do extyields[ yield ] = pCity:GetBuildingYield(buildingType, yid); end
-			for yield,_ in pairs(YieldTypes) do extyields[ yield ] = GetBuildingBaseYield(sBuildingType, "YIELD_"..yield); end
+			for yield,_ in pairs(YieldTypes) do extyields[ yield ] = RMA_GetBuildingBaseYield(sBuildingType, "YIELD_"..yield); end
 			-- extyields.TOURISM = 0; -- tourism is produced in another way, GetBuildingYield() produces stupid numbers here ??? I don't know, the bug is for districts for sure
 			-- BGD : rendement réel du bâtiment, avec les bonus fixes (cités-États, gouverneurs, chefs,
 			-- personnages illustres…), pour les cartes en % des bâtiments (BGD_BuildingYieldBeforePercent).
@@ -1152,7 +1161,7 @@ function GetCityData( pCity:table )
 			SubjectType = SubjectTypes.TradeRoute,
 			Name        = "", -- later
 			IsDomestic  = (route.OriginCityPlayer == route.DestinationCityPlayer), -- boolean
-			Yields      = YieldTableNew(), -- later
+			Yields      = RMA_YieldTableNew(), -- later
 			NumImprovedResourcesAtDestination = 0, -- later
 			IsDestinationPlayerAlly = false, -- later
 			IsDestinationSuzerained = false, -- 230521 #1 Wisselbanken
@@ -1160,7 +1169,7 @@ function GetCityData( pCity:table )
 		}
 		-- copy yields
 		for _,yield in ipairs(route.OriginYields) do
-			YieldTableSetYield(routeData.Yields, GameInfo.Yields[yield.YieldIndex].YieldType, yield.Amount)
+			RMA_YieldTableSetYield(routeData.Yields, GameInfo.Yields[yield.YieldIndex].YieldType, yield.Amount)
 		end
 	
 		-- counters
@@ -1173,7 +1182,7 @@ function GetCityData( pCity:table )
 		routeData.Name = data.Name.." - "..BGD_Lookup(pDestCity:GetName())
 
 		-- market economy: number of resources improved at destination (lux, strat)
-		local tResources:table = GetCityResourceData(pDestCity) -- Firaxis function
+		local tResources:table = RMA_GetCityResourceData(pDestCity) -- Firaxis function
 		local function CountImprovedResources(sResourceClassToCount:string)
 			local iNum:number = 0
 			for eResourceType,amount in pairs(tResources) do
@@ -1211,13 +1220,13 @@ function GetCityData( pCity:table )
 			SubjectType = SubjectTypes.TradeRoute,
 			Name        = "", -- later
 			IsDomestic  = (route.OriginCityPlayer == route.DestinationCityPlayer), -- boolean
-			Yields      = YieldTableNew(), -- later
+			Yields      = RMA_YieldTableNew(), -- later
 			IsOriginPlayerAlly = false, -- 230521 #1 Wisselbanken
 			IsOriginSuzerained = false, -- 230521 #1 Wisselbanken
 		}
 		-- copy yields
 		for _,yield in ipairs(route.DestinationYields) do
-			YieldTableSetYield(routeData.Yields, GameInfo.Yields[yield.YieldIndex].YieldType, yield.Amount)
+			RMA_YieldTableSetYield(routeData.Yields, GameInfo.Yields[yield.YieldIndex].YieldType, yield.Amount)
 		end
 
 		-- Find origin city
@@ -1244,7 +1253,7 @@ end
 -- ===========================================================================
 -- Obtain unit maintenance
 -- This function will use GameInfo for vanilla game and UnitManager for Rise&Fall
-function GetUnitMaintenance(pUnit:table)
+function RMA_GetUnitMaintenance(pUnit:table)
 	local iUnitMaintenance:number = GameInfo.Units[ pUnit:GetUnitType() ].Maintenance;
 	local unitMilitaryFormation = pUnit:GetMilitaryFormation();
 	if unitMilitaryFormation == MilitaryFormationTypes.CORPS_FORMATION then return math.ceil(iUnitMaintenance * 1.5); end -- it is 150% rounded UP
@@ -1256,7 +1265,7 @@ end
 -- Diplomatic data (city states and allies)
 -- Trade routes (?)
 -- Units (?)
-function GetPlayerData(ePlayerID:number)
+function RMA_GetPlayerData(ePlayerID:number)
 	local pPlayer:table = Players[ Game.GetLocalPlayer() ]
 	if ePlayerID then pPlayer = Players[ ePlayerID ] end
 	if not pPlayer then return end -- error
@@ -1268,7 +1277,7 @@ function GetPlayerData(ePlayerID:number)
 	tPlayer.Cities		= tCities
 	
 	-- YIELDS
-	tPlayer.Yields = YieldTableNew()
+	tPlayer.Yields = RMA_YieldTableNew()
 	tPlayer.Yields.GOLD    = pPlayer:GetTreasury():GetGoldYield();
 	tPlayer.Yields.SCIENCE = pPlayer:GetTechs():GetScienceYield();
 	tPlayer.Yields.CULTURE = pPlayer:GetCulture():GetCultureYield();
@@ -1316,7 +1325,7 @@ function GetPlayerData(ePlayerID:number)
 			SubjectType = SubjectTypes.Unit,
 			Name = unitName,
 			MilitaryFormation = unitMilitaryFormation,
-			Maintenance = GetUnitMaintenance(unit),
+			Maintenance = RMA_GetUnitMaintenance(unit),
 			IsCivilian = (pUnitInfo.FormationClass == "FORMATION_CLASS_CIVILIAN"),
 		}
 		table.insert(tPlayer.Units, unitData)
@@ -1350,7 +1359,7 @@ end
 -- ===========================================================================
 -- PLOT YIELDS
 
-function GetPlotsData(ePlayerID:number)
+function RMA_GetPlotsData(ePlayerID:number)
 	local pPlayer:table = Players[ Game.GetLocalPlayer() ];
 	if ePlayerID then pPlayer = Players[ ePlayerID ]; end
 	if not pPlayer then return; end -- error
@@ -1411,15 +1420,15 @@ local tReqSets: table = {}; -- main table to store all requirement sets; will be
 --   .Reqs - table of {Req}
 
 
-function FetchAndCacheDataReq(sReqId:string)
-	--dprint("FUNCAL FetchAndCacheDataReq(req)", sReqId);
+function RMA_FetchAndCacheDataReq(sReqId:string)
+	--RMA_dprint("FUNCAL RMA_FetchAndCacheDataReq(req)", sReqId);
 	-- check if we already have it
 	local tReq:table = tReqs[ sReqId ];
 	if tReq then return tReq; end
 	-- Requirements
 	local req: table = GameInfo.Requirements[sReqId]; -- 230513 #2 This is a PK!
 	-- Check if exists
-	if not req then print("ERROR: FetchAndCacheDataReq unknown requirement", sReqId); return nil; end
+	if not req then print("ERROR: RMA_FetchAndCacheDataReq unknown requirement", sReqId); return nil; end
 	-- initialize an empty req
 	tReq = {};
 	tReq.ReqId         = sReqId;
@@ -1445,9 +1454,9 @@ end
 
 local INDENT2 = "   ";
 
-function DecodeReq(tOut:table, sReqId:string)
-	--dprint("FUNCAL DecodeReq(req)",sReqId);
-	local tReq:table = FetchAndCacheDataReq(sReqId);
+function RMA_DecodeReq(tOut:table, sReqId:string)
+	--RMA_dprint("FUNCAL RMA_DecodeReq(req)",sReqId);
+	local tReq:table = RMA_FetchAndCacheDataReq(sReqId);
 	if not tReq then return "ERROR: "..sReqId.." not defined!"; end
 	table.insert(tOut, INDENT2..sReqId);
 	table.insert(tOut, INDENT2.."Type: "..string.sub(tReq.ReqType, 13)); -- 230513 #2 hide REQUIREMENT_
@@ -1459,14 +1468,14 @@ function DecodeReq(tOut:table, sReqId:string)
 end
 
 
-function FetchAndCacheDataReqSet(sReqSetId:string)
-	--dprint("FUNCAL FetchAndCacheDataReqSet(req)", sReqSetId);
+function RMA_FetchAndCacheDataReqSet(sReqSetId:string)
+	--RMA_dprint("FUNCAL RMA_FetchAndCacheDataReqSet(req)", sReqSetId);
 	-- check if we already have it
 	local tReqSet:table = tReqSets[ sReqSetId ];
 	if tReqSet then return tReqSet; end
 	-- RequirementSets
 	local req: table = GameInfo.RequirementSets[sReqSetId]; -- #230513 this is a PK!
-	if not req then print("ERROR: FetchAndCacheDataReqSet unknown req set", sReqSetId); return nil; end
+	if not req then print("ERROR: RMA_FetchAndCacheDataReqSet unknown req set", sReqSetId); return nil; end
 	tReqSet = {};
 	tReqSet.ReqSetId = sReqSetId;
 	tReqSet.TestAll = ( req.RequirementSetType == "REQUIREMENTSET_TEST_ALL" );-- 90% are TEST_ALL
@@ -1477,7 +1486,7 @@ function FetchAndCacheDataReqSet(sReqSetId:string)
 	local tResults: table = DB.Query("SELECT * FROM RequirementSetRequirements WHERE RequirementSetId = ?", sReqSetId);
 	if tResults and #tResults > 0 then
 		for _,req in ipairs(tResults) do
-			table.insert(tReqSet.Reqs, FetchAndCacheDataReq(req.RequirementId));
+			table.insert(tReqSet.Reqs, RMA_FetchAndCacheDataReq(req.RequirementId));
 		end
 	end
 	-- done!
@@ -1485,18 +1494,18 @@ function FetchAndCacheDataReqSet(sReqSetId:string)
 	return tReqSet;
 end
 
-function DecodeReqSet(tOut:table, sReqSetId:string)
-	--dprint("FUNCAL DecodeReqSet(req)",sReqSetId);
-	local tReqSet:table = FetchAndCacheDataReqSet(sReqSetId);
+function RMA_DecodeReqSet(tOut:table, sReqSetId:string)
+	--RMA_dprint("FUNCAL RMA_DecodeReqSet(req)",sReqSetId);
+	local tReqSet:table = RMA_FetchAndCacheDataReqSet(sReqSetId);
 	if not tReqSet then return "ERROR: "..sReqSetId.." not defined!"; end
 	if tReqSet.TestAll then table.insert(tOut, "Test ALL of:"); end
 	if tReqSet.TestAny then table.insert(tOut, "Test ANY of:"); end
-	for _,req in ipairs(tReqSet.Reqs) do DecodeReq(tOut, req.ReqId); end
+	for _,req in ipairs(tReqSet.Reqs) do RMA_DecodeReq(tOut, req.ReqId); end
 end
 
 
-function FetchAndCacheData(sModifierId:string)
-	--dprint("FUNCAL FetchAndCacheData(mod)", sModifierId);
+function RMA_FetchAndCacheData(sModifierId:string)
+	--RMA_dprint("FUNCAL RMA_FetchAndCacheData(mod)", sModifierId);
 	-- check if we already have it
 	local tModifier:table = tModifiers[ sModifierId ];
 	if tModifier then return tModifier; end
@@ -1505,7 +1514,7 @@ function FetchAndCacheData(sModifierId:string)
 	-- Modifiers
 	local mod: table = GameInfo.Modifiers[sModifierId]; -- 230514 #2 This is a PK!
 	-- check if it exists!
-	if not mod then print("WARNING! FetchAndCacheData: No definition for Modifier", sModifierId); return nil; end
+	if not mod then print("WARNING! RMA_FetchAndCacheData: No definition for Modifier", sModifierId); return nil; end
 	tModifier.ModifierId   = sModifierId;
 	tModifier.ModifierType = mod.ModifierType;
 	tModifier.RunOnce      = mod.RunOnce; -- boolean
@@ -1520,7 +1529,7 @@ function FetchAndCacheData(sModifierId:string)
 		tModifier.CollectionType = tResults[1].CollectionType;
 		tModifier.EffectType     = tResults[1].EffectType;
 	end
-	if tModifier.CollectionType == nil or tModifier.EffectType == nil then print("WARNING! FetchAndCacheData: No dynamic modifier definition for Modifier", sModifierId); return nil; end
+	if tModifier.CollectionType == nil or tModifier.EffectType == nil then print("WARNING! RMA_FetchAndCacheData: No dynamic modifier definition for Modifier", sModifierId); return nil; end
 	
 	-- ModifierStrings - this one must be searched entirely
 	tResults = DB.Query("SELECT * FROM ModifierStrings WHERE ModifierId = ?", sModifierId);
@@ -1545,7 +1554,7 @@ function FetchAndCacheData(sModifierId:string)
 		for _,arg in ipairs(tResults) do
 			-- now we need to convert values into a proper type
 			-- there are 216 names, so maybe we'll do it when actually trying to use it?
-			--dprint("..found arg", arg.Name, arg.Value);
+			--RMA_dprint("..found arg", arg.Name, arg.Value);
 			tModifier.Arguments[ arg.Name ] = arg.Value;
 			-- special handling for Type
 			if arg.Type == "ScaleByGameSpeed" then
@@ -1555,8 +1564,8 @@ function FetchAndCacheData(sModifierId:string)
 		end -- for
 	end -- if
 	-- requirements
-	if tModifier.OwnerReqSetId   then tModifier.OwnerReqSet   = FetchAndCacheDataReqSet(tModifier.OwnerReqSetId);   end
-	if tModifier.SubjectReqSetId then tModifier.SubjectReqSet = FetchAndCacheDataReqSet(tModifier.SubjectReqSetId); end
+	if tModifier.OwnerReqSetId   then tModifier.OwnerReqSet   = RMA_FetchAndCacheDataReqSet(tModifier.OwnerReqSetId);   end
+	if tModifier.SubjectReqSetId then tModifier.SubjectReqSet = RMA_FetchAndCacheDataReqSet(tModifier.SubjectReqSetId); end
 	-- done!
 	tModifiers[ sModifierId ] = tModifier;
 	return tModifier; 
@@ -1590,7 +1599,7 @@ function BGD_OwnerRequirementsMet(tReqSet:table)
 	for _,req in ipairs(tReqSet.Reqs) do
 		local bValid = nil;
 		if req.ReqType == "REQUIREMENT_REQUIREMENTSET_IS_MET" and req.Arguments.RequirementSetId then
-			bValid = BGD_OwnerRequirementsMet(FetchAndCacheDataReqSet(req.Arguments.RequirementSetId));
+			bValid = BGD_OwnerRequirementsMet(RMA_FetchAndCacheDataReqSet(req.Arguments.RequirementSetId));
 		else
 			bValid = BGD_PlayerRequirement(req);
 		end
@@ -1623,7 +1632,7 @@ function BGD_CityYieldPercent(pCity:table, sYieldType:string)
 end
 
 function BGD_YieldModifierImpact(tSubject:table, sYieldType:string, fAmount:number)
-	local fTotal:number = YieldTableGetYield(tSubject.Yields, sYieldType);
+	local fTotal:number = RMA_YieldTableGetYield(tSubject.Yields, sYieldType);
 	local fBase:number = 100 + BGD_CityYieldPercent(tSubject.City, sYieldType);
 	if fBase <= 0 then return 0; end
 	return fTotal * fAmount / fBase;
@@ -1653,7 +1662,7 @@ end
 -- Rendement réel par type de rendement (FOOD…FAITH) ; les autres clés gardent la base. Rend aussi
 -- vrai si le jeu a répondu, faux sinon (on garde alors la base, comme avant).
 function BGD_BuildingYieldsTotal(pCity:table, iBuildingIndex:number, tBase:table)
-	local tTotal:table = YieldTableNew();
+	local tTotal:table = RMA_YieldTableNew();
 	for yield,value in pairs(tBase) do tTotal[ yield ] = value; end
 	if pCity == nil or pCity.GetBuildingYield == nil or iBuildingIndex == nil then return tTotal, false; end
 	local bAny:boolean = false;
@@ -1674,8 +1683,8 @@ end
 
 -- Modificateurs en % des rendements de bâtiments actifs pour le joueur local : cartes posées,
 -- gouvernement, traits du chef et de la civilisation (Seondeok : +30 % au Seowon par titre de
--- gouverneur dans BBG). Relus à chaque CalculateModifierEffect (les cartes posées changent dans
--- l'écran du gouvernement) et à chaque RefreshBaseData, en cache entre les deux.
+-- gouverneur dans BBG). Relus à chaque RMA_CalculateModifierEffect (les cartes posées changent dans
+-- l'écran du gouvernement) et à chaque RMA_RefreshBaseData, en cache entre les deux.
 local BGD_EFFETS_PCT_BATIMENT:table = {
 	EFFECT_ADJUST_BUILDING_YIELD_MODIFIERS_FOR_DISTRICT = true,
 	EFFECT_ADJUST_BUILDING_YIELD_MODIFIER = true,
@@ -1688,7 +1697,7 @@ function BGD_ActiveBuildingPercentMods()
 	local function Add(sModifierId:string, iDepth:number)
 		if sModifierId == nil or tSeen[ sModifierId ] or iDepth > 3 then return; end
 		tSeen[ sModifierId ] = true;
-		local tMod:table = FetchAndCacheData(sModifierId);
+		local tMod:table = RMA_FetchAndCacheData(sModifierId);
 		if tMod == nil then return; end
 		if tMod.OwnerReqSet and not BGD_OwnerRequirementsMet(tMod.OwnerReqSet) then return; end
 		if tMod.EffectType == "EFFECT_ATTACH_MODIFIER" then
@@ -1761,7 +1770,7 @@ function BGD_BuildingPercentActive(tCity:table, sDistrictType:string, sBuildingT
 			end
 		end
 		if bMatch and tMod.SubjectReqSet then
-			bMatch = CheckAllRequirements(tMod.SubjectReqSet, tCity, SubjectTypes.City);
+			bMatch = RMA_CheckAllRequirements(tMod.SubjectReqSet, tCity, SubjectTypes.City);
 		end
 		if bMatch then iSum = iSum + (tonumber(tArgs.Amount) or 0); end
 	end
@@ -1786,7 +1795,7 @@ local function BGD_CityStateReqMet(tReqSet:table, pMinor:table, ePlayer:number, 
 		local bValid = nil;
 		local tArgs:table = req.Arguments or {};
 		if req.ReqType == "REQUIREMENT_REQUIREMENTSET_IS_MET" and tArgs.RequirementSetId and iDepth < 3 then
-			bValid = BGD_CityStateReqMet(FetchAndCacheDataReqSet(tArgs.RequirementSetId), pMinor, ePlayer, iDepth + 1);
+			bValid = BGD_CityStateReqMet(RMA_FetchAndCacheDataReqSet(tArgs.RequirementSetId), pMinor, ePlayer, iDepth + 1);
 		elseif req.ReqType == "REQUIREMENT_PLAYER_HAS_GIVEN_INFLUENCE_TOKENS" then
 			bValid = pMinor:GetInfluence():GetTokensReceived(ePlayer) >= (tonumber(tArgs.MinimumTokens) or 1);
 		elseif req.ReqType == "REQUIREMENT_PLAYER_AT_PEACE" then
@@ -1829,7 +1838,7 @@ function BGD_CityStateBuildingBonuses()
 	local okQ, tRows = pcall(function() return DB.Query("SELECT ModifierId FROM ModifierArguments WHERE Name = 'CityStatesOnly'"); end);
 	if not okQ or type(tRows) ~= "table" then return tBonus; end
 	for _,row in ipairs(tRows) do
-		local tMod:table = FetchAndCacheData(row.ModifierId);
+		local tMod:table = RMA_FetchAndCacheData(row.ModifierId);
 		if tMod and tMod.EffectType == "EFFECT_ADJUST_BUILDING_YIELD_CHANGE" then
 			local v = tMod.Arguments.CityStatesOnly;
 			if v == true or v == 1 or v == "1" or (type(v) == "string" and string.lower(v) == "true") then
@@ -1855,7 +1864,7 @@ function BGD_CityStateBuildingBonuses()
 			local tTraits:table = {};
 			for row in GameInfo.LeaderTraits() do if tLeaders[ row.LeaderType ] then tTraits[ row.TraitType ] = true; end end
 			local function Add(sModifierId:string, tReqSets:table, iDepth:number)
-				local tMod:table = sModifierId and FetchAndCacheData(sModifierId);
+				local tMod:table = sModifierId and RMA_FetchAndCacheData(sModifierId);
 				if tMod == nil or iDepth > 3 then return; end
 				local tSets:table = {};
 				for _,tSet in ipairs(tReqSets) do table.insert(tSets, tSet); end
@@ -1887,9 +1896,9 @@ end
 function BGD_BuildingYieldBeforePercent(tCity:table, sDistrictType:string, building:table, sYieldType:string)
 	if building.isPillaged then return 0; end -- un bâtiment pillé ne rapporte rien
 	if not building.IsYieldsTotalFromGame or building.YieldsTotal == nil then
-		return YieldTableGetYield(building.Yields, sYieldType) or 0;
+		return RMA_YieldTableGetYield(building.Yields, sYieldType) or 0;
 	end
-	local fTotal:number = YieldTableGetYield(building.YieldsTotal, sYieldType) or 0;
+	local fTotal:number = RMA_YieldTableGetYield(building.YieldsTotal, sYieldType) or 0;
 	-- bonus des cités-États : hors des % dans le jeu
 	fTotal = math.max(0, fTotal - BGD_CityStateBuildingBonus(building.BuildingType, sYieldType));
 	local iPercent:number = BGD_BuildingPercentActive(tCity, BGD_BaseDistrictType(sDistrictType), BGD_BaseBuildingType(building.BuildingType), sYieldType);
@@ -1897,21 +1906,21 @@ function BGD_BuildingYieldBeforePercent(tCity:table, sDistrictType:string, build
 	return fTotal * 100 / (100 + iPercent);
 end
 
-function DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tMainSubjects:table, sMainSubjectType:string)
-	--print("DecodeModifier(modid,pid,cid,subtype)",sModifierId,ePlayerID,iCityID,sMainSubjectType);
-	local tMod:table = FetchAndCacheData(sModifierId);
+function RMA_DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tMainSubjects:table, sMainSubjectType:string)
+	--print("RMA_DecodeModifier(modid,pid,cid,subtype)",sModifierId,ePlayerID,iCityID,sMainSubjectType);
+	local tMod:table = RMA_FetchAndCacheData(sModifierId);
 	if not tMod then return "ERROR: "..sModifierId.." not defined!"; end
 	local tOut = {};
 	table.insert(tOut, "Modifier: "..tMod.ModifierId);
 	table.insert(tOut, "Type: "..string.sub(tMod.ModifierType, 10)); -- 230514 #2
 	if tMod.OwnerReqSetId then
 		table.insert(tOut, "Owner: "..tMod.OwnerReqSetId);
-		DecodeReqSet(tOut, tMod.OwnerReqSetId);
+		RMA_DecodeReqSet(tOut, tMod.OwnerReqSetId);
 	end
 	table.insert(tOut, "Collection: "..string.sub(tMod.CollectionType, 12)); -- 230514 #2
 	if tMod.SubjectReqSetId then
 		table.insert(tOut, "Subject: "..tMod.SubjectReqSetId);
-		DecodeReqSet(tOut, tMod.SubjectReqSetId);
+		RMA_DecodeReqSet(tOut, tMod.SubjectReqSetId);
 	end
 	table.insert(tOut, "Effect: "..string.sub(tMod.EffectType, 8)); -- 230514 #2
 	for name,value in pairs(tMod.Arguments) do table.insert(tOut, name.." = "..value); end
@@ -1920,7 +1929,7 @@ function DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tM
 	if tMod.NewOnly then table.insert(tOut, "New Only"); end
 	if tMod.Permanent then table.insert(tOut, "Permanent"); end
 	-- analysis starts here
-	if bBaseDataDirty then RefreshBaseData(); end -- make sure we have current data
+	if bBaseDataDirty then RMA_RefreshBaseData(); end -- make sure we have current data
 	-- TODO: ASSUMPTION Owner will be Player, this is true for Policies and many other modifiers
 	-- TODO: add support for other owners later, if necessary
 	local tOwner:table, sOwnerType:string = tPlayer, SubjectTypes.Player; -- Players[ Game:GetLocalPlayer() ]
@@ -1933,18 +1942,18 @@ function DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tM
 	local tSubjects:table, sSubjectType:string = tMainSubjects, sMainSubjectType; -- let's start with passed args, will be nils most of the time
 	if tMainSubjects == nil or sMainSubjectType == nil then 
 		-- rebuild collection
-		tSubjects, sSubjectType = BuildCollectionOfSubjects(tMod, tOwner, sOwnerType);
+		tSubjects, sSubjectType = RMA_BuildCollectionOfSubjects(tMod, tOwner, sOwnerType);
 	else
 		if tMod.CollectionType == "COLLECTION_CITY_DISTRICTS" then
 			-- try to pass cities
-			tSubjects, sSubjectType = BuildCollectionOfSubjects(tMod, tMainSubjects, sMainSubjectType);
+			tSubjects, sSubjectType = RMA_BuildCollectionOfSubjects(tMod, tMainSubjects, sMainSubjectType);
 		elseif tMod.CollectionType ~= "COLLECTION_OWNER" then
 			-- rebuild collection
-			tSubjects, sSubjectType = BuildCollectionOfSubjects(tMod, tOwner, sOwnerType);
+			tSubjects, sSubjectType = RMA_BuildCollectionOfSubjects(tMod, tOwner, sOwnerType);
 		end
 	end
 	--print("Subjects are:"); for k,v in pairs(tSubjects) do print(k,v.SubjectType,v.Name); end -- debug
-	--dshowsubjects(tSubjects); -- debug
+	--RMA_dshowsubjects(tSubjects); -- debug
 	-- list subjects
 	local tSubjectsOut:table = {};
 	table.insert(tSubjectsOut, "Subject(s): "..sSubjectType);
@@ -1955,7 +1964,7 @@ function DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tM
 	table.insert(tOut, table.concat(tSubjectsOut, ", "));
 	-- calculate impact of the modifier
 	local bUnknownEffect:boolean = false;
-	local tImpact:table = YieldTableNew();
+	local tImpact:table = RMA_YieldTableNew();
 	-- BGD : le prérequis de propriétaire n'était qu'affiché. Un modificateur dont le propriétaire ne
 	-- le remplit pas n'a aucun effet (nourriture des cartes de personnages illustres réservée à
 	-- Anacaona dans BBG, par exemple).
@@ -1964,21 +1973,21 @@ function DecodeModifier(sModifierId:string, ePlayerID:number, iCityID:number, tM
 		tSubjects = {};
 	end
 	for i,subject in pairs(tSubjects) do
-		local tSubjectImpact:table = ApplyEffectAndCalculateImpact(tMod, subject, sSubjectType); -- it will return nil if effect unknown
+		local tSubjectImpact:table = RMA_ApplyEffectAndCalculateImpact(tMod, subject, sSubjectType); -- it will return nil if effect unknown
 		if tSubjectImpact then
-			--dprint("Impact for subject ", subject.Name); dshowyields(tSubjectImpact); -- debug
-			YieldTableAdd(tImpact, tSubjectImpact);
+			--RMA_dprint("Impact for subject ", subject.Name); RMA_dshowyields(tSubjectImpact); -- debug
+			RMA_YieldTableAdd(tImpact, tSubjectImpact);
 		else
 			bUnknownEffect = true;
 		end
 	end
-	--dprint("Impact for all subjects"); dshowyields(tImpact); -- debug
+	--RMA_dprint("Impact for all subjects"); RMA_dshowyields(tImpact); -- debug
 	-- create an output string
 	local sImpactText:string = "Effect: ";
 	local bImpact:boolean = false;
 	for	yield,value in pairs(tImpact) do
 		if value ~= 0 then
-			sImpactText = sImpactText..GetYieldString("YIELD_"..yield, value);
+			sImpactText = sImpactText..RMA_GetYieldString("YIELD_"..yield, value);
 			bImpact = true;
 		end
 	end
@@ -2006,12 +2015,12 @@ end
 --  table - requirement
 --  table - subject to analyze (from tCities or any other)
 --  string - type of subject (e.g. "City", "District")
-function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
-	--print("CheckOneRequirement(req,type,sub)(subject)",tReq.ReqId,tReq.ReqType,sSubjectType,tSubject.SubjectType,tSubject.Name);
+function RMA_CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
+	--print("RMA_CheckOneRequirement(req,type,sub)(subject)",tReq.ReqId,tReq.ReqType,sSubjectType,tSubject.SubjectType,tSubject.Name);
 	
 	local function CheckForMismatchError(sExpectedType:string, sExpectedType2:string)
 		if sExpectedType == tSubject.SubjectType or (sExpectedType2 ~= nil and sExpectedType2 == tSubject.SubjectType) then return false; end
-		print("ERROR: CheckOneRequirement mismatch for exp subject", sExpectedType, "got", tSubject.SubjectType, "req is", tReq.ReqId, tReq.ReqType); return true;
+		print("ERROR: RMA_CheckOneRequirement mismatch for exp subject", sExpectedType, "got", tSubject.SubjectType, "req is", tReq.ReqId, tReq.ReqType); return true;
 	end
 	
 	-- MAIN DISPATCHER FOR REQUIREMENTS
@@ -2038,7 +2047,7 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
 	elseif tReq.ReqType == "REQUIREMENT_CITY_HAS_BUILDING" then -- 35, Wonders too!
 		--if CheckForMismatchError(SubjectTypes.City) then return false; end
 		if not( tSubject.SubjectType == SubjectTypes.City or tSubject.SubjectType == SubjectTypes.District ) then
-			print("ERROR: CheckOneRequirement mismatch for subject", tSubject.SubjectType); dshowtable(tReq); return nil;
+			print("ERROR: RMA_CheckOneRequirement mismatch for subject", tSubject.SubjectType); RMA_dshowtable(tReq); return nil;
 		end
 		if tSubject.SubjectType == SubjectTypes.City then
 			for _,district in ipairs(tSubject.Districts) do
@@ -2089,7 +2098,7 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
 				local districtType:string = district.DistrictType;	
 				if GameInfo.DistrictReplaces[ districtType ] then districtType = GameInfo.DistrictReplaces[ districtType ].ReplacesDistrictType; end
 				bIsValidSubject = ( ( districtType == tReq.Arguments.DistrictType ) and -- DISTRICT_THEATER, etc.
-									( YieldTableGetYield(district.Yields, tReq.Arguments.YieldType) >= tonumber(tReq.Arguments.Amount)) );
+									( RMA_YieldTableGetYield(district.Yields, tReq.Arguments.YieldType) >= tonumber(tReq.Arguments.Amount)) );
 				if bIsValidSubject then break; end
 			end -- isBuilt
 		end
@@ -2169,7 +2178,7 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
         elseif tSubject.SubjectType == SubjectTypes.City then
             bIsValidSubject = CheckPlayerHasTechnology(Players[ tSubject.City:GetOwner() ], tReq.Arguments.TechnologyType);
         else
-            print("ERROR: CheckOneRequirement mismatch for subject", tSubject.SubjectType); dshowtable(tReq); return nil;
+            print("ERROR: RMA_CheckOneRequirement mismatch for subject", tSubject.SubjectType); RMA_dshowtable(tReq); return nil;
         end
 		
 	elseif tReq.ReqType == "REQUIREMENT_PLAYER_HAS_DISTRICT" then -- 1
@@ -2267,14 +2276,14 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
 	elseif tReq.ReqType == "REQUIREMENT_PLOT_IMPROVEMENT_TYPE_MATCHES" then
 		if CheckForMismatchError(SubjectTypes.Plot) then return false; end
 		local info:table = GameInfo.Improvements[ tReq.Arguments.ImprovementType ];
-		if info == nil then print("ERROR: CheckOneRequirement unknown improvement", tReq.Arguments.ImprovementType); return false; end -- error
+		if info == nil then print("ERROR: RMA_CheckOneRequirement unknown improvement", tReq.Arguments.ImprovementType); return false; end -- error
 		bIsValidSubject = ( tSubject.Plot:GetImprovementType() == info.Index );
 		
 	elseif tReq.ReqType == "REQUIREMENT_PLOT_IS_APPEAL_BETWEEN" then
 		--if CheckForMismatchError(SubjectTypes.Plot) then return false; end
         -- 2021-05-13 can be a District also DISTRICT_IS_CHARMING_NEIGHBORHOOD = Public Transport Policy
 		if not( tSubject.SubjectType == SubjectTypes.Plot or tSubject.SubjectType == SubjectTypes.District ) then
-			print("ERROR: CheckOneRequirement mismatch for subject", tSubject.SubjectType); dshowtable(tReq); return nil;
+			print("ERROR: RMA_CheckOneRequirement mismatch for subject", tSubject.SubjectType); RMA_dshowtable(tReq); return nil;
 		end
 		bIsValidSubject = ( tSubject.Plot:GetAppeal() >= tonumber(tReq.Arguments.MinimumAppeal) );
 		-- there is probably maximum appeal but it is not used at all
@@ -2282,7 +2291,7 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
 	elseif tReq.ReqType == "REQUIREMENT_PLOT_ADJACENT_TO_RIVER" then
 		--if CheckForMismatchError(SubjectTypes.Plot) then return false; end -- this could be District or Plot, maybe City?
 		if not( tSubject.SubjectType == SubjectTypes.Plot or tSubject.SubjectType == SubjectTypes.District or tSubject.SubjectType == SubjectTypes.City ) then
-			print("ERROR: CheckOneRequirement mismatch for subject", tSubject.SubjectType); dshowtable(tReq); return nil;
+			print("ERROR: RMA_CheckOneRequirement mismatch for subject", tSubject.SubjectType); RMA_dshowtable(tReq); return nil;
 		end
 		-- 2019-04-06 only IsRiver counts, tested on Hydro Dam upgrade
 		--bIsValidSubject = ( tSubject.Plot:IsRiver() or tSubject.Plot:IsRiverAdjacent() );
@@ -2300,7 +2309,7 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
 		--local districtType:string = tSubject.DistrictType;
 		--if GameInfo.DistrictReplaces[ districtType ] then districtType = GameInfo.DistrictReplaces[ districtType ].ReplacesDistrictType; end
 		local info:table = GameInfo.Districts[ tReq.Arguments.DistrictType ];
-		if info == nil then print("ERROR: CheckOneRequirement unknown district", tReq.Arguments.DistrictType); return false; end -- error
+		if info == nil then print("ERROR: RMA_CheckOneRequirement unknown district", tReq.Arguments.DistrictType); return false; end -- error
 		local eDistrictType:number = info.Index;
 		local iX:number, iY:number = tSubject.Plot:GetX(), tSubject.Plot:GetY();
 		for direction = 0, DirectionTypes.NUM_DIRECTION_TYPES - 1, 1 do
@@ -2313,7 +2322,7 @@ function CheckOneRequirement(tReq:table, tSubject:table, sSubjectType:string)
         if tSubject.SubjectType == SubjectTypes.Plot or tSubject.SubjectType == SubjectTypes.City then
             bIsValidSubject = tSubject.Plot:IsCoastalLand(); -- City also has Plot in the table
         else
-            print("ERROR: CheckOneRequirement mismatch for exp subject", "[City or Plot]", "got", tSubject.SubjectType, "req is", tReq.ReqId, tReq.ReqType); return true;
+            print("ERROR: RMA_CheckOneRequirement mismatch for exp subject", "[City or Plot]", "got", tSubject.SubjectType, "req is", tReq.ReqId, tReq.ReqType); return true;
         end
 
 	-- 230522 #3 Halicarnassus
@@ -2336,10 +2345,10 @@ end
 --  table - requirement set
 --  table - subject to analyze (from tCities or any other)
 --  string - type of subject (e.g. "City", "District")
-function CheckAllRequirements(tReqSet:table, tSubject:table, sSubjectType:string)
-	--print("CheckAllRequirements(req,sub)(subject)",tReqSet.ReqSetId,sSubjectType,tSubject.SubjectType,tSubject.Name);
+function RMA_CheckAllRequirements(tReqSet:table, tSubject:table, sSubjectType:string)
+	--print("RMA_CheckAllRequirements(req,sub)(subject)",tReqSet.ReqSetId,sSubjectType,tSubject.SubjectType,tSubject.Name);
 	for _,req in ipairs(tReqSet.Reqs) do
-		local bIsValid:boolean = CheckOneRequirement(req, tSubject, sSubjectType);
+		local bIsValid:boolean = RMA_CheckOneRequirement(req, tSubject, sSubjectType);
 		if tReqSet.TestAny and     bIsValid then return true;  end -- we found 1 positive, that is all needed for TestAny
 		if tReqSet.TestAll and not bIsValid then return false; end -- we found 1 negative, that is all needed for TestAll
 	end
@@ -2348,20 +2357,20 @@ function CheckAllRequirements(tReqSet:table, tSubject:table, sSubjectType:string
 	if tReqSet.TestAll then return true;  end -- all were positive
 	-- still nothing? error...
 	print("ERROR: checked all requirements and nothing seems to work out for subject", sSubjectType);
-	dshowtable(tReqSet);
+	RMA_dshowtable(tReqSet);
 	return false;
 end
 
 
 ------------------------------------------------------------------------------
--- BuildCollectionOfSubjects return 2 values
+-- RMA_BuildCollectionOfSubjects return 2 values
 --  table - of subjects - these are objects from tCities (cities, districts or buildings), TODO: filtered using SubReqs
 --  string - type of the subject
-function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
-	--print("BuildCollectionOfSubjects(subreq,ownname,owntype,passed)",tMod.SubjectReqSetId,tOwner.Name,tOwner.SubjectType,sOwnerType);
+function RMA_BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
+	--print("RMA_BuildCollectionOfSubjects(subreq,ownname,owntype,passed)",tMod.SubjectReqSetId,tOwner.Name,tOwner.SubjectType,sOwnerType);
 	local tSubjects:table, sSubjectType:string = {}, "([COLOR_Red]unknown[ENDCOLOR])";
 	local tReqSet:table = tMod.SubjectReqSet; -- speed up some checking
-	--dprint("  Subject requirement set is (id)", tMod.SubjectReqSetId);
+	--RMA_dprint("  Subject requirement set is (id)", tMod.SubjectReqSetId);
 	-- MAIN DISPATCHER FOR COLLECTIONS
 	if tMod.CollectionType == "COLLECTION_OWNER" then
 		-- most difficult one... not yet...
@@ -2384,13 +2393,13 @@ function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
 	elseif tMod.CollectionType == "COLLECTION_CITY_DISTRICTS" then
 		local function AddDistrictsFromCity(tSubject:table)
 			if tSubject.SubjectType ~= SubjectTypes.City then
-				print("ERROR: BuildCollectionOfSubjects: Mismatch type for COLLECTION_CITY_DISTRICTS", sOwnerType); dshowtable(tMod); dshowrectable(tSubject); return
+				print("ERROR: RMA_BuildCollectionOfSubjects: Mismatch type for COLLECTION_CITY_DISTRICTS", sOwnerType); RMA_dshowtable(tMod); RMA_dshowrectable(tSubject); return
 			end
 			for _,district in ipairs(tSubject.Districts) do
 				if district.isBuilt then
 					--print("working on district",district.Name)
 					if tReqSet then  
-						if CheckAllRequirements(tReqSet, district, sSubjectType) then table.insert(tSubjects, district); end
+						if RMA_CheckAllRequirements(tReqSet, district, sSubjectType) then table.insert(tSubjects, district); end
 					else
 						table.insert(tSubjects, district);
 					end
@@ -2406,7 +2415,7 @@ function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
 				AddDistrictsFromCity(citydata);
 			end
 		else
-			print("ERROR: BuildCollectionOfSubjects: Mismatch type for COLLECTION_CITY_DISTRICTS", sOwnerType); dshowtable(tMod);
+			print("ERROR: RMA_BuildCollectionOfSubjects: Mismatch type for COLLECTION_CITY_DISTRICTS", sOwnerType); RMA_dshowtable(tMod);
 		end
 
 	elseif tMod.CollectionType == "COLLECTION_PLAYER_CAPITAL_CITY" then
@@ -2424,7 +2433,7 @@ function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
 		sSubjectType = SubjectTypes.City;
 		for cityname,citydata in pairs(tCities) do
 			if tReqSet then 
-				if CheckAllRequirements(tReqSet, citydata, sSubjectType) then table.insert(tSubjects, citydata); end
+				if RMA_CheckAllRequirements(tReqSet, citydata, sSubjectType) then table.insert(tSubjects, citydata); end
 			else
 				table.insert(tSubjects, citydata);
 			end
@@ -2435,7 +2444,7 @@ function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
 		for cityname,citydata in pairs(tCities) do
 			if bIsRiseAndFall and citydata.City:GetAssignedGovernor() then
 				if tReqSet then 
-					if CheckAllRequirements(tReqSet, citydata, sSubjectType) then table.insert(tSubjects, citydata); end
+					if RMA_CheckAllRequirements(tReqSet, citydata, sSubjectType) then table.insert(tSubjects, citydata); end
 				else
 					table.insert(tSubjects, citydata);
 				end
@@ -2448,7 +2457,7 @@ function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
 			for _,district in ipairs(citydata.Districts) do
 				if district.isBuilt then
 					if tReqSet then  
-						if CheckAllRequirements(tReqSet, district, sSubjectType) then table.insert(tSubjects, district); end
+						if RMA_CheckAllRequirements(tReqSet, district, sSubjectType) then table.insert(tSubjects, district); end
 					else
 						table.insert(tSubjects, district);
 					end
@@ -2462,7 +2471,7 @@ function BuildCollectionOfSubjects(tMod:table, tOwner:table, sOwnerType:string)
 		sSubjectType = SubjectTypes.Plot;
 		for _,plot in ipairs(tPlots) do
 			if tReqSet then
-				if CheckAllRequirements(tReqSet, plot, sSubjectType) then table.insert(tSubjects, plot); end
+				if RMA_CheckAllRequirements(tReqSet, plot, sSubjectType) then table.insert(tSubjects, plot); end
 			else
 				table.insert(tSubjects, plot);
 			end
@@ -2489,16 +2498,16 @@ end
 ------------------------------------------------------------------------------
 -- Returns a table of extended yields
 -- It will return nil if an effect is unknown
-function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:string)
-	--print("ApplyEffectAndCalculateImpact(mod,eff,sub)(subject)",tMod.ModifierId,tMod.EffectType,sSubjectType,tSubject.SubjectType,tSubject.Name);
+function RMA_ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:string)
+	--print("RMA_ApplyEffectAndCalculateImpact(mod,eff,sub)(subject)",tMod.ModifierId,tMod.EffectType,sSubjectType,tSubject.SubjectType,tSubject.Name);
 
 	local function CheckForMismatchError(sExpectedType:string)
 		if sExpectedType == tSubject.SubjectType then return false; end
-		print("ERROR: ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); dshowtable(tMod); return true;
+		print("ERROR: RMA_ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); RMA_dshowtable(tMod); return true;
 	end
 	
 	-- MAIN DISPATCHER FOR EFFECTS
-	local tImpact:table = YieldTableNew();
+	local tImpact:table = RMA_YieldTableNew();
 	
 	if tMod.EffectType == "EFFECT_ATTACH_MODIFIER" then
 		-- well, do nothing here but return tImpact, this will clear unknown flag
@@ -2506,25 +2515,25 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 	-- single effect for changing plot yields
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLOT_YIELD" then
 		if CheckForMismatchError(SubjectTypes.Plot) then return nil; end
-		YieldTableSetMultipleYields(tImpact, tMod.Arguments.YieldType, tMod.Arguments.Amount);
+		RMA_YieldTableSetMultipleYields(tImpact, tMod.Arguments.YieldType, tMod.Arguments.Amount);
 
 	------------------------------ CITY ------------------------------------------------
 	
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_YIELD_CHANGE" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount));
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_ALL_YIELDS_CHANGE" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
 		local fYieldChange:number = tonumber(tMod.Arguments.Amount);
-		for yield in GameInfo.Yields() do YieldTableSetYield(tImpact, yield.YieldType, fYieldChange); end
+		for yield in GameInfo.Yields() do RMA_YieldTableSetYield(tImpact, yield.YieldType, fYieldChange); end
 		
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_YIELD_MODIFIER" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
 		-- 230522 #3 support for multi-args
 		-- BGD : pourcentage du rendement de base, pas du total (qui contient les autres bonus).
 		if string.find(tMod.Arguments.YieldType, ",") == nil then
-			YieldTableSetYield(tImpact, tMod.Arguments.YieldType, BGD_YieldModifierImpact(tSubject, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount)));
+			RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, BGD_YieldModifierImpact(tSubject, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount)));
 		else
 			local tYields:table = {};
 			for sYield in string.gmatch(tMod.Arguments.YieldType, "[^,%s]+") do table.insert(tYields, sYield); end
@@ -2532,9 +2541,9 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 			for sAmount in string.gmatch(tostring(tMod.Arguments.Amount), "[^,%s]+") do table.insert(tAmounts, tonumber(sAmount)); end
 			for i,sYield in ipairs(tYields) do
 				local fAmount:number = tAmounts[i] or tAmounts[#tAmounts] or 0;
-				local tOne:table = YieldTableNew();
-				YieldTableSetYield(tOne, sYield, BGD_YieldModifierImpact(tSubject, sYield, fAmount));
-				YieldTableAdd(tImpact, tOne);
+				local tOne:table = RMA_YieldTableNew();
+				RMA_YieldTableSetYield(tOne, sYield, BGD_YieldModifierImpact(tSubject, sYield, fAmount));
+				RMA_YieldTableAdd(tImpact, tOne);
 			end
 		end
 
@@ -2542,7 +2551,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 	-- remplit la condition (Invention : par atelier).
 	elseif tMod.EffectType == "EFFECT_ADJUST_GREAT_PERSON_POINTS" then
 		if tSubject.SubjectType ~= SubjectTypes.City and tSubject.SubjectType ~= SubjectTypes.Player then
-			print("ERROR: ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); dshowtable(tMod); return nil;
+			print("ERROR: RMA_ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); RMA_dshowtable(tMod); return nil;
 		end
 		local sClasse:string = tMod.Arguments.GreatPersonClassType;
 		if sClasse == nil then return nil; end
@@ -2550,11 +2559,11 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_YIELD_PER_DISTRICT" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount) * tSubject.NumDistricts);
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount) * tSubject.NumDistricts);
 		
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_YIELD_PER_POPULATION" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount) * tSubject.Population);
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount) * tSubject.Population);
 
 	-- 2020-06-04 Reyna taxation, seems like they forgot about city yield per pop modifiers :)
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_GOLD_FROM_CITIZENS" then
@@ -2571,29 +2580,29 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_AMENITIES_FROM_RELIGION" then
 		if not( tSubject.SubjectType == SubjectTypes.City or tSubject.SubjectType == SubjectTypes.District ) then
-			print("ERROR: ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); dshowtable(tMod); return nil;
+			print("ERROR: RMA_ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); RMA_dshowtable(tMod); return nil;
 		end
 		tImpact.AMENITY = tonumber(tMod.Arguments.Amount);
 		
 	-- 230522 #10 Johannesburg
 	elseif tMod.EffectType == "EFFECT_ADJUST_YIELD_BY_NUMBER_OF_RESOURCES" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tSubject.NumResources * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tSubject.NumResources * tonumber(tMod.Arguments.Amount));
 		
 	------------------------------ DISTRICT ------------------------------------------------
 	
 	elseif tMod.EffectType == "EFFECT_ADJUST_DISTRICT_YIELD_MODIFIER" then
 		if CheckForMismatchError(SubjectTypes.District) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldType) * tonumber(tMod.Arguments.Amount) / 100.0);
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, RMA_YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldType) * tonumber(tMod.Arguments.Amount) / 100.0);
 		-- 230521 #13 Economic Union
 		for _,building in ipairs(tSubject.Buildings) do
 			if tDistrictYieldCopies[building.BuildingType] ~= nil and building.isBuilt and not building.isPillaged then
 				local oldYield: string = tMod.Arguments.YieldType;
 				local newYield: string = tDistrictYieldCopies[building.BuildingType][oldYield];
 				if newYield ~= nil then
-					local tImpactAdd: table = YieldTableNew();
-					YieldTableSetYield(tImpactAdd, newYield, YieldTableGetYield(tSubject.Yields, oldYield) * tonumber(tMod.Arguments.Amount) / 100.0);
-					YieldTableAdd(tImpact, tImpactAdd);
+					local tImpactAdd: table = RMA_YieldTableNew();
+					RMA_YieldTableSetYield(tImpactAdd, newYield, RMA_YieldTableGetYield(tSubject.Yields, oldYield) * tonumber(tMod.Arguments.Amount) / 100.0);
+					RMA_YieldTableAdd(tImpact, tImpactAdd);
 				end
 			end
 		end
@@ -2601,12 +2610,12 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 	elseif tMod.EffectType == "EFFECT_ADJUST_DISTRICT_YIELD_CHANGE" then
 		if CheckForMismatchError("District") then return nil; end
         -- 2021-05-14 Public Transport fix
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount));
 
 	-- 2019-04-17 Added
 	elseif tMod.EffectType == "EFFECT_ADJUST_DISTRICT_YIELD_BASED_ON_ADJACENCY_BONUS" then
 		if CheckForMismatchError(SubjectTypes.District) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldTypeToGrant, YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldTypeToMirror));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldTypeToGrant, RMA_YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldTypeToMirror));
 
 	elseif tMod.EffectType == "EFFECT_FEATURE_ADJACENCY" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
@@ -2634,8 +2643,8 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		end
 		-- compatibility tweak for CIVITAS CS mod - remove if not needed any more
 		-- they use YieldChange instead of Amount in this modifier
-		if     tMod.Arguments.Amount      then YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
-		elseif tMod.Arguments.YieldChange then YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.YieldChange));
+		if     tMod.Arguments.Amount      then RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		elseif tMod.Arguments.YieldChange then RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.YieldChange));
 		end
 		
 	elseif tMod.EffectType == "EFFECT_TERRAIN_ADJACENCY" then
@@ -2662,7 +2671,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				iNum = iNum + GetNumAdjacentTerrainType(district.Plot:GetX(), district.Plot:GetY(), tMod.Arguments.TerrainType);
 			end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 		
 	------------------------------ BUILDING ------------------------------------------------
 	
@@ -2676,7 +2685,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 					local buildingType:string = building.BuildingType;	
 					if GameInfo.BuildingReplaces[ buildingType ] then buildingType = GameInfo.BuildingReplaces[ buildingType ].ReplacesBuildingType; end
 					if buildingType == sBuildingType then
-						YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount)); bApplied = true; break;
+						RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tonumber(tMod.Arguments.Amount)); bApplied = true; break;
 					end
 				end
 				if bApplied then break; end
@@ -2695,7 +2704,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 					if buildingType == sBuildingType then
 						-- BGD : base + bonus fixes, sans les % déjà appliqués
 						local fYield:number = BGD_BuildingYieldBeforePercent(tSubject, district.DistrictType, building, tMod.Arguments.YieldType);
-						YieldTableSetYield(tImpact, tMod.Arguments.YieldType, fYield*tonumber(tMod.Arguments.Amount)/100.0); bApplied = true; break;
+						RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, fYield*tonumber(tMod.Arguments.Amount)/100.0); bApplied = true; break;
 					end
 				end
 				if bApplied then break; end
@@ -2716,7 +2725,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 						local fYield:number = BGD_BuildingYieldBeforePercent(tSubject, district.DistrictType, building, tMod.Arguments.YieldType);
 						fYieldChange = fYieldChange + fYield * tonumber(tMod.Arguments.Amount) / 100.0;
 					end
-					YieldTableSetYield(tImpact, tMod.Arguments.YieldType, fYieldChange);
+					RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, fYieldChange);
 					break;
 				end -- isBuilt
 			end
@@ -2738,7 +2747,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
         elseif tSubject.SubjectType == SubjectTypes.District then
             tImpact.PRODUCTION = tonumber(tMod.Arguments.Amount);
         else
-            print("ERROR: ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); dshowtable(tMod); return true;
+            print("ERROR: RMA_ApplyEffectAndCalculateImpact mismatch for subject", sSubjectType); RMA_dshowtable(tMod); return true;
         end
 		
 	-- special effects to boost production
@@ -2822,24 +2831,24 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				if pDest ~= nil and not pDest:IsMajor() and not pDest:IsBarbarian() then iRoutes = iRoutes + 1; end
 			end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iRoutes * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iRoutes * tonumber(tMod.Arguments.Amount));
 
 	------------------------------ ENVOY ------------------------------------------------
 	
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_YIELD_CHANGE_PER_USED_INFLUENCE_TOKEN" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tSubject.NumInfluenceTokensGiven * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tSubject.NumInfluenceTokensGiven * tonumber(tMod.Arguments.Amount));
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_YIELD_CHANGE_PER_TRIBUTARY" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tSubject.NumSuzerainCityStates * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, tSubject.NumSuzerainCityStates * tonumber(tMod.Arguments.Amount));
 		
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_YIELD_MODIFIER_PER_TRIBUTARY" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
-		--print("FUN ApplyEffectAndCalculateImpact(mod,eff,sub)(subject)",tMod.ModifierId,tMod.EffectType,sSubjectType,tSubject.SubjectType,tSubject.Name);
+		--print("FUN RMA_ApplyEffectAndCalculateImpact(mod,eff,sub)(subject)",tMod.ModifierId,tMod.EffectType,sSubjectType,tSubject.SubjectType,tSubject.Name);
 		--print("EFFECT_ADJUST_PLAYER_YIELD_MODIFIER_PER_TRIBUTARY", tMod.Arguments.YieldType, tMod.Arguments.Amount, "city-states:", tSubject.NumSuzerainCityStates);
-		--dshowyields(tSubject.Yields);
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldType) * tSubject.NumSuzerainCityStates * tonumber(tMod.Arguments.Amount) / 100.0);
+		--RMA_dshowyields(tSubject.Yields);
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, RMA_YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldType) * tSubject.NumSuzerainCityStates * tonumber(tMod.Arguments.Amount) / 100.0);
 
 	------------------------------ TRADE ROUTE MODIFIERS ------------------------------------------------
 	
@@ -2853,12 +2862,12 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 			local tRoutes:table = city.OutgoingRoutes; -- default
 			if not bOrigin then tRoutes = city.IncomingRoutes; end
 			for _,route in ipairs(tRoutes) do
-				local tSingleRouteImpact:table = YieldTableNew();
-				--dprint("route yields for", route.Name); dshowyields(route.Yields);
-				YieldTableSetYield(tSingleRouteImpact, tMod.Arguments.YieldType, YieldTableGetYield(route.Yields, tMod.Arguments.YieldType));
-				YieldTablePercent(tSingleRouteImpact, tonumber(tMod.Arguments.Amount));
-				--dprint("single impact is"); dshowyields(tSingleRouteImpact);
-				YieldTableAdd(tImpact, tSingleRouteImpact);
+				local tSingleRouteImpact:table = RMA_YieldTableNew();
+				--RMA_dprint("route yields for", route.Name); RMA_dshowyields(route.Yields);
+				RMA_YieldTableSetYield(tSingleRouteImpact, tMod.Arguments.YieldType, RMA_YieldTableGetYield(route.Yields, tMod.Arguments.YieldType));
+				RMA_YieldTablePercent(tSingleRouteImpact, tonumber(tMod.Arguments.Amount));
+				--RMA_dprint("single impact is"); RMA_dshowyields(tSingleRouteImpact);
+				RMA_YieldTableAdd(tImpact, tSingleRouteImpact);
 			end
 		end
 	
@@ -2869,14 +2878,14 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		-- sum yields from all outgoing international routes
 		for _,city in pairs(tSubject.Cities) do
 			for _,route in ipairs(city.OutgoingRoutes) do
-				if not route.IsDomestic then YieldTableAdd(tImpact, route.Yields); end
+				if not route.IsDomestic then RMA_YieldTableAdd(tImpact, route.Yields); end
 			end
 		end
 		-- multiply total yields by the multi-modifier
-		local tModifier: table = YieldTableNew();
-		YieldTableSetMultipleYields(tModifier, tMod.Arguments.YieldType, tMod.Arguments.Amount);
-		YieldTableMultiply(tModifier, 0.01);
-		YieldTableMultiplyTable(tImpact, tModifier);
+		local tModifier: table = RMA_YieldTableNew();
+		RMA_YieldTableSetMultipleYields(tModifier, tMod.Arguments.YieldType, tMod.Arguments.Amount);
+		RMA_YieldTableMultiply(tModifier, 0.01);
+		RMA_YieldTableMultiplyTable(tImpact, tModifier);
 	
 	------------------------------ TRADE ROUTE YIELDS ------------------------------------------------
 
@@ -2884,7 +2893,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		if CheckForMismatchError(SubjectTypes.Player) then return nil end
 		local iNum:number = 0
 		for cityname,city in pairs(tSubject.Cities) do iNum = iNum + city.NumRoutes end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_TRADE_ROUTE_ORIGIN_YIELD_FOR_ALLY_ROUTE" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil end
@@ -2894,7 +2903,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				if route.IsDestinationPlayerAlly then iNum = iNum + 1 end
 			end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
 
 	-- 230521 #1 Wisselbanken
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_TRADE_ROUTE_ORIGIN_YIELD_FOR_SUZERAIN_ROUTE" then
@@ -2905,29 +2914,29 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				if route.IsDestinationSuzerained then iNum = iNum + 1 end
 			end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
 
 	-- 230521 #1 Wisselbanken
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_TRADE_ROUTE_DESTINATION_YIELD_FOR_ALLY_ROUTE" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil end
-		YieldTableClear(tImpact); -- no gains for us
+		RMA_YieldTableClear(tImpact); -- no gains for us
 
 	-- 230521 #1 Wisselbanken
 	elseif tMod.EffectType == "EFFECT_ADJUST_PLAYER_TRADE_ROUTE_DESTINATION_YIELD_FOR_SUZERAIN_ROUTE" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil end
-		YieldTableClear(tImpact); -- no gains for us
+		RMA_YieldTableClear(tImpact); -- no gains for us
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_TRADE_ROUTE_YIELD_FOR_DOMESTIC" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
 		local iNum:number = 0;
 		for cityname,city in pairs(tSubject.Cities) do iNum = iNum + city.NumRoutesDomestic end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_TRADE_ROUTE_YIELD_FOR_INTERNATIONAL" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
 		local iNum:number = 0;
 		for cityname,city in pairs(tSubject.Cities) do iNum = iNum + city.NumRoutesInternational end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 		
 	elseif tMod.EffectType == "EFFECT_ADJUST_TRADE_ROUTE_YIELD_PER_SPECIALTY_DISTRICT_FOR_DOMESTIC" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
@@ -2937,7 +2946,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				if route.IsDomestic then iNum = iNum + route.NumSpecialtyDistricts; end
 			end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_TRADE_ROUTE_YIELD_PER_SPECIALTY_DISTRICT_FOR_INTERNATIONAL" then
 		if CheckForMismatchError(SubjectTypes.Player) then return nil; end
@@ -2947,7 +2956,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 				if not route.IsDomestic then iNum = iNum + route.NumSpecialtyDistricts; end
 			end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount))
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_TRADE_ROUTE_YIELD_PER_DESTINATION_STRATEGIC_RESOURCE_FOR_INTERNATIONAL" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
@@ -2955,7 +2964,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		for _,route in ipairs(tSubject.OutgoingRoutes) do
 			if not route.IsDomestic then iNum = iNum + route.NumImprovedResourcesStrategic; end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 		
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_TRADE_ROUTE_YIELD_PER_DESTINATION_LUXURY_RESOURCE_FOR_INTERNATIONAL" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
@@ -2963,7 +2972,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		for _,route in ipairs(tSubject.OutgoingRoutes) do
 			if not route.IsDomestic then iNum = iNum + route.NumImprovedResourcesLuxury; end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_CITY_TRADE_ROUTE_YIELD_PER_DESTINATION_STRATEGIC_RESOURCE_FOR_DOMESTIC" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
@@ -2971,7 +2980,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		for _,route in ipairs(tSubject.OutgoingRoutes) do
 			if route.IsDomestic then iNum = iNum + route.NumImprovedResourcesStrategic; end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 		
 	-- 230521 #15 University of Sankore, Surplus Logistics, Zheng He effects
 	-- This effect is bugged in the engine - it ignores Domestic argument and works only for International TRs.
@@ -2981,7 +2990,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 		for _,route in ipairs(tSubject.IncomingRoutes) do
 			if not route.IsDomestic then iNum = iNum + 1; end
 		end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 		
 	-- 230521 #15 University of Sankore, Surplus Logistics, Zheng He effects
 	-- This effect handles both domestic and international TRs, but we gain only from domestic ones.
@@ -2992,7 +3001,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 			for _,route in ipairs(tSubject.IncomingRoutes) do
 				if route.IsDomestic then iNum = iNum + 1; end
 			end
-			YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
+			RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.Amount));
 		end
 
 	------------------------------ GREAT WORK and TOURISM ------------------------------------------------
@@ -3004,7 +3013,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 
 	elseif tMod.EffectType == "EFFECT_ADJUST_DISTRICT_TOURISM_CHANGE" then
 		if not( tSubject.SubjectType == SubjectTypes.City or tSubject.SubjectType == SubjectTypes.District ) then
-			print("ERROR: ApplyEffectAndCalculateImpact mismatch for subject", tSubject.SubjectType); dshowtable(tMod); return nil;
+			print("ERROR: RMA_ApplyEffectAndCalculateImpact mismatch for subject", tSubject.SubjectType); RMA_dshowtable(tMod); return nil;
 		end
 		tImpact.TOURISM = tonumber(tMod.Arguments.Amount);
 	
@@ -3022,7 +3031,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 						if greatWork.GreatWorkObjectType == sGreatWorkObjectType then iTourism = iTourism + greatWork.Tourism; end
 					end
 				end
-				--dprint("Tourism from GWs (type) in (city) is (num)", sGreatWorkObjectType, tSubject.Name, iTourism);
+				--RMA_dprint("Tourism from GWs (type) in (city) is (num)", sGreatWorkObjectType, tSubject.Name, iTourism);
 				return iTourism;
 			end
 			-- impact is only difference, hence -100, and for ScalingFactor<100 it is actualy a negative impact!
@@ -3046,7 +3055,7 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 					if greatWork.GreatWorkObjectType == tMod.Arguments.GreatWorkObjectType then iNum = iNum + 1; end
 				end
 			end
-			YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.YieldChange));
+			RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * tonumber(tMod.Arguments.YieldChange));
 		elseif tMod.Arguments.ScalingFactor then
 			-- version that adds percentage on base yield
 			for buildingType,greatWorks in pairs(tSubject.GreatWorks) do
@@ -3059,27 +3068,27 @@ function ApplyEffectAndCalculateImpact(tMod:table, tSubject:table, sSubjectType:
 					end
 				end
 			end
-			YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * (tonumber(tMod.Arguments.ScalingFactor)-100) / 100.0);
+			RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, iNum * (tonumber(tMod.Arguments.ScalingFactor)-100) / 100.0);
 		end
 	
 	------------------------------  WONDER ------------------------------------------------
 	
 	elseif tMod.EffectType == "EFFECT_ADJUST_WONDER_YIELD_CHANGE" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, table.count(tSubject.Wonders) * tonumber(tMod.Arguments.Amount));
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, table.count(tSubject.Wonders) * tonumber(tMod.Arguments.Amount));
 	
 	------------------------------  RELIGION ------------------------------------------------
 	
 	elseif tMod.EffectType == "EFFECT_ADJUST_FOLLOWER_YIELD_MODIFIER" then
 		if CheckForMismatchError(SubjectTypes.City) then return nil; end
-		YieldTableSetYield(tImpact, tMod.Arguments.YieldType, YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldType) * tSubject.MajorityReligionFollowers * tonumber(tMod.Arguments.Amount) / 100.0);
+		RMA_YieldTableSetYield(tImpact, tMod.Arguments.YieldType, RMA_YieldTableGetYield(tSubject.Yields, tMod.Arguments.YieldType) * tSubject.MajorityReligionFollowers * tonumber(tMod.Arguments.Amount) / 100.0);
 	
 	else
 		-- do nothing here... probably will never implement all possible types
 		return nil;
 	end
 	-- done!
-	--dprint("  Impact for subject (type,name)",tSubject.SubjectType,tSubject.Name); dshowyields(tSubject.Yields); dshowyields(tImpact); -- debug
+	--RMA_dprint("  Impact for subject (type,name)",tSubject.SubjectType,tSubject.Name); RMA_dshowyields(tSubject.Yields); RMA_dshowyields(tImpact); -- debug
 	return tImpact;
 end
 
@@ -3158,17 +3167,17 @@ end
 -- for policies:  ("Policy",   policyType,   Game.GetLocalPlayer(), nil)
 -- for governors: ("Governor", governorType, Game.GetLocalPlayer(), iCityID)
 -- for city states: the 5th parameter is used to select proper modifiers, it is the ONLY place where it is used
-function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:number, iCityID:number, sInfluence:string)
-	--dprint("FUN CalculateModifierEffect(obj,obtype,pid,cid,infl)",sObject,sObjectType,ePlayerID,iCityID,sInfluence);
+function RMA_CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:number, iCityID:number, sInfluence:string)
+	--RMA_dprint("FUN RMA_CalculateModifierEffect(obj,obtype,pid,cid,infl)",sObject,sObjectType,ePlayerID,iCityID,sInfluence);
 	local sModifiersTable:string = tModifiersTables[ sObject ];
 	-- check if there are modifiers at all
 	if sModifiersTable == nil then return "(error)", nil, "No modifiers' table for object "..sObject; end
 	local sObjectTypeField:string = sObject.."Type"; -- simple version for starters
 	
 	-- iterate and find them
-	--dprint("...calculating modifiers (obj,table,field)", sObject, sObjectType, ePlayerID, iCityID);
+	--RMA_dprint("...calculating modifiers (obj,table,field)", sObject, sObjectType, ePlayerID, iCityID);
 	--TimerStart(); -- debug
-	local tTotalImpact:table = YieldTableNew();
+	local tTotalImpact:table = RMA_YieldTableNew();
 	local tToolTip:table = {}; -- tooltip
 	local bUnknownEffect:boolean = false;
 	local sSubjectFilter:string = ( sInfluence and "PLAYER_HAS_"..sInfluence.."_INFLUENCE" or nil );
@@ -3180,7 +3189,7 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 			-- stupid Firaxis, some fields are named ModifierId and some ModifierID (sic!)
 			local sModifierId:string = mod.ModifierId;
 			if not sModifierId then sModifierId = mod.ModifierID; end -- fix for BeliefModifiers, GoodyHutSubTypes, ImprovementModifiers
-			local sText:string, pYields:table, sAttachedId:string, bUnknown:boolean, tMod:table, tSubjects:table, sSubjectType:string = DecodeModifier(sModifierId, ePlayerID, iCityID);
+			local sText:string, pYields:table, sAttachedId:string, bUnknown:boolean, tMod:table, tSubjects:table, sSubjectType:string = RMA_DecodeModifier(sModifierId, ePlayerID, iCityID);
 			-- this the place to check for extra conditions
 			if sSubjectFilter == nil or tMod.SubjectReqSetId == sSubjectFilter then
 				table.insert(tToolTip, sText);
@@ -3189,9 +3198,9 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 					-- in some cases the subjects will be passed down to be processed again
 					-- when (a) collection was processed correctly (b) there's more than 1 subject
 					if tSubjects ~= nil then
-						sText, pYields, sAttachedId, bUnknown, tMod = DecodeModifier(sAttachedId, ePlayerID, iCityID, tSubjects, sSubjectType);
+						sText, pYields, sAttachedId, bUnknown, tMod = RMA_DecodeModifier(sAttachedId, ePlayerID, iCityID, tSubjects, sSubjectType);
 					else
-						sText, pYields, sAttachedId, bUnknown, tMod = DecodeModifier(sAttachedId, ePlayerID, iCityID);
+						sText, pYields, sAttachedId, bUnknown, tMod = RMA_DecodeModifier(sAttachedId, ePlayerID, iCityID);
 					end
 					table.insert(tToolTip, sText);
 					-- 2019-04-14 Reset yields to 0 if there are no valid subjects that qualify for attaching
@@ -3200,7 +3209,7 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 						table.insert(tToolTip, "Attached modifier has NO valid subjects");
 					end
 				end
-				if pYields then YieldTableAdd(tTotalImpact, pYields); end
+				if pYields then RMA_YieldTableAdd(tTotalImpact, pYields); end
 				bUnknownEffect = bUnknownEffect or bUnknown;
 				table.insert(tToolTip, TOOLTIP_SEP);
 			end -- extra conditions
@@ -3214,14 +3223,14 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 	--local sTotalImpact:string = "";
 	local bImpact:boolean = false;
 	--for yield,value in pairs(tTotalImpact) do
-		--if value ~= 0 then sTotalImpact = sTotalImpact..(sTotalImpact=="" and "" or " ")..GetYieldString("YIELD_"..yield, value); end
+		--if value ~= 0 then sTotalImpact = sTotalImpact..(sTotalImpact=="" and "" or " ")..RMA_GetYieldString("YIELD_"..yield, value); end
 	--end
 	--for	_,yield in ipairs(YieldTypesOrder) do
-		--if tTotalImpact[yield] ~= 0 then sTotalImpact = sTotalImpact..(sTotalImpact=="" and "" or " ")..GetYieldString("YIELD_"..yield, tTotalImpact[yield]); end
+		--if tTotalImpact[yield] ~= 0 then sTotalImpact = sTotalImpact..(sTotalImpact=="" and "" or " ")..RMA_GetYieldString("YIELD_"..yield, tTotalImpact[yield]); end
 	--end
 	-- BGD : points de personnages illustres toujours montrés, [icône]+x, qu'ils soient fixes (cartes
 	-- d'Inspiration…) ou par ville (Invention : 4 + 2 par atelier).
-	local sTotalImpact:string = YieldTableGetInfo(tTotalImpact);
+	local sTotalImpact:string = RMA_YieldTableGetInfo(tTotalImpact);
 	if sTotalImpact == "" then
 		--sTotalImpact = "-"; -- just to show that there's nothing; empty string could be misleading
 		table.insert(tToolTip, "Yields not affected.");
@@ -3238,11 +3247,11 @@ function CalculateModifierEffect(sObject:string, sObjectType:string, ePlayerID:n
 end
 
 ------------------------------------------------------------------------------
--- RefreshBaseData should be called when the window is open or after the data has changed
+-- RMA_RefreshBaseData should be called when the window is open or after the data has changed
 -- Probably could use a Lua event for that (TODO)
 -- TODO: what about other players? probably will need multiple tables of cities, but let's start with LocalPlayer
-function RefreshBaseData(ePlayerID:number)
-	--dprint("FUN RefreshBaseData(player)",ePlayerID)
+function RMA_RefreshBaseData(ePlayerID:number)
+	--RMA_dprint("FUN RMA_RefreshBaseData(player)",ePlayerID)
 	local playerID:number = ePlayerID;
 	if playerID == nil then playerID = Game.GetLocalPlayer(); end
 	local pPlayer	:table = Players[playerID];
@@ -3261,25 +3270,25 @@ function RefreshBaseData(ePlayerID:number)
 		local cityName:string = pCity:GetName();
 
 		-- Big calls, obtain city data and add report specific fields to it.
-		local data:table = GetCityData( pCity );
+		local data:table = RMA_GetCityData( pCity );
 		-- Add more data (not in CitySupport)
-		--data.Resources			= GetCityResourceData( pCity );
+		--data.Resources			= RMA_GetCityResourceData( pCity );
 		--data.WorkedTileYields, data.NumWorkedTiles = GetWorkedTileYieldData( pCity, pCulture );
 		tCities[ cityName ] = data;
-		--dprint("**** CITY DATA ****", cityName); -- debug
-		--dshowrectable(data); -- debug
+		--RMA_dprint("**** CITY DATA ****", cityName); -- debug
+		--RMA_dshowrectable(data); -- debug
 	end
 	
-	GetPlayerData(); -- for COLLECTION_OWNER as Player
+	RMA_GetPlayerData(); -- for COLLECTION_OWNER as Player
 	
-	GetPlotsData(); -- for COLLECTION_PLAYER_PLOT_YIELDS
+	RMA_GetPlotsData(); -- for COLLECTION_PLAYER_PLOT_YIELDS
 	
 	bBaseDataDirty = false; -- clean :)
 end
 
 -- modifiers helper - could be time-consuming
 -- looking for an object that has a specified modifier attached
-function GetObjectNameForModifier(sModifierId:string)
+function RMA_GetObjectNameForModifier(sModifierId:string)
 	--print("looking for", sModifierId);
 	for object,modtable in pairs(tModifiersTables) do
 		--print("checking", object, modtable)
@@ -3305,22 +3314,22 @@ function GetObjectNameForModifier(sModifierId:string)
 	end
 	-- last try - this could an attached modifer via EFFECT_ATTACH_MODIFIER
 	for row in GameInfo.ModifierArguments() do
-		if row.Name == "ModifierId" and row.Value == sModifierId then return GetObjectNameForModifier(row.ModifierId); end -- recursive for main modifier
+		if row.Name == "ModifierId" and row.Value == sModifierId then return RMA_GetObjectNameForModifier(row.ModifierId); end -- recursive for main modifier
 	end
-	print("ERROR: GetObjectNameForModifier cannot find object for modifier", sModifierId);
+	print("ERROR: RMA_GetObjectNameForModifier cannot find object for modifier", sModifierId);
 	return "[COLOR_Red]unknown[ENDCOLOR]";
 end
 
 
 ------------------------------------------------------------------------------
-function Initialize()
+function RMA_Initialize()
 	-- exposed members
-	RMA.FetchAndCacheData = FetchAndCacheData;
-	RMA.DecodeModifier  = DecodeModifier;
-	RMA.RefreshBaseData = RefreshBaseData;
-	RMA.CalculateModifierEffect = CalculateModifierEffect;
-	RMA.GetObjectNameForModifier = GetObjectNameForModifier;
-	RMA.YieldTableGetInfo = YieldTableGetInfo;
+	RMA.FetchAndCacheData = RMA_FetchAndCacheData;
+	RMA.DecodeModifier  = RMA_DecodeModifier;
+	RMA.RefreshBaseData = RMA_RefreshBaseData;
+	RMA.CalculateModifierEffect = RMA_CalculateModifierEffect;
+	RMA.GetObjectNameForModifier = RMA_GetObjectNameForModifier;
+	RMA.YieldTableGetInfo = RMA_YieldTableGetInfo;
 	
 	-- add events that require the base data to be refreshed
 	-- only set the dirty flag, the actual data will be refreshed when necessary
@@ -3369,26 +3378,26 @@ function Initialize()
 	-- PERFORMANCE TESTING
 	--[[
 	-- Reading all requirements - 90 ms -> 20 ms
-	Timer1Reset(); Timer1Start();
+	RMA_Timer1Reset(); RMA_Timer1Start();
 	for req in GameInfo.Requirements() do
-		_ = FetchAndCacheDataReq(req.RequirementId);
+		_ = RMA_FetchAndCacheDataReq(req.RequirementId);
 	end
-	Timer1Tick(); Timer1Stop("requirements");
+	RMA_Timer1Tick(); RMA_Timer1Stop("requirements");
 	-- Decoding all requirements - insignificant, 3 ms -> 2 ms
 	-- Reading all requirement sets - 140 ms -> 15 ms
-	Timer1Reset(); Timer1Start();
+	RMA_Timer1Reset(); RMA_Timer1Start();
 	for req in GameInfo.RequirementSets() do
-		_ = FetchAndCacheDataReqSet(req.RequirementSetId);
+		_ = RMA_FetchAndCacheDataReqSet(req.RequirementSetId);
 	end
-	Timer1Tick(); Timer1Stop("requirement sets");
+	RMA_Timer1Tick(); RMA_Timer1Stop("requirement sets");
 	-- Reading all modifiers -  2200 ms -> 270 ms
-	Timer1Reset(); Timer1Start();
+	RMA_Timer1Reset(); RMA_Timer1Start();
 	for mod in GameInfo.Modifiers() do
-		_ = FetchAndCacheData(mod.ModifierId);
+		_ = RMA_FetchAndCacheData(mod.ModifierId);
 	end
-	Timer1Tick(); Timer1Stop("modifiers");
+	RMA_Timer1Tick(); RMA_Timer1Stop("modifiers");
 	--]]
 end
-Initialize();
+RMA_Initialize();
 
 print("OK loaded Real Modifier Analysis.lua from Better Report Screen");

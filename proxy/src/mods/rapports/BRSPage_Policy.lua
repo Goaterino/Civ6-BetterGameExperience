@@ -186,7 +186,8 @@ function ViewPolicyPage()
 			-- fill out yields
 			for yield,value in pairs(policy.Yields) do
 				--print("...yield,value", yield, value);
-				if value ~= 0 then pPolicyInstance["PolicyEntryYield"..yield]:SetText(toPlusMinusNoneString(value)); end
+				-- BGD : seulement les rendements qui ont une colonne (pas les points de personnages illustres PG_*)
+				if value ~= 0 and pPolicyInstance["PolicyEntryYield"..yield] ~= nil then pPolicyInstance["PolicyEntryYield"..yield]:SetText(toPlusMinusNoneString(value)); end
 			end
 			
 			end -- FILTERS

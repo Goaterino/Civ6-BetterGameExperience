@@ -66,6 +66,21 @@ env.GameInfo = setmetatable({
 }, { __index = function() return Table({}); end });
 env._G = env;
 
+-- Ce que le contexte hôte (l'écran des rapports) a déjà défini avant de charger RMA : CitySupport,
+-- Civ6Common, son Initialize, et la table YieldTypes du jeu. RMA tourne dans le même environnement
+-- (pas de setfenv dans HavokScript) et ne doit rien en changer.
+local hote = {};
+for _, nom in ipairs({ "GetCityData", "GetCurrentProductionInfoOfCity", "GetDistrictYieldText", "GetYieldString",
+		"GetYieldTextColor", "GetYieldTextIcon", "GetGreatWorksForCity", "toPlusMinusString", "toPlusMinusNoneString",
+		"Initialize", "GetCityResourceData", "GetUnitMaintenance", "Timer1Start", "Timer1Tick", "dshowrectable" }) do
+	hote[nom] = function() return nom; end;
+	env[nom] = hote[nom];
+end
+env.YieldTypes = { FOOD = 0, PRODUCTION = 1, GOLD = 2, SCIENCE = 3, CULTURE = 4, FAITH = 5 };
+local yieldTypesHote = env.YieldTypes;
+local avant = {};
+for nom in pairs(env) do avant[nom] = true; end
+
 local chunk = assert(load(RMA_TEXT, "@RealModifierAnalysis.lua", "t", env));
 local ok, err = pcall(chunk);
 assert(ok, err);
@@ -78,9 +93,24 @@ local function Check(cond, what)
 	end
 end
 
+-- Les globales de l'hôte sont intactes (essai en jeu du 8 novembre 2026 : GetCityData de RMA
+-- remplaçait celui de CitySupport, page des villes cassée).
+for nom, f in pairs(hote) do
+	Check(env[nom] == f, "globale de l'hôte écrasée par RMA : " .. nom);
+end
+local n = 0;
+for _ in pairs(yieldTypesHote) do n = n + 1; end
+Check(env.YieldTypes == yieldTypesHote and n == 6 and yieldTypesHote.TOURISM == nil, "YieldTypes de l'hôte modifié par RMA");
+-- Aucune globale de RMA hors du préfixe RMA_ (ou BGD_, les nôtres).
+for nom, v in pairs(env) do
+	if not avant[nom] and not nom:find("^RMA_") and not nom:find("^BGD_") then
+		Check(false, "globale de RMA sans préfixe : " .. nom);
+	end
+end
+
 -- Fonctions exposées comme dans le mod.
 Check(type(RMA.CalculateModifierEffect) == "function", "RMA.CalculateModifierEffect exposée");
-local YieldTableGetYieldOrig = env.YieldTableGetYield;
+local YieldTableGetYieldOrig = env.RMA_YieldTableGetYield;
 
 -- Pourcentages d'une infobulle de rendement, en anglais et en français (espaces insécables).
 local function City(tip) return { GetYieldToolTip = function() return tip; end }; end
@@ -94,10 +124,10 @@ Check(env.BGD_CityYieldPercent(nil, "YIELD_SCIENCE") == 0, "sans ville");
 -- Monachisme : +75 % de science sur une ville à 33 de science totale, avec +65 % déjà appliqués :
 -- base 20, gain 15 (et non 33 × 0,75 = 24,75).
 local subject = { City = City(tipEN), Yields = Any };
-env.YieldTableGetYield = function() return 33; end;
+env.RMA_YieldTableGetYield = function() return 33; end;
 local impact = env.BGD_YieldModifierImpact(subject, "YIELD_SCIENCE", 75);
 Check(math.abs(impact - 15) < 1e-9, "gain du Monachisme : " .. tostring(impact));
-env.YieldTableGetYield = YieldTableGetYieldOrig;
+env.RMA_YieldTableGetYield = YieldTableGetYieldOrig;
 
 -- Prérequis du propriétaire : dirigeant.
 local function Set(testAny, reqs) return { TestAny = testAny, TestAll = not testAny, Reqs = reqs }; end
@@ -122,7 +152,7 @@ local pGovernor = {
 	HasPromotion = function(_, h) return owned[h] == true; end,
 };
 local pCity = { GetAssignedGovernor = function() return pGovernor; end };
-local established, n = env.GetGovernorData(pCity);
+local established, n = env.RMA_GetGovernorData(pCity);
 Check(established == true and n == 2, "promotions de l'éducateur : " .. tostring(n));
 
 -- Entretien : trois unités militaires (entretien 1, 2 et 4) et un bâtisseur ; le Trône du seigneur
@@ -135,7 +165,7 @@ local player = { SubjectType = "Player", Units = {
 	{ Maintenance = 1 }, { Maintenance = 2 }, { Maintenance = 4 }, { Maintenance = 0, IsCivilian = true },
 } };
 local function Entretien(amount)
-	local t = env.ApplyEffectAndCalculateImpact({ EffectType = "EFFECT_ADJUST_UNIT_MAINTENANCE_DISCOUNT", Arguments = { Amount = tostring(amount) } }, player, "Player");
+	local t = env.RMA_ApplyEffectAndCalculateImpact({ EffectType = "EFFECT_ADJUST_UNIT_MAINTENANCE_DISCOUNT", Arguments = { Amount = tostring(amount) } }, player, "Player");
 	return t and t.GOLD;
 end
 -- Conscription (1) : 0 + 1 + 1 ; Levée en masse (2) : 0 + 1 + 2 ; Forces d'élite (-2) : -2 × 3.
@@ -153,27 +183,27 @@ local function Ville(owner, original, x)
 	} };
 end
 local fondee = { ReqType = "REQUIREMENT_CITY_IS_ORIGINAL_OWNER", Arguments = {}, Inverse = true };
-Check(env.CheckOneRequirement(fondee, Ville(0, 3, 0), "City") == true, "Prétoire : ville annexée");
-Check(env.CheckOneRequirement(fondee, Ville(0, 0, 0), "City") == false, "Prétoire : ville fondée");
+Check(env.RMA_CheckOneRequirement(fondee, Ville(0, 3, 0), "City") == true, "Prétoire : ville annexée");
+Check(env.RMA_CheckOneRequirement(fondee, Ville(0, 0, 0), "City") == false, "Prétoire : ville fondée");
 
 -- Taxe coloniale : 8 cases ou plus de la capitale (en x seul ici).
 env.Players[0].GetCities = function() return { GetCapitalCity = function() return { GetX = function() return 10; end, GetY = function() return 0; end }; end }; end;
 env.Map = { GetPlotDistance = function(x1, y1, x2, y2) return math.abs(x1 - x2) + math.abs(y1 - y2); end };
 local loin = { ReqType = "REQUIREMENT_PLOT_NEAR_CAPITAL", Arguments = { MinDistance = "8" } };
-Check(env.CheckOneRequirement(loin, Ville(0, 0, 18), "City") == true, "Taxe coloniale : à 8 cases");
-Check(env.CheckOneRequirement(loin, Ville(0, 0, 17), "City") == false, "Taxe coloniale : à 7 cases");
+Check(env.RMA_CheckOneRequirement(loin, Ville(0, 0, 18), "City") == true, "Taxe coloniale : à 8 cases");
+Check(env.RMA_CheckOneRequirement(loin, Ville(0, 0, 17), "City") == false, "Taxe coloniale : à 7 cases");
 
 -- Points de personnages illustres : la clé de la classe, et « +x[icône] ».
-local pg = env.ApplyEffectAndCalculateImpact({ EffectType = "EFFECT_ADJUST_GREAT_PERSON_POINTS",
+local pg = env.RMA_ApplyEffectAndCalculateImpact({ EffectType = "EFFECT_ADJUST_GREAT_PERSON_POINTS",
 	Arguments = { Amount = "2", GreatPersonClassType = "GREAT_PERSON_CLASS_ENGINEER" } }, Ville(0, 0, 0), "City");
 Check(pg ~= nil and pg.PG_ENGINEER == 2, "points d'ingénieur par atelier");
-local total = env.YieldTableNew();
+local total = env.RMA_YieldTableNew();
 Check(total.PG_ENGINEER == 0 and total.PG_SCIENTIST == 0, "clés des points dans une table neuve");
-env.YieldTableAdd(total, pg);
-env.YieldTableAdd(total, pg);
+env.RMA_YieldTableAdd(total, pg);
+env.RMA_YieldTableAdd(total, pg);
 total.PG_ENGINEER = total.PG_ENGINEER + 4;
 env.Locale = { ToNumber = function(v) return string.format("%+g", v); end };
-Check(env.YieldTableGetInfo(total):find("[ICON_GreatEngineer]+8", 1, true) ~= nil, "texte des points : " .. env.YieldTableGetInfo(total));
+Check(env.RMA_YieldTableGetInfo(total):find("[ICON_GreatEngineer]+8", 1, true) ~= nil, "texte des points : " .. env.RMA_YieldTableGetInfo(total));
 
 -- Cartes en % des bâtiments (Rationalisme…) : base + bonus fixes lus au jeu, sans les % déjà
 -- appliqués. Bibliothèque : 2 de base + 2 d'une cité-État ; Rationalisme posé, ses deux % remplis
@@ -194,7 +224,7 @@ local tMods = {
 	ATTACHE = { ModifierId = "ATTACHE", EffectType = "EFFECT_ATTACH_MODIFIER", Arguments = { ModifierId = "SEONDEOK_1" } },
 	AUTRE = { ModifierId = "AUTRE", EffectType = "EFFECT_ADJUST_CITY_YIELD_CHANGE", Arguments = {} },
 };
-env.FetchAndCacheData = function(id) return tMods[id]; end;
+env.RMA_FetchAndCacheData = function(id) return tMods[id]; end;
 env.GameInfo.Policies = Table({ { PolicyType = "POLICY_RATIONALISM", Index = 7 }, { PolicyType = "POLICY_GRAND_OPERA", Index = 8 } });
 env.GameInfo.PolicyModifiers = Table({
 	{ PolicyType = "POLICY_RATIONALISM", ModifierId = "RATIONALISM_BUILDING_YIELDS_HIGH_POP" },
@@ -214,7 +244,7 @@ env.Players[0].GetCulture = function() return {
 LEADER = "LEADER_GANDHI";
 
 -- Rendement réel lu au jeu (par index de rendement, ou par nom si l'index échoue).
-local tBase = env.YieldTableNew(); tBase.SCIENCE = 2;
+local tBase = env.RMA_YieldTableNew(); tBase.SCIENCE = 2;
 local pCityJeu = { GetBuildingYield = function(_, b, y) if y == 2 then return 8; elseif y == 3 then return 1; end return 0; end };
 local tTotal, bJeu = env.BGD_BuildingYieldsTotal(pCityJeu, 12, tBase);
 Check(bJeu and tTotal.SCIENCE == 8 and tTotal.CULTURE == 1, "rendement réel du bâtiment");
@@ -225,8 +255,8 @@ tTotal, bJeu = env.BGD_BuildingYieldsTotal({}, 12, tBase);
 Check(not bJeu and tTotal.SCIENCE == 2, "sans GetBuildingYield : base");
 
 local function Bibli(total, pille, type)
-	local t = env.YieldTableNew(); t.SCIENCE = total;
-	local b = env.YieldTableNew(); b.SCIENCE = 2;
+	local t = env.RMA_YieldTableNew(); t.SCIENCE = total;
+	local b = env.RMA_YieldTableNew(); b.SCIENCE = 2;
 	return { BuildingType = type or "BUILDING_LIBRARY", Yields = b, YieldsTotal = t, IsYieldsTotalFromGame = true, isPillaged = pille };
 end
 local function VilleCampus(pop, batiments, district)
@@ -238,34 +268,34 @@ local v = VilleCampus(15, { Bibli(8) });
 local f = env.BGD_BuildingYieldBeforePercent(v, "DISTRICT_CAMPUS", v.Districts[1].Buildings[1], "YIELD_SCIENCE");
 Check(Proche(f, 4), "bibliothèque avant les % (Rationalisme posé, 2 %) : " .. tostring(f));
 local rat = tMods.RATIONALISM_BUILDING_YIELDS_HIGH_ADJACENCY;
-local t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+local t = env.RMA_ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and Proche(t.SCIENCE, 2), "Rationalisme (+50 %) sur 4 : " .. tostring(t and t.SCIENCE));
 -- Ville de 10 : seul le % de proximité est actif, le jeu donne 4 × 1,5 = 6.
 v = VilleCampus(10, { Bibli(6) });
-t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+t = env.RMA_ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and Proche(t.SCIENCE, 2), "ville de 10 : " .. tostring(t and t.SCIENCE));
 -- Carte non posée : le rendement lu au jeu est celui avant la carte.
 tSlots = { -1 };
-env.CalculateModifierEffect("Policy", "POLICY_X", 0);
+env.RMA_CalculateModifierEffect("Policy", "POLICY_X", 0);
 v = VilleCampus(15, { Bibli(4) });
-t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+t = env.RMA_ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and Proche(t.SCIENCE, 2), "carte non posée : " .. tostring(t and t.SCIENCE));
 -- Seondeok (trait, modificateur attaché) avec un titre de gouverneur : +30 % déjà dans les 5,2.
 LEADER = "LEADER_SEONDEOK";
-env.CalculateModifierEffect("Policy", "POLICY_X", 0);
+env.RMA_CalculateModifierEffect("Policy", "POLICY_X", 0);
 v = VilleCampus(15, { Bibli(5.2, false, "BUILDING_MADRASA") }, "DISTRICT_SEOWON");
 v.IsGovernorEstablished, v.NumGovernorPromotions = true, 1;
-t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+t = env.RMA_ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and Proche(t.SCIENCE, 2), "Seondeok, Seowon et bâtiment unique : " .. tostring(t and t.SCIENCE));
 LEADER = "LEADER_GANDHI";
-env.CalculateModifierEffect("Policy", "POLICY_X", 0);
+env.RMA_CalculateModifierEffect("Policy", "POLICY_X", 0);
 -- Bâtiment pillé : rien ; rendement réel indisponible : base de données, comme avant.
 v = VilleCampus(15, { Bibli(4, true) });
-t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+t = env.RMA_ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and t.SCIENCE == 0, "bâtiment pillé");
 local sans = Bibli(4); sans.IsYieldsTotalFromGame = false;
 v = VilleCampus(15, { sans });
-t = env.ApplyEffectAndCalculateImpact(rat, v, "City");
+t = env.RMA_ApplyEffectAndCalculateImpact(rat, v, "City");
 Check(t ~= nil and Proche(t.SCIENCE, 1), "sans rendement réel : base 2 × 50 % = " .. tostring(t and t.SCIENCE));
 
 -- Bonus des cités-États (CityStatesOnly) : hors des % dans le jeu. Bibliothèque : 2 de base + 2 de
@@ -289,9 +319,9 @@ local pGeneve = { GetID = function() return 5; end, IsMinor = function() return 
 env.PlayerManager = { GetAliveMinors = function() return { pGeneve }; end };
 env.Players[0].GetDiplomacy = function() return { IsAtWarWith = function() return bGuerre; end }; end;
 local function RationalismeAvecCE()
-	env.CalculateModifierEffect("Policy", "POLICY_X", 0); -- vide les caches
+	env.RMA_CalculateModifierEffect("Policy", "POLICY_X", 0); -- vide les caches
 	local vCE = VilleCampus(15, { Bibli(4) });
-	local r = env.ApplyEffectAndCalculateImpact(rat, vCE, "City");
+	local r = env.RMA_ApplyEffectAndCalculateImpact(rat, vCE, "City");
 	return r and r.SCIENCE;
 end
 Check(Proche(RationalismeAvecCE(), 1), "cité-État : bonus hors du % : " .. tostring(RationalismeAvecCE()));

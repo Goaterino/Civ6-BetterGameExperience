@@ -9,11 +9,10 @@
 --                         brut comme une clé ({1_Num}…).
 --   BGD_Inclure(nom)    : exécute le fichier embarqué `nom` dans le contexte, comme include().
 --   BGD_ChargerRMA()    : Real Modifier Analysis (de Better Report Screen), chargé une fois par
---                         contexte dans son propre environnement ; rend sa table de fonctions.
+--                         contexte, dans celui du contexte (globales préfixées RMA_) ; rend sa
+--                         table de fonctions.
 -- ===========================================================================
 if BGD_Lookup == nil then
-	local G = getfenv and getfenv(1) or _G;
-
 	local function Erreur(nom, err)
 		print("BetterGameExperience : " .. tostring(nom) .. " : " .. tostring(err));
 	end
@@ -72,14 +71,10 @@ if BGD_Lookup == nil then
 		BGD_RMA = t;
 		local fichier = Charger("RealModifierAnalysis");
 		if fichier ~= nil then
-			-- Environnement propre : RMA définit beaucoup de globales (Initialize, dprint…) qui ne
-			-- doivent pas écraser celles du contexte hôte.
-			if setfenv ~= nil then
-				setfenv(fichier, setmetatable({ BGD_RMA_Table = t }, { __index = G }));
-			else
-				-- Sans setfenv, dans l'environnement du contexte : ses globales s'y ajoutent.
-				BGD_RMA_Table = t;
-			end
+			-- Dans l'environnement du contexte : HavokScript n'isole pas un chunk par setfenv (essai
+			-- en jeu du 8 novembre 2026, GetCityData de CitySupport écrasé). Les globales de RMA sont
+			-- donc toutes préfixées RMA_, et il garde sa propre copie de YieldTypes.
+			BGD_RMA_Table = t;
 			local ok, err = pcall(fichier);
 			if not ok then Erreur("RealModifierAnalysis", err); end
 		end

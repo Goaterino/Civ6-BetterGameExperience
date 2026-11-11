@@ -249,7 +249,8 @@ function ViewMinorPage()
 			
 			-- fill out yields
 			for yield,value in pairs(minor.Yields) do
-				if value ~= 0 then pMinorInstance["PolicyEntryYield"..yield]:SetText(toPlusMinusNoneString(value)); end
+				-- BGD : seulement les rendements qui ont une colonne (pas les points de personnages illustres PG_*)
+				if value ~= 0 and pMinorInstance["PolicyEntryYield"..yield] ~= nil then pMinorInstance["PolicyEntryYield"..yield]:SetText(toPlusMinusNoneString(value)); end
 			end
 			
 			end -- FILTERS
