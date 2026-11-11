@@ -1,0 +1,33 @@
+# Essai de patch sous hardened runtime, pour le portage macOS (analyses/macos/essai_patch) : un
+# faux exe signé avec les droits du jeu, une dylib injectée qui tente de patcher son code. Lancé à
+# la main, ou quand l'essai change. Sans secret ni écriture ; le tableau des verdicts est dans le
+# résumé de chaque job.
+name: macos-essai
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - analyses/macos/essai_patch/**
+      - .github/workflows/macos-essai.yml
+
+permissions:
+  contents: read
+
+jobs:
+  essai:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Apple Silicon, en natif puis en x86_64 traduit par Rosetta.
+          - { machine: macos-latest, arch: arm64 }
+          - { machine: macos-latest, arch: x86_64 }
+          # Mac Intel.
+          - { machine: macos-15-intel, arch: x86_64 }
+    runs-on: ${{ matrix.machine }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Essai
+        run: bash analyses/macos/essai_patch/essai.sh ${{ matrix.arch }}
