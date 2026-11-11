@@ -546,6 +546,10 @@ part, chaque machine déconnecte tous les joueurs de sa table des relais (« Dro
 player… because the host dropped », vu le 10 novembre à 20:19:55). Seul un départ suivi d'un retour
 du joueur refait le lien (d'où « rejoindre deux fois »).
 
+> Note (2026-11-11): according to the code, a relayed player has no connection, so the player list
+> shows −1 ms for them, not 0 ms (not seen in a game yet). The usual "0 ms" is a different problem:
+> see "Pings stuck at 0 ms" below.
+
 **Ce que fait Civ6** (Ghidra, exe DX12 du 5 novembre 2026) :
 - l'hôte envoie au joueur qui arrive un `NetPeerInfoSteam(joueur, steamID)` par joueur ; son
   traitement (`140851aa0`) ouvre une connexion en attente (file de la session, `+0x48`). L'autre
@@ -596,6 +600,50 @@ suivi et la table des partenaires.
 
 **Pas encore essayé en partie** : il faut trois machines avec BGE (l'hôte, et les deux joueurs de la
 paire : un relais ne passe jamais par un lien avec l'hôte), et un lien qui échoue.
+
+## Pings stuck at 0 ms
+
+[src/pings.rs](src/pings.rs).
+
+**The problem.** Seen on 2026-11-11 while joining a public game: the player-list tooltip showed
+0 ms for the host (who can never be relayed) and for two other players, and 127 ms for a third,
+although all seven links had opened directly, the same way, with no `NetRelay`. The link works; the
+measurement is frozen. Players still rejoin "to fix the 0 ms", and a reconnection often costs a
+desync.
+
+**What Civ6 does** (Ghidra, DX12 exe of 2026-11-05):
+- `Network.GetPingTime(player)` (`14026c3f0`) → session, entry `+0x170` (`14083e3e0`): the network
+  player, its connection (`+0x10`), then the session's transport (`+0x28`, entry `+0x20`; Steam:
+  `140854480`), which reads that Steam account's ping from its thread's table (`+0x108`, field
+  `+0x28`). Without a connection (relayed player) the lookup fails: −1.
+- The Steam transport thread (`140864130`) visits every link every 5 s (`141032ec8`), and every
+  visit is a measuring round (`+0x120` = 1): it resets the round time (`+0xe0`), then, for each
+  player, sends an "SP" request if none is waiting for an answer (`+0x30`). The "Sp" answer gives
+  the ping (time since the round time) and clears the wait.
+- If a request is still waiting, it sends no new one and writes the time elapsed since the round
+  time it has just reset: 0 ms. The intended retry after 10 s (ping ≥ 9999) therefore never
+  happens: a single unanswered request freezes the link at 0 ms until a reconnection.
+- A request goes unanswered when the other side does not know the sending account yet ("Received a
+  Steam transport ping request from steamID without a registered connection"): that is the case
+  when joining, while the links open one after the other over about thirty seconds. On a second
+  join everything opens within two seconds, hence "rejoin twice to fix the 0 ms".
+
+**What BGE does.** The two bytes of the "a request is waiting" jump (`jnz` after
+`cmp qword [rdi+30h],0`, at `140864ad6`; DX11: `140862936`) become two `nop`: every measuring round
+sends a new request, and a frozen link gets its real ping back 5 s later. The other players need
+nothing: they already answer every request from a known account; only the machine with BGE sees
+correct pings. Practically nothing more on the network: the two-byte packet already goes to every
+player every 5 s ("S" + space, to keep the link alive); it becomes a request, and the other side
+answers with two bytes.
+
+- Installed when `winmm.dll` loads, before the transport thread runs, only if the 19 bytes of the
+  comparison are the expected ones at the loaded exe's address; log: `pings: resend of unanswered
+  pings installed (DX12)` or `… (DX11)`, otherwise `pings: unknown exe (…), fix not installed`.
+- `actif=off` installs nothing; `resend_pings=off` in `rollover_proxy.cfg` turns off this fix
+  alone.
+- `cargo test` checks that each address matches its own installed exe, and only that one, and that
+  the bytes occur once in it.
+- Not tried in a game yet: to check by joining a public game, where 0 ms is common.
 
 ## Compiler, tester, installer
 
