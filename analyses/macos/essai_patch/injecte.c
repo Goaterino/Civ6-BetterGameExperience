@@ -415,8 +415,18 @@ __attribute__((constructor)) static void demarrage(void) {
     lancer("mémoire exécutable : MAP_JIT", enfant_jit, NULL);
     lancer("mémoire exécutable : page RW passée RX", enfant_rw_rx, NULL);
 
-    // L'image 0 est l'exécutable principal, même avec une dylib insérée.
-    int n = accrocher_import((const struct mach_header_64 *)_dyld_get_image_header(0), _dyld_get_image_vmaddr_slide(0), "_dlopen", (void *)mon_dlopen);
+    // L'exécutable principal se reconnaît à son type : l'image 0 n'est pas toujours lui (en arm64
+    // sous macOS 26, c'est la dylib insérée, et l'accroche se posait sur nos propres imports).
+    uint32_t exe = 0;
+    for (uint32_t i = 0; i < _dyld_image_count(); i++) {
+        const struct mach_header *h = _dyld_get_image_header(i);
+        if (h && h->filetype == MH_EXECUTE) {
+            exe = i;
+            break;
+        }
+    }
+    dprintf(1, "  détail : exécutable principal = image %u (%s)\n", exe, _dyld_get_image_name(exe));
+    int n = accrocher_import((const struct mach_header_64 *)_dyld_get_image_header(exe), _dyld_get_image_vmaddr_slide(exe), "_dlopen", (void *)mon_dlopen);
     if (n > 0) {
         bge_res("accroche de l'import dlopen de l'exe", "posée (%d pointeur%s)", n, n > 1 ? "s" : "");
     } else {
