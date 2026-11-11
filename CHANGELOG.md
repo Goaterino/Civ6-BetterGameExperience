@@ -4,6 +4,20 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.9.1
+
+Compatible with 0.9.0 in multiplayer: players on 0.9.0 and 0.9.1 play together with every fix on.
+
+### Interface fixes
+- **Report screen**: the Yields and Cities tabs work again. The policy card effect calculation,
+  loaded in the same screen, replaced some of the screen's own data and broke them. The Policies and
+  City-States tabs no longer fail on a row with great person points, and sorting a column of the
+  Cities tab no longer fails when the Yields tab was not opened first.
+- **Discounted districts**: the discount shown is now the one the game applies. The game updates a
+  district's cost only at certain moments (a new technology or civic, a new city, a district of the
+  same type placed or completed), so the list could show a discount the game only gave a few turns
+  later.
+
 ## BetterGameExperience 0.9.0
 
 Includes everything from the 0.8.1 pre-release. Multiplayer games need every human player on 0.9.0

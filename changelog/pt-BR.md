@@ -2,6 +2,21 @@
 
 [English](../CHANGELOG.md) · outros idiomas: veja o [registro em inglês](../CHANGELOG.md).
 
+## BetterGameExperience 0.9.1
+
+Compatível com a 0.9.0 no multijogador: jogadores na 0.9.0 e na 0.9.1 jogam juntos com todas as
+correções.
+
+### Correções da interface
+- **Tela de relatórios**: as abas Rendimentos e Cidades voltam a funcionar. O cálculo do efeito dos
+  cartões de política, carregado na mesma tela, substituía alguns dos seus dados e as quebrava. As
+  abas Políticas e Cidades-estado não falham mais em uma linha com pontos de grandes personalidades,
+  e ordenar uma coluna da aba Cidades não falha mais quando a aba Rendimentos não foi aberta antes.
+- **Distritos com desconto**: o desconto mostrado agora é o que o jogo aplica. O jogo só atualiza o
+  custo de um distrito em certos momentos (nova tecnologia ou cívico, nova cidade, distrito do mesmo
+  tipo posicionado ou concluído), então a lista podia mostrar um desconto que o jogo só dava alguns
+  turnos depois.
+
 ## BetterGameExperience 0.9.0
 
 Inclui tudo da pré-release 0.8.1. No multijogador, todos os jogadores humanos precisam estar na
