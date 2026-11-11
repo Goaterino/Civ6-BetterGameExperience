@@ -626,6 +626,18 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="es_ES">
 			<Text>Mensaje de red dañado bloqueado: habría congelado la partida.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="es_ES">
+			<Text>{1} y {2} están conectados a través del anfitrión (0 ms). Intentando conectarlos directamente durante el cambio de turno.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="es_ES">
+			<Text>{1} y {2} ya están conectados directamente: conexión de 0 ms corregida.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="es_ES">
+			<Text>No se pudo conectar directamente a {1} y {2}: siguen conectados a través del anfitrión (0 ms). Se volverá a intentar en el próximo cambio de turno.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="es_ES">
+			<Text>No se pudo conectar directamente a {1} y {2} tras {3} intentos: siguen conectados a través del anfitrión (0 ms). Volver a unirse a la partida una vez suele solucionarlo.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="es_ES">
 			<Text>Describe el problema: qué ha pasado, cuándo y qué esperabas en su lugar.</Text>
 		</Row>

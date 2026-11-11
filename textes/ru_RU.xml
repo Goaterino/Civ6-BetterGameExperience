@@ -626,6 +626,18 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ru_RU">
 			<Text>Заблокировано повреждённое сетевое сообщение: из-за него игра зависла бы.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="ru_RU">
+			<Text>{1} и {2} соединены через хоста (0 мс). Попытка прямого соединения во время смены хода.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="ru_RU">
+			<Text>{1} и {2} теперь соединены напрямую: соединение 0 мс исправлено.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="ru_RU">
+			<Text>Не удалось соединить {1} и {2} напрямую: они остаются соединены через хоста (0 мс). Новая попытка при следующей смене хода.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="ru_RU">
+			<Text>Не удалось соединить {1} и {2} напрямую после {3} попыток: они остаются соединены через хоста (0 мс). Обычно помогает один раз перезайти в игру.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="ru_RU">
 			<Text>Опишите проблему: что произошло, когда и чего вы ожидали вместо этого.</Text>
 		</Row>

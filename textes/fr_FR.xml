@@ -626,6 +626,18 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="fr_FR">
 			<Text>Message réseau abîmé bloqué : il aurait gelé la partie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="fr_FR">
+			<Text>{1} et {2} passent par l'hôte (0 ms). Tentative de lien direct pendant le changement de tour.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="fr_FR">
+			<Text>{1} et {2} sont maintenant reliés en direct : lien à 0 ms réparé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="fr_FR">
+			<Text>Lien direct entre {1} et {2} impossible : ils restent reliés par l'hôte (0 ms). Nouvel essai au prochain changement de tour.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="fr_FR">
+			<Text>Lien direct entre {1} et {2} impossible après {3} essais : ils restent reliés par l'hôte (0 ms). Rejoindre la partie une fois règle en général le problème.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="fr_FR">
 			<Text>Décrivez le problème : ce qui s'est passé, à quel moment, et ce que vous attendiez à la place.</Text>
 		</Row>

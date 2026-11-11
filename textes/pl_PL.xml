@@ -626,6 +626,18 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pl_PL">
 			<Text>Zablokowano uszkodzoną wiadomość sieciową, która zamroziłaby grę.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="pl_PL">
+			<Text>{1} i {2} są połączeni przez hosta (0 ms). Próba bezpośredniego połączenia podczas zmiany tury.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="pl_PL">
+			<Text>{1} i {2} są teraz połączeni bezpośrednio: połączenie 0 ms naprawione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="pl_PL">
+			<Text>Nie udało się połączyć bezpośrednio {1} i {2}: nadal łączą się przez hosta (0 ms). Kolejna próba przy następnej zmianie tury.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="pl_PL">
+			<Text>Nie udało się połączyć bezpośrednio {1} i {2} po {3} próbach: nadal łączą się przez hosta (0 ms). Ponowne dołączenie do gry zwykle to naprawia.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="pl_PL">
 			<Text>Opisz problem: co się stało, kiedy i czego oczekiwałeś zamiast tego.</Text>
 		</Row>
