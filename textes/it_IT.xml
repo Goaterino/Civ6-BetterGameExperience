@@ -626,6 +626,18 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="it_IT">
 			<Text>Messaggio di rete danneggiato bloccato: avrebbe congelato la partita.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="it_IT">
+			<Text>{1} e {2} sono collegati tramite l'host (0 ms). Tentativo di collegamento diretto durante il cambio di turno.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="it_IT">
+			<Text>{1} e {2} ora sono collegati direttamente: collegamento a 0 ms risolto.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="it_IT">
+			<Text>Impossibile collegare direttamente {1} e {2}: restano collegati tramite l'host (0 ms). Nuovo tentativo al prossimo cambio di turno.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="it_IT">
+			<Text>Impossibile collegare direttamente {1} e {2} dopo {3} tentativi: restano collegati tramite l'host (0 ms). Rientrare nella partita una volta di solito risolve.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="it_IT">
 			<Text>Descrivi il problema: cosa è successo, quando e cosa ti aspettavi invece.</Text>
 		</Row>

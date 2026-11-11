@@ -626,6 +626,18 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="zh_Hans_CN">
 			<Text>已拦截一条损坏的网络消息，否则游戏会卡死。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_DETECTE" Language="zh_Hans_CN">
+			<Text>{1} 和 {2} 通过主机连接（0 ms）。将在回合切换时尝试直接连接。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_REPARE" Language="zh_Hans_CN">
+			<Text>{1} 和 {2} 现已直接连接：0 ms 连接已修复。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ECHEC" Language="zh_Hans_CN">
+			<Text>无法直接连接 {1} 和 {2}：仍通过主机连接（0 ms）。将在下一次回合切换时重试。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_RELAIS_ABANDON" Language="zh_Hans_CN">
+			<Text>尝试 {3} 次后仍无法直接连接 {1} 和 {2}：仍通过主机连接（0 ms）。重新加入一次游戏通常可以解决。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_DESCRIPTION" Language="zh_Hans_CN">
 			<Text>请描述问题：发生了什么、在什么时候，以及你原本期望的结果。</Text>
 		</Row>

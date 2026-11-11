@@ -533,6 +533,70 @@ décompression ignorée) n'est pas corrigé : la garde empêche seulement le gel
 changées, les vtables et la borne de l'identifiant (ajoutés le 2026-11-10, d'après l'exe) n'ont pas
 encore tourné en partie.
 
+## La re-liaison des paires relayées (« 0 ms »)
+
+[src/reliaison.rs](src/reliaison.rs), le bloc « Liens à 0 ms » de [src/partie.lua](src/partie.lua),
+et `EnvoyerPret` de [../proxy/src/ui_depart.lua](../proxy/src/ui_depart.lua).
+
+**Le problème.** Un joueur qui arrive (ou revient) ouvre un lien direct vers chaque joueur, un à la
+fois. Un joueur qui ne répond pas pendant 20 s (partie occupée, machine lente) fait échouer le lien :
+l'hôte diffuse `NetRelay(nouveau, existant)` et, pour le reste de la partie, les messages entre les
+deux passent par lui. La liste des joueurs affiche 0 ms. Rien ne retente le lien. Pire : quand l'hôte
+part, chaque machine déconnecte tous les joueurs de sa table des relais (« Dropping net relayed
+player… because the host dropped », vu le 10 novembre à 20:19:55). Seul un départ suivi d'un retour
+du joueur refait le lien (d'où « rejoindre deux fois »).
+
+**Ce que fait Civ6** (Ghidra, exe DX12 du 5 novembre 2026) :
+- l'hôte envoie au joueur qui arrive un `NetPeerInfoSteam(joueur, steamID)` par joueur ; son
+  traitement (`140851aa0`) ouvre une connexion en attente (file de la session, `+0x48`). L'autre
+  accepte toute connexion qui porte la clé de session ; à l'ouverture du lien, chacun envoie son
+  `NetIntroductionSteam`, puis `NetRegister`, `NetAppRegister` et `NetSnapshotProcessed` ;
+- l'introduction (`140851730`) retire la connexion en attente et appelle `CreateNetPlayer`
+  (`140812f90`), qui lie le joueur réseau à la connexion ;
+- la table des relais (session `+0x60`) : joueur → partenaires, sur chaque machine (le `NetRelay`
+  est diffusé). L'envoi vers un joueur relayé passe par l'hôte (`14084efd0`) ;
+- le chemin de Civ6 ne relie pas une paire déjà relayée : il saute la file, et `CreateNetPlayer`
+  remplace le joueur existant (« Using a playerID with an existing network connection.
+  Disconnecting the old connection. »), ce qui publie `DelayedPlayerLeft`, le départ du joueur
+  pour le jeu (pause, gestion de déconnexion de MPH, désynchro). Une connexion en attente échouée
+  reste en tête de file : l'hôte, qui relaie, ne répond pas à `NetPeerFailure`.
+
+**Ce que fait BGE**, pendant le départ de tour simultané (option « No First/Last moves », tous les
+humains avec BGE à la même version, donc les deux joueurs de la paire) : personne ne joue, les
+ordres sont retenus, rien n'est en vol entre les deux.
+1. Le plus petit identifiant de chaque paire de sa table dit dans le chat « *A* and *B* are linked
+   through the host (0 ms). Trying to connect them directly during the turn change. », et ouvre une
+   connexion en attente vers l'autre, comme à l'arrivée (message `NetPeerInfoSteam` fabriqué). Son
+   signal `.bgd_pret` attend le résultat ; l'hôte attend au plus 60 s, une tentative dure au plus
+   45 s.
+2. Des deux côtés, l'introduction détournée reconnaît la re-liaison (le joueur est relayé avec nous,
+   arrive sur une connexion qu'aucun joueur n'a, et son joueur réseau n'a pas de connexion) : le
+   joueur réseau existant prend la connexion sur place (connexion en `+0x10`, table connexion →
+   joueur en `+0x40` du gestionnaire des joueurs), la connexion en attente vers lui est retirée, la
+   paire sort de la table des relais. Rien n'est publié : pour le jeu, personne n'est parti. Les
+   `NetRegister`, `NetAppRegister` et `NetSnapshotProcessed` qui suivent sur cette connexion sont
+   jetés pendant 30 s : le joueur est déjà enregistré, et `NetRegister` rappellerait l'application.
+3. Réussite : « *A* and *B* are now connected directly: 0 ms link fixed. », et `.bgd_relais a b` à
+   tous (caché) : chaque autre machine équipée retire la paire de sa table, pour ne plus les
+   déconnecter au départ de l'hôte. A et B ignorent l'annonce : elle peut arriver avant
+   l'introduction de l'autre, qui ne serait alors plus reconnue comme une re-liaison ; ils retirent
+   leur paire à l'arrivée de l'introduction.
+4. Échec (pas de réponse en 20 s) : Civ6 envoie `NetPeerFailure`, l'hôte renvoie `NetRelay` pour la
+   paire ; le `NetRelay` d'une paire déjà relayée est ignoré (le traiter renverrait les
+   introductions par le relais et publierait un départ). BGE retire la connexion échouée de la tête
+   de file, la paire reste relayée, et le chat le dit ; nouvel essai au prochain tour, au plus 3 par
+   paire et par partie (le dernier message conseille de rejoindre une fois).
+
+Adresses des deux exe du 5 novembre 2026 (`EXES`), retrouvées dans le DX11 comme pour la garde,
+vérifiées octet par octet au démarrage (vtables de six messages, début des fonctions appelées, la
+lecture du gestionnaire réseau) ; journal : `reliaison : re-liaison des paires relayées posée
+(DX12)`, puis `reliaison : …` à chaque tentative. Interrupteur : `reliaison=off` dans
+`rollover_proxy.cfg` ne pose rien. `cargo test` vérifie chaque table sur son exe, la logique de
+suivi et la table des partenaires.
+
+**Pas encore essayé en partie** : il faut trois machines avec BGE (l'hôte, et les deux joueurs de la
+paire : un relais ne passe jamais par un lien avec l'hôte), et un lien qui échoue.
+
 ## Compiler, tester, installer
 
 ```bash
