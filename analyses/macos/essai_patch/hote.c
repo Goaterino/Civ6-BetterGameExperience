@@ -27,8 +27,7 @@ int main(int argc, char **argv) {
     int (*volatile f)(void) = cible_hote;
     dprintf(1, "hote : cible_hote() = %d à l'entrée de main\n", f());
 
-    dprintf(1, "hote : appel de dlopen
-");
+    dprintf(1, "hote : appel de dlopen\n");
     void *h = dlopen(argv[1], RTLD_NOW);
     if (!h) {
         dprintf(1, "hote : dlopen impossible : %s\n", dlerror());
