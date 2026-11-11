@@ -348,8 +348,7 @@ static int accrocher_import(const struct mach_header_64 *mh, intptr_t slide, con
                     continue;
                 }
                 void **cases = (void **)((uintptr_t)slide + sect->addr);
-                dprintf(1, "  détail : section de pointeurs %.16s,%.16s, %llu cases
-", sect->segname, sect->sectname,
+                dprintf(1, "  détail : section de pointeurs %.16s,%.16s, %llu cases\n", sect->segname, sect->sectname,
                         (unsigned long long)(sect->size / sizeof(void *)));
                 for (uint64_t k = 0; k < sect->size / sizeof(void *); k++) {
                     uint32_t ix = indirects[sect->reserved1 + k];
@@ -365,8 +364,7 @@ static int accrocher_import(const struct mach_header_64 *mh, intptr_t slide, con
                         dprintf(1, "  détail : section %.16s non inscriptible (errno %d)\n", sect->sectname, errno);
                         continue;
                     }
-                    dprintf(1, "  détail : case %p, avant %p (dlopen du système : %p)
-", (void *)&cases[k], cases[k], (void *)dlopen);
+                    dprintf(1, "  détail : case %p, avant %p (dlopen du système : %p)\n", (void *)&cases[k], cases[k], (void *)dlopen);
                     cases[k] = remplacement;
                     case_dlopen = &cases[k];
                     dprintf(1, "  détail : import %s remplacé dans %.16s,%.16s\n", nom, sect->segname, sect->sectname);
