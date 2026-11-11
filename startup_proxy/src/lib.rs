@@ -5,12 +5,13 @@
 //! posé. Il est donc chargé au lancement, avant le menu principal, sans remplacer aucun fichier de
 //! Steam. Ses exports sont relayés vers la winmm de System32 (voir build.rs et `relais`).
 //!
-//! Ce proxy charge le proxy de GameCore à la place de l'original (`chargeur`), ajoute à l'écran
-//! d'options un onglet qui édite ses réglages (`options`), et annonce sa version aux autres joueurs
-//! du salon multijoueur (`salon`), ajoute au menu Échap un bouton qui envoie un rapport de bug
-//! (`rapport`), borne les comptes lus par le désérialiseur des messages réseau, contre le gel à la
-//! déconnexion d'un joueur (`messages`), et refait le lien direct des paires de joueurs relayées
-//! par l'hôte (« 0 ms », `reliaison`). Journal commun aux deux proxys :
+//! This proxy loads the GameCore proxy instead of the original (`chargeur`), adds to the options
+//! screen a tab that edits its settings (`options`), announces its version to the other players in
+//! the multiplayer lobby (`salon`), adds to the Escape menu a button that sends a bug report
+//! (`rapport`), bounds the counts read by the network message deserializer, against the freeze when
+//! a player disconnects (`messages`), re-links pairs of players relayed through the host
+//! (`reliaison`), and re-sends pings left unanswered, which would otherwise stay frozen at "0 ms" in
+//! the player list (`pings`). Log shared by both proxies:
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
 // Modules communs avec le proxy de GameCore, qui y trouvent `crate::win` et `crate::patch`.
@@ -34,6 +35,7 @@ mod salon;
 mod rapport;
 mod messages;
 mod reliaison;
+mod pings;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]
@@ -103,6 +105,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             options::install();
             messages::install();
             reliaison::install();
+            pings::install();
             #[cfg(feature = "diag")]
             zones::install();
         }
