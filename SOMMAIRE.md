@@ -87,6 +87,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   chacun ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
   [docs/netcode](docs/netcode/README.md) ;
+- [macos](analyses/macos/README.md) : portage macOS, binaires du jeu inspectés (Mach-O universels,
+  hardened runtime, GameCore chargé par `dlopen`) et essai de patch du code sur les machines macOS
+  de la CI (pas encore lancé) ;
 - [docs/gamecore_xp2](docs/gamecore_xp2/README.md) : carte des fichiers source de GameCore_XP2.
 
 ## Installation
