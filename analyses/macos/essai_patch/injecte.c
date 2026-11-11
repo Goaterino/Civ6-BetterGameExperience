@@ -309,6 +309,9 @@ static void essais_patch(const char *quoi, void *fn) {
 // Remplace, dans l'image `mh`, chaque pointeur d'import du symbole `nom` (`_dlopen`) par
 // `remplacement`. Rend le nombre de pointeurs modifiés, ou -1 si les tables sont introuvables.
 // Les pointeurs sont dans __DATA ou __DATA_CONST : des données, pas du code signé.
+// Dernière case d'import remplacée, relue à la fin du processus (`fin`).
+static void **case_dlopen;
+
 static int accrocher_import(const struct mach_header_64 *mh, intptr_t slide, const char *nom, void *remplacement) {
     const struct symtab_command *st = NULL;
     const struct dysymtab_command *dt = NULL;
@@ -345,6 +348,9 @@ static int accrocher_import(const struct mach_header_64 *mh, intptr_t slide, con
                     continue;
                 }
                 void **cases = (void **)((uintptr_t)slide + sect->addr);
+                dprintf(1, "  détail : section de pointeurs %.16s,%.16s, %llu cases
+", sect->segname, sect->sectname,
+                        (unsigned long long)(sect->size / sizeof(void *)));
                 for (uint64_t k = 0; k < sect->size / sizeof(void *); k++) {
                     uint32_t ix = indirects[sect->reserved1 + k];
                     if (ix & (INDIRECT_SYMBOL_ABS | INDIRECT_SYMBOL_LOCAL) || ix >= st->nsyms) {
@@ -359,7 +365,10 @@ static int accrocher_import(const struct mach_header_64 *mh, intptr_t slide, con
                         dprintf(1, "  détail : section %.16s non inscriptible (errno %d)\n", sect->sectname, errno);
                         continue;
                     }
+                    dprintf(1, "  détail : case %p, avant %p (dlopen du système : %p)
+", (void *)&cases[k], cases[k], (void *)dlopen);
                     cases[k] = remplacement;
+                    case_dlopen = &cases[k];
                     dprintf(1, "  détail : import %s remplacé dans %.16s,%.16s\n", nom, sect->segname, sect->sectname);
                     n++;
                 }
@@ -388,6 +397,15 @@ static void *mon_dlopen(const char *chemin, int mode) {
 }
 
 // ---------------------------------------------------------------------------------------------
+
+// À la fin du processus : la case d'import porte-t-elle toujours l'accroche ? Si dyld l'a
+// réécrite après le constructeur, l'accroche est à poser plus tard ou autrement.
+__attribute__((destructor)) static void fin(void) {
+    if (case_dlopen && getenv("BGE_VARIANTE")) {
+        bge_res("case de l'import dlopen à la fin du processus", "%s (%p)",
+                *case_dlopen == (void *)mon_dlopen ? "porte toujours l'accroche" : "réécrite", *case_dlopen);
+    }
+}
 
 __attribute__((constructor)) static void demarrage(void) {
     // Les fils de fork ne doivent pas refaire l'essai, et l'injection ne se propage pas plus loin.

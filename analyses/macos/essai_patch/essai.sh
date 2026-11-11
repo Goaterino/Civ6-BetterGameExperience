@@ -23,6 +23,11 @@ out="$(mktemp -d "${TMPDIR:-/tmp}/bge_essai_${arch}.XXXXXX")"
 echo "Dossier de travail : $out"
 sw_vers 2>/dev/null
 echo "Machine : $(uname -m), essai en $arch"
+# SIP coupé, le système n'applique pas toutes les règles de signature : les verdicts ne valent
+# alors pas pour le Mac d'un joueur. La variante `strict` le confirme (injection acceptée).
+sip="$(csrutil status 2>&1 | head -1)"
+echo "SIP : $sip"
+echo "boot-args : $(nvram boot-args 2>&1)"
 
 # x86_64 sur Apple Silicon : Rosetta, à installer s'il manque.
 if [ "$arch" = x86_64 ] && [ "$(uname -m)" = arm64 ] && ! /usr/bin/pgrep -q oahd; then
@@ -93,6 +98,8 @@ done
 {
   echo
   echo "## Essai de patch, $etiquette, macOS $(sw_vers -productVersion 2>/dev/null)"
+  echo
+  echo "$sip"
   echo
   echo "| Variante | Essai | Verdict |"
   echo "|---|---|---|"
