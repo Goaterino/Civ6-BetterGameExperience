@@ -131,7 +131,7 @@ ajouter un bloc (`ui_merveilles`, `ui_rendements`). Ces mods demandent en plus :
 
 | besoin | mods | solution proposée |
 |---|---|---|
-| charger des fichiers qui n'existent pas dans le jeu | BRS (pages, RMA), TPE (infobulles) | **fichiers embarqués** : `Civ6Proxy_Charger(nom)`, fonction native posée dans la table globale du contexte (comme `Civ6RolloverProxy_Clock`). Elle compile le texte embarqué par le vrai `luaL_loadbuffer`, sous le nom `@<nom>.lua`, et rend la fonction. Le Lua l'appelle, ou lui donne son propre environnement (`setfenv`) pour RMA. HavokScript exporte `lua_pcall`, `lua_cpcall` et `hksi_lua_getfenv` |
+| charger des fichiers qui n'existent pas dans le jeu | BRS (pages, RMA), TPE (infobulles) | **fichiers embarqués** : `Civ6Proxy_Charger(nom)`, fonction native posée dans la table globale du contexte (comme `Civ6RolloverProxy_Clock`). Elle compile le texte embarqué par le vrai `luaL_loadbuffer`, sous le nom `@<nom>.lua`, et rend la fonction. Le Lua l'appelle. Pour RMA, `setfenv` n'isole rien dans HavokScript : ses globales sont préfixées `RMA_`. HavokScript exporte `lua_pcall`, `lua_cpcall` et `hksi_lua_getfenv` |
 | un contexte de plus | TPE (`TopPanel_TT`), BRS (`RealModifierAnalysis`) | pas de contexte neuf. Les `ToolTipType` de TPE vont à la fin de `TopPanel.xml`, et son Lua dans le contexte `TopPanel`. RMA est chargé dans un environnement isolé par le premier contexte qui en a besoin (`GovernmentScreen` ou `ReportScreen`). Un drapeau dans `ExposedMembers` évite un second chargement |
 | textes absents de la base | les quatre | **table de textes embarquée**, générée depuis les XML des mods (toutes leurs langues, l'anglais en dernier recours). Lua : nos copies appellent `BGD_Lookup` au lieu de `Locale.Lookup`, sans toucher à la table `Locale` partagée. `Locale.Lookup` sur un texte brut le met en forme (`{1_Num}`), comme le jeu le fait déjà. XML : les `String="LOC_…"` sont remplacés à la lecture du fichier, dans la langue rendue par `Localization::GetCurrentLanguage()` → `Language::GetType()`, deux exports de `Localization_FinalRelease.dll` |
 | `GlobalParameters`, `GameInfo.RLLReports` | BRS | remplacés dans nos copies : `BRS_OPTION_MODIFIERS` → `0`, version → constante, liste des rapports écrite en dur dans le bloc ajouté à `ReportsList.lua` |
@@ -271,6 +271,17 @@ Le gros morceau : ≈ 530 Ko de Lua et de XML embarqués.
 - **RMA** : une copie privée par contexte (`BGD_ChargerRMA`), dans l'écran des rapports comme dans
   celui du gouvernement. Elle n'est pas mise dans `ExposedMembers.RMA`, que le RMA du mod pourrait
   écraser, et ne meurt pas avec un autre contexte.
+  - **Pas d'isolation possible.** Le `setfenv` prévu au départ n'isole rien dans HavokScript. Premier
+    essai en jeu (journal de l'hôte, 8 novembre 2026) : le `GetCityData` de RMA remplaçait celui de
+    CitySupport (pages Villes et Villes 2 cassées), et son ajout de `TOURISM`… `LOYALTY` à
+    `YieldTypes` cassait la page des rendements. Toutes ses globales sont désormais préfixées `RMA_`,
+    et il garde sa propre copie de `YieldTypes`.
+  - **Points de personnages illustres** (clés `PG_*` de nos corrections de RMA) : sans colonne dans
+    les pages Politiques et Cités-États, ils plantaient le remplissage de la ligne. Ils n'y sont plus
+    écrits ; le texte de l'effet les donne toujours.
+  - **Tri de la page Villes** : le tri par colonne lisait les données de la page des rendements
+    (`m_kCityData`, défaut du mod), vides tant qu'elle n'avait pas été ouverte. Il lit maintenant
+    celles de la page (`m_kCity1Data`).
 - **Mod présent.** Tout est neutralisé :
   - `ReportScreen.lua` et `ReportScreen.xml` du mod : remplacés par les nôtres.
   - `BRSPage_*.lua` : jamais inclus, puisque notre texte charge les pages embarquées.
@@ -495,7 +506,7 @@ Rien n'a encore tourné dans le jeu. Hors jeu, les patchs passent sur les vrais 
 mods, la syntaxe de tous les scripts est vérifiée, et les corrections de RMA comme le bloc des
 drapeaux ont leurs tests Lua. Restent à voir en jeu :
 
-1. **HavokScript** : `getfenv` / `setfenv` (RMA isolé), et `Locale.Lookup` qui met en forme un texte
+1. **HavokScript** : `setfenv` n'isole pas (vu le 8 novembre 2026, voir `ui_rapports`), et `Locale.Lookup` qui met en forme un texte
    brut (les textes des mods passent par là). Le journal `Lua.log` dira tout échec
    (`BetterGameExperience : …`).
 2. **Les fonctions natives** : `mods : fonctions natives posées` au journal, puis un écran des

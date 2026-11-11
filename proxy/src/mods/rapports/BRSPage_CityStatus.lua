@@ -521,7 +521,9 @@ function sort_cities( type, instance )
 
 	local i = 0
 	
-	for _, kCityData in spairs( m_kCityData, function( t, a, b ) return city_sortFunction( instance.Descend, type, t, a, b ); end ) do
+	-- BGD : les données de cette page (m_kCity1Data), pas celles de la page des rendements (m_kCityData),
+	-- vides tant qu'elle n'a pas été ouverte : le tri par colonne plantait.
+	for _, kCityData in spairs( m_kCity1Data, function( t, a, b ) return city_sortFunction( instance.Descend, type, t, a, b ); end ) do
 		i = i + 1
 		local cityInstance = instance.Children[i]
 
