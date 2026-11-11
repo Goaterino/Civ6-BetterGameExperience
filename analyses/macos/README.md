@@ -1,7 +1,8 @@
 # Portage macOS
 
-État au 2026-11-11 : binaires du jeu inspectés, essai de faisabilité écrit, pas encore lancé. Aucun
-code du proxy n'est porté.
+État au 2026-11-11 : binaires du jeu inspectés, essai de faisabilité passé sur les machines macOS
+de la CI, où SIP est désactivé : il reste à le refaire sur un Mac ordinaire. Aucun code du proxy
+n'est porté.
 
 ## Ce que livre le jeu sous macOS
 
@@ -47,7 +48,7 @@ adresse de détour est donc à retrouver deux fois.
 | accroche de l'import `luaL_loadbuffer` | fonction interne de l'exe, à retrouver par signature et à détourner |
 | lecture XML retrouvée par signature | idem, signature à refaire par architecture |
 | une trentaine de `Site` dans GameCore, adresses fixes | adresses à retrouver dans un binaire sans symboles, par architecture |
-| `VirtualProtect` puis saut de 14 octets | patch du code sous hardened runtime : **à établir**, voir l'essai |
+| `VirtualProtect` puis saut de 14 octets | `mach_vm_protect` avec `VM_PROT_COPY` puis écriture : passe en CI, **à confirmer SIP actif**, voir l'essai |
 
 Le Lua et le XML de l'interface, les réglages et le salon multijoueur ne dépendent pas de la
 plateforme.
@@ -102,9 +103,49 @@ Lecture des résultats de la variante `jeu` :
 - **x86_64 sous Rosetta passe et arm64 non** : lancer le jeu en x86_64 sur Apple Silicon devient
   une solution de repli.
 
+## Résultats en CI (2026-11-11)
+
+Passage [43027744636](https://github.com/Goaterino/Civ6-BetterGameExperience/actions/runs/43027744636),
+macOS 26.7.2 sur Apple Silicon (arm64 et x86_64 sous Rosetta) et macOS 15 sur Intel. Variante `jeu` :
+
+| Essai | arm64 | x86_64 (Rosetta) | x86_64 (Intel) |
+|---|---|---|---|
+| injection par `DYLD_INSERT_LIBRARIES` | OK | OK | OK |
+| mémoire exécutable, `MAP_JIT` et page RW passée RX | OK | OK | OK |
+| accroche de l'import `dlopen`, appelée pour `GameCore_XP2.dll` | OK | OK | OK |
+| exe : `mprotect` RW, ou RWX | refusé | refusé | refusé |
+| exe : `mach_vm_protect` avec `VM_PROT_COPY` | OK | OK | OK |
+| exe : copie posée par `mach_vm_remap` | OK | écrit, sans effet | OK |
+| bundle : `mprotect` RW puis RX | OK | OK | OK |
+| bundle : `mprotect` RWX | refusé | OK | OK |
+| bundle : `mach_vm_protect` avec `VM_PROT_COPY` | OK | OK | OK |
+| signature du processus après les patchs | valide | valide | valide |
+| bout en bout, fonctions de l'exe et du bundle détournées | oui | oui | oui |
+
+**Réserve : SIP est désactivé sur ces machines** (`csrutil status`). La variante `strict`, sans
+aucun droit, y accepte l'injection, alors qu'un Mac ordinaire la refuse : le témoin montre que la
+CI n'applique pas les règles de signature d'un Mac de joueur. Ces résultats disent que le
+mécanisme est juste, pas que le hardened runtime le laisse passer. Les quatre autres variantes
+donnent d'ailleurs les mêmes verdicts que `jeu`.
+
+Ce qui tient quand même :
+
+- **`mach_vm_protect` avec `VM_PROT_COPY` est la méthode à retenir**, la seule à passer partout,
+  pour l'exe comme pour le bundle. `mprotect` seul est refusé sur le code de l'exe même sans
+  hardened runtime (variante `nu`) : c'est la protection maximale du segment, pas la signature.
+- **Sous Rosetta, la copie posée par `mach_vm_remap` est écrite mais le code exécuté ne change
+  pas** : Rosetta exécute sa traduction de l'ancien code. Méthode à écarter.
+- **L'exécutable n'est pas toujours l'image 0 de dyld.** En arm64 sous macOS 26, l'image 0 est la
+  dylib insérée ; l'exe se reconnaît à son type `MH_EXECUTE`. Le chargeur devra faire de même.
+- En arm64, le bundle refuse une page RWX : écrire en RW, puis repasser en RX.
+
+Reste à lancer l'essai sur un Mac ordinaire, SIP actif (la commande ci-dessus, sans le jeu, avec
+les outils en ligne de commande de Xcode). La variante `strict` doit alors refuser l'injection, et
+la variante `jeu` tranche.
+
 ## Plan
 
-1. Lancer l'essai et en tirer la méthode de détour.
+1. Refaire l'essai sur un Mac dont SIP est actif, et en tirer la méthode de détour.
 2. Chargeur : dylib injectée qui accroche `dlopen` et charge le proxy à la place de
    `GameCore_XP2.dll`. `win.rs`, `patch.rs` et `exe.rs` passent derrière une couche par plateforme.
 3. Interface : retrouver `luaL_loadbuffer` et la lecture XML dans l'exe macOS. Tous les correctifs
@@ -114,6 +155,6 @@ Lecture des résultats de la variante `jeu` :
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.
 
-Reste à obtenir d'un joueur sous macOS : la liste des fichiers du `.app`
-(`find "Civilization VI.app" -type f`), pour savoir où sont les dylibs livrées, et son
-architecture.
+Reste à obtenir d'un joueur sous macOS : le tableau de l'essai lancé sur son Mac, la liste des
+fichiers du `.app` (`find "Civilization VI.app" -type f`), pour savoir où sont les dylibs livrées,
+et son architecture.
