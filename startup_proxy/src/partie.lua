@@ -37,7 +37,9 @@ local function BGD_PartieRelais()
 	-- Le verdict de la partie : "<version>@<jeton>:<1|0>:<jetons>", écrit par notre salon.
 	local verdict = cfg:GetValue("BGD_VERDICT");
 	local version, jeton, actif, liste = string.match(tostring(verdict), "^([^@#:]*)@([^@#:]*):([01]):(.*)$");
-	local _, jetonAnnonce = string.match(tostring(cfg:GetValue("BGD_VERSION")), "^([^@#:]*)@([^@#:]*)#");
+	-- Parenthèses : GetValue d'une clé absente ne rend aucune valeur, et tostring() refuse de n'en
+	-- recevoir aucune (joueur sans BGE dans une nouvelle partie).
+	local _, jetonAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#");
 	if version == nil or jeton ~= jetonAnnonce then
 		return;  -- pas de verdict de notre salon : partie lancée sans notre proxy
 	end
@@ -51,7 +53,7 @@ local function BGD_PartieRelais()
 	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 		local pc = PlayerConfigurations[id];
 		if id ~= localID and pc ~= nil and pc:IsHuman() and Network.IsPlayerConnected(id) then
-			local v, jh, perso = string.match(tostring(pc:GetValue("BGD_VERSION")), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+			local v, jh, perso = string.match(tostring((pc:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
 			if v == version and jh == jeton then
 				if not jetons[perso] then
 					jetons[perso] = true;
