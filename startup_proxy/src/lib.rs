@@ -10,7 +10,7 @@
 //! the multiplayer lobby (`salon`), adds to the Escape menu a button that sends a bug report
 //! (`rapport`), bounds the counts read by the network message deserializer, against the freeze when
 //! a player disconnects (`messages`), re-links pairs of players relayed through the host
-//! (`reliaison`), and re-sends pings left unanswered, which would otherwise stay frozen at "0 ms" in
+//! (`relink`), and re-sends pings left unanswered, which would otherwise stay frozen at "0 ms" in
 //! the player list (`pings`). Log shared by both proxies:
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
@@ -34,7 +34,7 @@ mod maj;
 mod salon;
 mod rapport;
 mod messages;
-mod reliaison;
+mod relink;
 mod pings;
 #[cfg(feature = "diag")]
 mod zones;
@@ -104,7 +104,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
             options::install();
             messages::install();
-            reliaison::install();
+            relink::install();
             pings::install();
             #[cfg(feature = "diag")]
             zones::install();

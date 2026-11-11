@@ -4,12 +4,12 @@
 -- (startup_proxy/src/salon.rs). Fonctions natives posées par le proxy :
 --   Civ6Proxy_PolActifs()     -> 1 si les correctifs POL sont actifs sur cette machine, sinon 0
 --   Civ6Proxy_Journal(texte)  -> écrit dans RolloverProxy.log
---   Civ6Proxy_GardeMessages() -> lectures corrigées par la garde des messages réseau depuis
---                                le dernier appel (voir plus bas)
---   Civ6Proxy_Relais()        -> paires de joueurs relayées par l'hôte (« 0 ms »), "a-b,c-d"
---   Civ6Proxy_RelaisReparer(partenaire, steamID) -> 1 si la tentative de lien direct est lancée
---   Civ6Proxy_RelaisEtat(partenaire) -> 0 en cours, 1 relié en direct, 2 échec
---   Civ6Proxy_RelaisRetirer(a, b) -> retire la paire de la table locale des relais (voir plus bas)
+--   Civ6Proxy_GardeMessages() -> reads fixed by the network message guard since the last call
+--                                (see below)
+--   Civ6Proxy_RelayedPairs()  -> pairs of players relayed through the host, "a-b,c-d"
+--   Civ6Proxy_RelinkStart(partner, steamID) -> 1 if the direct link attempt started
+--   Civ6Proxy_RelinkState(partner) -> 0 in progress, 1 linked directly, 2 failed
+--   Civ6Proxy_RelayForgetPair(a, b) -> removes the pair from the local relay table (see below)
 --
 -- Un joueur qui rejoint la partie en cours, ou s'y reconnecte, passe par le salon : il tire un
 -- nouveau jeton et ne croit le verdict de l'hôte que s'il l'y trouve (salon.lua). Or l'hôte est en
@@ -131,127 +131,127 @@ if Civ6Proxy_GardeMessages ~= nil then
 	end);
 end
 
--- Liens à 0 ms (startup_proxy/src/reliaison.rs) : deux joueurs dont le lien direct a échoué à
--- l'arrivée de l'un d'eux passent par l'hôte pour toute la partie (« 0 ms » dans la liste des
--- joueurs), et sont déconnectés tous les deux si l'hôte part. Pendant le départ de tour simultané
--- (ui_depart.lua : tout le monde attend, les ordres sont retenus, rien n'est en vol entre eux), le
--- plus petit identifiant de chaque paire refait le lien direct : il le dit dans le chat, lance la
--- tentative, garde son signal « prêt » jusqu'au résultat (BGD_RelaisRetient, que ui_depart.lua
--- consulte avant d'envoyer `.bgd_pret` ; l'hôte attend au plus 60 s, une tentative dure au plus
--- 45 s), puis dit le résultat. Réussite : `.bgd_relais <a> <b>` à tous (caché par
--- ui_depart_chat.lua), et chaque machine équipée retire la paire de sa table des relais. Au plus
--- MAX_ESSAIS tentatives par paire et par partie. Le départ simultané exige que tous les humains
--- aient BGE à la même version : les deux joueurs de la paire l'ont.
-if Civ6Proxy_Relais ~= nil and Civ6Proxy_RelaisReparer ~= nil and Civ6Proxy_RelaisEtat ~= nil
-	and Civ6Proxy_RelaisRetirer ~= nil then
-	local RELAIS = ".bgd_relais ";
-	local MAX_ESSAIS = 3;
-	local R = { essais = {}, tour = -1, file = {}, encours = nil };
+-- Links relayed through the host (startup_proxy/src/relink.rs): two players whose direct link
+-- failed when one of them arrived go through the host for the rest of the game, and both are
+-- disconnected if the host leaves. During the simultaneous turn start (ui_depart.lua: everyone
+-- waits, orders are held, nothing is in flight between them), the lower player ID of each pair
+-- rebuilds the direct link: it says so in the chat, starts the attempt, holds its "ready" signal
+-- until the result (BGD_RelinkHolding, which ui_depart.lua checks before sending `.bgd_pret`; the
+-- host waits at most 60 s, an attempt lasts at most 45 s), then says the result. On success,
+-- `.bgd_relinked <a> <b>` goes to everyone (hidden by ui_depart_chat.lua), and every machine with
+-- BGE removes the pair from its relay table. At most MAX_TRIES attempts per pair per game. The
+-- simultaneous turn start requires every human to have the same BGE version, so both players of
+-- the pair have it.
+if Civ6Proxy_RelayedPairs ~= nil and Civ6Proxy_RelinkStart ~= nil and Civ6Proxy_RelinkState ~= nil
+	and Civ6Proxy_RelayForgetPair ~= nil then
+	local SIGNAL = ".bgd_relinked ";
+	local MAX_TRIES = 3;
+	local R = { tries = {}, turn = -1, queue = {}, current = nil };
 
-	local function Nom(id)
+	local function Name(id)
 		local pc = PlayerConfigurations[id];
 		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
 	end
 
-	-- « <joueur>: BGE - … » à tous, en anglais (chaque machine équipée le traduit à l'arrivée).
-	local function Dire(couleur, cle, p, ...)
-		local texte = couleur .. "BGE - " .. BGD_TxtAnglais(cle, Nom(p.a), Nom(p.b), ...) .. "[ENDCOLOR]";
-		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
-		BGD_PartieJournal("message : " .. texte);
+	-- "<player>: BGE - …" to everyone, in English (each machine with BGE translates it on arrival).
+	local function Say(color, key, p, ...)
+		local text = color .. "BGE - " .. BGD_TxtAnglais(key, Name(p.a), Name(p.b), ...) .. "[ENDCOLOR]";
+		Network.SendChat(text, ChatTargetTypes.CHATTARGET_ALL, -1);
+		BGD_PartieJournal("message: " .. text);
 	end
 
-	local function Cle(p)
+	local function Key(p)
 		return p.a .. "-" .. p.b;
 	end
 
-	-- Les paires de la table locale dont ce joueur est le plus petit identifiant, partenaire connecté.
-	local function MesPaires()
-		local moi = Network.GetLocalPlayerID();
+	-- The pairs of the local table where this player has the lower ID, with the partner connected.
+	local function MyPairs()
+		local me = Network.GetLocalPlayerID();
 		local t = {};
-		for a, b in string.gmatch(tostring(Civ6Proxy_Relais() or ""), "(%d+)-(%d+)") do
+		for a, b in string.gmatch(tostring(Civ6Proxy_RelayedPairs() or ""), "(%d+)-(%d+)") do
 			a, b = tonumber(a), tonumber(b);
-			if a == moi and Network.IsPlayerConnected(b) then
+			if a == me and Network.IsPlayerConnected(b) then
 				table.insert(t, { a = a, b = b });
 			end
 		end
 		return t;
 	end
 
-	local function Lancer(p)
-		R.essais[Cle(p)] = (R.essais[Cle(p)] or 0) + 1;
+	local function Start(p)
+		R.tries[Key(p)] = (R.tries[Key(p)] or 0) + 1;
 		local pc = PlayerConfigurations[p.b];
 		local steam = pc and tostring(pc:GetNetworkIdentifer() or "") or "";
-		if not string.match(steam, "^%d+$") or Civ6Proxy_RelaisReparer(p.b, steam) ~= 1 then
-			BGD_PartieJournal("relais : tentative " .. Cle(p) .. " pas lancée (voir reliaison)");
+		if not string.match(steam, "^%d+$") or Civ6Proxy_RelinkStart(p.b, steam) ~= 1 then
+			BGD_PartieJournal("relink: attempt " .. Key(p) .. " not started (see the relink lines)");
 			return false;
 		end
-		R.encours = p;
-		BGD_PartieJournal("relais : tentative " .. Cle(p) .. " (" .. R.essais[Cle(p)] .. "/" .. MAX_ESSAIS .. ")");
-		Dire("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_RELAIS_DETECTE", p);
+		R.current = p;
+		BGD_PartieJournal("relink: attempt " .. Key(p) .. " (" .. R.tries[Key(p)] .. "/" .. MAX_TRIES .. ")");
+		Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_RELINK_DETECTED", p);
 		return true;
 	end
 
-	-- Vrai tant qu'une tentative est en cours : ui_depart.lua n'envoie pas encore `.bgd_pret`.
-	-- Appelée quand la machine serait prête, puis deux fois par seconde tant qu'elle retient.
-	function BGD_RelaisRetient()
-		local ok, retenir = pcall(function()
+	-- True while an attempt is in progress: ui_depart.lua does not send `.bgd_pret` yet.
+	-- Called when this machine would be ready, then twice a second while it holds.
+	function BGD_RelinkHolding()
+		local ok, holding = pcall(function()
 			if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud() then
 				return false;
 			end
-			if R.encours ~= nil then
-				local p = R.encours;
-				local etat = Civ6Proxy_RelaisEtat(p.b);
-				if etat == 0 then
+			if R.current ~= nil then
+				local p = R.current;
+				local state = Civ6Proxy_RelinkState(p.b);
+				if state == 0 then
 					return true;
 				end
-				R.encours = nil;
-				if etat == 1 then
-					Network.SendChat(RELAIS .. p.a .. " " .. p.b, ChatTargetTypes.CHATTARGET_ALL, -1);
-					Dire("[COLOR_GREEN]", "LOC_BGD_CHAT_RELAIS_REPARE", p);
-				elseif (R.essais[Cle(p)] or 0) >= MAX_ESSAIS then
-					Dire("[COLOR_RED]", "LOC_BGD_CHAT_RELAIS_ABANDON", p, MAX_ESSAIS);
+				R.current = nil;
+				if state == 1 then
+					Network.SendChat(SIGNAL .. p.a .. " " .. p.b, ChatTargetTypes.CHATTARGET_ALL, -1);
+					Say("[COLOR_GREEN]", "LOC_BGD_CHAT_RELINK_FIXED", p);
+				elseif (R.tries[Key(p)] or 0) >= MAX_TRIES then
+					Say("[COLOR_RED]", "LOC_BGD_CHAT_RELINK_GAVE_UP", p, MAX_TRIES);
 				else
-					Dire("[COLOR_RED]", "LOC_BGD_CHAT_RELAIS_ECHEC", p);
+					Say("[COLOR_RED]", "LOC_BGD_CHAT_RELINK_FAILED", p);
 				end
 			end
-			local tour = Game.GetCurrentGameTurn();
-			if R.tour ~= tour then
-				R.tour = tour;
-				R.file = {};
-				for _, p in ipairs(MesPaires()) do
-					if (R.essais[Cle(p)] or 0) < MAX_ESSAIS then
-						table.insert(R.file, p);
+			local turn = Game.GetCurrentGameTurn();
+			if R.turn ~= turn then
+				R.turn = turn;
+				R.queue = {};
+				for _, p in ipairs(MyPairs()) do
+					if (R.tries[Key(p)] or 0) < MAX_TRIES then
+						table.insert(R.queue, p);
 					end
 				end
 			end
-			while #R.file > 0 do
-				if Lancer(table.remove(R.file, 1)) then
+			while #R.queue > 0 do
+				if Start(table.remove(R.queue, 1)) then
 					return true;
 				end
 			end
 			return false;
 		end);
 		if not ok then
-			BGD_PartieJournal("relais : erreur : " .. tostring(retenir));
-			R.encours = nil;
+			BGD_PartieJournal("relink: error: " .. tostring(holding));
+			R.current = nil;
 			return false;
 		end
-		return retenir;
+		return holding;
 	end
 
-	-- Réussite annoncée par l'initiateur : la paire sort de la table locale (l'hôte compris).
+	-- Success announced by the initiator: the pair leaves the local table (the host's included).
 	Events.MultiplayerChat.Add(function(fromPlayer, toPlayer, text, eTargetType)
 		local ok, err = pcall(function()
-			if type(text) ~= "string" or string.sub(text, 1, #RELAIS) ~= RELAIS then
+			if type(text) ~= "string" or string.sub(text, 1, #SIGNAL) ~= SIGNAL then
 				return;
 			end
-			local a, b = string.match(text, "^%.bgd_relais (%d+) (%d+)");
-			if a ~= nil and Civ6Proxy_RelaisRetirer(tonumber(a), tonumber(b)) == 1 then
-				BGD_PartieJournal("relais : paire " .. a .. "-" .. b .. " retirée (reliée en direct)");
+			local a, b = string.match(text, "^%.bgd_relinked (%d+) (%d+)");
+			if a ~= nil and Civ6Proxy_RelayForgetPair(tonumber(a), tonumber(b)) == 1 then
+				BGD_PartieJournal("relink: pair " .. a .. "-" .. b .. " removed (linked directly)");
 			end
 		end);
 		if not ok then
-			BGD_PartieJournal("relais : erreur : " .. tostring(err));
+			BGD_PartieJournal("relink: error: " .. tostring(err));
 		end
 	end);
 end

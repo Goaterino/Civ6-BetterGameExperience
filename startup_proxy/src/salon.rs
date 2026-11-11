@@ -310,10 +310,10 @@ const PARTIE_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
     (lua_garde, b"Civ6Proxy_GardeMessages\0"),
-    (crate::reliaison::lua_paires, b"Civ6Proxy_Relais\0"),
-    (crate::reliaison::lua_reparer, b"Civ6Proxy_RelaisReparer\0"),
-    (crate::reliaison::lua_etat, b"Civ6Proxy_RelaisEtat\0"),
-    (crate::reliaison::lua_retirer, b"Civ6Proxy_RelaisRetirer\0"),
+    (crate::relink::lua_pairs, b"Civ6Proxy_RelayedPairs\0"),
+    (crate::relink::lua_start, b"Civ6Proxy_RelinkStart\0"),
+    (crate::relink::lua_state, b"Civ6Proxy_RelinkState\0"),
+    (crate::relink::lua_forget, b"Civ6Proxy_RelayForgetPair\0"),
 ];
 const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0")];
 
