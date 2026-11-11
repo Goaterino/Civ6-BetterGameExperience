@@ -33,11 +33,16 @@
 //! l'identifiant du joueur (seulement -1) : un identifiant hors des emplacements n'est pas appliqué
 //! non plus (voir `MESSAGES`).
 //!
-//! Noms : projet Ghidra `civ6-netcode`, signets « Gel 2026-11-09 ». Les mêmes règles, posées par
-//! un hook externe pendant la mise au point, ont tourné sur deux parties entières de dix joueurs
-//! (162 tours, 108 000 messages reçus) sans fausse alerte.
-//! Adresses de `CivilizationVI_DX12.exe` du 5 novembre 2026, vérifiées octet par octet : sur un
-//! autre exe (DX11, autre version), rien n'est posé et le journal le dit.
+//! Noms : projet Ghidra `civ6-netcode`, signets « Gel 2026-11-09 » (adresses DX12 ci-dessus). Les
+//! mêmes règles, posées par un hook externe pendant la mise au point, ont tourné sur deux parties
+//! entières de dix joueurs (162 tours, 108 000 messages reçus) sans fausse alerte.
+//! Adresses des deux exe du 5 novembre 2026 (`EXES`) : `CivilizationVI_DX12.exe` et
+//! `CivilizationVI.exe` (DX11). Le DX11 est le même code à d'autres adresses : mêmes fonctions, de
+//! même taille, octet pour octet sauf les déplacements relatifs (appels, adressage relatif à rip).
+//! Au démarrage, l'exe chargé est vérifié octet par octet contre chaque table ; sur un autre exe
+//! (autre version), rien n'est posé et le journal le dit. Sans la table DX11, un joueur en DX11
+//! n'avait aucune garde : c'est lui qui a gelé puis planté le 10 novembre 2026 (20 h 09), quand le
+//! joueur en DX12 à côté de lui a été protégé.
 //! Réglages : `actif=off` (l'interrupteur général) ne pose rien, comme pour le reste du mod ;
 //! c'est un correctif de bug, sans réglage en release. Dans les builds de diagnostic (feature
 //! `diag`) seulement, `garde_messages` dans `rollover_proxy.cfg` (onglet, section Diagnostic) :
@@ -52,10 +57,9 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
 /// Base des adresses Ghidra de l'exe.
 const BASE: u64 = 0x1_4000_0000;
 
-/// `ReadSerializerField(lecteur, descripteur, destination, octets)`. Prologue : `mov [rsp+8],rbx ;
-/// push rdi ; sub rsp,70h ; mov rax,r8 ; mov rbx,rdx`, 16 octets sans adressage relatif, recopiés
-/// dans le trampoline.
-const LECTURE: u64 = 0x1_4099_f9d0;
+/// Prologue de `ReadSerializerField(lecteur, descripteur, destination, octets)` (`Exe::lecture`) :
+/// `mov [rsp+8],rbx ; push rdi ; sub rsp,70h ; mov rax,r8 ; mov rbx,rdx`, 16 octets sans adressage
+/// relatif, recopiés dans le trampoline. Le même dans les deux exe.
 const PROLOGUE: [u8; 16] = [0x48, 0x89, 0x5c, 0x24, 0x08, 0x57, 0x48, 0x83, 0xec, 0x70, 0x49, 0x8b, 0xc0, 0x48, 0x8b, 0xda];
 
 /// Plus d'entrées qu'aucune carte ou liste d'un message n'en a (quelques dizaines en pratique).
@@ -77,78 +81,114 @@ pub enum Regle {
     Longueur,
 }
 
-struct Site {
-    nom: &'static str,
-    /// Adresse de retour de `call qword ptr [rax+30h]` dans la fonction.
-    retour: u64,
-    regle: Regle,
-}
-
-const SITES: [Site; 7] = [
-    Site { nom: "carte : paires", retour: 0x1_407a_1f44, regle: Regle::Compte },
-    Site { nom: "carte : entrées", retour: 0x1_407a_209f, regle: Regle::Compte },
-    Site { nom: "carte nommée : compte", retour: 0x1_407a_dfe3, regle: Regle::CompteOuDrapeaux },
-    Site { nom: "carte nommée : compte après drapeaux", retour: 0x1_407a_e03a, regle: Regle::Compte },
-    Site { nom: "liste : compte", retour: 0x1_407a_d901, regle: Regle::Compte },
-    Site { nom: "variant : longueur", retour: 0x1_407a_34f4, regle: Regle::Longueur },
-    Site { nom: "configuration : clés changées", retour: 0x1_4026_619b, regle: Regle::Compte },
+/// Les sept lectures, dans l'ordre de `Exe::retours`.
+const SITES: [(&str, Regle); 7] = [
+    ("carte : paires", Regle::Compte),
+    ("carte : entrées", Regle::Compte),
+    ("carte nommée : compte", Regle::CompteOuDrapeaux),
+    ("carte nommée : compte après drapeaux", Regle::Compte),
+    ("liste : compte", Regle::Compte),
+    ("variant : longueur", Regle::Longueur),
+    ("configuration : clés changées", Regle::Compte),
 ];
+/// La lecture où le mode test injecte le compte du gel : « carte : entrées ».
+const SITE_INJECTION: usize = 1;
 /// `call qword ptr [rax+30h]`, juste avant chaque adresse de retour.
 const APPEL: [u8; 3] = [0xff, 0x50, 0x30];
 
-/// Débuts des fonctions qui contiennent ces lectures : avec les sites et le prologue de la lecture,
-/// l'empreinte de l'exe analysé.
-const FONCTIONS: &[(&str, u64, [u8; 12])] = &[
-    ("DeserializeTypedVariantMap", 0x1_407a_1e20, [0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56, 0x48]),
-    ("DeserializeDataVariant", 0x1_407a_3450, [0x4c, 0x8b, 0xdc, 0x49, 0x89, 0x5b, 0x10, 0x49, 0x89, 0x73, 0x18, 0x57]),
-    ("DeserializeNamedVariantMap", 0x1_407a_df50, [0x48, 0x8b, 0xc4, 0x55, 0x48, 0x8d, 0xa8, 0x38, 0xfe, 0xff, 0xff, 0x48]),
-    ("DeserializeVariantList", 0x1_407a_d890, [0x48, 0x89, 0x5c, 0x24, 0x18, 0x48, 0x89, 0x6c, 0x24, 0x20, 0x56, 0x41]),
-    ("NetGameConfig : clés changées", 0x1_4026_6140, [0x48, 0x89, 0x5c, 0x24, 0x18, 0x48, 0x89, 0x74, 0x24, 0x20, 0x55, 0x57]),
+/// Les fonctions qui contiennent ces lectures, dans l'ordre de `Exe::fonctions`, et leurs premiers
+/// octets, les mêmes dans les deux exe.
+const FONCTIONS: [(&str, [u8; 12]); 5] = [
+    ("DeserializeTypedVariantMap", [0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56, 0x48]),
+    ("DeserializeDataVariant", [0x4c, 0x8b, 0xdc, 0x49, 0x89, 0x5b, 0x10, 0x49, 0x89, 0x73, 0x18, 0x57]),
+    ("DeserializeNamedVariantMap", [0x48, 0x8b, 0xc4, 0x55, 0x48, 0x8d, 0xa8, 0x38, 0xfe, 0xff, 0xff, 0x48]),
+    ("DeserializeVariantList", [0x48, 0x89, 0x5c, 0x24, 0x18, 0x48, 0x89, 0x6c, 0x24, 0x20, 0x56, 0x41]),
+    ("NetGameConfig : clés changées", [0x48, 0x89, 0x5c, 0x24, 0x18, 0x48, 0x89, 0x74, 0x24, 0x20, 0x55, 0x57]),
 ];
 
-/// Un message dont le traitement efface une configuration avant d'y recopier la carte reçue
-/// (entrée `+0x178` de la carte, `1407a6660`, quatrième argument 0 : effacement par `+0x160`).
-struct Message {
-    nom: &'static str,
-    /// Sa vtable (`Civ6NetMessage.cpp`), posée par ses constructeurs.
-    vtable: u64,
-    /// Destructeur, texte, écriture, lecture, traitement.
-    entrees: [u64; 5],
-}
+/// Les messages dont le traitement efface une configuration avant d'y recopier la carte reçue
+/// (entrée `+0x178` de la carte, `1407a6660`, quatrième argument 0 : effacement par `+0x160`), dans
+/// l'ordre de `Exe::vtables`.
+/// - `NetGameConfig`, traitement `140266e00` : `1401033f0(configuration, carte, clés changées)`.
+///   Sans clé changée, toute la configuration de la partie est effacée puis reconstruite.
+/// - `NetPlayerInfo`, traitement `140267330` : `140116630(emplacements + id × 0x40, carte, null)`,
+///   la configuration du joueur effacée puis recopiée. Identifiant en message + 0x38.
+const MESSAGES: [&str; 2] = ["NetGameConfig", "NetPlayerInfo"];
+/// Entrées de vtable : destructeur, texte, écriture, lecture, traitement.
 const LIRE: usize = 3;
 const TRAITER: usize = 4;
-const MESSAGES: [Message; 2] = [
-    // Traitement `140266e00` : `1401033f0(configuration, carte, clés changées)`. Sans clé changée,
-    // toute la configuration de la partie est effacée puis reconstruite.
-    Message {
-        nom: "NetGameConfig",
-        vtable: 0x1_40fe_0020,
-        entrees: [0x1_4026_69c0, 0x1_4026_6ca0, 0x1_4026_7680, 0x1_4026_79d0, 0x1_4026_6e00],
+/// Les emplacements de joueurs de la configuration, de 0x40 octets, vont de `[+0x2e0]` à `[+0x2e8]`.
+const EMPLACEMENTS: usize = 0x2e0;
+
+/// Tout ce qui dépend de l'exe : adresses Ghidra (base `0x140000000`) et octets qui contiennent un
+/// déplacement relatif.
+struct Exe {
+    nom: &'static str,
+    /// `ReadSerializerField`, le détour (prologue `PROLOGUE`).
+    lecture: u64,
+    /// Adresse de retour de `call qword ptr [rax+30h]` pour chaque lecture de `SITES`.
+    retours: [u64; 7],
+    /// Début de chaque fonction de `FONCTIONS`.
+    fonctions: [u64; 5],
+    /// Pour chaque message de `MESSAGES` : sa vtable (`Civ6NetMessage.cpp`), posée par ses
+    /// constructeurs, et ses cinq entrées.
+    vtables: [(u64, [u64; 5]); 2],
+    /// Le singleton de la configuration.
+    configuration: u64,
+    /// La fonction qui le lit : `sub rsp,38h ; mov rax,[rip+…]`, le déplacement menant à
+    /// `configuration`.
+    singleton: (u64, [u8; 11]),
+    /// Début du traitement de `NetPlayerInfo`, jusqu'au calcul `emplacements + id × 0x40` (`cmp
+    /// [rcx+38h],-1` … `call singleton` … `add rcx,[rax+2e0h]`).
+    traitement_joueur: (u64, [u8; 0x35]),
+}
+
+/// Les deux exe du 5 novembre 2026. Le DX11 a été trouvé fonction par fonction : mêmes octets que
+/// le DX12 hors déplacements relatifs, même taille (table `.pdata`), et le même contexte autour de
+/// chaque lecture.
+const EXES: [Exe; 2] = [
+    Exe {
+        nom: "DX12",
+        lecture: 0x1_4099_f9d0,
+        retours: [0x1_407a_1f44, 0x1_407a_209f, 0x1_407a_dfe3, 0x1_407a_e03a, 0x1_407a_d901, 0x1_407a_34f4, 0x1_4026_619b],
+        fonctions: [0x1_407a_1e20, 0x1_407a_3450, 0x1_407a_df50, 0x1_407a_d890, 0x1_4026_6140],
+        vtables: [
+            (0x1_40fe_0020, [0x1_4026_69c0, 0x1_4026_6ca0, 0x1_4026_7680, 0x1_4026_79d0, 0x1_4026_6e00]),
+            (0x1_40fe_0048, [0x1_4026_6aa0, 0x1_4026_6da0, 0x1_4026_7810, 0x1_4026_7c40, 0x1_4026_7330]),
+        ],
+        configuration: 0x1_4231_00a0,
+        singleton: (0x1_4010_08b0, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0xf7, 0x20, 0x02]),
+        traitement_joueur: (
+            0x1_4026_7340,
+            [
+                0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89,
+                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x53, 0x95, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
+                0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
+            ],
+        ),
     },
-    // Traitement `140267330` : `140116630(emplacements + id × 0x40, carte, null)`, la configuration
-    // du joueur effacée puis recopiée. Identifiant en message + 0x38.
-    Message {
-        nom: "NetPlayerInfo",
-        vtable: 0x1_40fe_0048,
-        entrees: [0x1_4026_6aa0, 0x1_4026_6da0, 0x1_4026_7810, 0x1_4026_7c40, 0x1_4026_7330],
+    Exe {
+        nom: "DX11",
+        lecture: 0x1_4099_2530,
+        retours: [0x1_4079_fc34, 0x1_4079_fd8f, 0x1_407a_be73, 0x1_407a_beca, 0x1_407a_b791, 0x1_407a_12b4, 0x1_4026_466b],
+        fonctions: [0x1_4079_fb10, 0x1_407a_1210, 0x1_407a_bde0, 0x1_407a_b720, 0x1_4026_4610],
+        vtables: [
+            (0x1_40fd_0cc0, [0x1_4026_4e90, 0x1_4026_5170, 0x1_4026_5b40, 0x1_4026_5e90, 0x1_4026_52d0]),
+            (0x1_40fd_0ce8, [0x1_4026_4f70, 0x1_4026_5270, 0x1_4026_5cd0, 0x1_4026_6100, 0x1_4026_5800]),
+        ],
+        configuration: 0x1_422d_8a20,
+        singleton: (0x1_400f_fa30, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0x8f, 0x1d, 0x02]),
+        traitement_joueur: (
+            0x1_4026_5810,
+            [
+                0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89,
+                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x03, 0xa2, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
+                0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
+            ],
+        ),
     },
 ];
-/// Le singleton de la configuration (lu par `1401008b0`) ; ses emplacements de joueurs, de 0x40
-/// octets, vont de `[+0x2e0]` à `[+0x2e8]`.
-const CONFIGURATION: u64 = 0x1_4231_00a0;
-const EMPLACEMENTS: usize = 0x2e0;
-/// `sub rsp,38h ; mov rax,[rip+0220f7e5]` : le singleton lu en `1423100a0`.
-const SINGLETON: (u64, [u8; 11]) = (0x1_4010_08b0, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0xf7, 0x20, 0x02]);
-/// Début du traitement de `NetPlayerInfo`, jusqu'au calcul `emplacements + id × 0x40` (`cmp
-/// [rcx+38h],-1` … `add rcx,[rax+2e0h]`).
-const TRAITEMENT_JOUEUR: (u64, [u8; 0x35]) = (
-    0x1_4026_7340,
-    [
-        0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89, 0xbc, 0x24,
-        0x90, 0x20, 0x00, 0x00, 0xe8, 0x53, 0x95, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40, 0x48, 0xc1, 0xe1, 0x06,
-        0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
-    ],
-);
+
 /// Messages lus avec une correction et pas encore traités (adresses). Borné : un message détruit
 /// sans traitement ne reste pas.
 static ABIMES: std::sync::Mutex<Vec<usize>> = std::sync::Mutex::new(Vec::new());
@@ -156,7 +196,18 @@ const MAX_ABIMES: usize = 64;
 /// Lecture et traitement d'origine de chaque message de `MESSAGES`.
 static ORIGINES: [[AtomicUsize; 2]; 2] = [[AtomicUsize::new(0), AtomicUsize::new(0)], [AtomicUsize::new(0), AtomicUsize::new(0)]];
 
-static EXE: AtomicUsize = AtomicUsize::new(0);
+/// Adresses de retour des sept lectures dans l'exe chargé (0 tant que la garde n'est pas posée).
+static RETOURS: [AtomicUsize; 7] = [
+    AtomicUsize::new(0),
+    AtomicUsize::new(0),
+    AtomicUsize::new(0),
+    AtomicUsize::new(0),
+    AtomicUsize::new(0),
+    AtomicUsize::new(0),
+    AtomicUsize::new(0),
+];
+/// Adresse du singleton de la configuration dans l'exe chargé.
+static CONFIGURATION: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static CORRECTIONS: AtomicU32 = AtomicU32::new(0);
 /// Corrections pas encore annoncées dans le chat (`a_annoncer`).
@@ -231,21 +282,20 @@ unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, des
     let real: Lecture = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
     let r = real(lecteur, desc, dest, n);
     if n == 4 && !dest.is_null() {
-        let exe = EXE.load(Ordering::Relaxed);
-        if let Some(site) = SITES.iter().find(|s| exe + (s.retour - BASE) as usize == retour) {
-            if site.retour == 0x1_407a_209f && INJECTION.swap(false, Ordering::Relaxed) {
+        if let Some(i) = RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) {
+            let (nom, regle) = SITES[i];
+            if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
                 std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
                 log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
             }
             let valeur = std::ptr::read_unaligned(dest as *const u32);
-            let drapeaux = if site.regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
-            if let Some(motif) = absurde(site.regle, valeur, drapeaux) {
+            let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
+            if let Some(motif) = absurde(regle, valeur, drapeaux) {
                 std::ptr::write_unaligned(dest as *mut u32, 0);
                 let total = compter();
                 if total <= 20 || total % 100 == 0 {
                     log(&format!(
-                        "messages : {} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)",
-                        site.nom
+                        "messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"
                     ));
                 }
             }
@@ -296,14 +346,13 @@ unsafe fn lire(i: usize, msg: *mut u8, lecteur: *mut c_void) {
         }
         liste.push(msg as usize);
         drop(liste);
-        log(&format!("messages : {} abîmé à la lecture, il ne sera pas appliqué", MESSAGES[i].nom));
+        log(&format!("messages : {} abîmé à la lecture, il ne sera pas appliqué", MESSAGES[i]));
     }
 }
 
 /// Les emplacements de joueurs de la configuration, si elle existe déjà.
 unsafe fn emplacements() -> Option<usize> {
-    let exe = EXE.load(Ordering::Relaxed);
-    let configuration = *((exe + (CONFIGURATION - BASE) as usize) as *const usize);
+    let configuration = *(CONFIGURATION.load(Ordering::Relaxed) as *const usize);
     if configuration == 0 {
         return None;
     }
@@ -321,7 +370,7 @@ unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
         position.map(|p| liste.remove(p)).is_some()
     };
     if abime {
-        log(&format!("messages : {} abîmé non appliqué, la configuration est gardée", MESSAGES[i].nom));
+        log(&format!("messages : {} abîmé non appliqué, la configuration est gardée", MESSAGES[i]));
         return;
     }
     if i == 1 {
@@ -353,13 +402,13 @@ unsafe extern "C-unwind" fn traiter_joueur(msg: *mut u8, contexte: *mut c_void) 
 
 /// Détourne lecture et traitement des messages de `MESSAGES` en remplaçant leurs entrées de vtable.
 /// Les vtables sont relogées par le chargeur avant DllMain : `verifier` les a comparées à l'exe chargé.
-unsafe fn installer_messages(exe: usize) -> Result<(), String> {
+unsafe fn installer_messages(exe: usize, table: &Exe) -> Result<(), String> {
     let detours: [[Fonction; 2]; 2] = [[lire_config, traiter_config], [lire_joueur, traiter_joueur]];
-    for (i, m) in MESSAGES.iter().enumerate() {
-        let vtable = (exe + (m.vtable - BASE) as usize) as *mut usize;
+    for (i, (adresse, _)) in table.vtables.iter().enumerate() {
+        let vtable = (exe + (adresse - BASE) as usize) as *mut usize;
         let mut old = 0u32;
         if win::VirtualProtect(vtable.add(LIRE) as *mut c_void, 16, win::PAGE_EXECUTE_READWRITE, &mut old) == 0 {
-            return Err(format!("{} : VirtualProtect a échoué", m.nom));
+            return Err(format!("{} : VirtualProtect a échoué", MESSAGES[i]));
         }
         ORIGINES[i][0].store(*vtable.add(LIRE), Ordering::Relaxed);
         ORIGINES[i][1].store(*vtable.add(TRAITER), Ordering::Relaxed);
@@ -370,40 +419,57 @@ unsafe fn installer_messages(exe: usize) -> Result<(), String> {
     Ok(())
 }
 
-/// Les octets attendus sont-ils tous là ? Sinon, la première différence.
-unsafe fn verifier(exe: usize) -> Result<(), String> {
-    let lire = |adresse: u64, n: usize| std::slice::from_raw_parts((exe + (adresse - BASE) as usize) as *const u8, n);
-    if lire(LECTURE, PROLOGUE.len()) != &PROLOGUE[..] {
-        return Err(format!("ReadSerializerField : octets inattendus en {LECTURE:#x}"));
+/// Les octets de la table sont-ils tous là, dans l'image lue par `lire(adresse, n)` ? Sinon, la
+/// première différence. `entree(adresse)` lit une entrée de vtable et la ramène à la base
+/// `0x140000000`. Commun à l'exe chargé (`verifier`) et aux fichiers (tests).
+fn empreinte<'a>(table: &Exe, lire: impl Fn(u64, usize) -> &'a [u8], entree: impl Fn(u64) -> u64) -> Result<(), String> {
+    if lire(table.lecture, PROLOGUE.len()) != PROLOGUE {
+        return Err(format!("ReadSerializerField : octets inattendus en {:#x}", table.lecture));
     }
-    for (nom, adresse, debut) in FONCTIONS {
-        if lire(*adresse, debut.len()) != &debut[..] {
+    for ((nom, debut), adresse) in FONCTIONS.iter().zip(table.fonctions) {
+        if lire(adresse, debut.len()) != debut {
             return Err(format!("{nom} : octets inattendus en {adresse:#x}"));
         }
     }
-    for s in &SITES {
-        if lire(s.retour - APPEL.len() as u64, APPEL.len()) != &APPEL[..] {
-            return Err(format!("{} : pas d'appel de lecture avant {:#x}", s.nom, s.retour));
+    for ((nom, _), retour) in SITES.iter().zip(table.retours) {
+        if lire(retour - APPEL.len() as u64, APPEL.len()) != APPEL {
+            return Err(format!("{nom} : pas d'appel de lecture avant {retour:#x}"));
         }
     }
+    let (singleton, octets_singleton) = &table.singleton;
+    let (traitement, octets_traitement) = &table.traitement_joueur;
     let empreintes: [(&str, u64, &[u8]); 2] = [
-        ("singleton de la configuration", SINGLETON.0, &SINGLETON.1),
-        ("traitement de NetPlayerInfo", TRAITEMENT_JOUEUR.0, &TRAITEMENT_JOUEUR.1),
+        ("singleton de la configuration", *singleton, octets_singleton),
+        ("traitement de NetPlayerInfo", *traitement, octets_traitement),
     ];
     for (nom, adresse, octets) in empreintes {
         if lire(adresse, octets.len()) != octets {
             return Err(format!("{nom} : octets inattendus en {adresse:#x}"));
         }
     }
-    for m in &MESSAGES {
-        let vtable = (exe + (m.vtable - BASE) as usize) as *const usize;
-        for (k, entree) in m.entrees.iter().enumerate() {
-            if *vtable.add(k) != exe + (entree - BASE) as usize {
-                return Err(format!("{} : vtable inattendue en {:#x}", m.nom, m.vtable));
+    // `mov rax,[rip+d]` de 7 octets au décalage 4 : le singleton est en fonction + 11 + d.
+    let d = i32::from_le_bytes(octets_singleton[7..11].try_into().unwrap());
+    if singleton.wrapping_add(11).wrapping_add_signed(i64::from(d)) != table.configuration {
+        return Err(format!("singleton de la configuration : ne mène pas en {:#x}", table.configuration));
+    }
+    for (nom, (vtable, entrees)) in MESSAGES.iter().zip(&table.vtables) {
+        for (k, attendue) in entrees.iter().enumerate() {
+            if entree(vtable + 8 * k as u64) != *attendue {
+                return Err(format!("{nom} : vtable inattendue en {vtable:#x}"));
             }
         }
     }
     Ok(())
+}
+
+/// La table convient-elle à l'exe chargé ? Les vtables y sont relogées par le chargeur.
+unsafe fn verifier(exe: usize, table: &Exe) -> Result<(), String> {
+    let image = |adresse: u64| exe + (adresse - BASE) as usize;
+    empreinte(
+        table,
+        |adresse, n| std::slice::from_raw_parts(image(adresse) as *const u8, n),
+        |adresse| (*(image(adresse) as *const usize)).wrapping_sub(exe) as u64 + BASE,
+    )
 }
 
 /// Pose le détour, sauf `garde_messages=off`. Appelée par DllMain : aucun code de l'exe n'a encore
@@ -429,17 +495,25 @@ pub unsafe fn install() {
         Mode::On => {}
     }
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
-    if let Err(e) = verifier(exe) {
-        log(&format!("messages : {e}, garde absente (exe DX12 du 5 novembre 2026 attendu)"));
+    let mut raisons = Vec::new();
+    let Some(table) = EXES.iter().find(|t| verifier(exe, t).map_err(|e| raisons.push(format!("{} : {e}", t.nom))).is_ok()) else {
+        log(&format!(
+            "messages : exe non reconnu ({}), garde absente (exe DX12 ou DX11 du 5 novembre 2026 attendu)",
+            raisons.join(" ; ")
+        ));
         return;
+    };
+    let image = |adresse: u64| exe + (adresse - BASE) as usize;
+    for (r, retour) in RETOURS.iter().zip(table.retours) {
+        r.store(image(retour), Ordering::Relaxed);
     }
-    EXE.store(exe, Ordering::Relaxed);
-    let at = exe + (LECTURE - BASE) as usize;
+    CONFIGURATION.store(image(table.configuration), Ordering::Relaxed);
+    let at = image(table.lecture);
     match patch::install_at("lecture de champ", at, &PROLOGUE, at + PROLOGUE.len(), bgd_messages_lecture_stub as *const () as usize) {
         Ok(t) => {
             TRAMP.store(t, Ordering::Relaxed);
-            log(&format!("messages : garde posée (lecture de champ en exe+{:#x}, {} sites)", at - exe, SITES.len()));
-            match installer_messages(exe) {
+            log(&format!("messages : garde posée ({}, lecture de champ en exe+{:#x}, {} sites)", table.nom, at - exe, SITES.len()));
+            match installer_messages(exe, table) {
                 Ok(()) => log("messages : NetGameConfig et NetPlayerInfo abîmés écartés"),
                 Err(e) => log(&format!("messages : {e}, messages de configuration non surveillés")),
             }
@@ -510,33 +584,32 @@ mod tests {
         })
     }
 
-    /// L'empreinte correspond à l'exe DX12 installé, et pas à l'exe DX11.
+    /// Le fichier de chaque exe, dans l'ordre de `EXES`.
+    const FICHIERS: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+
+    /// La table appliquée à un fichier d'exe. Dans le fichier, les vtables portent les adresses à
+    /// la base préférée (0x140000000), sans relogement.
+    fn empreinte_fichier(table: &Exe, fichier: &[u8]) -> Result<(), String> {
+        let lire = |adresse: u64, n: usize| offset(fichier, adresse).map_or(&[][..], |o| &fichier[o..][..n]);
+        empreinte(table, lire, |adresse| u64::from_le_bytes(lire(adresse, 8).try_into().unwrap_or_default()))
+    }
+
+    /// Chaque table correspond à son exe installé, et à lui seul.
     #[test]
     fn octets_dans_les_exes() {
-        let Ok(dx12) = std::fs::read(format!(r"{EXE_DIR}\CivilizationVI_DX12.exe")) else {
-            eprintln!("exe absent, test sauté");
-            return;
-        };
-        let lire = |adresse: u64, n: usize| &dx12[offset(&dx12, adresse).unwrap()..][..n];
-        assert_eq!(lire(LECTURE, PROLOGUE.len()), &PROLOGUE[..]);
-        for (nom, adresse, debut) in FONCTIONS {
-            assert_eq!(lire(*adresse, debut.len()), &debut[..], "{nom}");
-        }
-        for s in &SITES {
-            assert_eq!(lire(s.retour - APPEL.len() as u64, APPEL.len()), &APPEL[..], "{}", s.nom);
-        }
-        assert_eq!(lire(SINGLETON.0, SINGLETON.1.len()), &SINGLETON.1[..], "singleton");
-        assert_eq!(lire(TRAITEMENT_JOUEUR.0, TRAITEMENT_JOUEUR.1.len()), &TRAITEMENT_JOUEUR.1[..], "traitement de NetPlayerInfo");
-        // Dans le fichier, les vtables portent les adresses à la base préférée (0x140000000).
-        for m in &MESSAGES {
-            for (k, entree) in m.entrees.iter().enumerate() {
-                let q = u64::from_le_bytes(lire(m.vtable + 8 * k as u64, 8).try_into().unwrap());
-                assert_eq!(q, *entree, "{} : entrée {k}", m.nom);
+        for (i, nom) in FICHIERS.iter().enumerate() {
+            let Ok(fichier) = std::fs::read(format!(r"{EXE_DIR}\{nom}")) else {
+                eprintln!("{nom} absent, test sauté");
+                continue;
+            };
+            for (j, table) in EXES.iter().enumerate() {
+                let resultat = empreinte_fichier(table, &fichier);
+                if i == j {
+                    assert_eq!(resultat, Ok(()), "table {} sur {nom}", table.nom);
+                } else {
+                    assert!(resultat.is_err(), "la table {} ne doit pas passer sur {nom}", table.nom);
+                }
             }
-        }
-        if let Ok(dx11) = std::fs::read(format!(r"{EXE_DIR}\CivilizationVI.exe")) {
-            let same = offset(&dx11, LECTURE).is_some_and(|o| dx11[o..o + PROLOGUE.len()] == PROLOGUE);
-            assert!(!same, "l'exe DX11 ne doit pas passer l'empreinte avec les adresses DX12");
         }
     }
 }

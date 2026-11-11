@@ -509,12 +509,22 @@ appliqué non plus, et compte comme une correction.
   gel (0x61746143) injecté…` puis `… remplacé par 0 (1 corrections)`, la ligne `BGE - Blocked…`
   doit arriver dans le chat à l'arrivée en jeu, et la partie continue (la carte visée est vidée,
   sans effet visible). En solo, il n'y a pas de chat : le journal seulement. Remettre `on` ensuite.
-- Adresses de `CivilizationVI_DX12.exe` du 5 novembre 2026, vérifiées octet par octet (prologue de
-  la lecture, début des cinq fonctions, `call [rax+30h]` avant chaque retour, les cinq entrées des
-  deux vtables, le singleton de la configuration, le début du traitement de `NetPlayerInfo`) ; les
-  vtables et le singleton ne sont touchés que si tout correspond. Sur un autre exe
-  (DX11, autre build), rien n'est posé et le journal dit `messages : … octets inattendus …, garde
-  absente`. `cargo test` vérifie l'empreinte sur l'exe installé.
+- Adresses des deux exe du 5 novembre 2026, `CivilizationVI_DX12.exe` et `CivilizationVI.exe`
+  (DX11), une table chacun (`EXES`). L'exe chargé est vérifié octet par octet contre chaque table
+  (prologue de la lecture, début des cinq fonctions, `call [rax+30h]` avant chaque retour, les cinq
+  entrées des deux vtables, le singleton de la configuration et le déplacement qui y mène, le début
+  du traitement de `NetPlayerInfo`) ; les vtables et le singleton ne sont touchés que si tout
+  correspond. Le journal dit laquelle a été retenue : `messages : garde posée (DX11, …)`. Sur un
+  autre exe (autre build), rien n'est posé et le journal dit `messages : exe non reconnu (DX12 : …
+  ; DX11 : …), garde absente`. `cargo test` vérifie que chaque table passe sur son exe installé, et
+  seulement sur lui.
+- La table DX11 (ajoutée le 2026-11-10) : avant elle, un joueur en DX11 n'avait aucune garde, et
+  c'est lui qui a gelé puis planté à la déconnexion du 10 novembre (20 h 09) quand les joueurs en
+  DX12 ont été protégés. Le DX11 est le même code que le DX12 à d'autres adresses : chaque fonction
+  y a été retrouvée par ses premiers octets, puis comparée en entier (même taille dans la table
+  `.pdata`, mêmes octets hors déplacements relatifs d'appels et d'adressage relatif à `rip`, mêmes
+  octets autour de chaque lecture) ; les vtables sont les cinq entrées retrouvées, à la suite, dans
+  `.rdata`.
 - Les mêmes règles, posées par un hook externe pendant la mise au point, ont tourné sur deux
   parties entières de dix joueurs (57 et 105 tours, 108 000 messages reçus, des déconnexions dont
   deux départs de l'hôte avec migration) sans se déclencher à tort.
