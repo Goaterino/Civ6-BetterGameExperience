@@ -509,22 +509,21 @@ appliqué non plus, et compte comme une correction.
   gel (0x61746143) injecté…` puis `… remplacé par 0 (1 corrections)`, la ligne `BGE - Blocked…`
   doit arriver dans le chat à l'arrivée en jeu, et la partie continue (la carte visée est vidée,
   sans effet visible). En solo, il n'y a pas de chat : le journal seulement. Remettre `on` ensuite.
-- Adresses des deux exe du 5 novembre 2026, `CivilizationVI_DX12.exe` et `CivilizationVI.exe`
-  (DX11), une table chacun (`EXES`). L'exe chargé est vérifié octet par octet contre chaque table
-  (prologue de la lecture, début des cinq fonctions, `call [rax+30h]` avant chaque retour, les cinq
-  entrées des deux vtables, le singleton de la configuration et le déplacement qui y mène, le début
-  du traitement de `NetPlayerInfo`) ; les vtables et le singleton ne sont touchés que si tout
-  correspond. Le journal dit laquelle a été retenue : `messages : garde posée (DX11, …)`. Sur un
-  autre exe (autre build), rien n'est posé et le journal dit `messages : exe non reconnu (DX12 : …
-  ; DX11 : …), garde absente`. `cargo test` vérifie que chaque table passe sur son exe installé, et
-  seulement sur lui.
-- La table DX11 (ajoutée le 2026-11-10) : avant elle, un joueur en DX11 n'avait aucune garde, et
-  c'est lui qui a gelé puis planté à la déconnexion du 10 novembre (20 h 09) quand les joueurs en
-  DX12 ont été protégés. Le DX11 est le même code que le DX12 à d'autres adresses : chaque fonction
-  y a été retrouvée par ses premiers octets, puis comparée en entier (même taille dans la table
-  `.pdata`, mêmes octets hors déplacements relatifs d'appels et d'adressage relatif à `rip`, mêmes
-  octets autour de chaque lecture) ; les vtables sont les cinq entrées retrouvées, à la suite, dans
-  `.rdata`.
+- Addresses of both exes of 2026-11-05, `CivilizationVI_DX12.exe` and `CivilizationVI.exe` (DX11),
+  one table each (`EXES`). The loaded exe is checked byte by byte against each table (prologue of
+  the read, start of the five functions, `call [rax+30h]` before each return, the five entries of
+  both vtables, the configuration singleton and the displacement leading to it, the start of the
+  `NetPlayerInfo` handler); the vtables and the singleton are touched only if everything matches.
+  The log says which table was used: `messages: guard installed (DX11, …)`. On another exe (another
+  build), nothing is installed and the log says `messages: unknown exe (DX12: …; DX11: …), guard
+  not installed`. `cargo test` checks that each table matches its own installed exe, and only that
+  one.
+- The DX11 table (added on 2026-11-10): before it, a player on DX11 had no guard, and that player
+  froze, then crashed, at the disconnection of 2026-11-10 (20:09), while the players on DX12 were
+  protected. DX11 is the same code as DX12 at other addresses: each function was found there by its
+  first bytes, then compared in full (same size in the `.pdata` table, same bytes except the
+  relative displacements of calls and `rip`-relative addressing, same bytes around each read); the
+  vtables are the five entries found one after the other in `.rdata`.
 - Les mêmes règles, posées par un hook externe pendant la mise au point, ont tourné sur deux
   parties entières de dix joueurs (57 et 105 tours, 108 000 messages reçus, des déconnexions dont
   deux départs de l'hôte avec migration) sans se déclencher à tort.
