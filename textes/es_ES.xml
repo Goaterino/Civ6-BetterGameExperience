@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="es_ES">
 			<Text>Señales de equipo (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="es_ES">
+			<Text>Rueda de señales de equipo</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="es_ES">
 			<Text>Mantén X sobre el mapa y suelta en la dirección de la señal. Los aliados y espectadores la reciben si todos usan la misma versión de sala de BGE.</Text>
 		</Row>

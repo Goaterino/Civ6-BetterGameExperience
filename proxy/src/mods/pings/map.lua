@@ -5,10 +5,27 @@ include("SupportFunctions")
 
 local lifetime, failureDuration = 4, 0.45
 local markers = InstanceManager:new("BGD_PingMarker", "Anchor", Controls.Markers)
-local active, limits, shortcuts = {}, {}, {}
+local active, limits = {}, {}
 local wheel, failureStart, mouseX, mouseY
 local held = {}
 local center
+
+if pingSkin then
+    Controls.NativeWheel:SetHide(true)
+    Controls.SkinWheel:SetTexture(pingSkin.wheel)
+    Controls.SkinWheel:SetSizeVal(216, 216)
+    Controls.SkinWheel:SetHide(false)
+    Controls.Focus:SetTexture(pingSkin.focus)
+    Controls.Focus:SetSizeVal(68, 68)
+    Controls.FailedCross:SetHide(true)
+    Controls.FailedSlash:SetTexture(pingSkin.denied)
+    Controls.FailedSlash:SetSizeVal(64, 64)
+    Controls.FailedSlash:SetHide(false)
+    Controls.BlockedCross:SetHide(true)
+    Controls.BlockedSlash:SetTexture(pingSkin.denied)
+    Controls.BlockedSlash:SetSizeVal(44, 44)
+    Controls.BlockedSlash:SetHide(false)
+end
 
 local function setIcon(glyph, image, call)
     glyph:SetHide(call.texture ~= nil)
@@ -34,7 +51,8 @@ for _, call in ipairs(calls) do
     ContextPtr:BuildInstanceForControl("BGD_PingChoice", choice, Controls.Choices)
     choice.Root:SetOffsetVal(call.dx, call.dy)
     setIcon(choice.Glyph, choice.Icon, call)
-    if call.shortcut then shortcuts[48 + call.shortcut] = call end
+    local size = call.angle and 54 or 31
+    choice.Icon:SetSizeVal(size, size)
 end
 
 local function closeWheel()
@@ -63,6 +81,7 @@ local function highlight(call)
     local blocked = coolingDown(limits, Network.GetLocalPlayerID(), call.id, UI.GetElapsedTime())
     if wheel.highlight == call and wheel.blocked == blocked then return end
     wheel.highlight, wheel.blocked = call, blocked
+    Controls.Focus:SetHide(call == center)
     Controls.Focus:SetOffsetVal(call.dx, call.dy)
     Controls.Focus:SetColor(call.tint)
     Controls.BlockedChoice:SetOffsetVal(call.dx, call.dy)
@@ -99,8 +118,8 @@ local function animate()
             ripple(art.Echo, age-0.24)
             local drop = math.max(0, 1-age/0.18)
             local spring = math.sin(math.max(0,age-0.18)*21) * math.exp(-math.max(0,age-0.18)*8)
-            local size = 54 + 20*drop + 5*spring
-            art.Badge:SetSizeVal(size, size)
+            local size = 76 + 27*drop + 7*spring
+            art.Icon:SetSizeVal(size, size)
             art.Badge:SetOffsetY(-28 - 31*drop*drop + 4*spring)
             art.Art:SetAlpha(math.min(1, (lifetime-age)/0.62))
         end
@@ -131,6 +150,7 @@ local function showFailure(call, x, y, now)
     local worldX, worldY, worldZ = UI.GridToWorld(x, y)
     Controls.FailedAnchor:SetWorldPositionVal(worldX, worldY, worldZ)
     setIcon(Controls.FailedGlyph, Controls.FailedIcon, call)
+    Controls.FailedIcon:SetSizeVal(60, 60)
     Controls.FailedArt:SetOffsetVal(0, -28)
     Controls.FailedArt:SetAlpha(1)
     Controls.FailedAnchor:SetHide(false)
@@ -155,6 +175,12 @@ local function showPing(sender, call, x, y)
     local art = markers:GetInstance()
     local worldX, worldY, worldZ = UI.GridToWorld(x, y)
     art.Anchor:SetWorldPositionVal(worldX, worldY, worldZ)
+    if pingSkin then
+        art.Wave:SetTexture(pingSkin.ripple)
+        art.Echo:SetTexture(pingSkin.ripple)
+        art.Foot:SetTexture(pingSkin.ripple)
+        art.Foot:SetSizeVal(35, 17)
+    end
     art.Wave:SetColor(call.tint)
     art.Echo:SetColor(call.tint)
     art.Foot:SetColor(call.tint)
@@ -191,8 +217,87 @@ local function plotAt(x, y)
     if plot then return plot:GetIndex() end
 end
 
--- Read the ordered mouse/key message stream for both ends of this stroke. Poll only
--- for the first position, before the context has seen a mouse-move event.
+-- For keyboard bindings use the ordered raw mouse/key stream, including after a
+-- rebind. v9 actions can also have mouse/controller gestures, dispatched by Civ.
+local raw, mapped = {}, {}
+local keyNames
+local function normalized(s)
+    return (s:gsub("%s+", ""):lower())
+end
+local function fromDisplay(display)
+    if not keyNames then
+        keyNames = {}
+        for key=1,255 do keyNames[normalized(chordText(key))] = key end
+    end
+    local name = normalized(display)
+    local mask = 0
+    while true do
+        local first, rest = name:match("^([^+]+)%+(.+)$")
+        if not first then break end
+        if first==normalized(Locale.Lookup("LOC_OPTIONS_KEY_CONTROL")) then mask=mask+512
+        elseif first==normalized(Locale.Lookup("LOC_OPTIONS_KEY_ALT")) then mask=mask+256
+        elseif first==normalized(Locale.Lookup("LOC_OPTIONS_KEY_SHIFT")) then mask=mask+1024
+        else return nil end
+        name=rest
+    end
+    return keyNames[name] and keyNames[name]+mask
+end
+local function refreshBindings()
+    raw,mapped = {},{}
+    local native = nativeActions()
+    for _, binding in ipairs(pingBindings) do
+        local id = native[binding]
+        local chords, useMapped = {},false
+        for slot=0,1 do
+            if id then
+                local display=Input.GetGestureDisplayString(id,slot)
+                if display and display~="" then
+                    local chord=fromDisplay(display)
+                    if chord then chords[#chords+1]=chord else useMapped=true end
+                end
+            else
+                local chord=localChord(binding,slot)
+                if chord~=0 then chords[#chords+1]=chord end
+            end
+        end
+        if useMapped then mapped[id]=binding
+        else for _, chord in ipairs(chords) do raw[chord]=binding end end
+    end
+end
+
+local function startBinding(binding, owner, x, y)
+    if held[owner] then return true end
+    if Input.GetActiveContext() ~= InputContext.World or not UIManager:GetMouseOverWorld() then return false end
+    local seat = PlayerConfigurations[Network.GetLocalPlayerID()]
+    if not seat or observer(seat) then return false end
+    local plot = plotAt(x,y)
+    if not plot then return false end
+    held[owner] = true
+    if binding.call then
+        sendPing(binding.call, plot)
+    elseif not wheel then
+        local w,h = UIManager:GetScreenSizeVal()
+        local left,top = math.max(0,math.min(x-108,w-216)), math.max(0,math.min(y-108,h-240))
+        wheel = {owner=owner,x=x,y=y,cursorX=x,cursorY=y,centerX=left+108,centerY=top+108,plot=plot,time=UI.GetElapsedTime()}
+        Controls.Wheel:SetOffsetVal(left,top)
+        Controls.Wheel:SetHide(false)
+        highlight(center)
+        wake()
+    end
+    return true
+end
+
+local function finishBinding(owner)
+    if not held[owner] then return false end
+    held[owner] = nil
+    if wheel and wheel.owner==owner then
+        local gesture = wheel
+        closeWheel()
+        if Input.GetActiveContext()==InputContext.World then sendPing(selection(gesture),gesture.plot) end
+    end
+    return true
+end
+
 local function onInput(input)
     local message = input:GetMessageType()
     if message == MouseEvents.MouseMove then
@@ -204,42 +309,23 @@ local function onInput(input)
         closeWheel()
         return true
     end
-    if message ~= KeyEvents.KeyDown and message ~= KeyEvents.KeyUp then return false end
-    local key = input:GetKey()
-    if message == KeyEvents.KeyUp then
-        if not held[key] then return false end
-        held[key] = nil
-        if key == Keys.X and wheel then
-            local gesture = wheel
-            closeWheel()
-            if Input.GetActiveContext() == InputContext.World then sendPing(selection(gesture), gesture.plot) end
-        end
-        return true
-    end
-    if held[key] then return true end
-    local direct = input:IsAltDown() and shortcuts[key]
-    if not direct and (key ~= Keys.X or input:IsAltDown()) then return false end
-    if input:IsControlDown() or input:IsShiftDown() or Input.GetActiveContext() ~= InputContext.World
-        or not UIManager:GetMouseOverWorld() then return false end
-    local seat = PlayerConfigurations[Network.GetLocalPlayerID()]
-    if not seat or observer(seat) then return false end
+    if message == KeyEvents.KeyUp then return finishBinding(input:GetKey()) end
+    if message ~= KeyEvents.KeyDown then return false end
+    if held[input:GetKey()] then return true end
+    local binding = raw[keyboardChord(input)]
+    if not binding then return false end
     local x,y = mouseX,mouseY
     if x == nil then x,y = UIManager:GetMousePos() end
-    local plot = plotAt(x,y)
-    if not plot then return false end
-    held[key] = true
-    if direct then
-        sendPing(direct, plot)
-    else
-        local w,h = UIManager:GetScreenSizeVal()
-        local left,top = math.max(0,math.min(x-108,w-216)), math.max(0,math.min(y-108,h-240))
-        wheel = {x=x,y=y,cursorX=x,cursorY=y,centerX=left+108,centerY=top+108,plot=plot,time=UI.GetElapsedTime()}
-        Controls.Wheel:SetOffsetVal(left,top)
-        Controls.Wheel:SetHide(false)
-        highlight(center)
-        wake()
-    end
-    return true
+    return startBinding(binding,input:GetKey(),x,y)
+end
+
+local function onActionStarted(id)
+    local binding = mapped[id]
+    if binding then startBinding(binding,binding,UIManager:GetMousePos()) end
+end
+local function onActionFinished(id)
+    local binding = mapped[id]
+    if binding then finishBinding(binding) end
 end
 
 local function onChat(sender, recipient, text, channel)
@@ -307,6 +393,10 @@ Controls.BGD_PingVolume:RegisterSliderCallback(function(value)
         play(center)
     end
 end)
+refreshBindings()
+LuaEvents.BGD_PingBindingsChanged.Add(refreshBindings)
+Events.InputActionStarted.Add(onActionStarted)
+Events.InputActionFinished.Add(onActionFinished)
 Events.LoadGameViewStateDone.Add(onReady)
 Events.LoadScreenClose.Add(onReady)
 Events.MultiplayerChat.Add(onChat)
@@ -315,6 +405,9 @@ LuaEvents.BGD_PingVolumeChanged.Add(refreshVolume)
 ContextPtr:SetInputHandler(onInput,true)
 ContextPtr:SetAppLostFocusHandler(resetInput)
 ContextPtr:SetShutdown(function()
+    LuaEvents.BGD_PingBindingsChanged.Remove(refreshBindings)
+    Events.InputActionStarted.Remove(onActionStarted)
+    Events.InputActionFinished.Remove(onActionFinished)
     Events.LoadGameViewStateDone.Remove(onReady)
     Events.LoadScreenClose.Remove(onReady)
     Events.MultiplayerChat.Remove(onChat)

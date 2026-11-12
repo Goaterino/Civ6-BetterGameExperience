@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="it_IT">
 			<Text>Segnali di squadra (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="it_IT">
+			<Text>Ruota dei segnali di squadra</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="it_IT">
 			<Text>Tieni premuto X sulla mappa e rilascia nella direzione del segnale. Alleati e spettatori lo ricevono se tutti hanno la stessa versione della lobby BGE.</Text>
 		</Row>

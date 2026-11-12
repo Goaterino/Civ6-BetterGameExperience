@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="zh_Hans_CN">
 			<Text>队伍信号（BGE）</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="zh_Hans_CN">
+			<Text>队伍信号轮盘</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="zh_Hans_CN">
 			<Text>在地图上按住 X，朝所需信号的方向移动鼠标后松开。所有人的 BGE 大厅版本相同时，队友和观战者都能收到信号。</Text>
 		</Row>

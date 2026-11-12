@@ -69,7 +69,7 @@ le décocher dans les options de partie. Tous les joueurs et observateurs connec
 même version de salon BGE. Appuyez sur **X** pour marquer une case, ou maintenez **X**, déplacez la
 souris et relâchez. En haut indique un danger, à droite « J’arrive », en bas un appel à l’aide et
 à gauche un ennemi disparu. Les alliés voient le signal et le nom pendant quatre secondes.
-Les observateurs voient les deux équipes. Le volume se règle dans **Audio**. Dans le chat,
+Les raccourcis se modifient dans **Options → Raccourcis clavier**. Les observateurs voient les deux équipes. Le volume se règle dans **Audio**. Dans le chat,
 `/mute nom` et `/unmute nom` contrôlent les messages et les signaux de ce joueur.
 
 ## Réglages
