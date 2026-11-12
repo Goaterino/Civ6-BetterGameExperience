@@ -1,164 +1,161 @@
-# Sonde Steam : obtenir le lien du salon depuis le proxy
+# Steam probe: getting the lobby link from the proxy
 
-Le flux de [hook_externe.md](hook_externe.md) a besoin, à son étape 3, du lien
-`steam://joinlobby/289070/<lobbyId>/<steamId64>` du salon que l'hôte vient de créer, pour l'envoyer
-à la `feedback_url` du site. L'API Steamworks n'a aucun appel « dans quel salon suis-je ? » : il
-faut trancher, en conditions réelles, laquelle des voies de
-[Le lien de salon Steam](hook_externe.md#le-lien-de-salon-steam--lapi-steamworks-sans-désassemblage)
-marche avec le `steam_api64.dll` livré par le jeu.
+The flow of [hook_externe.md](hook_externe.md) needs, at its step 3, the
+`steam://joinlobby/289070/<lobbyId>/<steamId64>` link of the lobby the host has just created, to
+send it to the site's `feedback_url`. The Steamworks API has no "which lobby am I in?" call: we have
+to settle, in real conditions, which of the ways in
+[The Steam lobby link](hook_externe.md#the-steam-lobby-link-the-steamworks-api-no-disassembly)
+works with the `steam_api64.dll` shipped with the game.
 
-Conception du 2026-11-12. **Rien n'est écrit** : la sonde sera montée et lancée depuis une machine
-Windows avec le jeu et Steam (la machine de développement n'a ni l'exe, ni `steam_api64.dll`).
+Design of 2026-11-12. **Nothing is written**: the probe will be built and run from a Windows machine
+with the game and Steam (the development machine has neither the exe nor `steam_api64.dll`).
 
-## Ce qu'on veut savoir
+## What we want to know
 
-1. Quels exports `steam_api64.dll` expose : l'API plate récente, l'ancienne, les deux, aucune.
-2. Quelles chaînes de version d'interface répondent (`SteamFriends0xx`, `SteamUser0xx`,
+1. Which exports `steam_api64.dll` exposes: the recent flat API, the old one, both, none.
+2. Which interface version strings answer (`SteamFriends0xx`, `SteamUser0xx`,
    `SteamMatchmaking0xx`).
-3. Si `GetFriendGamePlayed` sur **son propre** Steam ID rend le salon (`m_steamIDLobby`), et à
-   partir de quand après l'hébergement.
-4. Si ce salon est bien le nôtre : `GetLobbyOwner` rend notre Steam ID, et un ami rejoint avec le
-   lien reconstruit.
-5. Si la table Lua `Network` a un accesseur au salon qui nous aurait échappé.
+3. Whether `GetFriendGamePlayed` on **our own** Steam ID returns the lobby (`m_steamIDLobby`), and
+   how long after hosting.
+4. Whether that lobby is really ours: `GetLobbyOwner` returns our Steam ID, and a friend joins with
+   the rebuilt link.
+5. Whether the Lua `Network` table has an accessor to the lobby that we missed.
 
-Une seule séance de test doit répondre aux cinq questions.
+A single test session must answer all five questions.
 
-## Où elle vit
+## Where it lives
 
-- **Un module `startup_proxy/src/steam.rs`.** La même logique servira ensuite à la vraie fonction
-  (le lien envoyé à `feedback_url`) : seule la partie journalisation sera retirée.
-- **Une native `Civ6Proxy_SondeSteam()`**, enregistrée avec les autres natives du salon
-  ([salon.rs](../../startup_proxy/src/salon.rs)). Elle fait tous les appels, journalise, et rend le
-  lien reconstruit, ou nil.
-- **Le déclencheur, dans le bloc ajouté à `stagingroom.lua`**
-  ([salon.lua](../../startup_proxy/src/salon.lua)) :
-  - sur `LuaEvents.HostGame_ShowStagingRoom` (l'hôte), déjà écouté par `BGD_Ouverture` ;
-  - sur `LuaEvents.JoiningRoom_ShowStagingRoom` (un client) : la même lecture côté client dira si un
-    joueur qui rejoint voit le même salon, utile plus tard à `rejoindre_salon` ;
-  - puis **de nouveau à 2, 5, 10 et 30 secondes**. La présence de jeu que lit
-    `GetFriendGamePlayed` peut être mise à jour par Steam avec retard : la première lecture
-    seule ne suffit pas à conclure. Le minuteur passe par le `SetUpdate` du contexte, enchaîné avec
-    celui qui existe éventuellement déjà.
-- **Activée par une clé de `rollover_proxy.cfg`** : `sonde_steam = true`, absente par défaut. C'est un
-  outil de diagnostic temporaire, pas une fonction pour les joueurs : il n'a pas sa place dans
-  l'onglet, et disparaît une fois la question tranchée.
-- **Livrée en pré-release** (canal pré-release de l'installeur), sans changement de version du POL.
+- **A `startup_proxy/src/steam.rs` module.** The same logic will then serve the real feature (the
+  link sent to `feedback_url`): only the logging part will be removed.
+- **A native `Civ6Proxy_SondeSteam()`**, registered with the other lobby natives
+  ([salon.rs](../../startup_proxy/src/salon.rs)). It makes all the calls, logs, and returns the
+  rebuilt link, or nil.
+- **The trigger, in the block added to `stagingroom.lua`**
+  ([salon.lua](../../startup_proxy/src/salon.lua)):
+  - on `LuaEvents.HostGame_ShowStagingRoom` (the host), already listened to by `BGD_Ouverture`;
+  - on `LuaEvents.JoiningRoom_ShowStagingRoom` (a client): the same reading on the client side will
+    tell whether a joining player sees the same lobby, useful later for `rejoindre_salon`;
+  - then **again at 2, 5, 10 and 30 seconds**. The game presence that `GetFriendGamePlayed` reads may
+    be updated by Steam with a delay: the first reading alone is not enough to conclude. The timer
+    goes through the context's `SetUpdate`, chained with any one that already exists.
+- **Enabled by a `rollover_proxy.cfg` key**: `sonde_steam = true`, absent by default. It is a
+  temporary diagnostic tool, not a feature for players: it does not belong in the tab, and goes away
+  once the question is settled.
+- **Shipped in a pre-release** (the installer's pre-release channel), with no POL version change.
 
-## Les appels, dans l'ordre
+## The calls, in order
 
-Tous sur le fil du Lua (celui qui appelle la native), celui du jeu : l'API Steam n'est pas sûre
-d'un autre fil.
+All on the Lua thread (the one calling the native), which is the game's: the Steam API is not safe
+from another thread.
 
-### 1. Le module
+### 1. The module
 
-`GetModuleHandleW("steam_api64.dll")`, **jamais** `LoadLibrary` : on ne charge pas une DLL que le jeu
-n'aurait pas chargée. Nul : journaliser « steam_api64 absent », et rendre nil.
+`GetModuleHandleW("steam_api64.dll")`, **never** `LoadLibrary`: we do not load a DLL the game would
+not have loaded. Null: log "steam_api64 missing", and return nil.
 
-### 2. Les exports
+### 2. The exports
 
-Parcourir la table d'exports du module (en-têtes PE, déjà lus ailleurs par le proxy), et journaliser
-chaque nom qui contient `SteamFriends`, `SteamUser`, `SteamMatchmaking`, `GetHSteamUser`,
-`FindOrCreate` ou `RegisterCallback`. La liste complète tranche la question 1 d'un coup, même si les
-essais qui suivent échouent.
+Walk the module's export table (PE headers, already read elsewhere by the proxy), and log every name
+that contains `SteamFriends`, `SteamUser`, `SteamMatchmaking`, `GetHSteamUser`, `FindOrCreate` or
+`RegisterCallback`. The full list settles question 1 at once, even if the attempts that follow fail.
 
-### 3. Les interfaces
+### 3. The interfaces
 
-Trois façons de les obtenir, essayées dans cet ordre, en journalisant celle qui répond :
+Three ways to get them, tried in this order, logging the one that answers:
 
-| voie | exports | SDK |
+| way | exports | SDK |
 |---|---|---|
-| accesseurs plats versionnés | `SteamAPI_SteamFriends_v017()`, `SteamAPI_SteamUser_v023()`, `SteamAPI_SteamMatchmaking_v009()` | 1.48 et après |
-| interface par son nom | `SteamAPI_GetHSteamUser()`, puis `SteamInternal_FindOrCreateUserInterface(h, "SteamFriends017")` ; versions 017 à 015, `SteamUser023` à 019, `SteamMatchmaking009` à 008 | 1.37 et après |
-| accesseurs anciens | `SteamFriends()`, `SteamUser()`, `SteamMatchmaking()` | avant 1.37 |
+| versioned flat accessors | `SteamAPI_SteamFriends_v017()`, `SteamAPI_SteamUser_v023()`, `SteamAPI_SteamMatchmaking_v009()` | 1.48 and later |
+| interface by name | `SteamAPI_GetHSteamUser()`, then `SteamInternal_FindOrCreateUserInterface(h, "SteamFriends017")`; versions 017 to 015, `SteamUser023` to 019, `SteamMatchmaking009` to 008 | 1.37 and later |
+| old accessors | `SteamFriends()`, `SteamUser()`, `SteamMatchmaking()` | before 1.37 |
 
-Les numéros de version sont ceux du SDK public. La liste des exports (étape 2) donne les bons si
-aucun ne répond.
+The version numbers are those of the public SDK. The export list (step 2) gives the right ones if
+none answers.
 
-### 4. Les appels plats
+### 4. The flat calls
 
-| appel | signature (x64, `uint64` pour un `CSteamID`) | ce qu'on journalise |
+| call | signature (x64, `uint64` for a `CSteamID`) | what we log |
 |---|---|---|
-| `SteamAPI_ISteamUser_GetSteamID` | `(user) -> uint64` | notre Steam ID |
-| `SteamAPI_ISteamFriends_GetFriendGamePlayed` | `(friends, uint64 id, FriendGameInfo_t*) -> bool` | la valeur rendue, les 24 octets en hexadécimal, puis chaque champ |
-| `SteamAPI_ISteamMatchmaking_GetLobbyOwner` | `(mm, uint64 lobby) -> uint64` | le propriétaire du salon lu |
-| `SteamAPI_ISteamMatchmaking_GetNumLobbyMembers` | `(mm, uint64 lobby) -> int` | le nombre de membres |
+| `SteamAPI_ISteamUser_GetSteamID` | `(user) -> uint64` | our Steam ID |
+| `SteamAPI_ISteamFriends_GetFriendGamePlayed` | `(friends, uint64 id, FriendGameInfo_t*) -> bool` | the return value, the 24 bytes in hex, then each field |
+| `SteamAPI_ISteamMatchmaking_GetLobbyOwner` | `(mm, uint64 lobby) -> uint64` | the owner of the lobby read |
+| `SteamAPI_ISteamMatchmaking_GetNumLobbyMembers` | `(mm, uint64 lobby) -> int` | the number of members |
 
-`FriendGameInfo_t`, 24 octets :
+`FriendGameInfo_t`, 24 bytes:
 
-| offset | champ | taille | contrôle |
+| offset | field | size | check |
 |---|---|---|---|
-| 0 | `m_gameID` | 8 | les 24 bits bas valent **289070** : preuve que la structure est bien lue |
+| 0 | `m_gameID` | 8 | the low 24 bits are **289070**: proof that the structure is read correctly |
 | 8 | `m_unGameIP` | 4 | |
 | 12 | `m_usGamePort` | 2 | |
 | 14 | `m_usQueryPort` | 2 | |
-| 16 | `m_steamIDLobby` | 8 | non nul, et différent de notre Steam ID |
+| 16 | `m_steamIDLobby` | 8 | non-zero, and different from our Steam ID |
 
-La structure est passée remplie de zéros : un appel qui rend `true` sans rien écrire se voit.
+The structure is passed filled with zeros: a call that returns `true` without writing anything shows.
 
-**Le contrôle sans second joueur** : sur l'hôte, `GetLobbyOwner(m_steamIDLobby)` doit rendre notre
-Steam ID, et `GetNumLobbyMembers` au moins 1. Les deux ensemble disent que l'identifiant lu est un
-salon où l'on est, et qu'on en est l'hôte. C'est presque une preuve à soi seul ; l'ami qui rejoint
-(protocole, étape 2) la complète.
+**The check with no second player**: on the host, `GetLobbyOwner(m_steamIDLobby)` must return our
+Steam ID, and `GetNumLobbyMembers` at least 1. Together, the two say that the identifier read is a
+lobby we are in, and that we are its host. That is almost proof on its own; the friend who joins
+(protocol, test 2) completes it.
 
-### 5. Côté Lua
+### 5. On the Lua side
 
-Dans le même déclencheur :
-- `PlayerConfigurations[Network.GetLocalPlayerID()]:GetNetworkIdentifer()`, comparé au Steam ID de
-  l'étape 4 : s'ils diffèrent, on ne lit pas la bonne interface ;
-- les noms des fonctions de la table `Network` (`for k, v in pairs(Network)`), triés : l'exe en
-  enregistre 85, et un accesseur au salon nous a peut-être échappé.
+In the same trigger:
+- `PlayerConfigurations[Network.GetLocalPlayerID()]:GetNetworkIdentifer()`, compared with the Steam
+  ID from step 4: if they differ, we are not reading the right interface;
+- the names of the functions in the `Network` table (`for k, v in pairs(Network)`), sorted: the exe
+  registers 85 of them, and we may have missed an accessor to the lobby.
 
-### 6. Le lien
+### 6. The link
 
-`steam://joinlobby/289070/<m_steamIDLobby>/<notre Steam ID>`, journalisé en entier.
+`steam://joinlobby/289070/<m_steamIDLobby>/<our Steam ID>`, logged in full.
 
-## Sûreté
+## Safety
 
-- `panic = "abort"` : aucun `unwrap`, aucun indexage qui puisse paniquer. Chaque pointeur rendu par
-  Steam est testé avant usage.
-- On ne passe jamais une interface à une fonction plate tant que son pointeur n'est pas non nul.
-- Aucune écriture, aucun rappel enregistré, aucun détournement dans l'exe : la sonde ne fait que lire.
-- Le journal ne contient que des identifiants que le lien du salon contient déjà : notre Steam ID et
-  le salon. Pas de liste d'amis, pas de nom de compte.
+- `panic = "abort"`: no `unwrap`, no indexing that could panic. Every pointer returned by Steam is
+  tested before use.
+- An interface is never passed to a flat function while its pointer is null.
+- No writes, no callback registered, no hook in the exe: the probe only reads.
+- The log only contains identifiers that the lobby link already contains: our Steam ID and the
+  lobby. No friends list, no account name.
 
-## Journal attendu
+## Expected log
 
-Dans `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, préfixe `sonde steam :` :
+In `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, with the `sonde steam :` prefix:
 
 ```
-sonde steam : t=0s hôte, exe CivilizationVI_DX12.exe
+sonde steam : t=0s host, exe CivilizationVI_DX12.exe
 sonde steam : exports SteamAPI_GetHSteamUser, SteamInternal_FindOrCreateUserInterface, SteamAPI_ISteamFriends_GetFriendGamePlayed, …
-sonde steam : interfaces par FindOrCreate : SteamFriends017, SteamUser021, SteamMatchmaking009
-sonde steam : GetSteamID 76561198000000001 ; GetNetworkIdentifer 76561198000000001 (identiques)
-sonde steam : GetFriendGamePlayed(soi) true, octets 2e6904…, appid 289070, lobby 109775241000000000
-sonde steam : GetLobbyOwner 76561198000000001 (nous), 1 membre
-sonde steam : lien steam://joinlobby/289070/109775241000000000/76561198000000001
+sonde steam : interfaces through FindOrCreate: SteamFriends017, SteamUser021, SteamMatchmaking009
+sonde steam : GetSteamID 76561198000000001 ; GetNetworkIdentifer 76561198000000001 (identical)
+sonde steam : GetFriendGamePlayed(self) true, bytes 2e6904…, appid 289070, lobby 109775241000000000
+sonde steam : GetLobbyOwner 76561198000000001 (us), 1 member
+sonde steam : link steam://joinlobby/289070/109775241000000000/76561198000000001
 sonde steam : Network = BroadcastGameConfig, BroadcastPlayerInfo, …
 ```
 
-## Protocole de test
+## Test protocol
 
-| essai | qui | ce qu'il valide |
+| test | who | what it validates |
 |---|---|---|
-| 1 | l'hôte seul : `sonde_steam = true`, héberger un salon Internet depuis le menu, attendre 30 s | questions 1, 2, 3 et la moitié de 4 (`GetLobbyOwner`) ; question 5 |
-| 2 | un ami, sans BGE : clic sur le lien journalisé à l'essai 1 | la seconde moitié de 4 : il arrive dans **ce** salon |
-| 3 | l'ami, avec BGE et la sonde : rejoindre normalement | le client lit-il le même salon ? |
-| 4 | essai 1 avec l'autre exe (DX11 et DX12) | même DLL Steam, mêmes résultats |
-| 5 | essai 1 en salon privé, puis visible par les amis | la présence de jeu, donc `GetFriendGamePlayed`, dépend-elle de la visibilité ? |
-| 6 | essai 1 puis migration d'hôte (l'hôte quitte) | le nouvel hôte lit-il le même salon ? |
+| 1 | the host alone: `sonde_steam = true`, host an Internet lobby from the menu, wait 30 s | questions 1, 2, 3 and half of 4 (`GetLobbyOwner`); question 5 |
+| 2 | a friend, without BGE: click on the link logged in test 1 | the second half of 4: they land in **this** lobby |
+| 3 | the friend, with BGE and the probe: join normally | does the client read the same lobby? |
+| 4 | test 1 with the other exe (DX11 and DX12) | same Steam DLL, same results |
+| 5 | test 1 in a private lobby, then friends-only | does the game presence, and so `GetFriendGamePlayed`, depend on visibility? |
+| 6 | test 1 then host migration (the host leaves) | does the new host read the same lobby? |
 
-Récupérer le journal par le bouton de rapport de bug du menu Échap, ou directement dans le dossier
-ci-dessus.
+Get the log through the bug report button in the Escape menu, or directly from the folder above.
 
-## Ce qu'on fait des résultats
+## What to do with the results
 
-| résultat | suite |
+| result | next step |
 |---|---|
-| lobby non nul, appid 289070, `GetLobbyOwner` = nous, l'ami arrive | **voie 1 validée** : `steam.rs` devient la fonction du lien, sans la journalisation. Noter le délai observé avant la première lecture valable |
-| `true` mais lobby nul, ou valable seulement après un délai variable | garder la voie 1 avec relectures, plafonnées (30 s), et préparer la voie 2 en repli |
-| `false`, ou un lobby qui n'est pas le nôtre | **voie 2** : s'abonner à `LobbyCreated_t` / `LobbyEnter_t` par `SteamAPI_RegisterCallback`. Une seconde sonde, sur le même modèle |
-| aucune interface obtenue | lire la liste des exports, corriger les noms ou versions, recommencer |
-| lien valable selon la sonde, mais l'ami n'arrive pas | le format `steam://joinlobby` en cause, pas la lecture : comparer avec le lien que Steam donne lui-même (clic droit sur l'hôte dans la liste d'amis, « Rejoindre la partie ») |
+| non-zero lobby, appid 289070, `GetLobbyOwner` = us, the friend lands in it | **way 1 validated**: `steam.rs` becomes the link feature, without the logging. Note the delay observed before the first valid reading |
+| `true` but zero lobby, or valid only after a variable delay | keep way 1 with re-reads, capped (30 s), and prepare way 2 as a fallback |
+| `false`, or a lobby that is not ours | **way 2**: subscribe to `LobbyCreated_t` / `LobbyEnter_t` through `SteamAPI_RegisterCallback`. A second probe, on the same model |
+| no interface obtained | read the export list, fix the names or versions, try again |
+| link valid according to the probe, but the friend does not land in it | the `steam://joinlobby` format is at fault, not the reading: compare with the link Steam itself gives (right-click on the host in the friends list, "Join game") |
 
-La voie 3 (`lobbysteamid` de la Web API) se teste à part, sans le jeu : un `curl` sur
-`GetPlayerSummaries` avec une clé Web API, pendant l'essai 1. Elle ne servirait qu'au site, en repli.
+Way 3 (the Web API's `lobbysteamid`) is tested separately, without the game: a `curl` on
+`GetPlayerSummaries` with a Web API key, during test 1. It would only serve the site, as a fallback.

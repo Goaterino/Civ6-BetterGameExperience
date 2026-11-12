@@ -1,153 +1,149 @@
-# Hook externe : créer et rejoindre un salon depuis un site de draft
+# External hook: creating and joining a lobby from a draft site
 
-Suite de [l'analyse du salon](README.md#pistes-pour-automatiser-la-création), qui établit que la
-création et le réglage d'un salon se font entièrement par l'API Lua du front-end, côté hôte. Reste à
-choisir **par où l'ordre arrive de l'extérieur**, et **comment le jeu le reçoit**.
+Follows [the lobby analysis](README.md#pistes-pour-automatiser-la-création), which establishes that
+creating and configuring a lobby is done entirely through the front-end Lua API, on the host side.
+What remains is to choose **how the order arrives from outside**, and **how the game receives it**.
 
-Conception du 2026-11-04 (première cible : [CivUp](https://github.com/Rettend/civup), bot de draft
-et activité Discord), révisée le 2026-11-12 pour n'importe quel site de draft. Rien n'est
-implémenté.
+Design of 2026-11-04 (first target: [CivUp](https://github.com/Rettend/civup), a draft bot and
+Discord activity), revised on 2026-11-12 for any draft site. Nothing is implemented.
 
-## Le flux visé
+## The intended flow
 
-1. Les joueurs font le draft sur le site.
-2. Draft terminé, l'un d'eux clique « Héberger la partie » : le site ouvre
-   `civ6bge://creation_salon?data=…`, et son jeu crée le salon réglé.
-3. Le proxy de ce joueur renvoie au site le lien `steam://joinlobby/...` du salon (`feedback_url`).
-4. Les autres cliquent « Rejoindre » : le site ouvre `civ6bge://rejoindre_salon?steamurl=…`, et leur
-   jeu, s'il est ouvert, rejoint le salon.
+1. The players run the draft on the site.
+2. Once the draft is over, one of them clicks "Host the game": the site opens
+   `civ6bge://creation_salon?data=…`, and their game creates the configured lobby.
+3. That player's proxy sends the lobby's `steam://joinlobby/...` link back to the site
+   (`feedback_url`).
+4. The others click "Join": the site opens `civ6bge://rejoindre_salon?steamurl=…`, and their game,
+   if it is open, joins the lobby.
 
-Le site ne connaît que deux liens et une route HTTPS. Les réglages propres à chaque communauté sont
-des **presets entretenus par BGE**, que le site désigne par leur nom.
+The site only knows two links and one HTTPS route. The settings specific to each community are
+**presets maintained by BGE**, which the site refers to by name.
 
-## Architecture : un relais figé, toute la logique dans le proxy
+## Architecture: a frozen relay, all the logic in the proxy
 
-L'installeur ne se met pas à jour lui-même : le manifeste d'une release ne liste que `winmm.dll` et
-`BGD_GameCore_XP2.dll` ([release/manifest.py](../../release/manifest.py)), et une mise à jour lancée
-depuis le jeu (`--after-game`) passe par la copie de l'installeur déjà en place. Seul un
-`BetterGameExperience_V<x>.exe` téléchargé et ouvert remplace cette copie (`copy_self`). Le proxy de
-démarrage, lui, change à chaque release.
+The installer does not update itself: a release's manifest lists only `winmm.dll` and
+`BGD_GameCore_XP2.dll` ([release/manifest.py](../../release/manifest.py)), and an update started
+from the game (`--after-game`) goes through the copy of the installer already in place. Only a
+downloaded and opened `BetterGameExperience_V<x>.exe` replaces that copy (`copy_self`). The startup
+proxy, on the other hand, changes with every release.
 
-D'où le partage :
-- **l'installeur est un relais muet, écrit une fois pour toutes** : il transmet l'URI au jeu sans la
-  lire ;
-- **le proxy de démarrage fait tous les contrôles** : schéma, verbes, versions du format, presets,
-  expiration, confirmation. Le schéma peut s'étoffer sans toucher à l'installeur.
+Hence the split:
+- **the installer is a dumb relay, written once and for all**: it hands the URI to the game without
+  reading it;
+- **the startup proxy does all the checks**: scheme, verbs, format versions, presets, expiry,
+  confirmation. The scheme can grow without touching the installer.
 
-### Le registre
+### The registry
 
-Trois valeurs sous `HKCU`, sans droits administrateur :
+Three values under `HKCU`, no administrator rights needed:
 
 ```
 HKCU\Software\Classes\civ6bge
-    (défaut)     = "URL:BetterGameExperience"
-    URL Protocol = ""          ← la clé vide : c'est elle qui fait un schéma
+    (default)    = "URL:BetterGameExperience"
+    URL Protocol = ""          ← the empty value: this is what makes it a scheme
 HKCU\Software\Classes\civ6bge\shell\open\command
-    (défaut)     = "%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" --uri "%1"
+    (default)    = "%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe" --uri "%1"
 ```
 
-La commande désigne toujours **la copie à l'emplacement fixe**, jamais le
-`BetterGameExperience_V<x>.exe` téléchargé (que `remove_old_installers` supprime de toute façon).
-Elle ne change jamais : une nouvelle release n'a pas à réécrire le registre.
+The command always points to **the copy at the fixed location**, never to the downloaded
+`BetterGameExperience_V<x>.exe` (which `remove_old_installers` deletes anyway). It never changes: a
+new release does not have to rewrite the registry.
 
-L'argument doit être `--uri "%1"`, pas `"%1"` seul : un premier argument qui ne commence pas par
-`--` est pris pour le `%command%` de l'option de lancement Steam (`launch(&args)`,
-[main.rs](../../updater/src/main.rs)) et lancé comme le jeu.
+The argument must be `--uri "%1"`, not `"%1"` alone: a first argument that does not start with `--`
+is taken as the `%command%` of the Steam launch option (`launch(&args)`,
+[main.rs](../../updater/src/main.rs)) and launched as the game.
 
-### Le relais (`--uri`)
+### The relay (`--uri`)
 
-Ce qui est figé, et ne doit plus changer une fois publié :
-- la branche `--uri` passe **en tout premier** dans `main()`, avant `migrate_data_dir`,
-  `lang::init` et `copy_self`, sans fenêtre ni réseau ;
-- elle écrit la chaîne reçue, brute, dans `%LOCALAPPDATA%\BetterGameExperience\uri.txt` : d'abord
-  dans `uri.txt.tmp`, puis par renommage, pour que le proxy ne lise jamais un fichier à moitié
-  écrit. Un fichier déjà présent est remplacé : **le dernier clic gagne** ;
-- elle se termine aussitôt.
+What is frozen, and must not change once published:
+- the `--uri` branch comes **first of all** in `main()`, before `migrate_data_dir`, `lang::init` and
+  `copy_self`, with no window and no network;
+- it writes the string it received, raw, to `%LOCALAPPDATA%\BetterGameExperience\uri.txt`: first to
+  `uri.txt.tmp`, then by renaming, so that the proxy never reads a half-written file. A file already
+  present is replaced: **the last click wins**;
+- it exits immediately.
 
-Aucun contrôle : ni du schéma, ni de la taille (la ligne de commande de Windows plafonne déjà à
-32 767 caractères). Le manifeste de l'installeur est en `asInvoker` : un clic ne demande pas
-d'élévation.
+No checks: neither on the scheme nor on the size (the Windows command line already caps at 32,767
+characters). The installer's manifest is `asInvoker`: a click does not ask for elevation.
 
-Jeu fermé, le relais ne le lance pas : le fichier attend le prochain lancement, et le proxy juge
-alors s'il est périmé.
+When the game is closed, the relay does not start it: the file waits for the next launch, and the
+proxy then decides whether it is stale.
 
-### L'amorçage par l'installeur
+### Bootstrapping by the installer
 
-Une étape `assurer_amorcage()`, indépendante de l'état des DLL, à **chaque** lancement de
-l'installeur (fenêtre, `--after-game`, option de lancement Steam ; pas avec `--uri`) :
+An `assurer_amorcage()` step, independent of the state of the DLLs, on **every** launch of the
+installer (window, `--after-game`, Steam launch option; not with `--uri`):
 
-1. `copy_self()` vers `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`, comme
-   aujourd'hui ;
-2. **vérifier que la copie a les octets de l'exe lancé.** Si l'ancienne copie est verrouillée
-   (l'option de lancement Steam la garde ouverte pendant la partie), `std::fs::copy` échoue en
-   silence, et la clé désignerait un exe qui ne connaît pas `--uri` : chaque clic ouvrirait la
-   fenêtre de l'installeur. Copie différente : pas de clé, une ligne de journal, et nouvel essai au
-   lancement suivant ;
-3. écrire la clé si elle est absente ou différente de la commande attendue.
+1. `copy_self()` to `%LOCALAPPDATA%\BetterGameExperience\BetterGameExperience.exe`, as today;
+2. **check that the copy has the bytes of the running exe.** If the old copy is locked (the Steam
+   launch option keeps it open during the game), `std::fs::copy` fails silently, and the key would
+   point to an exe that does not know `--uri`: every click would open the installer window.
+   Different copy: no key, one log line, and another try on the next launch;
+3. write the key if it is missing or differs from the expected command.
 
-**Rien de cela ne bloque** : pas de fenêtre, pas d'élévation, pas de réseau. Une clé absente ne
-fait **pas** passer l'installation en « à réparer » (ce qui mènerait à réinstaller les DLL, en
-administrateur) : DLL à jour, la fenêtre dit « à jour », et l'amorçage s'est fait sans rien demander.
-La désinstallation retire la clé.
+**None of this blocks**: no window, no elevation, no network. A missing key does **not** move the
+installation to "needs repair" (which would lead to reinstalling the DLLs, as administrator): with
+the DLLs up to date, the window says "up to date", and the bootstrap was done without asking
+anything. Uninstalling removes the key.
 
-Un joueur qui ne met à jour que par la notification du jeu ne reçoit jamais le nouvel installeur,
-donc jamais la clé. Le proxy le voit (clé absente) et le menu principal le dit une fois : « ouvrez
-une fois le dernier installeur pour activer les liens civ6bge:// ».
+A player who only updates through the in-game notification never receives the new installer, so
+never gets the key. The proxy sees it (key missing) and the main menu says so once: "open the latest
+installer once to enable civ6bge:// links".
 
-### La surveillance de `uri.txt`, côté proxy
+### Watching `uri.txt`, on the proxy side
 
-Un **fil Rust du proxy de démarrage**, démarré au chargement :
-- toutes les secondes, il ne lit que la date et la taille du fichier (`GetFileAttributesExW`).
-  `FindFirstChangeNotificationW` sur le dossier, avec un délai d'une seconde, réagit tout de suite
-  et garde la seconde comme filet ;
-- au changement, il lit le fichier (plafonné à 64 Ko), et le range dans une case partagée, sous
-  verrou, avec un compteur de génération ;
-- aucun `unwrap` : `panic = "abort"` tuerait le jeu. Toute erreur est journalisée, puis ignorée.
+A **Rust thread of the startup proxy**, started on load:
+- every second, it reads only the file's date and size (`GetFileAttributesExW`).
+  `FindFirstChangeNotificationW` on the folder, with a one-second timeout, reacts at once and keeps
+  the second as a safety net;
+- on a change, it reads the file (capped at 64 KB) and stores it in a shared slot, under a lock, with
+  a generation counter;
+- no `unwrap`: `panic = "abort"` would kill the game. Every error is logged, then ignored.
 
-Côté Lua, une native `Civ6Proxy_Uri()` rend la génération et le contenu ; une seconde,
-`Civ6Proxy_UriFinie(etat)`, supprime le fichier. Les contextes concernés l'interrogent depuis leur
-`SetUpdate`, en cumulant `dt` jusqu'à une seconde environ. Un contexte n'a **qu'un** `SetUpdate`, et
-[maj.lua](../../startup_proxy/src/maj.lua) en pose déjà un sur `MainMenu` : il faut les enchaîner,
-sinon le dernier posé écrase l'autre.
+On the Lua side, a native `Civ6Proxy_Uri()` returns the generation and the content; a second one,
+`Civ6Proxy_UriFinie(etat)`, deletes the file. The contexts concerned query it from their `SetUpdate`,
+accumulating `dt` up to about one second. A context has **only one** `SetUpdate`, and
+[maj.lua](../../startup_proxy/src/maj.lua) already sets one on `MainMenu`: they must be chained,
+otherwise the last one set overwrites the other.
 
-Le fichier n'est supprimé qu'une fois l'URI appliquée, refusée ou périmée : un plantage entre-temps
-ne la perd pas.
+The file is deleted only once the URI has been applied, refused or found stale: a crash in between
+does not lose it.
 
-## Quand une URI est traitée
+## When a URI is handled
 
-| où est le joueur | ce qui se passe |
+| where the player is | what happens |
 |---|---|
-| menu principal | traitée tout de suite, sans popup |
-| dans un salon | **popup de confirmation**, puis traitée (voir ci-dessous) |
-| lancement engagé (compte à rebours, `Network.LaunchGame`, chargement) | en attente |
-| en partie | en attente, en silence : une ligne de journal, aucun popup |
+| main menu | handled at once, no popup |
+| in a lobby | **confirmation popup**, then handled (see below) |
+| launch committed (countdown, `Network.LaunchGame`, loading) | waits |
+| in a game | waits, silently: one log line, no popup |
 
-Par construction : seuls les contextes du menu principal et de la staging room interrogent
-`Civ6Proxy_Uri()`. Aucun contexte de partie ne le fait, donc un clic pendant une partie ne peut pas
-en faire sortir un joueur.
+By construction: only the main menu and staging room contexts query `Civ6Proxy_Uri()`. No in-game
+context does, so a click during a game cannot make a player leave it.
 
-Une URI en attente est traitée au retour au menu ou dans un salon si elle est encore fraîche :
-l'`expire` de la recette s'il y en a un, sinon dix minutes après la date du fichier. Sinon elle est
-supprimée et journalisée, sans rien afficher : un clic oublié pendant une partie de trois heures ne
-doit pas faire surgir un salon à la fin.
+A waiting URI is handled on the return to the menu or to a lobby if it is still fresh: the recipe's
+`expire` if it has one, otherwise ten minutes after the file's date. Otherwise it is deleted and
+logged, without showing anything: a click forgotten during a three-hour game must not make a lobby
+pop up at the end.
 
-**Le popup ne sert qu'à ce cas** : le joueur est déjà dans un salon, et le lien va l'y changer ou
-l'en faire sortir.
-- `creation_salon`, **hôte** du salon ouvert : « appliquer le draft à ce salon ? ». Ni `HostGame`, ni
-  `LeaveGame` (voir [Appliquer à un salon déjà ouvert](#appliquer-à-un-salon-déjà-ouvert)) ;
-- `creation_salon`, **client** dans le salon d'un autre : « quitter ce salon et héberger celui du
-  draft ? », puis `Network.LeaveGame()` propre et la suite comme depuis le menu ;
-- `rejoindre_salon` alors qu'on est dans un autre salon : « quitter ce salon et rejoindre celui-là ? ».
-  Le lien du salon où l'on est déjà est ignoré.
+**The popup is only for this case**: the player is already in a lobby, and the link will change it
+or make them leave it.
+- `creation_salon`, **host** of the open lobby: "apply the draft to this lobby?". Neither `HostGame`
+  nor `LeaveGame` (see [Applying to a lobby that is already open](#applying-to-a-lobby-that-is-already-open));
+- `creation_salon`, **client** in someone else's lobby: "leave this lobby and host the draft's
+  one?", then a clean `Network.LeaveGame()` and the same steps as from the menu;
+- `rejoindre_salon` while in another lobby: "leave this lobby and join that one?". The link of the
+  lobby one is already in is ignored.
 
-Un refus supprime l'URI.
+A refusal deletes the URI.
 
-## Les liens
+## The links
 
-### `civ6bge://creation_salon?data=<JSON en base64url>`
+### `civ6bge://creation_salon?data=<base64url JSON>`
 
-La recette tient entière dans le lien : aucun serveur à interroger, n'importe quel site ou message
-peut la porter. Douze emplacements avec des identifiants en clair tiennent sous 2 000 caractères.
+The whole recipe fits in the link: no server to query, any site or message can carry it. Twelve
+slots with plain identifiers fit under 2,000 characters.
 
 ```json
 {
@@ -155,7 +151,7 @@ peut la porter. Douze emplacements avec des identifiants en clair tiennent sous 
   "preset": "cpl-ffa",
   "nom": "Draft #4812",
   "feedback_url": "https://civdraft.example/api/draft/4812/lobby",
-  "feedback_token": "<jeton opaque fourni par le site>",
+  "feedback_token": "<opaque token provided by the site>",
   "expire": "2026-11-12T22:00:00Z",
   "overrides": { "MAP_SCRIPT": "Pangaea.lua" },
   "emplacements": [
@@ -165,146 +161,144 @@ peut la porter. Douze emplacements avec des identifiants en clair tiennent sous 
 }
 ```
 
-- `v` : version du format. Une version inconnue du proxy affiche « mettez à jour BGE ».
-- `preset` : nom d'un preset de BGE (voir [Les presets](#les-presets-par-communauté)). Inconnu : le
-  salon n'est pas créé, et un message le dit.
-- `overrides` : seulement les clés que le preset déclare modifiables. Une autre clé est journalisée,
-  pas écrite.
-- `emplacements` : le résultat du draft. `equipe` sert les modes par équipes
-  (`PlayerConfigurations[id]:SetTeam`) ; `attendu` est un nom pour l'affichage ; `steam` est
-  facultatif (voir [Le Steam ID facultatif](#le-steam-id-facultatif)).
-- `feedback_url` / `feedback_token` : où renvoyer le lien du salon, et de quoi le rattacher au draft
-  côté site (voir [Le retour du lien](#le-retour-du-lien-feedback_url)). Facultatifs.
-- `expire` : passé ce moment, la recette est supprimée sans rien afficher.
+- `v`: format version. A version unknown to the proxy shows "update BGE".
+- `preset`: name of a BGE preset (see [The presets](#per-community-presets)). Unknown: the lobby is
+  not created, and a message says so.
+- `overrides`: only the keys the preset declares as modifiable. Any other key is logged, not
+  written.
+- `emplacements`: the draft result. `equipe` serves team modes (`PlayerConfigurations[id]:SetTeam`);
+  `attendu` is a display name; `steam` is optional (see [The optional Steam ID](#the-optional-steam-id)).
+- `feedback_url` / `feedback_token`: where to send the lobby link back, and what ties it to the draft
+  on the site side (see [Sending the link back](#sending-the-link-back-feedback_url)). Optional.
+- `expire`: past this moment, the recipe is deleted without showing anything.
 
-**Les bans ne descendent pas dans le jeu.** Ils appartiennent au draft, qui se déroule entièrement
-sur le site ; une fois les chefs attribués, il n'y a plus rien à interdire. Les clés `BAN_*` et
-`DRAFT_MAP` de MPH servent son draft par le chat : la recette n'y touche pas.
+**Bans do not go down into the game.** They belong to the draft, which takes place entirely on the
+site; once the leaders are assigned, there is nothing left to forbid. MPH's `BAN_*` and `DRAFT_MAP`
+keys serve its chat-based draft: the recipe does not touch them.
 
-**Ce qu'on attend du site** : les identifiants internes du jeu (`LEADER_ABRAHAM_LINCOLN`,
-`CIVILIZATION_AMERICA`), pas des noms affichés ni des *slugs*. CivUp, par exemple, dérive ses slugs
-des noms anglais ([sync-bbg-leaders.ts](https://github.com/Rettend/civup/blob/main/packages/game/scripts/sync-bbg-leaders.ts)),
-mais son script lit déjà `LeaderType` et `CivilizationType` dans la base du jeu : il suffit de les
-garder. Même chose pour les cartes : des noms de fichiers de script (`Continents.lua`), pas des slugs.
+**What we expect from the site**: the game's internal identifiers (`LEADER_ABRAHAM_LINCOLN`,
+`CIVILIZATION_AMERICA`), not display names or *slugs*. CivUp, for example, derives its slugs from
+the English names ([sync-bbg-leaders.ts](https://github.com/Rettend/civup/blob/main/packages/game/scripts/sync-bbg-leaders.ts)),
+but its script already reads `LeaderType` and `CivilizationType` from the game database: it only
+needs to keep them. Same for maps: script file names (`Continents.lua`), not slugs.
 
 ### `civ6bge://rejoindre_salon?steamurl=steam://joinlobby/289070/<lobbyId>/<steamId64>`
 
-- **Forme stricte** : appid 289070 et deux identifiants numériques, rien d'autre. Le proxy ne passe
-  jamais à Steam qu'un `joinlobby` **reconstruit** à partir de ces trois nombres.
-- **Pour rejoindre**, l'URL reconstruite est confiée à Steam (`ShellExecute`) : c'est le chemin d'un
-  joueur qui colle le lien aujourd'hui, et Steam transmet la demande au jeu ouvert comme une
-  invitation. À vérifier en jeu, depuis le menu principal et depuis un autre salon.
-- Le site peut proposer le lien Steam brut en repli, aux joueurs sans BGE. Ce que BGE ajoute : la
-  garde contre le clic en partie, la sortie propre d'un autre salon, et plus tard le déplacement
-  automatique vers l'emplacement drafté.
+- **Strict form**: appid 289070 and two numeric identifiers, nothing else. The proxy only ever hands
+  Steam a `joinlobby` link **rebuilt** from these three numbers.
+- **To join**, the rebuilt URL is handed to Steam (`ShellExecute`): this is the path a player takes
+  today when pasting the link, and Steam passes the request to the open game as an invite. To be
+  checked in game, from the main menu and from another lobby.
+- The site can offer the raw Steam link as a fallback, to players without BGE. What BGE adds: the
+  guard against a click during a game, leaving another lobby cleanly, and later the automatic move
+  to the drafted slot.
 
-## Les presets par communauté
+## Per-community presets
 
-Les réglages varient d'une communauté à l'autre ; ils changent peu. Ils sont donc **embarqués dans
-le proxy de démarrage**, et suivent les releases.
+Settings vary from one community to another; they change rarely. They are therefore **embedded in
+the startup proxy**, and follow the releases.
 
-Un preset contient :
-- les réglages de partie et de carte (dont `MPH_PRESET` si la communauté s'en sert) ;
-- les mods requis (version de BBG…) ;
-- le type et la visibilité du salon (Internet, privé ou public) ;
-- les clés que le site peut modifier (`overrides`) ;
-- les **hôtes autorisés pour `feedback_url`**.
+A preset contains:
+- the game and map settings (including `MPH_PRESET` if the community uses it);
+- the required mods (BBG version…);
+- the lobby type and visibility (Internet, private or public);
+- the keys the site may change (`overrides`);
+- the **hosts allowed for `feedback_url`**.
 
-Un mod requis absent : le salon n'est pas créé, et un message dit lequel activer. Le point ouvert
-n°6 (activer un mod depuis le front-end, par l'API `Modding.*`) dira si l'on peut faire mieux.
+A required mod missing: the lobby is not created, and a message says which one to enable. Open
+point no. 6 (enabling a mod from the front-end, through the `Modding.*` API) will tell whether we can
+do better.
 
-## Le retour du lien (`feedback_url`)
+## Sending the link back (`feedback_url`)
 
-Dès que le lien `steam://joinlobby/289070/<lobbyId>/<steamId64>` du salon est connu, le proxy
-l'envoie :
-- `POST` en JSON : `{ "token": <feedback_token>, "steam_url": <lien>, "bge": <version> }` ;
-- HTTPS obligatoire ;
-- par `curl.exe`, sans fenêtre, comme [maj.rs](../../startup_proxy/src/maj.rs) ; délai de 20 s,
-  deux nouveaux essais, réponse ignorée au-delà du code HTTP ;
-- **seulement si l'hôte de `feedback_url` est dans la liste du preset.** Sinon le salon est créé,
-  rien n'est envoyé, et un message le dit. Un lien forgé par une page quelconque ne fait donc pas
-  partir le lien du salon (Steam ID de l'hôte compris) vers un inconnu. La liste des presets sert
-  aussi de registre des sites de confiance : une communauté qui veut le retour automatique demande à
-  y être ajoutée.
+As soon as the lobby's `steam://joinlobby/289070/<lobbyId>/<steamId64>` link is known, the proxy
+sends it:
+- JSON `POST`: `{ "token": <feedback_token>, "steam_url": <link>, "bge": <version> }`;
+- HTTPS required;
+- through `curl.exe`, with no window, like [maj.rs](../../startup_proxy/src/maj.rs); 20 s timeout,
+  two retries, response ignored beyond the HTTP status code;
+- **only if the `feedback_url` host is in the preset's list.** Otherwise the lobby is created,
+  nothing is sent, and a message says so. A link forged by some random page therefore does not send
+  the lobby link (host's Steam ID included) to a stranger. The preset list also serves as a registry
+  of trusted sites: a community that wants the automatic link-back asks to be added.
 
-Le retour n'envoie que ce que les joueurs du salon voient déjà : le lien. Pas de chemin local, pas de
-liste de mods.
+The link-back only sends what the players in the lobby already see: the link. No local path, no mod
+list.
 
-## Créer le salon depuis le menu
+## Creating the lobby from the menu
 
-L'ordre vient des pièges relevés dans l'analyse :
+The order comes from the pitfalls found in the analysis:
 
-1. `GameConfiguration.SetToDefaults(gameMode)` ;
-2. `Network.HostGame(serverType)` d'après le preset ;
-3. attendre `MultiplayerJoinGameComplete` — rien n'est écrit avant ;
-4. `MPH_PRESET` **d'abord**, puis le reste : le preset de MPH cascade ses `ConfigurationUpdates`, et
-   `CheckPreset` écrase les listes de celui qui écrit avant lui (L2) ;
-5. écrire par `SetupParameters:SetParameterValue`, pas par `SetValue` brut, pour que les domaines
-   soient revalidés tout de suite et qu'un rafraîchissement ne défasse rien ;
-6. revérifier les valeurs sensibles à l'intervalle de la taille de carte — `CITY_STATE_COUNT`
-   retombe à 0 hors de `[MAP_MIN_MINOR_PLAYERS, MAP_MAX_MINOR_PLAYERS]` (L2b) — et journaliser tout
-   écart entre la recette et la config obtenue ;
-7. **une seule** diffusion à la fin : `Network.BroadcastGameConfig(true)`, puis un
-   `BroadcastPlayerInfo(id)` par emplacement touché, et seulement pour des emplacements non humains ;
-8. journaliser la recette appliquée, clé par clé, et le résultat ;
-9. lire le lien du salon, et l'envoyer à `feedback_url`.
+1. `GameConfiguration.SetToDefaults(gameMode)`;
+2. `Network.HostGame(serverType)` according to the preset;
+3. wait for `MultiplayerJoinGameComplete` — nothing is written before;
+4. `MPH_PRESET` **first**, then the rest: the MPH preset cascades its `ConfigurationUpdates`, and
+   `CheckPreset` overwrites the lists of whoever wrote before it (L2);
+5. write through `SetupParameters:SetParameterValue`, not through raw `SetValue`, so that domains
+   are revalidated at once and a refresh undoes nothing;
+6. recheck the values sensitive to the map size range — `CITY_STATE_COUNT` falls back to 0 outside
+   `[MAP_MIN_MINOR_PLAYERS, MAP_MAX_MINOR_PLAYERS]` (L2b) — and log any gap between the recipe and
+   the resulting config;
+7. **a single** broadcast at the end: `Network.BroadcastGameConfig(true)`, then one
+   `BroadcastPlayerInfo(id)` per slot touched, and only for non-human slots;
+8. log the applied recipe, key by key, and the result;
+9. read the lobby link, and send it to `feedback_url`.
 
-**Qui écrit le chef d'un joueur, et quand.** Le draft étant joué d'avance, l'hôte écrit **tous** les
-emplacements juste après `HostGame`, pendant qu'ils sont encore IA ou ouverts : aucun humain n'est là
-pour contredire (L1). Un joueur qui rejoint reçoit la config complète de l'hôte, puis rediffuse son
-propre emplacement, avec le chef qu'il vient de recevoir : sans dégât. Reste la course de la
-conclusion 4 (une rediffusion partie d'un état antérieur). D'où une **vérification après chaque
-arrivée** : comparer le chef et l'équipe de l'emplacement à la recette, et ne rediffuser que s'ils
-ont dérivé, **au plus deux fois par emplacement**. Le ping-pong du mode anonyme (L5) montre ce que
-coûte une correction sans plafond.
+**Who writes a player's leader, and when.** Since the draft is played in advance, the host writes
+**all** the slots right after `HostGame`, while they are still AI or open: no human is there to
+contradict (L1). A player who joins receives the host's full config, then rebroadcasts their own
+slot, with the leader they just received: no harm. What remains is the race of conclusion 4 (a
+rebroadcast sent from an earlier state). Hence a **check after each arrival**: compare the slot's
+leader and team with the recipe, and rebroadcast only if they drifted, **at most twice per slot**.
+The anonymous-mode ping-pong (L5) shows what an uncapped correction costs.
 
-Le bloc Lua va à la fin de `hostgame.lua` (dispatch par nom de fichier : le remplaçant de MPH est
-pris aussi), le contexte qui porte `HostGame`, `CheckPreset` et les `SetupParameters`. La
-surveillance de `uri.txt` vit dans les blocs de `mainmenu.lua` et `stagingroom.lua`, qui lui parlent
-par `LuaEvents`. La staging room suit déjà les emplacements pour le verdict POL.
+The Lua block goes at the end of `hostgame.lua` (dispatch by file name: MPH's replacement is caught
+too), the context that carries `HostGame`, `CheckPreset` and the `SetupParameters`. Watching
+`uri.txt` lives in the `mainmenu.lua` and `stagingroom.lua` blocks, which talk to it through
+`LuaEvents`. The staging room already tracks the slots for the POL verdict.
 
-## Appliquer à un salon déjà ouvert
+## Applying to a lobby that is already open
 
-Cas de l'hôte qui confirme le popup. Des humains sont déjà connectés :
-- leurs emplacements ne sont **jamais** écrits par l'hôte (L1) ;
-- chefs et équipes sont écrits sur les emplacements IA ou ouverts seulement ;
-- les Steam ID de la recette déclenchent les déplacements (section suivante) ;
-- `MPH_PRESET` d'abord, puis le reste, et une seule diffusion à la fin, comme depuis le menu ;
-- le lien du salon est envoyé à `feedback_url`.
+The case of the host who confirms the popup. Humans are already connected:
+- their slots are **never** written by the host (L1);
+- leaders and teams are written on AI or open slots only;
+- the Steam IDs in the recipe trigger the moves (next section);
+- `MPH_PRESET` first, then the rest, and a single broadcast at the end, as from the menu;
+- the lobby link is sent to `feedback_url`.
 
-## Le Steam ID facultatif
+## The optional Steam ID
 
-L'hôte connaît le Steam ID de chaque joueur en Lua : `PlayerConfigurations[id]:GetNetworkIdentifer()`,
-déjà utilisé par [rapport.lua](../../startup_proxy/src/rapport.lua).
+The host knows each player's Steam ID in Lua: `PlayerConfigurations[id]:GetNetworkIdentifer()`,
+already used by [rapport.lua](../../startup_proxy/src/rapport.lua).
 
-**Sans `steam` dans la recette**, les chefs et les équipes sont écrits sur les emplacements, et
-chacun prend le sien à la main, comme aujourd'hui.
+**Without `steam` in the recipe**, leaders and teams are written on the slots, and everyone takes
+theirs by hand, as today.
 
-**Avec `steam`**, sur tous les emplacements ou seulement certains :
-- **l'hôte** : si son Steam ID est dans la recette, son entrée est **renumérotée en emplacement 0**
-  avant l'écriture. Aucun swap : l'ordre des emplacements ne porte rien que la recette ne réécrive ;
-- **un joueur qui rejoint** atterrit sur le premier emplacement ouvert, que l'hôte ne choisit pas.
-  S'il est attendu ailleurs :
-  - **avec BGE**, l'hôte lui envoie « emplacement N » par le canal d'annonce BGE du salon, et c'est
-    sa propre machine qui fait `Network.RequestPlayerIDChange(N)`. L'hôte l'accepte : l'emplacement
-    visé est IA ou ouvert. L'hôte n'écrit jamais l'emplacement d'un humain connecté (L1) ;
-  - **sans BGE**, la staging room affiche « Zoé est attendue en 3 », et le joueur se déplace à la
-    main ;
-- les emplacements sans `steam` restent libres : premier arrivé, premier servi ;
-- un Steam ID absent de la recette est **signalé** à l'hôte. Une recette n'expulse personne et ne
-  bloque pas le lancement ;
-- validation : 17 chiffres, commençant par `7656119`.
+**With `steam`**, on all slots or only some:
+- **the host**: if their Steam ID is in the recipe, their entry is **renumbered as slot 0** before
+  writing. No swap: the slot order carries nothing that the recipe does not rewrite;
+- **a player who joins** lands on the first open slot, which the host does not choose. If they are
+  expected elsewhere:
+  - **with BGE**, the host sends them "slot N" through the lobby's BGE announcement channel, and it
+    is their own machine that calls `Network.RequestPlayerIDChange(N)`. The host accepts it: the
+    target slot is AI or open. The host never writes a connected human's slot (L1);
+  - **without BGE**, the staging room shows "Zoé is expected in 3", and the player moves by hand;
+- slots without `steam` stay free: first come, first served;
+- a Steam ID absent from the recipe is **flagged** to the host. A recipe kicks nobody and does not
+  block the launch;
+- validation: 17 digits, starting with `7656119`.
 
-## Le lien de salon Steam : l'API Steamworks, sans désassemblage
+## The Steam lobby link: the Steamworks API, no disassembly
 
-C'est l'étape 3 du flux, et **le premier point à trancher** : sans lien, pas de retour au site.
+This is step 3 of the flow, and **the first point to settle**: without the link, nothing goes back
+to the site.
 
-Notre DLL tourne **dans le processus du jeu**, et `steam_api64.dll`, que l'exe importe, expose l'API
-plate (*flat API*) de Steamworks en C. Le jeu a déjà fait son `SteamAPI_Init` ; il suffit d'un
-`GetProcAddress`. Les fonctions plates prennent le `CSteamID` en `uint64` : aucun ABI C++ à imiter,
-aucun en-tête du SDK à embarquer.
+Our DLL runs **inside the game process**, and `steam_api64.dll`, which the exe imports, exposes the
+Steamworks *flat API* in C. The game has already called `SteamAPI_Init`; a `GetProcAddress` is
+enough. The flat functions take the `CSteamID` as a `uint64`: no C++ ABI to imitate, no SDK header
+to ship.
 
-**Obtenir les interfaces**, sans dépendre du numéro de version du SDK :
+**Getting the interfaces**, without depending on the SDK version number:
 
 ```
 SteamAPI_GetHSteamUser()                                        → HSteamUser
@@ -312,121 +306,120 @@ SteamInternal_FindOrCreateUserInterface(h, "SteamUser023")      → ISteamUser*
 SteamInternal_FindOrCreateUserInterface(h, "SteamFriends017")   → ISteamFriends*
 ```
 
-On essaie les quelques versions voisines, et on garde la première qui rend un pointeur non nul. Un
-`steam_api64.dll` d'un ancien SDK n'a peut-être pas ces deux exports : les accesseurs exportés
-directement (`SteamFriends`, `SteamUser`) servent de repli.
+We try the few neighbouring versions, and keep the first one that returns a non-null pointer. A
+`steam_api64.dll` from an old SDK may not have these two exports: the directly exported accessors
+(`SteamFriends`, `SteamUser`) serve as a fallback.
 
-**`steamId64`** : `SteamAPI_ISteamUser_GetSteamID(user)`.
+**`steamId64`**: `SteamAPI_ISteamUser_GetSteamID(user)`.
 
-**`lobbyId` : la moitié difficile.** L'API Steamworks n'a **aucun** appel « dans quel salon
-suis-je ? » : c'est au jeu de le retenir, depuis `LobbyCreated_t` / `LobbyEnter_t`. Trois voies :
+**`lobbyId`: the hard half.** The Steamworks API has **no** "which lobby am I in?" call: it is up to
+the game to remember it, from `LobbyCreated_t` / `LobbyEnter_t`. Three ways:
 
-1. `SteamAPI_ISteamFriends_GetFriendGamePlayed(friends, <notre propre Steam ID>, &info)` →
-   `info.m_steamIDLobby`. `FriendGameInfo_t` fait 24 octets : `m_gameID` (8), `m_unGameIP` (4),
-   `m_usGamePort` (2), `m_usQueryPort` (2), `m_steamIDLobby` (8, offset 16). La
-   [doc d'ISteamFriends](https://partner.steamgames.com/doc/api/ISteamFriends) ne décrit l'appel que
-   pour un ami : sur soi-même, il n'est pas documenté. **À tester d'abord.**
-2. S'abonner à `LobbyCreated_t` / `LobbyEnter_t` par `SteamAPI_RegisterCallback`, export de la même
-   DLL, comme le fait le modèle `CCallback` du SDK. On ne détourne rien dans l'exe, au prix d'une
-   dépendance à la table virtuelle de `CCallbackBase`, publique dans le SDK mais interne.
-3. Côté site, sans code dans le jeu : `GetPlayerSummaries` de la Web API rendrait un champ
-   `lobbysteamid`. Valve ne le documente pas, et il dépend de la visibilité du profil. Se teste avec
-   un `curl` et une clé Web API, pendant qu'un joueur au profil public héberge un salon.
-   `ILobbyMatchmakingService.GetLobbyData`, l'interface officielle, réclame une clé d'éditeur : hors
-   de portée.
+1. `SteamAPI_ISteamFriends_GetFriendGamePlayed(friends, <our own Steam ID>, &info)` →
+   `info.m_steamIDLobby`. `FriendGameInfo_t` is 24 bytes: `m_gameID` (8), `m_unGameIP` (4),
+   `m_usGamePort` (2), `m_usQueryPort` (2), `m_steamIDLobby` (8, offset 16). The
+   [ISteamFriends doc](https://partner.steamgames.com/doc/api/ISteamFriends) only describes the call
+   for a friend: on oneself, it is undocumented. **To test first.**
+2. Subscribe to `LobbyCreated_t` / `LobbyEnter_t` through `SteamAPI_RegisterCallback`, an export of
+   the same DLL, as the SDK's `CCallback` template does. Nothing is hooked in the exe, at the cost
+   of depending on the vtable of `CCallbackBase`, public in the SDK but internal.
+3. On the site side, with no code in the game: the Web API's `GetPlayerSummaries` would return a
+   `lobbysteamid` field. Valve does not document it, and it depends on profile visibility. It can be
+   tested with a `curl` and a Web API key, while a player with a public profile is hosting a lobby.
+   `ILobbyMatchmakingService.GetLobbyData`, the official interface, requires a publisher key: out of
+   reach.
 
-Le format `steam://joinlobby/<appid>/<lobbyId>/<steamId64>` n'est pas documenté par Valve non plus,
-mais c'est ce que les joueurs collent aujourd'hui, et ce que CivUp valide : il marche.
+The `steam://joinlobby/<appid>/<lobbyId>/<steamId64>` format is not documented by Valve either, but
+it is what players paste today, and what CivUp validates: it works.
 
-### La sonde
+### The probe
 
-Ni l'exe ni `steam_api64.dll` ne sont sur la machine de développement : on tranche en conditions
-réelles, par une sonde du proxy de démarrage livrée en pré-release. Elle ne fait que lire et
-journaliser, quand on héberge un salon (`MultiplayerJoinGameComplete`) :
-1. les exports présents dans `steam_api64.dll` (récents et anciens) ;
-2. les chaînes de version d'interface qui répondent (`SteamFriends017` et précédentes, idem
-   `SteamUser0xx`) ;
-3. le Steam ID par `GetSteamID`, comparé à `GetNetworkIdentifer()` côté Lua : la preuve qu'on lit
-   la bonne interface ;
-4. `GetFriendGamePlayed(soi-même)` : valeur rendue et `m_steamIDLobby` ;
-5. le lien reconstruit ;
-6. les noms des fonctions de la table Lua `Network` : l'exe en enregistre 85, et un accesseur au
-   salon nous a peut-être échappé.
+Neither the exe nor `steam_api64.dll` is on the development machine: this is settled in real
+conditions, through a startup proxy probe shipped in a pre-release. It only reads and logs, when a
+lobby is hosted (`MultiplayerJoinGameComplete`):
+1. the exports present in `steam_api64.dll` (recent and old);
+2. the interface version strings that answer (`SteamFriends017` and earlier, same for
+   `SteamUser0xx`);
+3. the Steam ID from `GetSteamID`, compared with `GetNetworkIdentifer()` on the Lua side: proof that
+   we are reading the right interface;
+4. `GetFriendGamePlayed(self)`: return value and `m_steamIDLobby`;
+5. the rebuilt link;
+6. the names of the functions in the Lua `Network` table: the exe registers 85 of them, and we may
+   have missed an accessor to the lobby.
 
-Le testeur héberge, un ami rejoint **avec le lien journalisé**. S'il arrive dans le salon, la
-voie 1 est validée ; sinon le journal dit où ça casse, et on passe à la voie 2.
+The tester hosts, a friend joins **with the logged link**. If they land in the lobby, way 1 is
+validated; otherwise the log says where it breaks, and we move on to way 2.
 
-Détail des appels, du journal attendu, du protocole et des suites selon le résultat :
+Details of the calls, the expected log, the protocol and the next steps for each result:
 [sonde_steam.md](sonde_steam.md).
 
-## Gardes
+## Guards
 
-- **Jamais en partie** : seuls les contextes du menu et de la staging room traitent une URI, et
-  jamais après l'engagement du lancement.
-- **Une recette ne fait rien d'autre** que régler un salon : pas de `Network.LaunchGame`, pas
-  d'expulsion, pas d'écriture de `rollover_proxy.cfg`, aucun chemin de fichier. Seul un
-  `LeaveGame()` confirmé dans le popup fait quitter un salon.
-- **Liste blanche** : clés et valeurs tirées de `SetupParameters.xml` et des `Config.xml` des mods
-  installés, plus les `overrides` déclarés par le preset. Une clé inconnue est journalisée, pas
-  écrite.
-- **Retour** limité aux hôtes du preset, en HTTPS ; réponses plafonnées (64 Ko), délai de 20 s.
-- **Une seule URI en attente**, supprimée dès appliquée, refusée ou périmée.
-- **Registre** écrit par l'installeur seulement, retiré à la désinstallation.
-- **Réglage dans l'onglet BetterGameExperience** (obligatoire pour toute fonction) :
-  `liens_civ6bge = true|false`, défaut `true`, `libre = true` comme `verif_maj`.
+- **Never in a game**: only the menu and staging room contexts handle a URI, and never once the
+  launch is committed.
+- **A recipe does nothing else** than configure a lobby: no `Network.LaunchGame`, no kick, no write
+  to `rollover_proxy.cfg`, no file path. Only a `LeaveGame()` confirmed in the popup makes the player
+  leave a lobby.
+- **Whitelist**: keys and values taken from `SetupParameters.xml` and from the `Config.xml` of the
+  installed mods, plus the `overrides` declared by the preset. An unknown key is logged, not written.
+- **Link-back** limited to the preset's hosts, over HTTPS; responses capped (64 KB), 20 s timeout.
+- **A single waiting URI**, deleted as soon as it is applied, refused or stale.
+- **Registry** written by the installer only, removed on uninstall.
+- **Setting in the BetterGameExperience tab** (required for every feature):
+  `liens_civ6bge = true|false`, default `true`, `libre = true` like `verif_maj`.
 
-## À vérifier avant d'écrire du code
+## To check before writing code
 
-1. **Le lien du salon** : la sonde, voie 1 puis 2. C'est le verrou de l'étape 3.
-2. **`rejoindre_salon` par `ShellExecute`** : depuis le menu principal, et depuis un autre salon.
-3. **`serverType` hors de l'interface** : `ServerTypeForMPLobbyType` dépend du mode posé par
-   `LuaEvents.ChangeMPLobbyMode` ; confirmer qu'on peut héberger en Internet depuis le menu sans
-   passer par l'écran `Lobby`.
-4. **Les 76 `NetPlayerInfo` de l'hébergement** (essai du 2026-11-04) : d'où ils viennent, et si une
-   écriture de recette juste après les croise.
-5. **L'engagement du lancement** : quel événement de la staging room marque le début du compte à
-   rebours, pour arrêter d'y traiter les URI.
-6. **Les mods requis** : l'API `Modding.*` permet-elle d'activer un mod depuis le front-end ? Sinon,
-   message et refus.
+1. **The lobby link**: the probe, way 1 then 2. This is the lock on step 3.
+2. **`rejoindre_salon` through `ShellExecute`**: from the main menu, and from another lobby.
+3. **`serverType` outside the UI**: `ServerTypeForMPLobbyType` depends on the mode set by
+   `LuaEvents.ChangeMPLobbyMode`; confirm that we can host on the Internet from the menu without
+   going through the `Lobby` screen.
+4. **The 76 `NetPlayerInfo` sent when hosting** (test of 2026-11-04): where they come from, and
+   whether a recipe write right after crosses them.
+5. **The launch commitment**: which staging room event marks the start of the countdown, to stop
+   handling URIs there.
+6. **Required mods**: does the `Modding.*` API allow enabling a mod from the front-end? Otherwise,
+   message and refusal.
 
-## Plan par paliers
+## Plan by stages
 
-| palier | contenu | dépend de |
+| stage | content | depends on |
 |---|---|---|
-| 0 | **La sonde Steam**, en pré-release ([sonde_steam.md](sonde_steam.md)) | une machine Windows avec le jeu et Steam |
-| 1 | **Le relais et l'amorçage** : `--uri`, `uri.txt`, `assurer_amorcage()`, retrait à la désinstallation ; surveillance de `uri.txt` par le proxy (fil, natives) | rien |
-| 2 | **`creation_salon`** : format v1, presets embarqués, application depuis le menu et dans un salon, popup ; tests Rust (décodage, versions, expiration, taille) et Lua (à la manière de [test_salon.lua](../../startup_proxy/tests/test_salon.lua)) | palier 1 |
-| 3 | **`feedback_url`** et **`rejoindre_salon`** | paliers 0 et 2 |
-| 4 | **Steam ID** : renumérotation de l'hôte, déplacement des joueurs avec BGE, affichage pour les autres | palier 2 |
+| 0 | **The Steam probe**, in a pre-release ([sonde_steam.md](sonde_steam.md)) | a Windows machine with the game and Steam |
+| 1 | **The relay and the bootstrap**: `--uri`, `uri.txt`, `assurer_amorcage()`, removal on uninstall; watching `uri.txt` from the proxy (thread, natives) | nothing |
+| 2 | **`creation_salon`**: format v1, embedded presets, applying from the menu and in a lobby, popup; Rust tests (decoding, versions, expiry, size) and Lua tests (in the style of [test_salon.lua](../../startup_proxy/tests/test_salon.lua)) | stage 1 |
+| 3 | **`feedback_url`** and **`rejoindre_salon`** | stages 0 and 2 |
+| 4 | **Steam ID**: renumbering the host, moving players who have BGE, display for the others | stage 2 |
 
-Le relais (palier 1) est le seul morceau de l'installeur : une fois publié, il ne bouge plus. Tout
-le reste suit les releases du proxy.
+The relay (stage 1) is the only part in the installer: once published, it no longer changes.
+Everything else follows the proxy releases.
 
-## Pistes écartées
+## Ruled-out options
 
-- **Micro-serveur local dans le jeu** (`127.0.0.1`, appelé en `fetch` par la page). Une activité
-  Discord est une iframe servie par le proxy de Discord, qui ne peut pas joindre `127.0.0.1`. Dans
-  un onglet normal, il faudrait passer la politique réseau local de Chrome (préflight
-  `Access-Control-Allow-Private-Network`, permission demandée à l'utilisateur), découvrir un port,
-  et garder une écoute ouverte dans le processus du jeu. Le relais par fichier fait la même chose
-  sans rien ouvrir. Si un tableau de bord local arrive un jour : `127.0.0.1` seulement, liste
-  blanche d'`Origin`, vérification de l'en-tête `Host` (contre le rebinding DNS), aucun `unwrap`.
-- **Lien qui ne transporte qu'un jeton, et appairage avec le site** (conception du 2026-11-04). Il
-  supposait un contrat serveur propre à chaque site. La recette dans le lien et la `feedback_url`
-  donnent le même flux sans appairage.
-- **Recette téléchargée depuis une URL du lien.** Toute page pourrait faire appeler un hôte
-  arbitraire par le jeu.
-- **Un installeur qui se met à jour lui-même.** Inutile ici : le relais ne change plus, et la logique
-  vit dans le proxy.
-- **Placer les joueurs sans BGE par l'hôte**, qui réécrirait leur emplacement après leur arrivée :
-  c'est la course de L1.
+- **Local micro-server in the game** (`127.0.0.1`, called with `fetch` by the page). A Discord
+  activity is an iframe served through Discord's proxy, which cannot reach `127.0.0.1`. In a normal
+  tab, it would have to get past Chrome's local network policy (preflight
+  `Access-Control-Allow-Private-Network`, permission asked of the user), find a port, and keep a
+  listener open in the game process. The file relay does the same without opening anything. If a
+  local dashboard ever comes: `127.0.0.1` only, `Origin` whitelist, `Host` header check (against DNS
+  rebinding), no `unwrap`.
+- **A link that only carries a token, and pairing with the site** (design of 2026-11-04). It assumed
+  a server contract specific to each site. The recipe in the link and the `feedback_url` give the
+  same flow without pairing.
+- **A recipe downloaded from a URL in the link.** Any page could make the game call an arbitrary
+  host.
+- **An installer that updates itself.** Not needed here: the relay no longer changes, and the logic
+  lives in the proxy.
+- **Placing players without BGE by the host**, which would rewrite their slot after they arrive:
+  that is the L1 race.
 
-## L'activité Discord de CivUp
+## CivUp's Discord activity
 
-CivUp ouvre ses liens externes par `discordSdk.commands.openExternalLink`, et **se replie sur le
-presse-papiers** quand l'ouverture échoue
+CivUp opens its external links through `discordSdk.commands.openExternalLink`, and **falls back to
+the clipboard** when opening fails
 ([platform/external-links.ts](https://github.com/Rettend/civup/blob/main/apps/activity/src/client/platform/external-links.ts)).
-Reste à mesurer si un schéma maison passe dans le client Discord (`steam://` d'abord, puis
-`civ6bge://`). Hors activité (message du bot, onglet de navigateur), un lien cliquable marche sans
-réserve. Le navigateur demande au premier clic « Ouvrir BetterGameExperience ? », avec une case
-« toujours autoriser ».
+It remains to measure whether a custom scheme goes through in the Discord client (`steam://` first,
+then `civ6bge://`). Outside the activity (bot message, browser tab), a clickable link works without
+reservation. On the first click, the browser asks "Open BetterGameExperience?", with an "always
+allow" checkbox.
