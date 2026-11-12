@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="ru_RU">
 			<Text>Сигналы команды (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="ru_RU">
+			<Text>Колесо сигналов команды</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="ru_RU">
 			<Text>Зажмите X над картой, переместите курсор в сторону сигнала и отпустите клавишу. Союзники и наблюдатели получат сигнал, если у всех одинаковая версия лобби BGE.</Text>
 		</Row>

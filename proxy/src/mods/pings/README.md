@@ -12,15 +12,16 @@ both sender and receiver. Pings do not write game properties or enter a save.
 Edit [catalog.lua](catalog.lua). Each entry supplies a stable wire ID, a translated
 label, a color, an icon, a sound, and optionally a wheel angle and direct shortcut.
 The call without an angle is the center tap. Other angles are clockwise from the top.
-Digits 1–9 are available as Alt shortcuts.
+Digits 1–9 define default Alt shortcuts. Players can rebind the wheel and direct calls in Options → Key Bindings. Keep the action ID stable to preserve saved bindings.
 
 - Set `icon` to text or a Civ font icon such as `[ICON_Movement]`. Use `texture`
   for a DDS available to Civ’s texture manager. The map and wheel use the same entry.
 - Drop a signed 16-bit PCM WAV in [audio/](audio/) and set `sound` to its filename
   without the extension. Cargo automatically embeds it in the GameCore DLL. The cue
   honors the ping, master, effects and mute-on-focus-loss settings.
-- An active copy of the standalone v9 mod supplies its local DDS and Wwise events
-  for entries with a `skin` name. BGE handles its input and delivery. The public
+- An active copy of the standalone v9 mod supplies the wheel, selection ring,
+  ground ripples and blocked indicator. Its call icons and Wwise events apply to
+  entries with a `skin` name. BGE handles input and delivery. The public
   build ships its own sounds and uses Civ’s installed UI art by default.
 - Put new label keys in each [translation XML](../../../../textes/README.md) and run
   `python textes/gen_textes.py --strict` from the repository root.

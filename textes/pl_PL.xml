@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="pl_PL">
 			<Text>Sygnały drużyny (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="pl_PL">
+			<Text>Koło sygnałów drużyny</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="pl_PL">
 			<Text>Przytrzymaj X nad mapą, przesuń kursor w kierunku sygnału i puść klawisz. Sojusznicy i obserwatorzy otrzymają sygnał, jeśli wszyscy mają tę samą wersję lobby BGE.</Text>
 		</Row>

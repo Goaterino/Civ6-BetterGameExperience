@@ -16,6 +16,7 @@ const TEXT: &str = concat!(
     include_str!("../../textes/bgd_texte.lua")
 );
 const MAP: &str = concat!(
+    include_str!("mods/pings/bindings.lua"), "\n",
     include_str!("mods/pings/limits.lua"),
     "\n",
     include_str!("mods/pings/map.lua")

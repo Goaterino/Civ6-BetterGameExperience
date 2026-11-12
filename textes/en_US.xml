@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="en_US">
 			<Text>Team pings (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="en_US">
+			<Text>Team ping wheel</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="en_US">
 			<Text>Hold X over the map and release toward a call. Teammates and spectators receive it when all players have the same BGE lobby version.</Text>
 		</Row>

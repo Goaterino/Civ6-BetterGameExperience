@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="ja_JP">
 			<Text>チームのピン（BGE）</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="ja_JP">
+			<Text>チームのピンホイール</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="ja_JP">
 			<Text>マップ上でXを押したまま、合図の方向に動かして離します。全員のBGEロビーバージョンが一致すると、味方と観戦者に届きます。</Text>
 		</Row>

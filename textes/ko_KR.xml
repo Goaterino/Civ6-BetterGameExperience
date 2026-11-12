@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="ko_KR">
 			<Text>팀 신호 (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="ko_KR">
+			<Text>팀 신호 휠</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="ko_KR">
 			<Text>지도에서 X를 누른 채 원하는 신호 방향으로 움직인 뒤 놓으세요. 모두 같은 BGE 로비 버전을 사용하면 팀원과 관전자가 신호를 받습니다.</Text>
 		</Row>

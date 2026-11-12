@@ -641,6 +641,9 @@
 		<Row Tag="LOC_BGD_PINGS_NAME" Language="de_DE">
 			<Text>Teamsignale (BGE)</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="de_DE">
+			<Text>Teamsignal-Rad</Text>
+		</Row>
 		<Row Tag="LOC_BGD_PINGS_HELP" Language="de_DE">
 			<Text>X auf der Karte gedrückt halten und in Richtung eines Signals loslassen. Verbündete und Zuschauer empfangen es, wenn alle dieselbe BGE-Lobbyversion haben.</Text>
 		</Row>
