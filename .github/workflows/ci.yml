@@ -19,11 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Même chaîne d'outils que la release : GNU, avec son éditeur de liens embarqué
-      # (startup_proxy/build.rs passe un .def à ld).
-      - name: Rust (GNU)
+      # Mêmes chaînes d'outils que la release : GNU pour les proxys, avec son éditeur de liens
+      # embarqué (startup_proxy/build.rs passe un .def à ld), MSVC pour l'installeur (updater/build.rs).
+      - name: Rust (GNU et MSVC)
         run: |
-          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
+          rustup toolchain install stable-x86_64-pc-windows-gnu stable-x86_64-pc-windows-msvc --profile minimal
           rustup default stable-x86_64-pc-windows-gnu
 
       # Avec et sans les outils de diagnostic (feature `diag`, par défaut), comme la release.
@@ -31,7 +31,7 @@ jobs:
         run: |
           (cd proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
           (cd startup_proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
-          (cd updater && cargo test --release --locked)
+          (cd updater && cargo +stable-x86_64-pc-windows-msvc test --release --locked)
 
   scripts:
     runs-on: ubuntu-latest

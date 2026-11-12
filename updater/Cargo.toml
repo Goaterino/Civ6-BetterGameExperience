@@ -22,3 +22,6 @@ sha2 = "0.10"
 [profile.release]
 opt-level = "s"
 strip = true
+
+[build-dependencies]
+embed-resource = "3.0.12"

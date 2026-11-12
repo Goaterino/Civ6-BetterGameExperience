@@ -94,7 +94,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 
 ## Installation
 
-Prérequis : Rust (`stable-x86_64-pc-windows-gnu` suffit), Python 3.10+.
+Prérequis : Rust (`stable-x86_64-pc-windows-gnu` suffit ; l'installeur de la release est compilé
+par `stable-x86_64-pc-windows-msvc`, voir [updater/README.md](updater/README.md)), Python 3.10+.
 
 ```bash
 python -m venv .venv

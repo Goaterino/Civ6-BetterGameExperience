@@ -11,6 +11,7 @@
 
 mod game;
 mod gui;
+mod http;
 mod install;
 mod lang;
 #[path = "../../proxy/src/noms.rs"]
@@ -335,7 +336,7 @@ fn installed(version: &str, relaunch: bool) {
         match gui::ask(&page, &|_| false) {
             LANGUAGE_CHANGED => continue,
             RELAUNCH => {
-                let _ = Command::new("explorer.exe").arg(STEAM_RUN).spawn();
+                win::open(STEAM_RUN);
             }
             _ => {}
         }
