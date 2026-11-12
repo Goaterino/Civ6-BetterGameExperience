@@ -1,6 +1,7 @@
-//! Fenêtres de l'installeur : le TaskDialog de Windows. Il vient de comctl32 v6, que l'exe n'active
-//! pas par un manifeste embarqué (la chaîne GNU n'a pas windres) : `init` l'active par un contexte
-//! d'activation, à partir d'un manifeste écrit dans le dossier de travail.
+//! Fenêtres de l'installeur : le TaskDialog de Windows. Il vient de comctl32 v6, que le manifeste
+//! embarqué dans l'exe active (build.rs). Une compilation sans compilateur de ressources (chaîne GNU
+//! sans windres) n'a pas ce manifeste : `load` active alors comctl32 v6 par un contexte d'activation,
+//! à partir d'un manifeste écrit dans le dossier de travail.
 #![allow(non_snake_case, clippy::upper_case_acronyms)]
 
 use std::cell::Cell;
@@ -120,8 +121,15 @@ struct Ctx<'a> {
     toggled: Cell<bool>,
 }
 
+/// TaskDialogIndirect de comctl32 v6 : celui qu'active le manifeste embarqué (build.rs), sinon,
+/// pour une compilation sans compilateur de ressources, celui d'un contexte d'activation.
 fn load() -> Option<TaskDialogIndirect> {
     unsafe { win::SetProcessDPIAware() };
+    // comctl32 v5, chargé sans manifeste, n'a pas TaskDialogIndirect.
+    let f = unsafe { win::GetProcAddress(win::LoadLibraryW(wide("comctl32.dll").as_ptr()), c"TaskDialogIndirect".as_ptr().cast()) };
+    if !f.is_null() {
+        return Some(unsafe { std::mem::transmute::<*mut c_void, TaskDialogIndirect>(f) });
+    }
     let dir = crate::release::work_dir();
     std::fs::create_dir_all(&dir).ok()?;
     let path = dir.join("comctl32.manifest");

@@ -1,10 +1,8 @@
 //! Lecture d'une release : manifeste signé, puis fichiers contrôlés par leur SHA-256 (voir
-//! release/README.md). Les téléchargements passent par le curl.exe de Windows, sans pile TLS à embarquer.
+//! release/README.md). Les téléchargements passent par WinHTTP (`http.rs`).
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::os::windows::process::CommandExt;
-use std::process::Command;
 
 use base64::Engine;
 use ed25519_dalek::{Signature, VerifyingKey};
@@ -13,9 +11,6 @@ use sha2::{Digest, Sha256};
 
 use crate::lang::{self, t};
 use crate::textes as tx;
-
-/// Pas de fenêtre de console pour curl.exe : l'installeur n'en a pas.
-pub const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 const RELEASES: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases";
 /// Liste des releases publiées (les brouillons n'y sont pas sans jeton), pour le canal pré-release :
@@ -211,19 +206,8 @@ fn download(url: &str, dest: &Path) -> Result<(), String> {
         let name = url.rsplit('/').next().unwrap();
         return fs::copy(Path::new(&dir).join(name), dest).map(drop).map_err(|e| format!("{name} : {e}"));
     }
-    let curl = Path::new(&std::env::var_os("SystemRoot").unwrap_or("C:\\Windows".into())).join("System32\\curl.exe");
-    let out = Command::new(curl)
-        .args(["-fsSL", "--retry", "2", "-o"])
-        .arg(dest)
-        .arg(url)
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| format!("curl.exe : {e}"))?;
-    if out.status.success() {
-        Ok(())
-    } else {
-        Err(lang::f(tx::DOWNLOAD_OF_X_X, &[&url, &String::from_utf8_lossy(&out.stderr).trim()]))
-    }
+    let data = crate::http::get(url).map_err(|e| lang::f(tx::DOWNLOAD_OF_X_X, &[&url, &e]))?;
+    fs::write(dest, data).map_err(|e| format!("{}: {e}", dest.display()))
 }
 
 #[cfg(test)]

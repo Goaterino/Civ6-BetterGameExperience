@@ -2,8 +2,6 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::os::windows::process::CommandExt;
-use std::process::Command;
 
 use crate::win;
 
@@ -38,10 +36,7 @@ pub fn from_command(exe: &Path) -> Option<PathBuf> {
     exe.ancestors().find(|dir| is_game_dir(dir)).map(Path::to_path_buf)
 }
 
+/// Civilization VI est lancé : `CivilizationVI.exe`, `CivilizationVI_DX12.exe`…
 pub fn running() -> bool {
-    Command::new("tasklist")
-        .args(["/FI", "IMAGENAME eq CivilizationVI*", "/FO", "CSV", "/NH"])
-        .creation_flags(crate::release::CREATE_NO_WINDOW)
-        .output()
-        .is_ok_and(|out| String::from_utf8_lossy(&out.stdout).to_lowercase().contains("civilizationvi"))
+    win::process_names().iter().any(|n| n.to_lowercase().starts_with("civilizationvi"))
 }

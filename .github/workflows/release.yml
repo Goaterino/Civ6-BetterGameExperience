@@ -28,11 +28,12 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = tag ]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
           echo "VERSION=$v" >> "$GITHUB_ENV"
 
-      # Même chaîne d'outils qu'en local : GNU, avec son éditeur de liens embarqué (startup_proxy/build.rs
-      # passe un .def à ld).
-      - name: Rust (GNU)
+      # Proxys : chaîne GNU, avec son éditeur de liens embarqué (startup_proxy/build.rs passe un .def
+      # à ld). Installeur : chaîne MSVC (updater/build.rs), pour ses ressources (rc.exe) et un binaire
+      # que les antivirus confondent moins avec un logiciel malveillant.
+      - name: Rust (GNU et MSVC)
         run: |
-          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
+          rustup toolchain install stable-x86_64-pc-windows-gnu stable-x86_64-pc-windows-msvc --profile minimal
           rustup default stable-x86_64-pc-windows-gnu
 
       - uses: actions/setup-python@v7
@@ -51,7 +52,7 @@ jobs:
         run: |
           (cd proxy && cargo test --release && cargo test --release --no-default-features)
           (cd startup_proxy && cargo test --release && cargo test --release --no-default-features)
-          (cd updater && cargo test --release)
+          (cd updater && cargo +stable-x86_64-pc-windows-msvc test --release)
           (cd rapport_worker && node --test test/index.test.js)
 
       # Sur un tag, la version de la release est gravée dans les DLL (proxy/src/version.rs, RELEASE) :
@@ -68,7 +69,7 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = tag ]; then export BGD_RELEASE="$VERSION"; fi
           (cd proxy && cargo build --release --no-default-features)
           (cd startup_proxy && cargo build --release --no-default-features)
-          (cd updater && cargo build --release)
+          (cd updater && cargo +stable-x86_64-pc-windows-msvc build --release)
           mkdir dist
           cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
           # Nom versionné : un joueur voit quelle version il a téléchargée. Lancé, l'installeur retire

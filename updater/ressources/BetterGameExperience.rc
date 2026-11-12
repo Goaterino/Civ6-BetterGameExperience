@@ -1,0 +1,40 @@
+// Ressources de l'exe, compilées par build.rs (embed-resource) : manifeste et informations de
+// version (Propriétés > Détails). VER_* viennent de build.rs : la version de la release
+// (BGD_RELEASE), 0.0.0 pour une compilation locale.
+#pragma code_page(65001)
+
+// Manifeste : requestedExecutionLevel asInvoker (pas d'élévation au lancement : l'installeur ne la
+// demande que pour écrire dans Program Files, par --apply ; sans cette ligne, Windows élève d'office
+// un exe dont la description parle d'installation), comctl32 v6 (TaskDialog de gui.rs), Windows 7 à
+// 11, DPI du système.
+1 24 "BetterGameExperience.manifest"
+
+1 VERSIONINFO
+FILEVERSION VER_MAJOR, VER_MINOR, VER_PATCH, 0
+PRODUCTVERSION VER_MAJOR, VER_MINOR, VER_PATCH, 0
+FILEFLAGSMASK 0x3F
+FILEFLAGS 0
+FILEOS 0x40004
+FILETYPE 1
+FILESUBTYPE 0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "Timothé RIDEL"
+      VALUE "FileDescription", "BetterGameExperience installer"
+      VALUE "FileVersion", VER_STR
+      VALUE "InternalName", "BetterGameExperience"
+      VALUE "LegalCopyright", "Copyright (c) 2026 Timothé RIDEL, MIT License"
+      VALUE "OriginalFilename", "BetterGameExperience.exe"
+      VALUE "ProductName", "BetterGameExperience"
+      VALUE "ProductVersion", VER_STR
+      VALUE "Comments", "https://github.com/Goaterino/Civ6-BetterGameExperience"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

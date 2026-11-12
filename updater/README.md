@@ -44,7 +44,9 @@ emplacement fixe, il s'appelle `BetterGameExperience.exe`.
 - **Jeu** : le dossier qui contient `DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll`,
   cherché parmi les parents de l'exe lancé par Steam, sinon dans les bibliothèques de
   `steamapps/libraryfolders.vdf` (dossier de Steam lu dans `HKCU\Software\Valve\Steam`).
-- **Téléchargement** : par le `curl.exe` de Windows, dans `%TEMP%\BetterGameExperience`. Le manifeste doit
+- **Téléchargement** : par WinHTTP, la pile HTTP de Windows ([src/http.rs](src/http.rs), proxy du
+  système, deux nouveaux essais sur une erreur réseau ou serveur passagère), dans
+  `%TEMP%\BetterGameExperience`. Le manifeste doit
   porter une signature valide pour la clé publique embarquée, et chaque DLL le SHA-256 du manifeste.
 - **Pose**, comme les `install.ps1` : à côté des fichiers du jeu, sans en remplacer aucun
   ([proxy/src/noms.rs](../proxy/src/noms.rs)) : `winmm.dll` dans `Base/Binaries/Win64Steam`,
@@ -77,11 +79,21 @@ emplacement fixe, il s'appelle `BetterGameExperience.exe`.
   `BetterGameExperience_V<version>.exe` de même version ou plus anciens, doublons « (1) » du
   navigateur compris. Jamais un plus récent, ni rien à l'emplacement fixe ; une compilation locale
   (sans `BGD_RELEASE`) ne retire rien.
-- **Pas de console** : l'exe est une application fenêtrée, et `curl.exe` et `tasklist` sont lancés
-  sans fenêtre (`CREATE_NO_WINDOW`).
-- **Fenêtres** : le TaskDialog vient de comctl32 v6, qu'on active d'habitude par un manifeste
-  embarqué dans l'exe. La chaîne GNU n'ayant pas `windres`, `gui.rs` l'active au démarrage par un
-  contexte d'activation, à partir d'un manifeste écrit dans `%TEMP%\BetterGameExperience`.
+- **Pas de console, pas de processus caché** : l'exe est une application fenêtrée, et ne lance
+  aucun programme sans fenêtre. Les téléchargements passent par WinHTTP, la détection du jeu en
+  cours par la liste des processus (Toolhelp), la relance du jeu par le shell (`steam://`). Un
+  `curl.exe` ou un `tasklist` lancé en cachette est l'un des comportements que les antivirus
+  prêtent aux logiciels malveillants.
+- **Ressources** ([build.rs](build.rs), [ressources/](ressources/)) : un manifeste (pas d'élévation
+  au lancement, `asInvoker` ; comctl32 v6 ; Windows 7 à 11 ; DPI du système) et les informations de
+  version (Propriétés > Détails : description, éditeur, version de la release). La release compile
+  l'installeur avec la chaîne MSVC, dont `rc.exe` compile les ressources, CRT liée statiquement
+  ([.cargo/config.toml](.cargo/config.toml)) : `cargo +stable-x86_64-pc-windows-msvc build --release`,
+  avec les Build Tools de Visual Studio. La chaîne GNU compile aussi l'installeur, sans ressources si
+  elle n'a pas `windres`.
+- **Fenêtres** : le TaskDialog vient de comctl32 v6, qu'active le manifeste embarqué. Sans lui
+  (compilation GNU sans `windres`), `gui.rs` l'active au démarrage par un contexte d'activation, à
+  partir d'un manifeste écrit dans `%TEMP%\BetterGameExperience`.
 - **À jour** : le SHA-256 de la DLL installée est celui du manifeste. L'installeur ne se fie pas au
   numéro de release gravé dans les DLL : une compilation locale n'en a pas.
 
