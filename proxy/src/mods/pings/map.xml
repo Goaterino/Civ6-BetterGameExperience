@@ -1,0 +1,45 @@
+<!-- Inserted in GenVFX, a world-effects context below the HUD. -->
+<Container ID="BGD_PingMap" Size="parent,parent" ConsumeMouse="0" Hidden="1">
+  <Container ID="Markers"/>
+  <WorldAnchor ID="FailedAnchor" Hidden="1">
+    <Container ID="FailedArt" Anchor="C,C" Size="64,64" Offset="0,-28" ConsumeMouse="0">
+      <Image Texture="Controls_CircleBacking" Anchor="C,C" Size="54,54" StretchMode="Fill"/>
+      <Label ID="FailedGlyph" Anchor="C,C" Style="FontNormal28"/>
+      <Image ID="FailedIcon" Anchor="C,C" Size="44,44" StretchMode="Fill" Hidden="1"/>
+      <Label Anchor="R,T" Style="FontNormal28" Color0="255,94,86,255" String="×" FontStyle="Stroke"/>
+    </Container>
+  </WorldAnchor>
+  <Container ID="Wheel" Size="216,216" Anchor="L,T" Hidden="1" ConsumeMouse="0">
+    <Image Texture="Controls_CircleBacking" Anchor="C,C" Size="206,206" StretchMode="Fill"/>
+    <Image Texture="Controls_CircleRim40" Anchor="C,C" Size="206,206" StretchMode="Fill"/>
+    <Image ID="Focus" Texture="Controls_CircleRim40" Anchor="C,C" Size="62,62" StretchMode="Fill"/>
+    <Container ID="Choices" Size="parent,parent"/>
+    <Label ID="BlockedChoice" Anchor="C,C" Style="FontNormal40" Color0="255,94,86,255" String="×" Hidden="1" FontStyle="Stroke"/>
+    <Label ID="Call" Anchor="C,B" Offset="0,-18" Style="FontNormal18" FontStyle="Stroke" ColorSet="White_Black"/>
+  </Container>
+</Container>
+<Instance Name="BGD_PingChoice">
+  <Container ID="Root" Anchor="C,C" Size="54,54" ConsumeMouse="0">
+    <Label ID="Glyph" Anchor="C,C" Style="FontNormal40" FontStyle="Stroke"/>
+    <Image ID="Icon" Anchor="C,C" Size="50,50" StretchMode="Fill" Hidden="1"/>
+  </Container>
+</Instance>
+<Instance Name="BGD_PingMarker">
+  <WorldAnchor ID="Anchor">
+    <Container ID="Art" Anchor="C,C" Size="2,2" ConsumeMouse="0">
+      <Image ID="Wave" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="70,35"/>
+      <Image ID="Echo" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="42,21"/>
+      <Image ID="Foot" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="35,17"/>
+      <Container ID="Badge" Anchor="C,C" Size="55,55" Offset="0,-28">
+        <Image Texture="Controls_CircleBacking" StretchMode="Fill" Size="parent,parent" Anchor="C,C"/>
+        <Label ID="Glyph" Anchor="C,C" Style="FontNormal40" FontStyle="Stroke"/>
+        <Image ID="Icon" Anchor="C,C" Size="parent,parent" StretchMode="Fill" Hidden="1"/>
+      </Container>
+      <Label ID="Sender" Anchor="C,C" Offset="0,20" Style="FontNormal14" FontStyle="Stroke" ColorSet="White_Black"/>
+    </Container>
+  </WorldAnchor>
+</Instance>
+<Stack ID="BGD_PingVolumeRow" Hidden="1" Anchor="R,T" StackGrowth="Left" Padding="5">
+  <Slider ID="BGD_PingVolume" Style="SliderControl" Anchor="C,C" Offset="5,0" Size="300,13"/>
+  <Label ID="BGD_PingCaption" Anchor="L,C" Style="ShellOptionText"/>
+</Stack>

@@ -1462,24 +1462,17 @@ pub unsafe fn on_gamecore_loaded() {
     }
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
 
-    // XML d'abord : le bloc Lua dépend des calques.
-    if BOUTONS.load(Ordering::Relaxed)
-        || JOURNAL.load(Ordering::Relaxed)
-        || AVANCEMENT.load(Ordering::Relaxed)
-        || crate::mods_ui::xml_needed()
-        || crate::congres::pose()
-    {
-        // Si le proxy de démarrage est installé, la lecture est déjà détournée : on s'enchaîne.
-        match exe::hook_read_xml(exe, hook_read_xml as *const () as usize) {
-            Ok(h) => {
-                XML_TRAMP.store(h.tramp, Ordering::Relaxed);
-                if h.chained {
-                    log("ui : lecture XML déjà détournée (proxy de démarrage), détour enchaîné");
-                }
-                *XML_HOOK.lock().unwrap() = Some(h);
+    // GenVFX needs XML even with every local UI option off. The lobby verdict is read per context.
+    // Si le proxy de démarrage est installé, la lecture est déjà détournée : on s'enchaîne.
+    match exe::hook_read_xml(exe, hook_read_xml as *const () as usize) {
+        Ok(h) => {
+            XML_TRAMP.store(h.tramp, Ordering::Relaxed);
+            if h.chained {
+                log("ui : lecture XML déjà détournée (proxy de démarrage), détour enchaîné");
             }
-            Err(e) => log(&format!("ui : {e}, pas de calques")),
+            *XML_HOOK.lock().unwrap() = Some(h);
         }
+        Err(e) => log(&format!("ui : {e}, pas de calques")),
     }
 
     let Some(slot) = iat_slot(exe, "HavokScript_FinalRelease.dll", "luaL_loadbuffer") else {

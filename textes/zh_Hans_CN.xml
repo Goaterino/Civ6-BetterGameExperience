@@ -638,5 +638,41 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="zh_Hans_CN">
 			<Text>为奇观建造提供 {1} [ICON_Production] 生产力，若为远古或古典时代的奇观则为 {2}。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="zh_Hans_CN">
+			<Text>队伍信号（BGE）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="zh_Hans_CN">
+			<Text>在地图上按住 X，朝所需信号的方向移动鼠标后松开。所有人的 BGE 大厅版本相同时，队友和观战者都能收到信号。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="zh_Hans_CN">
+			<Text>看这里</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="zh_Hans_CN">
+			<Text>危险</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="zh_Hans_CN">
+			<Text>正在路上</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="zh_Hans_CN">
+			<Text>请求支援</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="zh_Hans_CN">
+			<Text>敌人消失</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="zh_Hans_CN">
+			<Text>信号音量  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="zh_Hans_CN">
+			<Text>有多名玩家使用此名称，请使用 #席位号。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="zh_Hans_CN">
+			<Text>在 /mute 或 /unmute 后输入其他玩家的名称或 #席位号。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="zh_Hans_CN">
+			<Text>已屏蔽{1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="zh_Hans_CN">
+			<Text>已取消屏蔽{1}。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

@@ -638,5 +638,41 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="es_ES">
 			<Text>Otorga {1} de [ICON_Production] producción para la construcción de maravillas, {2} si la maravilla es de la Era Antigua o Clásica.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="es_ES">
+			<Text>Señales de equipo (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="es_ES">
+			<Text>Mantén X sobre el mapa y suelta en la dirección de la señal. Los aliados y espectadores la reciben si todos usan la misma versión de sala de BGE.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="es_ES">
+			<Text>Mirad aquí</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="es_ES">
+			<Text>Peligro</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="es_ES">
+			<Text>Voy de camino</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="es_ES">
+			<Text>Necesito ayuda</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="es_ES">
+			<Text>Enemigo desaparecido</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="es_ES">
+			<Text>Volumen de las señales  {1} %</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="es_ES">
+			<Text>Varios jugadores tienen ese nombre. Usa #puesto.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="es_ES">
+			<Text>Usa /mute o /unmute con el nombre o el #puesto de otro jugador.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="es_ES">
+			<Text>Has silenciado a {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="es_ES">
+			<Text>Has dejado de silenciar a {1}.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
