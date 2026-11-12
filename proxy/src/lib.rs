@@ -30,6 +30,7 @@ mod debordement;
 mod depart;
 mod empilement;
 mod exe;
+mod fin_tour;
 mod forward;
 mod improvements;
 mod mods_ui;
@@ -288,6 +289,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             congres::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();
+            fin_tour::on_proxy_unload();
             empilement::on_proxy_unload();
             depart::on_proxy_unload();
             carte::on_proxy_unload();
