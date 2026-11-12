@@ -356,6 +356,9 @@ journaliser, quand on héberge un salon (`MultiplayerJoinGameComplete`) :
 Le testeur héberge, un ami rejoint **avec le lien journalisé**. S'il arrive dans le salon, la
 voie 1 est validée ; sinon le journal dit où ça casse, et on passe à la voie 2.
 
+Détail des appels, du journal attendu, du protocole et des suites selon le résultat :
+[sonde_steam.md](sonde_steam.md).
+
 ## Gardes
 
 - **Jamais en partie** : seuls les contextes du menu et de la staging room traitent une URI, et
@@ -390,7 +393,7 @@ voie 1 est validée ; sinon le journal dit où ça casse, et on passe à la voie
 
 | palier | contenu | dépend de |
 |---|---|---|
-| 0 | **La sonde Steam**, en pré-release | un testeur sous Windows |
+| 0 | **La sonde Steam**, en pré-release ([sonde_steam.md](sonde_steam.md)) | une machine Windows avec le jeu et Steam |
 | 1 | **Le relais et l'amorçage** : `--uri`, `uri.txt`, `assurer_amorcage()`, retrait à la désinstallation ; surveillance de `uri.txt` par le proxy (fil, natives) | rien |
 | 2 | **`creation_salon`** : format v1, presets embarqués, application depuis le menu et dans un salon, popup ; tests Rust (décodage, versions, expiration, taille) et Lua (à la manière de [test_salon.lua](../../startup_proxy/tests/test_salon.lua)) | palier 1 |
 | 3 | **`feedback_url`** et **`rejoindre_salon`** | paliers 0 et 2 |
