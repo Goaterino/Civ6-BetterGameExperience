@@ -55,7 +55,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
   hook Frida et décodeur de config (analyse statique) ; créer et rejoindre un salon depuis un site
-  de draft par des liens `civ6bge://` ([hook_externe](analyses/lobby/hook_externe.md), conception) ;
+  de draft par des liens `civ6bge://` ([hook_externe](analyses/lobby/hook_externe.md), conception),
+  et la sonde Steam qui doit en fournir le lien du salon ([sonde_steam](analyses/lobby/sonde_steam.md),
+  conception) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
