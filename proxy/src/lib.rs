@@ -36,6 +36,7 @@ mod improvements;
 mod mods_ui;
 mod noms;
 mod patch;
+mod pings;
 mod pol;
 mod ports;
 mod rendements;

@@ -638,5 +638,41 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ja_JP">
 			<Text>遺産の建造に [ICON_Production] 生産力+{1}。古代または古典時代の遺産の場合は+{2}。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="ja_JP">
+			<Text>チームのピン（BGE）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="ja_JP">
+			<Text>マップ上でXを押したまま、合図の方向に動かして離します。全員のBGEロビーバージョンが一致すると、味方と観戦者に届きます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="ja_JP">
+			<Text>ここに注目</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="ja_JP">
+			<Text>危険</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="ja_JP">
+			<Text>向かっています</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="ja_JP">
+			<Text>援護を要請</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="ja_JP">
+			<Text>敵を見失った</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="ja_JP">
+			<Text>ピンの音量  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="ja_JP">
+			<Text>同じ名前のプレイヤーがいます。#席番号を指定してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="ja_JP">
+			<Text>/mute または /unmute の後に他のプレイヤーの名前か #席番号を入力してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="ja_JP">
+			<Text>{1}をミュートしました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ja_JP">
+			<Text>{1}のミュートを解除しました。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

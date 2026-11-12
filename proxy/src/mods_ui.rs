@@ -90,11 +90,6 @@ pub fn any() -> bool {
     [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS, &SPECTATEUR].iter().any(|f| on(f))
 }
 
-/// Une reprise a besoin de la lecture XML.
-pub fn xml_needed() -> bool {
-    on(&BANDEAU) || on(&POLITIQUES) || on(&RAPPORTS)
-}
-
 pub fn journal_reglages() -> String {
     let s = |f: &AtomicBool| if on(f) { "on" } else { "off" };
     format!(
@@ -256,6 +251,18 @@ pub fn patch_spectateur_ui(src: &[u8]) -> Result<Vec<u8>, String> {
 /// Le script entier à compiler à la place de celui de l'exe, et ce qu'on a fait (journal).
 pub fn remplacer(chunk: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), String>> {
     let vide = |quoi: &str| Some(Ok((format!("-- BetterGameDLLs : {quoi}, neutralisé par le proxy.\r\n").into_bytes(), format!("{quoi} neutralisé"))));
+    if is_file(chunk, "TeamPings.lua") && has(src, "TeamPingMarker")
+        || is_file(chunk, "TeamPingVolume.lua") && has(src, "TeamPings_Volume")
+    {
+        return vide("Team Pings standalone");
+    }
+    if is_file(chunk, "TeamPingChat.lua") && has(src, "TeamPingChatEvents") {
+        return Some(Ok((b"include(TeamPingChatSource or 'ChatPanel')".to_vec(), "chat pris en charge par BGE".into())));
+    }
+    if is_file(chunk, "TeamPingTracker.lua") && has(src, "TeamPingChatEvents") {
+        let clean = String::from_utf8_lossy(src).replace("include(\"TeamPingChatEvents\")", "");
+        return Some(Ok((clean.into_bytes(), "suivi du monde pris en charge par BGE".into())));
+    }
     let bsm = dans_bsm(chunk);
     if bsm {
         // Présence du mod dans la partie, même si ses remplacements sont désactivés.
@@ -416,6 +423,9 @@ fn ajoute(src: &[u8], bloc: &str) -> Vec<u8> {
 /// Le script avec nos blocs, et ce qu'on a fait. `entree_bandeau` : c'est le script du contexte
 /// TopPanel, le premier compilé après TopPanel.xml (voir `xml_lu`).
 pub fn ajouter(chunk: &str, src: &[u8], entree_bandeau: bool) -> Option<Result<(Vec<u8>, String), String>> {
+    if let Some(text) = crate::pings::lua(chunk, src) {
+        return Some(Ok((text, "signaux d’équipe (POL)".into())));
+    }
     if (on(&CHARGES) || on(&ROUTES)) && is_file(chunk, "UnitFlagManager.lua") {
         return Some(Ok((patch_drapeaux(src, on(&CHARGES), on(&ROUTES)), "charges et routes sur les drapeaux".into())));
     }
@@ -545,6 +555,9 @@ unsafe fn langue() -> String {
 
 /// Le XML à mettre à la place de celui que l'exe vient de lire, et ce qu'on a fait.
 pub unsafe fn xml(name: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), String>> {
+    if is_file(name, "GenVFX.xml") && crate::pol::actifs() {
+        return Some(crate::pings::xml(src).map(|t| (t, "signaux sur la carte".into())));
+    }
     if on(&RAPPORTS) && is_file(name, "ReportScreen.xml") {
         let l = langue();
         return Some(Ok((traduire_xml(RAPPORTS_XML, &l).into_bytes(), format!("écran de Better Report Screen du proxy ({l})"))));
@@ -642,9 +655,21 @@ unsafe extern "C-unwind" fn lua_fin_route(l: *mut c_void) -> i32 {
     }
 }
 
+unsafe extern "C-unwind" fn lua_ping_sound(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let name = (h.to_lstring)(l, 1, std::ptr::null_mut());
+    if name.is_null() {
+        crate::pings::stop();
+    } else if crate::pol::actifs() {
+        crate::pings::play(CStr::from_ptr(name).to_bytes(), (h.to_integer)(l, 2), (h.to_integer)(l, 3) != 0);
+    }
+    0
+}
+
 unsafe extern "C-unwind" fn installer(l: *mut c_void) -> i32 {
     if let Some(h) = hks() {
-        for (name, f) in [(&b"Civ6Proxy_Charger\0"[..], lua_charger as LuaCFn), (&b"Civ6Proxy_FinRoute\0"[..], lua_fin_route as LuaCFn)] {
+        for (name, f) in [(&b"Civ6Proxy_Charger\0"[..], lua_charger as LuaCFn), (&b"Civ6Proxy_FinRoute\0"[..], lua_fin_route as LuaCFn),
+                          (&b"Civ6Proxy_PingSound\0"[..], lua_ping_sound as LuaCFn)] {
             (h.push_closure)(l, f, 0, name.as_ptr() as *const c_char, 0);
             (h.set_field)(l, LUA_GLOBALSINDEX, name.as_ptr() as *const c_char);
         }

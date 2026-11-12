@@ -50,9 +50,10 @@ local function BGD_PartieRelais()
 	local jetons = {};
 	for j in string.gmatch(liste, "[^,]+") do jetons[j] = true; end
 	local ajoutes, sans = {}, {};
+	local pings = GameConfiguration.GetValue("BGD_TEAM_PINGS");
 	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 		local pc = PlayerConfigurations[id];
-		if id ~= localID and pc ~= nil and pc:IsHuman() and Network.IsPlayerConnected(id) then
+		if id ~= localID and pc ~= nil and (pc:IsHuman() or ((pings == true or pings == 1) and pc:GetSlotStatus() == SlotStatus.SS_OBSERVER)) and Network.IsPlayerConnected(id) then
 			local v, jh, perso = string.match(tostring((pc:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
 			if v == version and jh == jeton then
 				if not jetons[perso] then

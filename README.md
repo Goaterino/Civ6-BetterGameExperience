@@ -59,6 +59,15 @@ launching. Every player needs BetterGameExperience, at the same version.
 no player sees the research and civic progress (**x/y (+z)**) or the stored production of cities,
 whatever their own settings.
 
+**Team pings (BGE)** is on by default for new network games. The host can turn it off in game setup.
+It uses the same lobby version check as No First/Last moves, including connected observers.
+Tap **X** over the map to mark a tile, or hold **X**, move toward a call and release. Up is danger,
+right is on my way, down is assist, and left is enemy missing. **Alt+1–4** send missing, danger,
+on my way and assist directly. Teammates see the sender’s name for four seconds. Spectators see both teams.
+Adjust **Team ping volume** under **Audio**. Type `/mute name` or `/unmute name` in chat to control
+both chat and pings from that player. A blocked ping gives a silent local animation.
+[Editing ping types, icons and sounds](proxy/src/mods/pings/README.md).
+
 ## Settings
 
 Everything can be changed in **Options → BetterGameExperience**: one setting per feature, and a master

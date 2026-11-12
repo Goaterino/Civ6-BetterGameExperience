@@ -638,5 +638,41 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="pl_PL">
 			<Text>Zapewnia {1} pkt. [ICON_Production] produkcji na budowę cudu, {2}, jeśli cud pochodzi z ery starożytnej lub klasycznej.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="pl_PL">
+			<Text>Sygnały drużyny (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="pl_PL">
+			<Text>Przytrzymaj X nad mapą, przesuń kursor w kierunku sygnału i puść klawisz. Sojusznicy i obserwatorzy otrzymają sygnał, jeśli wszyscy mają tę samą wersję lobby BGE.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="pl_PL">
+			<Text>Spójrz tutaj</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="pl_PL">
+			<Text>Niebezpieczeństwo</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="pl_PL">
+			<Text>Już idę</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="pl_PL">
+			<Text>Potrzebuję pomocy</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="pl_PL">
+			<Text>Wróg zniknął</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="pl_PL">
+			<Text>Głośność sygnałów  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="pl_PL">
+			<Text>Kilku graczy ma tę nazwę. Użyj #numeru miejsca.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="pl_PL">
+			<Text>Użyj /mute lub /unmute z nazwą innego gracza lub #numerem miejsca.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="pl_PL">
+			<Text>Wyciszono gracza {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="pl_PL">
+			<Text>Cofnięto wyciszenie gracza {1}.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
