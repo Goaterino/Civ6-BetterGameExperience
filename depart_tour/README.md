@@ -333,6 +333,61 @@ secondes le couvrirait, au prix d'accords refusés à chaque fin de tour.
 Reste à vérifier en partie : plus de tour bloqué, et un accord retenu laisse l'écran et l'accord en
 attente dans un état propre (l'autre joueur ne voit rien arriver).
 
+### Diplomatie reçue pendant le passage de tour : la cause dans GameCore
+
+Rapport BGE-FB5126 (0.9.1, 2026-11-11, 10 humains), passage 59 → 60 : le joueur 1 demande une
+ambassade au joueur 9, la fin simultanée part, et l'acceptation du joueur 9
+(`DiplomacyAction … SET_EMBASSY`) arrive chez l'hôte juste après `Game Turn Ended: 59`. L'hôte
+écrit `Game Turn: 60` dans la même seconde, avant `StartGameSyncCheck()`. Les 7 joueurs dont le
+`GameTurnComplete` arrive ensuite commencent le tour 60 « tour fini » et le passent en boucle,
+comme au 9 novembre. Le correctif Lua ne retient que les accords commerciaux : l'ambassade passe.
+
+Lu dans GameCore (Ghidra, noms de fonctions repris du `.map` d'une compilation voisine) :
+- `EndTurn` (`180044b20`, journal `Game Turn Ended`) lève le drapeau de fin de tour (`180b13a81`,
+  lu par `180045dc0`). Le prochain `Game::Processor::Update` (`180046200`) le trouve levé et appelle
+  `BeginTurn` (`180044700`, journal `Game Turn: %i`), **quel qu'en soit l'appelant**. GameCore
+  n'attend rien : l'attente des `GameTurnComplete` et le contrôle de synchro sont dans l'exe, qui
+  envoie ensuite `GameUpdate InitialTurnProcessing=1`.
+- `GameUpdate::Execute` (`1800318d0`) ignore toute autre mise à jour tant que le drapeau est levé
+  (« GameUpdate (Ignored): … outside a game turn »). `GameTurnComplete::Execute` (`180031710`)
+  aussi : un `GameTurnComplete` n'est appliqué que pendant un tour. Dans un passage normal, ils
+  arrivent tous après `Game Turn Ended` et ne font rien dans GameCore.
+- `DiplomacyAction::Execute` (`1800308b0`) et `DiplomacyDeal::Execute` (`180030b70`) appliquent
+  l'action, puis lancent l'étape de mise à jour (`18060eca0`) **sans regarder le drapeau**.
+  `DiplomacySession::Execute` (`180030fe0`) aussi, pour le type `0x1baabc8b` quand aucun joueur n'a
+  son tour actif, ce qui est le cas après `EndTurn`.
+
+Reçu entre `EndTurn` et le `GameUpdate` initial, un tel message démarre donc le tour avant le
+contrôle de synchro. Les `GameTurnComplete` du tour fini arrivés après comptent pour le nouveau
+tour, et marquent leurs joueurs « tour fini » : ce sont exactement les joueurs bloqués (les 7 au
+tour 60, les 7 au tour 5 et le joueur 4 au tour 53 le 9 novembre).
+
+Ces messages annulent la fin de tour de leur expéditeur (`GetUnreadiesTurn` rend vrai pour
+`DiplomacyAction`, comme pour `UnitCommand`) : un joueur qui a passé son tour puis fait de la
+diplomatie reprend son tour. Le créneau dangereux n'est donc pas « tour passé » mais « tour
+terminé », après `EndTurn`, que seul le drapeau de GameCore indique.
+
+**Correctif** ([proxy/src/fin_tour.rs](../proxy/src/fin_tour.rs), correctif POL) : les trois appels
+à l'étape de mise à jour (`1800308cf`, `180030b98`, `1800310d2`) passent par un relais qui la saute
+quand le drapeau de fin de tour est levé, comme `GameUpdate::Execute`. L'action est appliquée ; le
+`GameUpdate` initial qui suit le contrôle de synchro lance la mise à jour et le tour. Drapeau
+baissé, rien ne change. Journal : `fin de tour : DiplomacyAction exécuté après la fin du tour…`.
+
+Les messages sont identifiés par leur vtable, qui suit leur nom dans `.rdata` (`DiplomacyAction`
+`18095d718`, `DiplomacyDeal` `18095d7f8`, `DiplomacySession` `18095d8e0`). `DiplomacyStatement::Execute`
+(`180031440`) ne lance que la mise à jour de la diplomatie (`180173130`), pas `Game::Processor::Update`
+(appelée par la seule étape `18060eca0`) : le `MAKE_DEAL` du 9 novembre ne démarre pas le tour, le
+`DiplomacyDeal` qui le précède si. Autres appelants de l'étape : `GameUpdate`, `GameTurnComplete`,
+`PlayerTurnComplete`, `PlayerSwap` (`180034b70`) et `PlayerConnectionChange` (`180033910`), un chemin
+local qui termine le tour d'un joueur (`18035e840`), et l'interface de l'exe (`180576a70`). Par
+lecture du code, une connexion, une déconnexion ou un échange de joueur dans ce créneau ferait sans
+doute de même. Pas observé, pas corrigé. Le troisième drapeau lu par `Update` (`180b13a82`) ne vaut 1
+qu'à l'initialisation de la partie (`1800451c0`), pour le premier tour.
+
+Limite : le correctif empêche le tour de démarrer avant la synchro, et les joueurs bloqués « tour
+fini ». Il ne garantit pas que l'action soit appliquée au même moment sur toutes les machines (avant
+`EndTurn` chez l'une, après chez l'autre) : la désynchro relevée au contrôle de synchro peut rester.
+
 ## Implémentation
 
 | où | quoi |
@@ -342,6 +397,7 @@ attente dans un état propre (l'autre joueur ne voit rien arriver).
 | [proxy/src/ui_depart_panneau.lua](../proxy/src/ui_depart_panneau.lua) | à la fin de `ActionPanel.lua` : pendant la retenue, `UI.IsProcessingMessages()` vrai par une table `UI` propre au contexte (bouton de fin de tour en attente : `OnRefresh` lit l'état réel de la simulation, et `EndTurnDirty` / `EndTurnBlockingChanged` arrivent avant `LocalPlayerTurnBegin`), `OnEndTurnBlockingChanged` rejoué au début du tour, jauge du minuteur figée ; journal `depart : panneau : …` |
 | [proxy/src/ui_depart_chat.lua](../proxy/src/ui_depart_chat.lua) | à la fin de `ChatPanel.lua` : signaux `.bgd_` cachés, lignes locales `BGE - …` |
 | [proxy/src/ui_accord_fin.lua](../proxy/src/ui_accord_fin.lua) | à la fin de `DiplomacyDealView.lua` : pas d'accord vers un humain une fois le minuteur écoulé ni pendant le passage de tour (voir plus haut) |
+| [proxy/src/fin_tour.rs](../proxy/src/fin_tour.rs) | correctif POL : après `EndTurn`, `DiplomacyAction`, `DiplomacyDeal` et `DiplomacySession` ne lancent plus la mise à jour qui démarre le tour suivant (voir plus haut) |
 | [startup_proxy/src/option_partie.lua](../startup_proxy/src/option_partie.lua) | à la fin de `SetupParameters.lua` : ligne `BGD_DEPART_SIMULTANE` insérée dans `Parameters` (approche n° 2) |
 
 Choix faits à l'implémentation :

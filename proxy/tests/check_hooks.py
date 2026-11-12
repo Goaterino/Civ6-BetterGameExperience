@@ -132,6 +132,21 @@ for rva in PILE_RVAS:
     assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
     print(f"empilement : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
+# Passage de tour (fin_tour.rs) : l'étape de mise à jour `18060eca0` en fin de DiplomacyAction,
+# DiplomacyDeal (jmp terminal) et DiplomacySession (call) redirigée vers un relais
+# `mov edx,quel ; jmp [rip+0]`.
+FIN_APPELS, FIN_CALLEE = ((0x308CF, 0xE9), (0x30B98, 0xE9), (0x310D2, 0xE8)), 0x60ECA0
+for i, (rva, opcode) in enumerate(FIN_APPELS):
+    code = ctypes.string_at(base + rva, 5)
+    assert code[0] == opcode, f"fin de tour {rva:#x} : pas de jmp/call ({code.hex()})"
+    stub = base + rva + 5 + struct.unpack("<i", code[1:])[0]
+    assert stub != base + FIN_CALLEE, f"fin de tour {rva:#x} : appel non redirigé"
+    jump = ctypes.string_at(stub, 19)
+    assert jump[:11] == bytes([0xBA]) + struct.pack("<I", i) + bytes.fromhex("ff2500000000"), f"fin de tour {rva:#x} : relais inattendu ({jump.hex()})"
+    hook = struct.unpack("<Q", jump[11:])[0]
+    assert h <= hook < h + 0x400000, f"fin de tour {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
+    print(f"fin de tour : {code[:1].hex()} {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+
 # Le proxy n'exporte que les noms de l'originale, plus DllMain, les deux exports de diagnostic et sa
 # version (BgdVersion, lue par le proxy de démarrage).
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -169,4 +184,8 @@ for rva in PILE_RVAS:
     code = ctypes.string_at(base + rva, 5)
     assert base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + PILE_CALLEE, f"empilement {rva:#x} : appel non restauré"
 print("empilement : appels d'origine restaurés après déchargement du proxy")
+for rva, opcode in FIN_APPELS:
+    code = ctypes.string_at(base + rva, 5)
+    assert code[0] == opcode and base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + FIN_CALLEE, f"fin de tour {rva:#x} : appel non restauré"
+print("fin de tour : appels d'origine restaurés après déchargement du proxy")
 print("OK")

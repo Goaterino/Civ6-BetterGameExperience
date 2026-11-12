@@ -66,6 +66,7 @@ pub(crate) fn real_module() -> usize {
         crate::ui::on_gamecore_loaded();
         crate::citoyens::on_gamecore_loaded(h);
         crate::ports::on_gamecore_loaded(h);
+        crate::fin_tour::on_gamecore_loaded(h);
         crate::empilement::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
         crate::carte::on_gamecore_loaded();
@@ -104,6 +105,7 @@ macro_rules! forward {
                 crate::spectateurs::reset();
                 crate::congres::reset();
                 crate::ports::reset();
+                crate::fin_tour::reset();
                 crate::empilement::reset();
                 crate::depart::reset();
                 crate::rendements_empire::reset();

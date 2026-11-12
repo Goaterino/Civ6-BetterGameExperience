@@ -612,6 +612,30 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Tests.** `cargo test` (règle d'excédent, hachages des classes) ; `check_hooks.py` vérifie les
   octets des deux sites, la redirection et sa restauration.
 
+## Diplomatie reçue pendant le passage de tour (correctif POL)
+
+[src/fin_tour.rs](src/fin_tour.rs). Analyse : [depart_tour/README.md](../depart_tour/README.md),
+« Diplomatie reçue pendant le passage de tour : la cause dans GameCore » (rapport BGE-FB5126).
+
+- **Le défaut du jeu.** Après `EndTurn`, le prochain `Game::Processor::Update` démarre le tour
+  suivant, quel qu'en soit l'appelant. `GameUpdate` attend le contrôle de synchro, mais
+  `DiplomacyAction`, `DiplomacyDeal` et `DiplomacySession` lancent l'étape de mise à jour
+  (`18060eca0`) sans regarder le drapeau de fin de tour : reçus dans ce créneau, ils démarrent le
+  tour chez l'hôte avant la synchro, et des joueurs commencent le tour « tour fini ».
+- **Le détour.** Les trois appels (`jmp` terminal en `1800308cf` et `180030b98`, `call` en
+  `1800310d2`) sont redirigés vers un relais (`mov edx,quel ; jmp [rip+0]`) qui saute l'étape quand
+  le drapeau est levé (`180045dc0`), comme `GameUpdate::Execute`. L'action est appliquée ; le
+  `GameUpdate` initial lance la mise à jour. Pendant le tour (joueur qui a passé son tour puis
+  agit), rien ne change.
+- **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`).
+- **Garde-fou.** Les trois sites (instruction qui précède, opcode, cible `18060eca0`) et les octets
+  de `180045dc0` doivent correspondre, sinon rien n'est redirigé. Les appels d'origine reviennent au
+  déchargement du proxy.
+- **Le journal.** `fin de tour : mise à jour après DiplomacyAction/Deal/Session suspendue pendant le
+  passage de tour (3 appels redirigés)`, puis les 20 premières mises à jour sautées de chaque partie.
+- **Tests.** `cargo test` (octets des sites dans le GameCore installé, s'il est là),
+  `check_hooks.py` (redirection et restauration).
+
 ## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGE) »)
 
 [src/depart.rs](src/depart.rs), [src/ui_depart.lua](src/ui_depart.lua),
