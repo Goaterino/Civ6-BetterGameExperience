@@ -37,8 +37,8 @@ local function BGD_PartieRelais()
 	-- Le verdict de la partie : "<version>@<jeton>:<1|0>:<jetons>", écrit par notre salon.
 	local verdict = cfg:GetValue("BGD_VERDICT");
 	local version, jeton, actif, liste = string.match(tostring(verdict), "^([^@#:]*)@([^@#:]*):([01]):(.*)$");
-	-- Parenthèses : GetValue d'une clé absente ne rend aucune valeur, et tostring() refuse de n'en
-	-- recevoir aucune (joueur sans BGE dans une nouvelle partie).
+	-- Extra parentheses: GetValue of a missing key returns no value at all, and tostring() fails
+	-- when given none (a player without BGE in a new game).
 	local _, jetonAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#");
 	if version == nil or jeton ~= jetonAnnonce then
 		return;  -- pas de verdict de notre salon : partie lancée sans notre proxy
