@@ -356,8 +356,9 @@ Tout passe par l'API Lua, côté hôte :
 BetterGameExperience, peut s'en charger. Il recevrait le résultat du civdraft par un fichier ou un
 `LuaEvents`.
 
-**Par où l'ordre arrive de l'extérieur** : branchement sur CivUp (bot de draft et activité
-Discord), appairage, format de recette, ordre d'application et gardes dans
+**Par où l'ordre arrive de l'extérieur** : liens `civ6bge://creation_salon` et
+`civ6bge://rejoindre_salon` depuis un site de draft, relais de l'installeur, presets par
+communauté, retour du lien Steam, ordre d'application et gardes dans
 [hook_externe.md](hook_externe.md).
 
 **Précautions :**
