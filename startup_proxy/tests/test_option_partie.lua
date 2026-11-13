@@ -63,8 +63,8 @@ do
 		and rows[2].ParameterId == "BGD_INDICATEURS_OFF");
 	Check("libellé « No First/Last moves (BGE) », aide en français", rows[1].Name == "No First/Last moves (BGE)"
 		and rows[1].Description:find("^Tous les joueurs commencent et finissent") ~= nil);
-	Check("team pings: localized, enabled by default, network game option", rows[3].ParameterId == "BGD_TEAM_PINGS"
-        and rows[3].SortIndex == 45 and rows[3].Name == "Signaux d’équipe (BGE)" and rows[3].DefaultValue == 1
+	Check("team pings: localized, disabled by default, network game option", rows[3].ParameterId == "BGD_TEAM_PINGS"
+        and rows[3].SortIndex == 45 and rows[3].Name == "Signaux d’équipe (BGE)" and rows[3].DefaultValue == 0
         and rows[3].sql:find("'GameOptions', 0, 0, 0, 1") ~= nil);
     Check("position 43 dans les options", rows[1].SortIndex == 43);
 	Check("réseau seulement, option de partie booléenne, cochée par défaut",
@@ -91,13 +91,15 @@ end
 do
 	-- Ligne d'une version précédente, décochée par défaut, restée dans la base.
 	local env, rows, journal = NewScreen("fr_FR", false, { { ParameterId = "BGD_DEPART_SIMULTANE", DefaultValue = 0 },
-		{ ParameterId = "BGD_INDICATEURS_OFF", DefaultValue = 1 } });
+		{ ParameterId = "BGD_INDICATEURS_OFF", DefaultValue = 1 }, { ParameterId = "BGD_TEAM_PINGS", DefaultValue = 1 } });
 	env.SetupParameters.Data_DiscoverParameters({});
 	Check("ancienne ligne : cochée par défaut, sans doublon", #rows == 3 and rows[1].DefaultValue == 1);
 	Check("ancienne ligne des indicateurs : décochée par défaut", rows[2].DefaultValue == 0);
+	Check("ancienne ligne des signaux d'équipe (0.11.0, cochée) : décochée par défaut", rows[3].DefaultValue == 0);
 	Check("ancienne ligne : cache vidé, journal", next(env.QueryCache) == nil
 		and #journal == 3 and journal[1] == "option : BGD_DEPART_SIMULTANE : cochée par défaut"
-		and journal[2] == "option : BGD_INDICATEURS_OFF : décochée par défaut");
+		and journal[2] == "option : BGD_INDICATEURS_OFF : décochée par défaut"
+		and journal[3] == "option : BGD_TEAM_PINGS : décochée par défaut");
 	env.SetupParameters.Data_DiscoverParameters({});
 	Check("ancienne ligne : une seule mise à jour", #journal == 3);
 end

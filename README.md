@@ -59,7 +59,7 @@ launching. Every player needs BetterGameExperience, at the same version.
 no player sees the research and civic progress (**x/y (+z)**) or the stored production of cities,
 whatever their own settings.
 
-**Team pings (BGE)** is on by default for new network games. The host can turn it off in game setup.
+**Team pings (BGE)** is off by default for new network games. The host can turn it on in game setup.
 It uses the same lobby version check as No First/Last moves, including connected observers.
 Tap **X** over the map to mark a tile, or hold **X**, move toward a call and release. Up is danger,
 right is on my way, down is assist, and left is enemy missing. **Alt+1–4** send missing, danger,
