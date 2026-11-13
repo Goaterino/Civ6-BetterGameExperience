@@ -2,18 +2,51 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
-## Prochaine version
+## BetterGameExperience 0.10.0
+
+En multijoueur, tous les humains doivent être en 0.10.0 pour les correctifs **[tous les
+joueurs]** et les signaux d'équipe : un salon qui mélange 0.9.x et 0.10.0 les coupe.
 
 ### Correctifs multijoueur [tous les joueurs]
-- **Spectateurs (Better Spectator Mod)** : la refonte des spectateurs de la 0.9.0 est retirée, car
-  les parties avec un spectateur étaient moins stables. BetterGameExperience ne change plus le niveau
-  de civilisation des spectateurs et ne remplace plus les scripts de Better Spectator Mod, et le
-  réglage « Better Spectator Mod pour les spectateurs » disparaît. Les spectateurs comptent de
-  nouveau comme civilisations majeures pour les scripts, les victoires et le score, comme avec Better
-  Spectator Mod seul. Le tourisme et les votes du Congrès mondial les ignorent toujours.
+- **Joueurs bloqués sur « pas prêt »** : une action diplomatique (ambassade, accord) reçue juste à
+  la fin du tour pouvait faire commencer le tour suivant trop tôt par l'hôte. Certains joueurs le
+  commençaient alors déjà marqués comme ayant fini, sans pouvoir redevenir prêts. Le tour suivant
+  attend maintenant la vérification du jeu, et l'action est toujours appliquée.
+- **Spectateurs (Better Spectator Mod)** : la refonte des spectateurs de la 0.9.0 est suspendue en
+  attendant des tests plus approfondis, car les parties avec un spectateur étaient moins stables.
+  BetterGameExperience ne change plus le niveau de civilisation des spectateurs et ne remplace plus
+  les scripts de Better Spectator Mod, et le réglage « Better Spectator Mod pour les spectateurs »
+  disparaît pour l'instant. Les spectateurs comptent de nouveau comme civilisations majeures pour
+  les scripts, les victoires et le score, comme avec Better Spectator Mod seul. Le tourisme et les
+  votes du Congrès mondial les ignorent toujours.
 - **Gardé pour les spectateurs** : changer le joueur observé ne désynchronise toujours pas la
   partie, et le tour du spectateur se termine toujours seul après une pause de MPH. Ces deux
   correctifs s'appliquent désormais aux scripts d'origine de Better Spectator Mod.
+
+### Nouveautés
+- **Signaux d'équipe (BGE)** : marquez une case pour votre équipe avec **X**, ou maintenez **X** pour
+  une roue d'appels (danger, j'arrive, aide, ennemi disparu) ; **Alt+1–4** les envoient directement.
+  Les coéquipiers voient et entendent le signal avec le nom de l'envoyeur, les spectateurs voient les
+  deux équipes. Désactivé par défaut : l'hôte coche **Signaux d'équipe (BGE)** dans la configuration
+  de la partie. Raccourcis dans les options des touches du jeu, volume dans les options audio ;
+  `/mute nom` bloque le chat et les signaux d'un joueur. Contribution de mariusbw.
+
+### Multijoueur
+- **Joueurs relayés par l'hôte** : deux joueurs dont la connexion directe a échoué à l'arrivée
+  passent par l'hôte jusqu'à la fin de la partie, et sont tous deux déconnectés si l'hôte part.
+  Pendant le départ de tour simultané, BetterGameExperience tente maintenant de les reconnecter
+  directement (trois essais au plus) et l'annonce dans le chat. Contribution de yodha.
+- **Pings bloqués à 0 ms** : le ping d'un joueur dans la liste des joueurs ne reste plus figé à 0 ms
+  après l'arrivée ; il est de nouveau mesuré toutes les 5 secondes. Plus besoin de quitter et
+  revenir pour le « réparer », ce qui provoquait souvent une désynchronisation. Contribution de yodha.
+- **Messages réseau endommagés** : la protection ajoutée en 0.9.0 fonctionne aussi avec la version
+  DirectX 11 du jeu. Contribution de yodha.
+- **Joueurs sans BetterGameExperience** : l'avertissement en partie pour un joueur arrivé sans
+  BetterGameExperience ne s'arrête plus sur une erreur de script. Contribution de yodha.
+
+### Installation et mises à jour
+- L'installeur télécharge et relance le jeu sans démarrer de programmes auxiliaires cachés, et porte
+  des informations de version : les antivirus devraient moins souvent le signaler.
 
 ## BetterGameExperience 0.9.1
 

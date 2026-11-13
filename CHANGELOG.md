@@ -4,18 +4,49 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
-## Next version
+## BetterGameExperience 0.10.0
+
+Multiplayer games need every human player on 0.10.0 for the **[all players]** fixes and for team
+pings: a lobby that mixes 0.9.x and 0.10.0 turns them off.
 
 ### Multiplayer fixes [all players]
-- **Spectators (Better Spectator Mod)**: the spectator rework from 0.9.0 is withdrawn, because games
-  with a spectator were less stable. BetterGameExperience no longer changes the spectators'
-  civilization level and no longer replaces Better Spectator Mod's scripts, and the « Better
-  Spectator Mod for spectators » setting is gone. Spectators count again as major civilizations for
+- **Players stuck on "not ready"**: a diplomatic action (an embassy, a deal) received right as the
+  turn ended could make the host start the next turn too early. Some players then began it already
+  marked as done and could not get ready again. The next turn now waits for the game's own check,
+  and the action is still applied.
+- **Spectators (Better Spectator Mod)**: the spectator rework from 0.9.0 is suspended until it has
+  been tested more thoroughly, because games with a spectator were less stable. BetterGameExperience
+  no longer changes the spectators' civilization level and no longer replaces Better Spectator
+  Mod's scripts, and the « Better Spectator Mod for spectators » setting is gone for now. Spectators count again as major civilizations for
   scripts, victories and score, as with Better Spectator Mod alone. Tourism and World Congress votes
   still leave them out.
 - **Kept for spectators**: changing the player a spectator watches still does not desync the game,
   and the spectator's turn still ends on its own after an MPH pause. Both fixes now apply to Better
   Spectator Mod's own scripts.
+
+### New
+- **Team pings (BGE)**: mark a tile for your team with **X**, or hold **X** for a wheel of calls
+  (danger, on my way, assist, enemy missing); **Alt+1–4** send them directly. Teammates see and hear
+  the ping with the sender's name, spectators see both teams. Off by default: the host ticks **Team
+  pings (BGE)** in game setup. Shortcuts in **Options → Key Bindings**, volume under **Audio**,
+  `/mute name` blocks a player's chat and pings. Contributed by mariusbw.
+
+### Multiplayer
+- **Players relayed through the host**: two players whose direct connection failed when joining
+  go through the host for the rest of the game, and are both dropped if the host leaves. During the
+  simultaneous turn start, BetterGameExperience now tries to connect them directly again (up to
+  three tries) and says so in the chat. Contributed by yodha.
+- **Pings stuck at 0 ms**: the ping of a player in the player list no longer stays frozen at 0 ms
+  after joining; it is measured again every 5 seconds. Leaving and rejoining to "fix" it, which
+  often caused a desync, is no longer needed. Contributed by yodha.
+- **Damaged network messages**: the protection added in 0.9.0 now also works with the DirectX 11
+  version of the game. Contributed by yodha.
+- **Players without BetterGameExperience**: the in-game warning about a player who joined without
+  BetterGameExperience no longer stops on a script error. Contributed by yodha.
+
+### Installer
+- The installer downloads and relaunches the game without starting hidden helper programs, and
+  carries version information: antivirus software should flag it less often.
 
 ## BetterGameExperience 0.9.1
 
