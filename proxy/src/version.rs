@@ -3,7 +3,7 @@
 //! changent la simulation, ne s'activeront que si tous les humains de la partie annoncent exactement
 //! la même : l'augmenter à chaque version qui change la simulation ou l'échange du salon.
 
-pub const VERSION: &str = "0.10.0";
+pub const VERSION: &str = "0.11.0";
 
 /// Préfixe de la marque `BgdVersion=<VERSION>` gravée dans le proxy de GameCore (export `BgdVersion`,
 /// proxy/src/lib.rs). Les deux DLL compilent ce fichier : le proxy de démarrage compare leur

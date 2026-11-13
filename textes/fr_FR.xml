@@ -650,5 +650,44 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="fr_FR">
 			<Text>[ICON_Production] Production +{1} pour la construction de merveilles, portée à {2} si la merveille est de l'Antiquité ou de l'ère classique.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="fr_FR">
+			<Text>Signaux d’équipe (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="fr_FR">
+			<Text>Roue des signaux d’équipe</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="fr_FR">
+			<Text>Maintenez X sur la carte et relâchez dans la direction du signal. Vos alliés et les spectateurs le reçoivent si tous les joueurs ont la même version de salon BGE.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="fr_FR">
+			<Text>Regardez ici</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="fr_FR">
+			<Text>Danger</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="fr_FR">
+			<Text>J’arrive</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="fr_FR">
+			<Text>À l’aide</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="fr_FR">
+			<Text>Ennemi disparu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="fr_FR">
+			<Text>Volume des signaux  {1} %</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="fr_FR">
+			<Text>Plusieurs joueurs portent ce nom. Utilisez #numéro.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="fr_FR">
+			<Text>Utilisez /mute ou /unmute avec le nom ou le #numéro d’un autre joueur.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="fr_FR">
+			<Text>{1} en sourdine.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="fr_FR">
+			<Text>{1} réactivé.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

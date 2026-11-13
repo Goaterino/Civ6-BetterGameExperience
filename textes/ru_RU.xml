@@ -650,5 +650,44 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ru_RU">
 			<Text>Дает {1} ед. [ICON_Production] производства для строительства чуда, {2}, если чудо относится к Древнему миру или Античности.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="ru_RU">
+			<Text>Сигналы команды (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="ru_RU">
+			<Text>Колесо сигналов команды</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="ru_RU">
+			<Text>Зажмите X над картой, переместите курсор в сторону сигнала и отпустите клавишу. Союзники и наблюдатели получат сигнал, если у всех одинаковая версия лобби BGE.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="ru_RU">
+			<Text>Смотрите сюда</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="ru_RU">
+			<Text>Опасность</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="ru_RU">
+			<Text>Уже иду</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="ru_RU">
+			<Text>Нужна помощь</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="ru_RU">
+			<Text>Враг пропал</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="ru_RU">
+			<Text>Громкость сигналов  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="ru_RU">
+			<Text>Это имя у нескольких игроков. Укажите #номер места.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="ru_RU">
+			<Text>Введите /mute или /unmute и имя другого игрока или #номер места.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="ru_RU">
+			<Text>Игрок {1} заглушён.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ru_RU">
+			<Text>Игрок {1} больше не заглушён.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

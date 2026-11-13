@@ -64,6 +64,14 @@ décocher avant le lancement. Tous les joueurs doivent avoir BetterGameExperienc
 coche, aucun joueur ne voit l'avancement de la recherche et du dogme (**x/y (+z)**) ni la production
 en réserve des villes, quels que soient ses propres réglages.
 
+**Signaux d’équipe (BGE)** est activé par défaut pour les nouvelles parties en réseau. L’hôte peut
+le décocher dans les options de partie. Tous les joueurs et observateurs connectés doivent avoir la
+même version de salon BGE. Appuyez sur **X** pour marquer une case, ou maintenez **X**, déplacez la
+souris et relâchez. En haut indique un danger, à droite « J’arrive », en bas un appel à l’aide et
+à gauche un ennemi disparu. Les alliés voient le signal et le nom pendant quatre secondes.
+Les raccourcis se modifient dans **Options → Raccourcis clavier**. Les observateurs voient les deux équipes. Le volume se règle dans **Audio**. Dans le chat,
+`/mute nom` et `/unmute nom` contrôlent les messages et les signaux de ce joueur.
+
 ## Réglages
 
 Tout se règle dans **Options → BetterGameExperience** : un réglage par fonctionnalité, et un interrupteur
