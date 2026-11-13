@@ -19,10 +19,11 @@ Digits 1–9 define default Alt shortcuts. Players can rebind the wheel and dire
 - Drop a signed 16-bit PCM WAV in [audio/](audio/) and set `sound` to its filename
   without the extension. Cargo automatically embeds it in the GameCore DLL. The cue
   honors the ping, master, effects and mute-on-focus-loss settings.
-- An active copy of the standalone v9 mod supplies the wheel, selection ring,
-  ground ripples and blocked indicator. Its call icons and Wwise events apply to
-  entries with a `skin` name. BGE handles input and delivery. The public
-  build ships its own sounds and uses Civ’s installed UI art by default.
+- BGE installs the approved wheel, selection ring, ground ripples, blocked
+  indicator, call icons and Wwise cues from [ping_assets](../../../../ping_assets).
+  The media component registers automatically when Civ opens the main menu.
+  Entries with a `skin` name use the matching DDS and audio event in that package.
+  The signed release manifest covers every asset as well as both DLLs.
 - Put new label keys in each [translation XML](../../../../textes/README.md) and run
   `python textes/gen_textes.py --strict` from the repository root.
 

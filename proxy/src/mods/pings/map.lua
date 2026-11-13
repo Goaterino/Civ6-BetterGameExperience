@@ -10,22 +10,19 @@ local wheel, failureStart, mouseX, mouseY
 local held = {}
 local center
 
-if pingSkin then
-    Controls.NativeWheel:SetHide(true)
-    Controls.SkinWheel:SetTexture(pingSkin.wheel)
-    Controls.SkinWheel:SetSizeVal(216, 216)
-    Controls.SkinWheel:SetHide(false)
-    Controls.Focus:SetTexture(pingSkin.focus)
-    Controls.Focus:SetSizeVal(68, 68)
-    Controls.FailedCross:SetHide(true)
-    Controls.FailedSlash:SetTexture(pingSkin.denied)
-    Controls.FailedSlash:SetSizeVal(64, 64)
-    Controls.FailedSlash:SetHide(false)
-    Controls.BlockedCross:SetHide(true)
-    Controls.BlockedSlash:SetTexture(pingSkin.denied)
-    Controls.BlockedSlash:SetSizeVal(44, 44)
-    Controls.BlockedSlash:SetHide(false)
-end
+Controls.SkinWheel:SetTexture(pingSkin.wheel)
+Controls.SkinWheel:SetSizeVal(216, 216)
+Controls.SkinWheel:SetHide(false)
+Controls.Focus:SetTexture(pingSkin.focus)
+Controls.Focus:SetSizeVal(68, 68)
+Controls.FailedCross:SetHide(true)
+Controls.FailedSlash:SetTexture(pingSkin.denied)
+Controls.FailedSlash:SetSizeVal(64, 64)
+Controls.FailedSlash:SetHide(false)
+Controls.BlockedCross:SetHide(true)
+Controls.BlockedSlash:SetTexture(pingSkin.denied)
+Controls.BlockedSlash:SetSizeVal(44, 44)
+Controls.BlockedSlash:SetHide(false)
 
 local function setIcon(glyph, image, call)
     glyph:SetHide(call.texture ~= nil)
@@ -89,18 +86,11 @@ local function highlight(call)
     Controls.Call:SetText(BGD_Txt(call.label))
 end
 
--- Hauteur des cercles au sol par rapport à leur largeur (0.50 suit l'inclinaison de la caméra,
--- mais les écrase trop), taille du caractère d'appel, taille de l'icône et hauteur du badge au repos.
-local RING_RATIO = 0.62
-local GLYPH_SIZE = 50
-local ICON_SIZE = 90
-local BADGE_Y = -34
-
 local function ripple(image, elapsed)
     if elapsed < 0 then image:SetAlpha(0); return end
     local phase = (elapsed % 1.24) / 1.24
     local width = 30 + 97 * (1 - (1-phase)^2)
-    image:SetSizeVal(width, width * RING_RATIO)
+    image:SetSizeVal(width, width * 0.50)
     image:SetAlpha((1-phase)^0.85)
 end
 
@@ -125,9 +115,9 @@ local function animate()
             ripple(art.Echo, age-0.24)
             local drop = math.max(0, 1-age/0.18)
             local spring = math.sin(math.max(0,age-0.18)*21) * math.exp(-math.max(0,age-0.18)*8)
-            local size = ICON_SIZE + 27*drop + 7*spring
+            local size = 76 + 27*drop + 7*spring
             art.Icon:SetSizeVal(size, size)
-            art.Badge:SetOffsetY(BADGE_Y - 31*drop*drop + 4*spring)
+            art.Badge:SetOffsetY(-28 - 31*drop*drop + 4*spring)
             art.Art:SetAlpha(math.min(1, (lifetime-age)/0.62))
         end
     end
@@ -182,17 +172,14 @@ local function showPing(sender, call, x, y)
     local art = markers:GetInstance()
     local worldX, worldY, worldZ = UI.GridToWorld(x, y)
     art.Anchor:SetWorldPositionVal(worldX, worldY, worldZ)
-    if pingSkin then
-        art.Wave:SetTexture(pingSkin.ripple)
-        art.Echo:SetTexture(pingSkin.ripple)
-        art.Foot:SetTexture(pingSkin.ripple)
-        art.Foot:SetSizeVal(35, math.floor(35 * RING_RATIO + 0.5))
-    end
+    art.Wave:SetTexture(pingSkin.ripple)
+    art.Echo:SetTexture(pingSkin.ripple)
+    art.Foot:SetTexture(pingSkin.ripple)
+    art.Foot:SetSizeVal(35, 17)
     art.Wave:SetColor(call.tint)
     art.Echo:SetColor(call.tint)
     art.Foot:SetColor(call.tint)
     setIcon(art.Glyph, art.Icon, call)
-    art.Glyph:SetFontSize(GLYPH_SIZE)
     TruncateString(art.Sender, 130, playerName(sender))
     table.insert(active, {controls=art, start=now, sender=sender})
     wake()

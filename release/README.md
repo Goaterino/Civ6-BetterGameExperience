@@ -13,7 +13,11 @@ jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |
 
-Les scripts Lua et XML sont compilés dans les DLL (`include_str!`) : aucun autre fichier à installer.
+Les scripts d'interface sont compilés dans les DLL (`include_str!`).
+`release/ping_assets.py dist` ajoute les neuf textures DDS, la banque audio, ses deux
+fichiers de configuration et `BGEPings.modinfo` depuis `ping_assets/`.
+Le manifeste signé les installe dans `DLC/BGEPings`. Le menu principal de BGE active
+automatiquement ces médias locaux, y compris dans les profils déjà existants.
 
 L'updater lit `releases/latest/download/manifest.json` (une redirection, sans l'API GitHub ni sa
 limite de requêtes), vérifie la signature avec [public_key.txt](public_key.txt), puis télécharge

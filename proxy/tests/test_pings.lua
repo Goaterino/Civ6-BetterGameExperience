@@ -122,7 +122,7 @@ end
 flick(host,760,450,0,65)
 assert(#packets==3 and packets[1].text==".bge_ping assist 7 4")
 for _,p in ipairs({host,peers[1],peers[3],peers[4]}) do
-    assert(p.cues[1][1]=="assist" and p.markers[1].Sender.SetTextValue=="Seat 0" and not p.unread)
+    assert(p.cues[1][1]=="Play_TeamPing_Assist" and p.markers[1].Sender.SetTextValue=="Seat 0" and not p.unread)
 end
 assert(#peers[2].markers==0 and #peers[5].markers==0 and #peers[6].markers==0 and #peers[7].markers==0)
 flick(peers[2],400,450,-70,0)
@@ -145,7 +145,7 @@ assert(bob.unread==unread+1)
 bob.chat.Controls.ChatEntry.submit("ordinary outgoing message")
 assert(bob.sent=="ordinary outgoing message")
 bob.chat.Controls.ChatEntry.submit("/pingvolume 25")
-assert(bob.cues[#bob.cues][2]==25)
+assert(bob.cues[#bob.cues][1]=="Play_TeamPing_Look_25")
 now=15
 for i=1,6 do flick(host,450,450,0,-70) end
 local before,heard=#packets,#host.cues
@@ -158,11 +158,11 @@ flick(host,450,450,0,0)
 assert(#packets==before and #host.cues==heard)
 now=25
 flick(host,450,450,0,0)
-assert(#packets==before+3 and host.cues[#host.cues][1]=="look")
+assert(#packets==before+3 and host.cues[#host.cues][1]=="Play_TeamPing_Look")
 input(host,3,nil,750,450); input(host,1,24); host.blur(); input(host,2,24)
 assert(#packets==before+3)
 input(host,1,29,nil,nil,true); input(host,2,29)
-assert(host.cues[#host.cues][1]=="danger")
+assert(host.cues[#host.cues][1]=="Play_TeamPing_Danger")
 -- Primary/alternate and cleared bindings update without restarting or reinstalling.
 host.prefs.BGD_Key_TeamPingWheel_0=11
 host.prefs.BGD_Key_TeamPingWheel_1=256+21
@@ -256,10 +256,10 @@ pingMatrix(0,{[0]=true,[4]=true})
 pingMatrix(1,{[1]=true,[2]=true,[4]=true})
 print("Four-seat fixture passed: teammates both ways, enemies excluded, No Team spectator, local mute/unmute for pings, audio and chat")
 
--- The mounted v9 skin supplies the whole wheel and map art, including its alpha-only ripples.
-local skinned=peer(1,true,true)
+-- A plain BGE install supplies the approved wheel, cues and transparent ripples.
+local skinned=peer(1,true)
 local ui=skinned.mapControls
-assert(ui.NativeWheel.SetHideValue==true and ui.SkinWheel.SetHideValue==false)
+assert(ui.SkinWheel.SetHideValue==false)
 assert(ui.SkinWheel.SetTextureValue=="TPWheel.dds" and ui.SkinWheel.SetSizeValValue==216)
 assert(ui.Focus.SetTextureValue=="TPFocus.dds" and ui.Focus.SetSizeValValue==68)
 assert(ui.BlockedSlash.SetTextureValue=="TPDenied.dds" and ui.FailedSlash.SetTextureValue=="TPDenied.dds")
@@ -275,6 +275,6 @@ assert(ui.Focus.SetHideValue==false and ui.Focus.x < -61 and math.abs(ui.Focus.y
 assert(input(skinned,2,24))
 local marker=skinned.markers[1]
 assert(marker.Icon.SetTextureValue=="TPMissing.dds" and marker.Glyph.SetHideValue)
-assert(marker.Icon.SetSizeValValue==117 and skinned.cues[1][1]=="Play_TeamPing_Missing")
+assert(marker.Icon.SetSizeValValue==103 and skinned.cues[1][1]=="Play_TeamPing_Missing")
 for _,ring in ipairs({marker.Foot,marker.Wave,marker.Echo}) do assert(ring.SetTextureValue=="TPRipple.dds") end
-assert(host.mapControls.SkinWheel.SetTextureValue==nil and host.markers[1].Wave.SetTextureValue==nil)
+assert(host.mapControls.SkinWheel.SetTextureValue=="TPWheel.dds" and host.markers[1].Wave.SetTextureValue=="TPRipple.dds")
