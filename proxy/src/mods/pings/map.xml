@@ -37,12 +37,12 @@
 <Instance Name="BGD_PingMarker">
   <WorldAnchor ID="Anchor">
     <Container ID="Art" Anchor="C,C" Size="2,2" ConsumeMouse="0">
-      <Image ID="Wave" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="70,35"/>
-      <Image ID="Echo" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="42,21"/>
-      <Image ID="Foot" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="35,17"/>
-      <Container ID="Badge" Anchor="C,C" Size="77,77" Offset="0,-29">
+      <Image ID="Wave" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="70,43"/>
+      <Image ID="Echo" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="42,26"/>
+      <Image ID="Foot" Texture="Controls_CircleRim40" StretchMode="Fill" Anchor="C,C" Size="35,22"/>
+      <Container ID="Badge" Anchor="C,C" Size="91,91" Offset="0,-34">
         <Label ID="Glyph" Anchor="C,C" Style="FontNormal40" FontStyle="Stroke"/>
-        <Image ID="Icon" Anchor="C,C" Size="77,77" StretchMode="Fill" Hidden="1"/>
+        <Image ID="Icon" Anchor="C,C" Size="91,91" StretchMode="Fill" Hidden="1"/>
       </Container>
       <Label ID="Sender" Anchor="C,C" Offset="0,20" Style="FontNormal14" FontStyle="Stroke" ColorSet="White_Black"/>
     </Container>

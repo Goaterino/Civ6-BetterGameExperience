@@ -21,7 +21,7 @@ local function events()
 end
 local function control()
     local c={}
-    for _,name in ipairs({"SetHide","SetText","SetColor","SetTexture","SetSizeVal","SetOffsetY","SetAlpha","SetWorldPositionVal","SetValue"}) do
+    for _,name in ipairs({"SetHide","SetText","SetColor","SetTexture","SetSizeVal","SetFontSize","SetOffsetY","SetAlpha","SetWorldPositionVal","SetValue"}) do
         c[name]=function(self,value) self[name.."Value"]=value end
     end
     function c:SetOffsetVal(x,y) self.x,self.y=x,y end
@@ -275,6 +275,6 @@ assert(ui.Focus.SetHideValue==false and ui.Focus.x < -61 and math.abs(ui.Focus.y
 assert(input(skinned,2,24))
 local marker=skinned.markers[1]
 assert(marker.Icon.SetTextureValue=="TPMissing.dds" and marker.Glyph.SetHideValue)
-assert(marker.Icon.SetSizeValValue==103 and skinned.cues[1][1]=="Play_TeamPing_Missing")
+assert(marker.Icon.SetSizeValValue==117 and skinned.cues[1][1]=="Play_TeamPing_Missing")
 for _,ring in ipairs({marker.Foot,marker.Wave,marker.Echo}) do assert(ring.SetTextureValue=="TPRipple.dds") end
 assert(host.mapControls.SkinWheel.SetTextureValue==nil and host.markers[1].Wave.SetTextureValue==nil)
