@@ -129,8 +129,6 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rapports", defaut = "on",
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_spectateur", defaut = "on",
-		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_DIAGNOSTIC", avance = true },
 	{ cle = "ui_journal", defaut = "off", diag = true,
@@ -139,13 +137,6 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_diag_accords", defaut = "off", diag = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_spectateur_fichiers", defaut = "all", diag = true,
-		choix = {
-			{ "all", "LOC_BGD_OPT_CHOIX_ACTIVE" },
-			{ "ui", "LOC_BGD_OPT_CHOIX_SANS_CONGRES" },
-			{ "congres", "LOC_BGD_OPT_CHOIX_CONGRES_SEUL" },
-			{ "aucun", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
-		} },
 	{ cle = "ui_mesure_mouvements", defaut = "off",
 		choix = PROXY_ON_OFF },
 	{ cle = "depart_signaux", defaut = "off",

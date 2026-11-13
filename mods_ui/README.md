@@ -20,14 +20,9 @@ Les cinq sont des mods d'interface (`AffectsSavedGames=0`) : ils ne changent auc
 demandent donc **pas** de correctif POL. Les reprendre dans le proxy évite surtout que l'hôte impose
 à tous les joueurs de s'abonner aux mêmes mods.
 
-Better Spectator Mod est traité à part : ses scripts ne sont pas repris, mais remplacés par nos
-versions à la compilation (voir `spectateurs/README.md#le-niveau-de-civilisation`). Cinq fichiers :
-`Data/Spectator.lua`, `UI/CityStates.lua`, `UI/Replacements/diplomacyribbon_spec.lua`,
-`UI/Replacements/leadericon.lua` et `UI/Replacements/worldcongresspopup_spec.lua`. La reconnaissance
-se fait sur le nom de fichier, sans tenir compte de la casse, et le popup du Congrès est remplacé
-depuis le fichier du jeu, faute d'entrée `ReplaceUIScript` dans le mod.
-`Data/Spectator.lua` est un script de gameplay : contrairement aux autres reprises, ces cinq
-substitutions ne se font qu'avec les correctifs POL actifs (voir `spectateurs/README.md#verrouillé-derrière-pol`).
+Better Spectator Mod n'est pas repris : ses scripts sont compilés tels quels, sauf deux corrections
+ciblées de `Data/Spectator.lua` et `UI/Spectator_UI.lua`, avec les correctifs POL (voir
+`spectateurs/README.md#corrections-ciblées-des-scripts-de-better-spectator-mod`).
 
 ## Ce que fait chaque mod
 
