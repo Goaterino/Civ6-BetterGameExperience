@@ -459,6 +459,10 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
         crate::maj::SCRIPT => (crate::maj::prepare(l, src), "maj : notification de mise à jour ajoutée"),
         crate::salon::SCRIPT_OPTION => (crate::salon::prepare_option(l, src), "option : « No First/Last moves (BGE) » ajoutée"),
         crate::rapport::SCRIPT => (crate::rapport::prepare(l, src), "rapport : bouton « Signaler un bug » du menu Échap ajouté"),
+        crate::remap::SCRIPT => match crate::remap::prepare(l, src) {
+            Some(text) => (text, "remap : the host loads its own game before the clients (Multiplayer Helper's remap)"),
+            None => return real(l, buf, size, name),
+        },
         _ => return real(l, buf, size, name),
     };
     let r = real(l, text.as_ptr(), text.len(), name);
