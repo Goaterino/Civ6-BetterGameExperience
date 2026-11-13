@@ -2,6 +2,12 @@
 
 [English](../CHANGELOG.md) · 其他语言：请参阅[英文更新日志](../CHANGELOG.md)。
 
+## 下一版本
+
+### 多人游戏修正 [所有玩家]
+- **观战者 (Better Spectator Mod)**：由于有观战者的对局稳定性下降，撤回 0.9.0 的观战者改造。BetterGameExperience 不再更改观战者的文明等级，也不再替换 Better Spectator Mod 的脚本，“观战者用 Better Spectator Mod”设置也随之移除。与单独使用 Better Spectator Mod 时一样，观战者在脚本、胜利和分数中重新算作主要文明。旅游业和世界议会投票仍然不计入他们。
+- **为观战者保留**：切换观战的玩家仍不会导致不同步，MPH 暂停后观战者的回合仍会自动结束。这两项修正现在作用于 Better Spectator Mod 的原始脚本。
+
 ## BetterGameExperience 0.9.1
 
 多人游戏中与 0.9.0 兼容：使用 0.9.0 和 0.9.1 的玩家可以一起游戏，所有修正均保持启用。

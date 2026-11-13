@@ -29,12 +29,6 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="fr_FR">
 			<Text>Chaque message du jeu</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="fr_FR">
-			<Text>Congrès mondial seulement</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="fr_FR">
-			<Text>Tout sauf le Congrès mondial</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="fr_FR">
 			<Text>Test</Text>
 		</Row>
@@ -209,12 +203,6 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="fr_FR">
 			<Text>D'après Better Report Screen (Infixo). Écran des rapports refait, avec les onglets Accords, Unités, Politiques, Cités-États et Villes, et l'effet de chaque politique et cité-État, corrigé comme les cartes. Remplace le mod s'il est actif.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="fr_FR">
-			<Text>Better Spectator Mod pour les spectateurs</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="fr_FR">
-			<Text>Remplace les scripts d'interface de Better Spectator Mod (cités-États, ruban diplomatique, icônes des dirigeants, Congrès mondial) par ceux du proxy, écrits pour des spectateurs sortis des civilisations majeures. Seulement si tous les joueurs ont le proxy ; le niveau des spectateurs suit toujours cette règle.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="fr_FR">
 			<Text>Journal des scripts et XML chargés</Text>
 		</Row>
@@ -238,12 +226,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="fr_FR">
 			<Text>Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="fr_FR">
-			<Text>Scripts de Better Spectator Mod remplacés</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="fr_FR">
-			<Text>Diagnostic : quels scripts d'interface de Better Spectator Mod le proxy remplace, pour isoler celui qui pose problème.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="fr_FR">
 			<Text>Afficher les signaux du départ et de la fin simultanés</Text>
@@ -649,6 +631,45 @@
 		</Row>
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="fr_FR">
 			<Text>[ICON_Production] Production +{1} pour la construction de merveilles, portée à {2} si la merveille est de l'Antiquité ou de l'ère classique.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="fr_FR">
+			<Text>Signaux d’équipe (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="fr_FR">
+			<Text>Roue des signaux d’équipe</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="fr_FR">
+			<Text>Maintenez X sur la carte et relâchez dans la direction du signal. Vos alliés et les spectateurs le reçoivent si tous les joueurs ont la même version de salon BGE.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="fr_FR">
+			<Text>Regardez ici</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="fr_FR">
+			<Text>Danger</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="fr_FR">
+			<Text>J’arrive</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="fr_FR">
+			<Text>À l’aide</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="fr_FR">
+			<Text>Ennemi disparu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="fr_FR">
+			<Text>Volume des signaux  {1} %</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="fr_FR">
+			<Text>Plusieurs joueurs portent ce nom. Utilisez #numéro.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="fr_FR">
+			<Text>Utilisez /mute ou /unmute avec le nom ou le #numéro d’un autre joueur.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="fr_FR">
+			<Text>{1} en sourdine.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="fr_FR">
+			<Text>{1} réactivé.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

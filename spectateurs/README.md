@@ -201,73 +201,39 @@ lua proxy/tests/test_congres.lua
 `check_hooks.py` vérifie la pose et la restauration des cinq détours sur la vraie DLL. Rien n'a
 encore été essayé en partie.
 
-## Le niveau de civilisation
+## Corrections ciblées des scripts de Better Spectator Mod
 
-Les correctifs ci-dessus laissent le spectateur classé majeur : il figure dans les listes de majeurs,
-et notamment dans celles que lit le Lua (`PlayerManager.GetAliveMajorIDs`). BSM le détecte ainsi.
+Le reste de BSM est compilé tel quel. Le proxy corrige seulement deux défauts d'origine du mod, avec
+les correctifs POL actifs (fixés par le verdict de l'hôte avant le chargement, les mêmes sur toutes les
+machines), sans réglage local (`mods_ui::remplacer`).
 
-Le getter `180169cd0` rend le niveau d'un joueur. Pour un spectateur, le proxy rend
-`CIVILIZATION_LEVEL_SPECTATOR` (`d67f2ab1`, le niveau défini par BSM) au lieu de `FULL_CIV` : il sort
-des listes de majeurs, des conditions de victoire et du score.
+**Désynchro de `SPEC_LAST_ID`** (vue le 2026-11-10 : `Variable Out Of Sync : m_kProperties` au
+contrôle de fin de tour, clé `4016213350` = `~CRC32("SPEC_LAST_ID")`). `Data/Spectator.lua` posait
+cette propriété de partie dans `DoObserverPlayer`, que l'interface du spectateur déclenche quand il
+change de joueur observé : elle n'existait donc que sur sa machine. Le proxy met en commentaire
+`Game:SetProperty("SPEC_LAST_ID",id)` dans ce script (deux occurrences, la seconde dans
+`OnTurnStarted`, jamais branchée ; `mods_ui::patch_spectateur_data`), sans rien changer d'autre ni
+décaler les lignes. `Spectator_UI.lua` ne la lisait qu'au début du tour du spectateur, pour revenir
+au dernier joueur observé : il est corrigé pour retenir cette valeur dans l'interface, à chaque
+`UIDoObserverPlayer` (`mods_ui::patch_spectateur_ui`).
 
-Deux points qui ne se déduisent pas :
-
-- l'objet reçu par ce getter **n'est pas le CvPlayer** : c'est un wrapper de `0x20` octets où l'ID du
-  joueur est à `+0x00`. À `+0xD8` on lit un pointeur partagé, identique pour tous les joueurs ;
-- la pose vole **14 octets** : `sub rsp,28h`, `mov rcx,[rcx+10h]` et `mov edx,[rip+0A2393Eh]`. La
-  troisième est relative à RIP : copiée telle quelle dans le trampoline, elle lirait ailleurs. Le
-  trampoline la refait en absolu (`mov r11,imm64` / `mov edx,[r11]`).
-
-Les octets du niveau sont vérifiés à part : s'ils manquent, les cinq détours ci-dessus restent posés et
-le journal le dit. S'il manque ceux des cinq autres, le niveau n'est pas posé non plus (il lit la même
-base). Comme eux, il est retiré au déchargement du proxy.
-
-### Verrouillé derrière POL
-
-Le niveau change la simulation, et il ne marche qu'avec le `Data/Spectator.lua` du proxy : celui de
-BSM ne cherche les spectateurs que parmi les majeurs, il ne les trouverait plus. Les deux sont un seul
-correctif POL, qui ne dépend que d'états communs à toutes les machines de la partie :
-
-- `Data/Spectator.lua` (script de gameplay) n'est substitué que si les correctifs POL sont actifs à
-  sa compilation. Ils sont fixés par le verdict de l'hôte dans le salon, avant le chargement, y
-  compris pour qui rejoint en cours de partie ; aucun réglage local (`ui_spectateur`,
-  `ui_spectateur_fichiers`) n'y touche ;
-- le détour ne rend `CIVILIZATION_LEVEL_SPECTATOR` que si ce script a été compilé dans la partie
-  (drapeau remis à zéro à chaque `DllCreateGameContext`), si les correctifs POL sont actifs, et si le
-  leader du joueur est `LEADER_SPECTATOR`. Le journal note le premier joueur ainsi reclassé.
-
-Les scripts d'interface repris (`CityStates`, ruban, icône, popup du Congrès) sont écrits pour des
-spectateurs hors des majeurs : ils ne sont substitués qu'avec les correctifs POL eux aussi. Sans POL,
-une partie avec BSM se comporte comme avant cette reprise. `ui_spectateur=off` ne coupe que ces
-scripts d'interface, sur la seule machine qui le règle.
-
-Dans le ruban diplomatique repris (essai du 2026-11-10, hôte spectateur) :
-- le spectateur est cherché parmi tous les participants (`GameConfiguration.GetParticipatingPlayerIDs`),
-  et plus seulement parmi les majeurs et les mineurs ; sinon, chez un joueur, le ruban de BSM
-  pouvait ne pas le trouver et passer la main à celui du jeu ;
-- un joueur ne voit pas les spectateurs, comme dans BSM, qui masquait leur portrait. Affichés, ils
-  passaient par le ruban du jeu : portrait « ? » (pas d'icône pour `LEADER_SPECTATOR`), nom et
-  rendements, comme un bot. Les spectateurs, eux, se voient entre eux.
-
-Désynchro de `SPEC_LAST_ID` (défaut d'origine de BSM, vu le 2026-11-10 : `Variable Out Of Sync :
-m_kProperties` au contrôle de fin de tour, clé `4016213350` = `~CRC32("SPEC_LAST_ID")`) :
-`Data/Spectator.lua` posait cette propriété de partie dans `DoObserverPlayer`, que l'interface du
-spectateur déclenche quand il change de joueur observé. Elle n'existait donc que sur sa machine, et
-le jeu devait la resynchroniser. `Spectator_UI.lua` ne la lit qu'au début du tour du spectateur, pour
-revenir au dernier joueur observé. Le `Spectator.lua` du proxy ne l'écrit plus, et le proxy corrige
-`Spectator_UI.lua` (`mods_ui::patch_spectateur_ui`) : la valeur est retenue dans l'interface, à
-chaque `UIDoObserverPlayer`. Les deux vont ensemble, sous le même verrou POL.
-
-Tour du spectateur après une pause (pause de MPH, qui est celle du jeu) : BSM ne passe le tour du
+**Tour du spectateur après une pause** (pause de MPH, qui est celle du jeu) : BSM ne passe le tour du
 spectateur qu'à `LocalPlayerTurnBegin` (`ACTION_ENDTURN`, « UserForced »). Une pause à ce moment-là
-fait échouer la demande, et rien ne la refait : le spectateur devait passer son tour à la main. Le
-même correctif de `Spectator_UI.lua` refait la demande à la sortie de la pause
-(`GameConfigChanged`, `PlayerInfoChanged`), si le tour du spectateur local est encore actif, hors
-congrès et si `BSM_SP` est absent ou vrai, comme BSM. `Lua.log` : `BGE : tour du spectateur repasse
-apres la pause`.
+fait échouer la demande, et rien ne la refait. Le même correctif de `Spectator_UI.lua` refait la
+demande à la sortie de la pause (`GameConfigChanged`, `PlayerInfoChanged`), si le tour du spectateur
+local est encore actif, hors congrès et si `BSM_SP` est absent ou vrai, comme BSM. `Lua.log` :
+`BGE : tour du spectateur repasse apres la pause`.
 
-Sur le popup du Congrès de BSM, le proxy ajoute le retour au vote (`ui_congres_vote.lua`), comme au
-popup du jeu, mais pas la lecture seule (`ui_congres.lua`) : ce popup gère déjà le spectateur.
+### Approche abandonnée : le niveau de civilisation
+
+Du 2026-11-10 au 2026-11-13 (0.9.0 et 0.9.1), le proxy rendait `CIVILIZATION_LEVEL_SPECTATOR` aux
+spectateurs par un détour du getter de niveau (`180169cd0`) et remplaçait cinq scripts de BSM par
+des versions écrites pour des spectateurs hors des majeurs (`Data/Spectator.lua`, `CityStates`, ruban
+diplomatique, icône de leader, popup du Congrès). Retiré : ce getter est lu partout dans GameCore
+(tour, IA, diplomatie, fin de tour réseau), et sa réponse dépendait d'états locaux relus à chaque
+appel (correctifs POL actifs, script compilé sur cette machine). Les parties avec spectateur étaient
+plus instables. On revient aux détours ciblés ci-dessus, un effet à la fois : les spectateurs
+comptent de nouveau parmi les majeurs côté scripts Lua, victoires et score.
 
 ## Refaire
 
