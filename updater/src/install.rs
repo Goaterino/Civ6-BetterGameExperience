@@ -23,9 +23,23 @@ pub struct Target {
     marker: &'static [u8],
 }
 
-pub const TARGETS: [Target; 2] = [
+pub const TARGETS: [Target; 15] = [
     Target { name: noms::GAMECORE_PROXY, dest: "DLC/Expansion2/Binaries/Win64", marker: b"RolloverProxyStatus" },
     Target { name: noms::DEMARRAGE, dest: "Base/Binaries/Win64Steam", marker: b"StartupProxyStatus" },
+    Target { name: "TPAssist.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPComing.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPDanger.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPDenied.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPFocus.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPLook.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPMissing.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPRipple.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TPWheel.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
+    Target { name: "TeamPingsAudio.bnk", dest: "DLC/BGEPings/Platforms/Windows/Audio", marker: b"BKHD" },
+    Target { name: "TeamPingsAudio.xml", dest: "DLC/BGEPings/Platforms/Windows/Audio", marker: b"SoundBanksInfo" },
+    Target { name: "TeamPingsBanks.ini", dest: "DLC/BGEPings/Platforms/Windows/Audio", marker: b"TeamPingsAudio.bnk" },
+    // Publish the content registration after all of the media it references.
+    Target { name: "BGEPings.modinfo", dest: "DLC/BGEPings", marker: b"863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd" },
 ];
 
 /// Marques des anciens proxys, posés sous le nom des originaux.
@@ -101,7 +115,9 @@ fn is_old_proxy(dll: &Path) -> Result<bool, String> {
 /// État de chaque proxy, puis de chaque ancien proxy encore posé à la place d'un original.
 pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
     let mut out: Vec<(&'static str, State)> =
-        TARGETS.iter().map(|t| (t.name, t.state(game, m).unwrap_or(State::Foreign))).collect();
+        TARGETS.iter()
+            .filter(|t| m.is_none_or(|m| m.files.iter().any(|f| f.name == t.name)))
+            .map(|t| (t.name, t.state(game, m).unwrap_or(State::Foreign))).collect();
     for ((_, name), (dll, _)) in noms::ANCIENS.iter().zip(old_files(game)) {
         if is_old_proxy(&dll).unwrap_or(false) {
             out.push((name, State::Old));
@@ -160,7 +176,7 @@ fn apply(action: Action, game: &Path, work: &Path) -> Result<(), String> {
 }
 
 fn writable(game: &Path) -> bool {
-    TARGETS.iter().all(|t| {
+    TARGETS[..2].iter().all(|t| {
         let probe = game.join(t.dest).join(".bgd_test");
         let ok = fs::write(&probe, b"").is_ok();
         let _ = fs::remove_file(&probe);
@@ -204,27 +220,55 @@ fn check_foreign(game: &Path) -> Result<(), String> {
 fn install(game: &Path, m: &Manifest, data: &[Vec<u8>]) -> Result<(), String> {
     // La release doit poser exactement nos cibles, aux mêmes endroits.
     let known = |f: &release::File| TARGETS.iter().any(|t| t.name == f.name && t.dest == f.dest);
-    if m.files.len() != TARGETS.len() || data.len() != m.files.len() || !m.files.iter().all(known) {
+    // Older releases contain the two proxies. New releases include the complete media set.
+    let targets = if m.files.len() == 2 { &TARGETS[..2] } else { &TARGETS[..] };
+    if m.files.len() != targets.len() || data.len() != m.files.len() || !m.files.iter().all(known)
+        || !targets.iter().all(|t| m.files.iter().filter(|f| f.name == t.name).count() == 1) {
         return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
     }
     check_foreign(game)?;
     restore_old(game)?;
-    for t in &TARGETS {
-        // Un manifeste qui citerait deux fois la même cible n'a pas celle-ci.
-        let Some(i) = m.files.iter().position(|f| f.name == t.name) else {
-            return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
-        };
-        let dll = t.path(game);
-        let new = dll.with_extension("dll.new");
-        fs::write(&new, &data[i]).map_err(|e| format!("{}: {e}", new.display()))?;
-        fs::rename(&new, &dll).map_err(|e| format!("{}: {e}", dll.display()))?;
+    let mut staged = Vec::new();
+    let mut published = 0;
+    let result = (|| {
+        for t in targets {
+            let i = m.files.iter().position(|f| f.name == t.name).unwrap();
+            let path = t.path(game);
+            fs::create_dir_all(path.parent().unwrap()).map_err(|e| format!("{}: {e}", path.display()))?;
+            let previous = match fs::read(&path) {
+                Ok(data) => Some(data),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+                Err(e) => return Err(format!("{}: {e}", path.display())),
+            };
+            let temporary = path.with_file_name(format!("{}.bge-new-{}", t.name, std::process::id()));
+            staged.push((path, temporary, previous));
+            let temporary = &staged.last().unwrap().1;
+            fs::write(temporary, &data[i]).map_err(|e| format!("{}: {e}", temporary.display()))?;
+        }
+        for (path, temporary, _) in &staged {
+            fs::rename(temporary, path).map_err(|e| format!("{}: {e}", path.display()))?;
+            published += 1;
+        }
+        Ok(())
+    })();
+    if result.is_err() {
+        for (path, temporary, previous) in staged[..published].iter().rev() {
+            match previous {
+                Some(bytes) => {
+                    fs::write(temporary, bytes).map_err(|e| format!("Rollback {}: {e}", path.display()))?;
+                    fs::rename(temporary, path).map_err(|e| format!("Rollback {}: {e}", path.display()))?;
+                }
+                None => fs::remove_file(path).map_err(|e| format!("Rollback {}: {e}", path.display()))?,
+            }
+        }
     }
-    Ok(())
+    for (_, temporary, _) in staged { let _ = fs::remove_file(temporary); }
+    result
 }
 
 fn uninstall(game: &Path) -> Result<(), String> {
     restore_old(game)?;
-    for t in &TARGETS {
+    for t in TARGETS.iter().rev() {
         if matches!(t.state(game, None)?, State::Installed | State::UpToDate) {
             let dll = t.path(game);
             fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
@@ -317,6 +361,35 @@ mod tests {
         // Une release qui ne pose pas exactement nos cibles est refusée.
         assert!(install(&dir, &m, &data[..1]).is_err());
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn ping_media_install_repair_and_uninstall() {
+        let dir = game("ping_media", &[]);
+        let mut data = vec![b"proxy RolloverProxyStatus".to_vec(), b"startup StartupProxyStatus".to_vec()];
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../ping_assets");
+        for target in &TARGETS[2..] {
+            let relative = Path::new(target.dest).strip_prefix("DLC/BGEPings").unwrap();
+            data.push(fs::read(root.join(relative).join(target.name)).unwrap());
+        }
+        let files = TARGETS.iter().zip(&data).map(|(t, bytes)| release::File {
+            name: t.name.into(), dest: t.dest.into(), sha256: release::sha256_hex(bytes),
+        }).collect();
+        let manifest = Manifest { version: "9.9.9".into(), files };
+        install(&dir, &manifest, &data).unwrap();
+        assert!(status(&dir, Some(&manifest)).iter().all(|(_, s)| *s == State::UpToDate));
+        for (target, expected) in TARGETS.iter().zip(&data) {
+            assert_eq!(fs::read(target.path(&dir)).unwrap(), *expected);
+        }
+        fs::remove_file(dir.join("DLC/BGEPings/Art/TPWheel.dds")).unwrap();
+        assert!(status(&dir, Some(&manifest)).iter().any(|(_, s)| *s == State::Absent));
+        install(&dir, &manifest, &data).unwrap();
+        assert!(status(&dir, Some(&manifest)).iter().all(|(_, s)| *s == State::UpToDate));
+        fs::write(dir.join("DLC/BGEPings/user-file.txt"), "keep").unwrap();
+        uninstall(&dir).unwrap();
+        assert!(TARGETS.iter().all(|t| !t.path(&dir).exists()));
+        assert_eq!(fs::read(dir.join("DLC/BGEPings/user-file.txt")).unwrap(), b"keep");
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
