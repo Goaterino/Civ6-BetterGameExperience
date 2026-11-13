@@ -92,24 +92,6 @@ const DEPOUILLEMENT: Site = Site {
     copy: (0, 15),
     resume: 15,
 };
-/// Getter du niveau de civilisation (`180169cd0`). Seule signature fiable parmi les 23 getters
-/// qui partagent le meme prologue : la cle de propriete et l'appel `[rax+58h]` sont propres a
-/// celui-ci. L'objet recu n'est pas le CvPlayer : c'est un wrapper de 20h octets ou l'ID du joueur
-/// est a +0x00 (a +0xD8 on lit un pointeur partage, identique pour tous les joueurs).
-const NIVEAU: Site = Site {
-    name: "niveau de civilisation",
-    address: 0x1_8016_9CD0,
-    expected: &[
-        0x48, 0x83, 0xEC, 0x28, 0x48, 0x8B, 0x49, 0x10, 0x8B, 0x15, 0x3E, 0x39, 0xA2, 0x00, 0x48, 0x8B,
-        0x01, 0xFF, 0x50, 0x58,
-    ],
-    copy: (0, 14),
-    resume: 14,
-};
-
-/// Niveau rendu pour un spectateur : `CIVILIZATION_LEVEL_SPECTATOR`, defini par BSM.
-const NIVEAU_SPECTATEUR: u32 = 0xD67F_2AB1;
-
 const SITES: [Site; 5] = [TOURISTES, DEMANDE, VOTE, VOTE_DISCUSSION, DEPOUILLEMENT];
 
 static BASE: AtomicUsize = AtomicUsize::new(0);
@@ -119,13 +101,6 @@ static T_DEMANDE: AtomicUsize = AtomicUsize::new(0);
 static T_VOTE: AtomicUsize = AtomicUsize::new(0);
 static T_DISCUSSION: AtomicUsize = AtomicUsize::new(0);
 static T_DEPOUILLEMENT: AtomicUsize = AtomicUsize::new(0);
-static T_NIVEAU: AtomicUsize = AtomicUsize::new(0);
-/// Le Spectator.lua du proxy a été compilé dans cette partie (`mods_ui::remplacer`, qui l'exige POL
-/// actifs) : celui de BSM ne cherche les spectateurs que parmi les majeurs, il ne les trouverait
-/// plus une fois leur niveau changé.
-static SCRIPT_NIVEAU: AtomicBool = AtomicBool::new(false);
-/// Premier niveau de spectateur rendu dans cette partie, journalisé une fois.
-static NIVEAU_VU: AtomicBool = AtomicBool::new(false);
 /// Dernier (N du jeu, N corrigé) journalisé, en `N << 16 | N'` ; -1 rien encore.
 static DERNIER_N: AtomicI32 = AtomicI32::new(-1);
 static VOTES_REFUSES: AtomicU32 = AtomicU32::new(0);
@@ -322,37 +297,6 @@ unsafe extern "system" fn hook_depouillement(resolution: usize) -> u64 {
     r
 }
 
-/// Le Spectator.lua du proxy vient d'être compilé (`mods_ui::remplacer`, POL actifs).
-pub fn script_niveau_compile() {
-    if !SCRIPT_NIVEAU.swap(true, Ordering::Relaxed) {
-        log("spectateurs : Spectator.lua du proxy compilé, niveau des spectateurs changé si POL actifs");
-    }
-}
-
-/// `180169cd0` : pour un spectateur, le niveau rendu est celui de BSM, ce qui le sort des listes
-/// de majeurs (Lua, victoires, score) sans toucher aux listes natives utilisées par les autres
-/// détours de ce module.
-///
-/// Correctif POL : il change la simulation. Il ne dépend que d'états communs à toutes les machines
-/// d'une partie POL (même proxy, même verdict de l'hôte), jamais d'un réglage local :
-/// `SCRIPT_NIVEAU` (le Spectator.lua du proxy, substitué si POL actifs, au même point du
-/// chargement partout), `pol::actifs()` et le leader du joueur. Le drapeau d'abord : ce getter est
-/// appelé souvent, et sans BSM il suffit à tout laisser tel quel.
-unsafe extern "system" fn hook_niveau(p: usize) -> i32 {
-    let original: unsafe extern "system" fn(usize) -> i32 = std::mem::transmute(T_NIVEAU.load(Ordering::Relaxed));
-    if p == 0 || !SCRIPT_NIVEAU.load(Ordering::Relaxed) || !pol::actifs() {
-        return original(p);
-    }
-    let id: i32 = rd(p);
-    if (0..64).contains(&id) && est_spectateur(BASE.load(Ordering::Relaxed), id as u32) {
-        if !NIVEAU_VU.load(Ordering::Relaxed) && !NIVEAU_VU.swap(true, Ordering::Relaxed) {
-            log(&format!("spectateurs : joueur {id} rendu au niveau CIVILIZATION_LEVEL_SPECTATOR"));
-        }
-        return NIVEAU_SPECTATEUR as i32;
-    }
-    original(p)
-}
-
 pub unsafe fn on_gamecore_loaded(base: usize) {
     if let Err(e) = patch::check(base, &SITES) {
         log(&format!("spectateurs : version inattendue, aucun détour : {e}"));
@@ -379,37 +323,6 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         }
         Some(e) => log(&format!("spectateurs : échec de la pose d'un détour : {e}")),
     }
-
-    // Le niveau : vérifié à part, après les cinq autres (il lit `BASE` : si leurs octets manquent,
-    // il n'est pas posé non plus). Si seuls les siens manquent, les cinq autres restent posés et le
-    // journal le dit. La pose ne dépend que du binaire, identique sur toutes les machines d'une
-    // partie POL (même version du proxy, même version du jeu).
-    // Si notre saut (jmp [rip+0], FF 25 00000000) est déjà là, on remet les octets d'origine avant
-    // de le reposer, au lieu de le prendre pour une version inattendue.
-    let at_niveau = base + (NIVEAU.address - patch::IMAGE_BASE) as usize;
-    let deja_pose = std::slice::from_raw_parts(at_niveau as *const u8, 2) == &[0xFF, 0x25][..];
-    if deja_pose {
-        patch::restore(base, &NIVEAU);
-    }
-    if patch::check(base, &[NIVEAU]).is_ok() {
-        let at = base + (NIVEAU.address - patch::IMAGE_BASE) as usize;
-        // `mov edx,[rip+0xA2393E]` (octets 8..14) est relatif à RIP : copié dans le trampoline, il
-        // lirait ailleurs. On le refait en absolu : mov r11,imm64 / mov edx,[r11].
-        let cle = at + 14 + 0x00A2_393E;
-        let mut prologue = NIVEAU.expected[0..8].to_vec();
-        prologue.extend_from_slice(&[0x49, 0xBB]);
-        prologue.extend_from_slice(&(cle as u64).to_le_bytes());
-        prologue.extend_from_slice(&[0x41, 0x8B, 0x13]);
-        match patch::install_at(NIVEAU.name, at, &prologue, at + NIVEAU.resume, hook_niveau as *const () as usize) {
-            Ok(t) => {
-                T_NIVEAU.store(t, Ordering::Relaxed);
-                log("spectateurs : détour de niveau posé");
-            }
-            Err(e) => log(&format!("spectateurs : niveau, pose impossible : {e}")),
-        }
-    } else if let Err(e) = patch::check(base, &[NIVEAU]) {
-        log(&format!("spectateurs : niveau, détour non posé : {e}"));
-    }
 }
 
 /// Les cinq détours sont posés : les scripts du congrès peuvent être patchés (`ui`).
@@ -435,16 +348,10 @@ pub unsafe fn on_proxy_unload() {
             patch::restore(base, site);
         }
     }
-    // Sans quoi GameCore sauterait dans ce proxy déchargé au premier niveau demandé.
-    if T_NIVEAU.swap(0, Ordering::Relaxed) != 0 {
-        patch::restore(base, &NIVEAU);
-    }
 }
 
 /// Nouvelle partie : les journaux recommencent.
 pub fn reset() {
-    SCRIPT_NIVEAU.store(false, Ordering::Relaxed);
-    NIVEAU_VU.store(false, Ordering::Relaxed);
     DERNIER_N.store(-1, Ordering::Relaxed);
     VOTES_REFUSES.store(0, Ordering::Relaxed);
     VOIX_RETIREES.store(0, Ordering::Relaxed);

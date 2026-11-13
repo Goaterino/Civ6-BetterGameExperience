@@ -29,12 +29,6 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ja_JP">
 			<Text>ゲームのすべてのメッセージ</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="ja_JP">
-			<Text>世界議会のみ</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ja_JP">
-			<Text>世界議会以外すべて</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="ja_JP">
 			<Text>テスト</Text>
 		</Row>
@@ -209,12 +203,6 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ja_JP">
 			<Text>Better Report Screen (Infixo) に基づきます。取引、ユニット、政策、都市国家、都市のタブを持つ新しいレポート画面で、各政策と都市国家の効果をカードと同じく修正して表示します。MOD が有効な場合はそれに置き換わります。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="ja_JP">
-			<Text>観戦者向け Better Spectator Mod</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="ja_JP">
-			<Text>Better Spectator Mod のインターフェーススクリプト（都市国家、外交リボン、指導者アイコン、世界議会）を、主要文明から外された観戦者向けに書かれたプロキシ版に置き換えます。全プレイヤーがプロキシを持つ場合のみ。観戦者のレベルも常にこの規則に従います。</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ja_JP">
 			<Text>読み込んだスクリプトと XML を記録</Text>
 		</Row>
@@ -238,12 +226,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ja_JP">
 			<Text>送受信した取引の提案と取引画面の表示内容を Lua.log に書き込み、人間同士の取引の行き違いを調べます。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="ja_JP">
-			<Text>置き換える Better Spectator Mod のスクリプト</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="ja_JP">
-			<Text>診断：問題のあるスクリプトを切り分けるため、プロキシが置き換える Better Spectator Mod のインターフェーススクリプトを選びます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ja_JP">
 			<Text>同時開始・同時終了の信号を表示</Text>
@@ -649,6 +631,45 @@
 		</Row>
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ja_JP">
 			<Text>遺産の建造に [ICON_Production] 生産力+{1}。古代または古典時代の遺産の場合は+{2}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="ja_JP">
+			<Text>チームのピン（BGE）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="ja_JP">
+			<Text>チームのピンホイール</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="ja_JP">
+			<Text>マップ上でXを押したまま、合図の方向に動かして離します。全員のBGEロビーバージョンが一致すると、味方と観戦者に届きます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="ja_JP">
+			<Text>ここに注目</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="ja_JP">
+			<Text>危険</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="ja_JP">
+			<Text>向かっています</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="ja_JP">
+			<Text>援護を要請</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="ja_JP">
+			<Text>敵を見失った</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="ja_JP">
+			<Text>ピンの音量  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="ja_JP">
+			<Text>同じ名前のプレイヤーがいます。#席番号を指定してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="ja_JP">
+			<Text>/mute または /unmute の後に他のプレイヤーの名前か #席番号を入力してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="ja_JP">
+			<Text>{1}をミュートしました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ja_JP">
+			<Text>{1}のミュートを解除しました。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

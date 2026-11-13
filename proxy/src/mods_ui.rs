@@ -36,13 +36,6 @@ static NOTIFICATIONS: AtomicBool = AtomicBool::new(true);
 static BANDEAU: AtomicBool = AtomicBool::new(true);
 static POLITIQUES: AtomicBool = AtomicBool::new(true);
 static RAPPORTS: AtomicBool = AtomicBool::new(true);
-/// Scripts d'interface de Better Spectator Mod repris (`ui_spectateur=`). Réglage local : il ne
-/// touche que l'interface, jamais Spectator.lua (script de gameplay, voir `remplacer`).
-static SPECTATEUR: AtomicBool = AtomicBool::new(true);
-// Quels scripts d'interface remplacer : 2 CityStates, 4 ruban, 8 icône, 16 popup du Congrès.
-// Sert à isoler un fichier qui pose problème ; 31 = tous. Le bit 1 (Spectator.lua) n'a plus
-// d'effet : ce script suit les correctifs POL, pas un réglage de la machine.
-static SPECTATEUR_FICHIERS: AtomicUsize = AtomicUsize::new(31);
 
 pub fn set_charges(on: bool) {
     CHARGES.store(on, Ordering::Relaxed);
@@ -62,24 +55,6 @@ pub fn set_politiques(on: bool) {
 pub fn set_rapports(on: bool) {
     RAPPORTS.store(on, Ordering::Relaxed);
 }
-pub fn set_spectateur(on: bool) {
-    SPECTATEUR.store(on, Ordering::Relaxed);
-}
-#[cfg(any(feature = "diag", test))]
-pub fn set_spectateur_fichiers(masque: usize) {
-    SPECTATEUR_FICHIERS.store(masque, Ordering::Relaxed);
-}
-
-/// Un script du mod BSM a été compilé dans ce processus : le mod est donc dans le paramétrage
-/// de la partie. Le popup du Congrès, fichier du jeu de base, n'est remplacé que dans ce cas.
-/// Propre à chaque machine (ordre des compilations) : il ne décide que de l'interface.
-static BSM_VU: AtomicBool = AtomicBool::new(false);
-
-/// Le texte est le popup du Congrès de BSM repris par le proxy (`remplacer`) : `ui` n'y ajoute que
-/// le retour au vote, ce popup gérant déjà le spectateur lui-même.
-pub fn est_popup_spectateur(src: &[u8]) -> bool {
-    src == SPECTATEUR_CONGRES
-}
 
 fn on(flag: &AtomicBool) -> bool {
     flag.load(Ordering::Relaxed)
@@ -87,25 +62,19 @@ fn on(flag: &AtomicBool) -> bool {
 
 /// Une reprise au moins est active : l'accroche Lua doit être posée.
 pub fn any() -> bool {
-    [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS, &SPECTATEUR].iter().any(|f| on(f))
-}
-
-/// Une reprise a besoin de la lecture XML.
-pub fn xml_needed() -> bool {
-    on(&BANDEAU) || on(&POLITIQUES) || on(&RAPPORTS)
+    [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS].iter().any(|f| on(f))
 }
 
 pub fn journal_reglages() -> String {
     let s = |f: &AtomicBool| if on(f) { "on" } else { "off" };
     format!(
-        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}, spectateur {}",
+        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}",
         s(&CHARGES),
         s(&ROUTES),
         s(&NOTIFICATIONS),
         s(&BANDEAU),
         s(&POLITIQUES),
-        s(&RAPPORTS),
-        s(&SPECTATEUR)
+        s(&RAPPORTS)
     )
 }
 
@@ -140,14 +109,6 @@ const RAPPORTS_LUA: &[u8] = include_bytes!("mods/rapports/reportscreen.lua");
 const RAPPORTS_XML: &str = include_str!("mods/rapports/reportscreen.xml");
 const LISTE: &str = include_str!("mods/rapports/liste.lua");
 const TEXTES: &str = include_str!("mods/textes.tsv");
-
-// Better Spectator Mod : nos versions des scripts, substituees a la compilation. Rien n'est ecrit
-// sur le disque ; le mod reste tel quel, active ou non.
-const SPECTATEUR_DATA: &[u8] = include_bytes!("mods/spectateur/spectator.lua");
-const SPECTATEUR_RIBBON: &[u8] = include_bytes!("mods/spectateur/diplomacyribbon_spec.lua");
-const SPECTATEUR_ICONE: &[u8] = include_bytes!("mods/spectateur/leadericon.lua");
-const SPECTATEUR_CITYSTATES: &[u8] = include_bytes!("mods/spectateur/citystates.lua");
-const SPECTATEUR_CONGRES: &[u8] = include_bytes!("mods/spectateur/worldcongresspopup_spec.lua");
 
 /// Better Spectator Mod : son script du bandeau, que TopPanel Extension Pro évinçait.
 const BSM_ID: &str = "c6e5ad32-0600-4a98-a7cd-5854a1abcaaf";
@@ -250,56 +211,65 @@ pub fn patch_spectateur_ui(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// Écriture de SPEC_LAST_ID dans Data/Spectator.lua de BSM (deux fois : dans `DoObserverPlayer`,
+/// et dans `OnTurnStarted`, jamais branchée, avec un `id` non défini).
+const SPEC_LAST_ID_ECRIT: &str = "Game:SetProperty(\"SPEC_LAST_ID\",id)";
+
+/// Data/Spectator.lua de BSM est un script de gameplay : il tourne sur chaque machine. Mais
+/// `DoObserverPlayer` n'est appelé que par l'interface du spectateur (`UIDoObserverPlayer`), sur sa
+/// seule machine, et y écrivait la propriété de partie SPEC_LAST_ID : m_kProperties divergeait des
+/// autres machines (désynchro au contrôle de fin de tour, vue le 2026-11-10). On retire seulement
+/// cette écriture ; le reste du script de BSM est compilé tel quel. Spectator_UI.lua garde le dernier
+/// joueur observé de son côté (`patch_spectateur_ui`).
+pub fn patch_spectateur_data(src: &[u8]) -> Result<Vec<u8>, String> {
+    let pos = find(src, SPEC_LAST_ID_ECRIT);
+    if has(src, "BGE : SPEC_LAST_ID") {
+        return Err("déjà corrigé".into());
+    }
+    if pos.is_empty() {
+        return Err("écriture de SPEC_LAST_ID introuvable".into());
+    }
+    // Octets remplacés tels quels : le fichier n'est pas forcément en UTF-8. L'instruction devient un
+    // commentaire jusqu'à la fin de sa ligne : les numéros de ligne ne changent pas.
+    let mut out = Vec::with_capacity(src.len() + 48 * pos.len());
+    let mut debut = 0;
+    for p in pos {
+        out.extend_from_slice(&src[debut..p]);
+        out.extend_from_slice(b"-- BGE : SPEC_LAST_ID plus ecrit (desynchro) : ");
+        debut = p;
+    }
+    out.extend_from_slice(&src[debut..]);
+    Ok(out)
+}
+
 // ---------------------------------------------------------------------------------------------
 // Étape 1 : texte entier remplacé.
 
 /// Le script entier à compiler à la place de celui de l'exe, et ce qu'on a fait (journal).
 pub fn remplacer(chunk: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), String>> {
     let vide = |quoi: &str| Some(Ok((format!("-- BetterGameDLLs : {quoi}, neutralisé par le proxy.\r\n").into_bytes(), format!("{quoi} neutralisé"))));
-    let bsm = dans_bsm(chunk);
-    if bsm {
-        // Présence du mod dans la partie, même si ses remplacements sont désactivés.
-        BSM_VU.store(true, Ordering::Relaxed);
+    if is_file(chunk, "TeamPings.lua") && has(src, "TeamPingMarker")
+        || is_file(chunk, "TeamPingVolume.lua") && has(src, "TeamPings_Volume")
+    {
+        return vide("Team Pings standalone");
     }
-    // Spectator.lua est un script de gameplay : il tourne sur chaque machine et change la
-    // simulation (il va avec le niveau des spectateurs, `spectateurs::hook_niveau`). Correctif
-    // POL, il ne dépend d'aucun réglage local : seulement des correctifs POL, fixés par le verdict
-    // de l'hôte avant le chargement de la partie, les mêmes partout.
-    if bsm && is_file(chunk, "Spectator.lua") {
-        if !crate::pol::actifs() {
-            return None;
-        }
-        crate::spectateurs::script_niveau_compile();
-        return Some(Ok((SPECTATEUR_DATA.to_vec(), "Better Spectator Mod : Spectator.lua du proxy (POL)".into())));
+    if is_file(chunk, "TeamPingChat.lua") && has(src, "TeamPingChatEvents") {
+        return Some(Ok((b"include(TeamPingChatSource or 'ChatPanel')".to_vec(), "chat pris en charge par BGE".into())));
     }
-    // Va avec Spectator.lua du proxy, qui n'écrit plus SPEC_LAST_ID : même verrou.
-    if bsm && is_file(chunk, "Spectator_UI.lua") {
-        if !crate::pol::actifs() {
-            return None;
-        }
-        return Some(patch_spectateur_ui(src).map(|t| (t, "Better Spectator Mod : dernier joueur observé gardé dans l'interface, tour repassé après une pause".into())));
+    if is_file(chunk, "TeamPingTracker.lua") && has(src, "TeamPingChatEvents") {
+        let clean = String::from_utf8_lossy(src).replace("include(\"TeamPingChatEvents\")", "");
+        return Some(Ok((clean.into_bytes(), "suivi du monde pris en charge par BGE".into())));
     }
-    // Les scripts d'interface, écrits pour des spectateurs hors des majeurs : avec les correctifs
-    // POL seulement, sans quoi une partie se comporte comme sans cette reprise.
-    if on(&SPECTATEUR) && (bsm || is_file(chunk, "WorldCongressPopup.lua")) && crate::pol::actifs() {
-        let fichier = |bit: usize| SPECTATEUR_FICHIERS.load(Ordering::Relaxed) & bit != 0;
-        if bsm {
-            // is_file compare le nom sans tenir compte de la casse : le jeu compile
-            // "LeaderIcon.lua" alors que le fichier s'appelle "leadericon.lua".
-            if fichier(4) && is_file(chunk, "diplomacyribbon_spec.lua") {
-                return Some(Ok((SPECTATEUR_RIBBON.to_vec(), "Better Spectator Mod : ruban diplomatique du proxy".into())));
-            }
-            if fichier(8) && is_file(chunk, "LeaderIcon.lua") {
-                return Some(Ok((SPECTATEUR_ICONE.to_vec(), "Better Spectator Mod : icone de leader du proxy".into())));
-            }
-            if fichier(2) && is_file(chunk, "CityStates.lua") {
-                return Some(Ok((SPECTATEUR_CITYSTATES.to_vec(), "Better Spectator Mod : CityStates du proxy".into())));
-            }
+    // Better Spectator Mod : deux corrections ciblées, correctifs POL (la première change la
+    // simulation). Elles ne dépendent d'aucun réglage local : seulement des correctifs POL, fixés par
+    // le verdict de l'hôte avant le chargement de la partie, les mêmes partout. Le reste de BSM est
+    // compilé tel quel.
+    if dans_bsm(chunk) && crate::pol::actifs() {
+        if is_file(chunk, "Spectator.lua") {
+            return Some(patch_spectateur_data(src).map(|t| (t, "Better Spectator Mod : SPEC_LAST_ID plus écrit par Spectator.lua".into())));
         }
-        // BSM n'a pas d'entrée ReplaceUIScript pour le popup du Congrès : c'est le fichier du jeu
-        // qui est compilé, on le remplace directement, si BSM est dans la partie.
-        if fichier(16) && BSM_VU.load(Ordering::Relaxed) && is_file(chunk, "WorldCongressPopup.lua") {
-            return Some(Ok((SPECTATEUR_CONGRES.to_vec(), "popup du Congres du proxy".into())));
+        if is_file(chunk, "Spectator_UI.lua") {
+            return Some(patch_spectateur_ui(src).map(|t| (t, "Better Spectator Mod : dernier joueur observé gardé dans l'interface, tour repassé après une pause".into())));
         }
     }
     if on(&RAPPORTS) {
@@ -416,6 +386,9 @@ fn ajoute(src: &[u8], bloc: &str) -> Vec<u8> {
 /// Le script avec nos blocs, et ce qu'on a fait. `entree_bandeau` : c'est le script du contexte
 /// TopPanel, le premier compilé après TopPanel.xml (voir `xml_lu`).
 pub fn ajouter(chunk: &str, src: &[u8], entree_bandeau: bool) -> Option<Result<(Vec<u8>, String), String>> {
+    if let Some(text) = crate::pings::lua(chunk, src) {
+        return Some(Ok((text, "signaux d’équipe (POL)".into())));
+    }
     if (on(&CHARGES) || on(&ROUTES)) && is_file(chunk, "UnitFlagManager.lua") {
         return Some(Ok((patch_drapeaux(src, on(&CHARGES), on(&ROUTES)), "charges et routes sur les drapeaux".into())));
     }
@@ -545,6 +518,9 @@ unsafe fn langue() -> String {
 
 /// Le XML à mettre à la place de celui que l'exe vient de lire, et ce qu'on a fait.
 pub unsafe fn xml(name: &str, src: &[u8]) -> Option<Result<(Vec<u8>, String), String>> {
+    if is_file(name, "GenVFX.xml") && crate::pol::actifs() {
+        return Some(crate::pings::xml(src).map(|t| (t, "signaux sur la carte".into())));
+    }
     if on(&RAPPORTS) && is_file(name, "ReportScreen.xml") {
         let l = langue();
         return Some(Ok((traduire_xml(RAPPORTS_XML, &l).into_bytes(), format!("écran de Better Report Screen du proxy ({l})"))));
@@ -642,9 +618,21 @@ unsafe extern "C-unwind" fn lua_fin_route(l: *mut c_void) -> i32 {
     }
 }
 
+unsafe extern "C-unwind" fn lua_ping_sound(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let name = (h.to_lstring)(l, 1, std::ptr::null_mut());
+    if name.is_null() {
+        crate::pings::stop();
+    } else if crate::pol::actifs() {
+        crate::pings::play(CStr::from_ptr(name).to_bytes(), (h.to_integer)(l, 2), (h.to_integer)(l, 3) != 0);
+    }
+    0
+}
+
 unsafe extern "C-unwind" fn installer(l: *mut c_void) -> i32 {
     if let Some(h) = hks() {
-        for (name, f) in [(&b"Civ6Proxy_Charger\0"[..], lua_charger as LuaCFn), (&b"Civ6Proxy_FinRoute\0"[..], lua_fin_route as LuaCFn)] {
+        for (name, f) in [(&b"Civ6Proxy_Charger\0"[..], lua_charger as LuaCFn), (&b"Civ6Proxy_FinRoute\0"[..], lua_fin_route as LuaCFn),
+                          (&b"Civ6Proxy_PingSound\0"[..], lua_ping_sound as LuaCFn)] {
             (h.push_closure)(l, f, 0, name.as_ptr() as *const c_char, 0);
             (h.set_field)(l, LUA_GLOBALSINDEX, name.as_ptr() as *const c_char);
         }
@@ -911,38 +899,9 @@ mod tests {
         }
         assert!(!lua.contains("include(\"BRSPage_") && !lua.contains("GlobalParameters.BRS_"));
     }
-
-    /// Better Spectator Mod : reprise verrouillée par les correctifs POL. Dans le processus de test,
-    /// le proxy de démarrage est absent : POL coupés, rien n'est substitué, Spectator.lua (gameplay)
-    /// compris, quels que soient les réglages locaux.
-    #[test]
-    fn spectateur_verrouille_par_pol() {
-        assert!(!crate::pol::actifs());
-        const BSM: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407";
-        assert!(dans_bsm(&format!(r"{BSM}\Data\Spectator.lua")));
-        assert!(dans_bsm(r"C:\Mods\BetterSpectatorMod\UI\CityStates.lua"));
-        assert!(!dans_bsm(r"C:\x\Base\Assets\UI\CityStates.lua"));
-        set_spectateur(true);
-        set_spectateur_fichiers(31);
-        for f in [r"Data\Spectator.lua", r"UI\Spectator_UI.lua", r"UI\CityStates.lua", r"UI\Replacements\leadericon.lua", r"UI\diplomacyribbon_spec.lua"] {
-            assert!(remplacer(&format!(r"{BSM}\{f}"), b"-- x").is_none(), "{f} remplacé sans POL");
-        }
-        assert!(BSM_VU.load(Ordering::Relaxed));
-        assert!(remplacer(r"C:\x\Base\Assets\UI\Popups\WorldCongressPopup.lua", b"-- x").is_none());
-        assert!(est_popup_spectateur(SPECTATEUR_CONGRES) && !est_popup_spectateur(b"-- x"));
-        for text in [SPECTATEUR_DATA, SPECTATEUR_RIBBON, SPECTATEUR_ICONE, SPECTATEUR_CITYSTATES, SPECTATEUR_CONGRES] {
-            assert!(std::str::from_utf8(text).is_ok());
-        }
-    }
-
-    /// SPEC_LAST_ID : plus écrit par Spectator.lua du proxy, gardé dans l'interface seulement.
+    /// SPEC_LAST_ID : gardé dans l'interface seulement.
     #[test]
     fn spectateur_dernier_observe() {
-        let data = std::str::from_utf8(SPECTATEUR_DATA).unwrap();
-        assert!(
-            data.lines().all(|l| l.trim_start().starts_with("--") || !l.contains("SetProperty(\"SPEC_LAST_ID\"")),
-            "Spectator.lua écrit encore SPEC_LAST_ID"
-        );
         let src = b"UIEvents = ExposedMembers.LuaEvents;\r\nif ( Game:GetProperty(\"SPEC_LAST_ID\") ~= nil) then\r\n\tspecid = Game:GetProperty(\"SPEC_LAST_ID\")\r\nend";
         let out = patch_spectateur_ui(src).unwrap();
         let t = String::from_utf8(out.clone()).unwrap();
@@ -956,6 +915,33 @@ mod tests {
             let out = patch_spectateur_ui(&src).unwrap();
             assert!(find(&out, SPEC_LAST_ID).is_empty());
             assert_eq!(find(&out, "BGD_SpecDernier = ").len(), 2, "déclaration et écouteur");
+        }
+    }
+
+    /// Data/Spectator.lua de BSM : seule l'écriture de SPEC_LAST_ID est retirée.
+    #[test]
+    fn spectateur_data_sans_spec_last_id() {
+        let ecrit = |t: &str| t.lines().any(|l| !l.trim_start().starts_with("--") && l.contains("SetProperty(\"SPEC_LAST_ID\""));
+        let src = b"\t\tend\r\n\t\tGame:SetProperty(\"SPEC_LAST_ID\",id)\r\n\tend\r\n\tGame:SetProperty(\"SPEC_LAST_ID\",id)\r\n";
+        let out = patch_spectateur_data(src).unwrap();
+        let t = String::from_utf8(out.clone()).unwrap();
+        assert!(!ecrit(&t));
+        assert_eq!(t.lines().count(), 4, "numéros de ligne inchangés");
+        assert_eq!(patch_spectateur_data(&out).unwrap_err(), "déjà corrigé");
+        assert!(patch_spectateur_data(b"-- x").is_err());
+        const BSM: &str = r"C:\Program Files (x86)\Steam\steamapps\workshop\content\289070\1916397407";
+        assert!(dans_bsm(&format!(r"{BSM}\Data\Spectator.lua")));
+        assert!(!dans_bsm(r"C:\x\Base\Assets\UI\Spectator.lua"));
+        // Sans les correctifs POL, rien n'est touché.
+        for f in [r"Data\Spectator.lua", r"UI\Spectator_UI.lua"] {
+            assert!(remplacer(&format!(r"{BSM}\{f}"), b"-- x").is_none(), "{f} touché sans POL");
+        }
+        if let Some(src) = read(format!(r"{BSM}\Data\Spectator.lua")) {
+            let out = patch_spectateur_data(&src).unwrap();
+            let (avant, apres) = (String::from_utf8_lossy(&src), String::from_utf8_lossy(&out));
+            assert!(ecrit(&avant) && !ecrit(&apres));
+            assert_eq!(find(&out, "-- BGE : SPEC_LAST_ID").len(), 2);
+            assert_eq!(avant.lines().count(), apres.lines().count());
         }
     }
 }

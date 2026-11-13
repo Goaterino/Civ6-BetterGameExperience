@@ -2,6 +2,19 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## Następna wersja
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Obserwatorzy (Better Spectator Mod)**: przebudowa obserwatorów z 0.9.0 zostaje wycofana, bo
+  rozgrywki z obserwatorem były mniej stabilne. BetterGameExperience nie zmienia już poziomu
+  cywilizacji obserwatorów ani nie zastępuje skryptów Better Spectator Mod, a ustawienie « Better
+  Spectator Mod dla obserwatorów » znika. Obserwatorzy znów liczą się jako główne cywilizacje dla
+  skryptów, zwycięstw i wyniku, jak przy samym Better Spectator Mod. Turystyka i głosowania Kongresu
+  Światowego nadal ich pomijają.
+- **Zachowane dla obserwatorów**: zmiana obserwowanego gracza nadal nie powoduje desynchronizacji, a
+  tura obserwatora nadal kończy się sama po pauzie MPH. Obie poprawki dotyczą teraz oryginalnych
+  skryptów Better Spectator Mod.
+
 ## BetterGameExperience 0.9.1
 
 Zgodna z 0.9.0 w grze wieloosobowej: gracze z 0.9.0 i 0.9.1 grają razem, ze wszystkimi poprawkami.
