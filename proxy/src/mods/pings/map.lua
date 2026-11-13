@@ -346,48 +346,13 @@ local function resetInput()
     closeWheel()
 end
 
-local volumeParent
-local refreshing = false
-local function refreshVolume()
-    refreshing = true
-    Controls.BGD_PingVolume:SetValue(volume()/100)
-    Controls.BGD_PingCaption:SetText(BGD_Txt("LOC_BGD_PINGS_VOLUME", volume()))
-    refreshing = false
-end
 local function onReady()
     Controls.BGD_PingMap:SetHide(false)
     ContextPtr:SetHide(false)
-    if volumeParent then return end
-    local slider = ContextPtr:LookUpControl("/InGame/TopOptionsMenu/Options/SFXVolSlider")
-    if not slider then return end
-    local sfx = slider:GetParent()
-    local stack = sfx:GetParent()
-    local row = Controls.BGD_PingVolumeRow
-    volumeParent = row:GetParent()
-    row:ChangeParent(stack)
-    for i, child in ipairs(stack:GetChildren()) do
-        if child == sfx or (sfx.CData ~= nil and child.CData == sfx.CData) then
-            stack:AddChildAtIndex(row, i)
-            break
-        end
-    end
-    row:SetHide(false)
-    refreshVolume()
-    stack:CalculateSize()
-    stack:ReprocessAnchoring()
 end
-Controls.BGD_PingVolume:RegisterSliderCallback(function(value)
-    if refreshing then return end
-    local percent = math.floor(value*4 + 0.5)*25
-    local changed = percent ~= volume()
-    UserConfiguration.SetValue("TeamPings_Volume", percent)
-    refreshVolume()
-    if changed then
-        local confirm = ContextPtr:LookUpControl("/InGame/TopOptionsMenu/Options/ConfirmButton")
-        if confirm then confirm:SetDisabled(false) end
-        play(center)
-    end
-end)
+local function previewVolume()
+    play(center)
+end
 refreshBindings()
 LuaEvents.BGD_PingBindingsChanged.Add(refreshBindings)
 Events.InputActionStarted.Add(onActionStarted)
@@ -396,7 +361,7 @@ Events.LoadGameViewStateDone.Add(onReady)
 Events.LoadScreenClose.Add(onReady)
 Events.MultiplayerChat.Add(onChat)
 LuaEvents.BGD_PingMuted.Add(hideSender)
-LuaEvents.BGD_PingVolumeChanged.Add(refreshVolume)
+LuaEvents.BGD_PingVolumePreview.Add(previewVolume)
 ContextPtr:SetInputHandler(onInput,true)
 ContextPtr:SetAppLostFocusHandler(resetInput)
 ContextPtr:SetShutdown(function()
@@ -407,8 +372,7 @@ ContextPtr:SetShutdown(function()
     Events.LoadScreenClose.Remove(onReady)
     Events.MultiplayerChat.Remove(onChat)
     LuaEvents.BGD_PingMuted.Remove(hideSender)
-    LuaEvents.BGD_PingVolumeChanged.Remove(refreshVolume)
-    if volumeParent then Controls.BGD_PingVolumeRow:ChangeParent(volumeParent) end
+    LuaEvents.BGD_PingVolumePreview.Remove(previewVolume)
     ContextPtr:ClearUpdate()
     markers:ResetInstances()
     if Civ6Proxy_PingSound then Civ6Proxy_PingSound(nil) end -- release asynchronous audio buffers
