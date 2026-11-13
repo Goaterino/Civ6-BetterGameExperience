@@ -65,6 +65,7 @@ SITES = (  # nom, RVA, prologue d'origine
     ("rendement", 0x37EC60, "44894424185553574154415541564157"),
     ("attente IA", 0x4A16E0, "40534883ec30488d05d34852"),
     ("citoyens", 0x10F050, "4c8bdc45894b204989531049894b08"),
+    ("modificateur de production", 0x9497A0, "48895c2408574883ec404863da488bf9"),
     ("promotion de gouverneur", 0x2DF340, "48895c240848896c2410488974241857"),
     ("retrait de gouverneur", 0x2DF800, "48895c2408488974241048897c2418"),
     ("établissement de gouverneur", 0x259B10, "4c8bdc4989732055498dabb8feffff"),
