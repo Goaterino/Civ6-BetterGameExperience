@@ -76,4 +76,31 @@ if arg[1] then
     wheelRow().Binding.click(); env.Controls.CancelBindingButton.click(); assert(wheelRow().Binding.text=="K")
     wheelRow().Binding.click(); env.Controls.ClearBindingButton.click(); assert(wheelRow().Binding.text=="")
 end
+
+-- Civ can retain an action from InputSettings.json after its original mod is disabled.
+-- Its binding still works, while its database name/category and visibility are missing.
+env.Input.GetActionCount=function() return 2 end
+env.Input.GetActionId=function(id)
+    if id==0 then return 777 end
+    if id==1 or id=="TeamPingWheel" then return 888 end
+end
+env.Input.ShouldShowActionKeybinding=function(id) return id==777 end
+env.Input.GetActionName=function(id) if id==777 then return "Stock" end end
+env.Input.GetActionCategory=function(id) if id==777 then return "UI" end end
+env.Input.GetActionDescription=env.Input.GetActionName
+env.Input.GetGestureDisplayString=function(id,slot)
+    if id==888 then return slot==0 and "V" or "" end
+    return "A"
+end
+local retained=assert(load(adapter.."return Input","@retained_binding","t",env))()
+assert(retained.GetActionCount()==6)
+assert(retained.GetActionId(1)==888 and retained.ShouldShowActionKeybinding(888))
+assert(retained.GetActionName(888)=="LOC_BGD_PINGS_WHEEL")
+assert(retained.GetActionCategory(888)=="LOC_BGD_PINGS_NAME")
+assert(retained.GetActionDescription(888)=="LOC_BGD_PINGS_WHEEL")
+assert(retained.GetGestureDisplayString(888,0)=="V")
+labels.native=false
+env._CurrentAction=888
+retained.BeginRecordingGestures(true)
+assert(labels.native)
 print("Ping primary/alternate recording, clearing and native delegation passed")

@@ -5,7 +5,7 @@
     <Container ID="FailedArt" Anchor="C,C" Size="64,64" Offset="0,-28" ConsumeMouse="0">
       <Label ID="FailedGlyph" Anchor="C,C" Style="FontNormal28"/>
       <Image ID="FailedIcon" Anchor="C,C" Size="60,60" StretchMode="Fill" Color="164,164,164,210" Hidden="1"/>
-      <Label ID="FailedCross" Anchor="R,T" Style="FontNormal28" Color0="255,94,86,255" String="Ã—" FontStyle="Stroke"/>
+      <Label ID="FailedCross" Anchor="R,T" Style="FontNormal28" Color0="255,94,86,255" String="Ãƒâ€”" FontStyle="Stroke"/>
       <Image ID="FailedSlash" Anchor="C,C" Size="64,64" StretchMode="Fill" Hidden="1"/>
     </Container>
   </WorldAnchor>
@@ -14,7 +14,7 @@
     <Image ID="Focus" Texture="Controls_CircleRim50" Anchor="C,C" Size="50,50" StretchMode="Fill" Hidden="1"/>
     <Container ID="Choices" Size="parent,parent"/>
     <Container ID="BlockedChoice" Anchor="C,C" Size="44,44" Hidden="1">
-      <Label ID="BlockedCross" Anchor="C,C" Style="FontNormal40" Color0="255,94,86,255" String="Ã—" FontStyle="Stroke"/>
+      <Label ID="BlockedCross" Anchor="C,C" Style="FontNormal40" Color0="255,94,86,255" String="Ãƒâ€”" FontStyle="Stroke"/>
       <Image ID="BlockedSlash" Anchor="C,C" Size="44,44" StretchMode="Fill" Hidden="1"/>
     </Container>
     <Label ID="Call" Anchor="C,B" Offset="0,-21" Style="FontNormal18" FontStyle="Stroke" ColorSet="White_Black"/>
@@ -40,7 +40,3 @@
     </Container>
   </WorldAnchor>
 </Instance>
-<Stack ID="BGD_PingVolumeRow" Hidden="1" Anchor="R,T" StackGrowth="Left" Padding="5">
-  <Slider ID="BGD_PingVolume" Style="SliderControl" Anchor="C,C" Offset="5,0" Size="300,13"/>
-  <Label ID="BGD_PingCaption" Anchor="L,C" Style="ShellOptionText"/>
-</Stack>
