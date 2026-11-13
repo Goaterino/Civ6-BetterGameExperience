@@ -123,12 +123,15 @@ end
 
 -- Les autres humains connectés, dans l'ordre des identifiants.
 local function BGD_AutresHumains()
+	local pings = GameConfiguration.GetValue("BGD_TEAM_PINGS");
+	local avecObservateurs = pings == true or pings == 1;
 	local localID = Network.GetLocalPlayerID();
 	local ids = {};
 	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 		local cfg = PlayerConfigurations[id];
-		if id ~= localID and cfg ~= nil and cfg:IsHuman()
-			and cfg:GetSlotStatus() == SlotStatus.SS_TAKEN and Network.IsPlayerConnected(id) then
+		if id ~= localID and cfg ~= nil
+			and ((cfg:IsHuman() and cfg:GetSlotStatus() == SlotStatus.SS_TAKEN)
+				or (avecObservateurs and cfg:GetSlotStatus() == SlotStatus.SS_OBSERVER)) and Network.IsPlayerConnected(id) then
 			table.insert(ids, id);
 		end
 	end

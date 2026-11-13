@@ -650,5 +650,44 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="ko_KR">
 			<Text>불가사의 건설에 [ICON_Production] 생산력 +{1}. 고대 또는 고전 시대 불가사의라면 +{2}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="ko_KR">
+			<Text>팀 신호 (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="ko_KR">
+			<Text>팀 신호 휠</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="ko_KR">
+			<Text>지도에서 X를 누른 채 원하는 신호 방향으로 움직인 뒤 놓으세요. 모두 같은 BGE 로비 버전을 사용하면 팀원과 관전자가 신호를 받습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="ko_KR">
+			<Text>여기를 보세요</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="ko_KR">
+			<Text>위험</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="ko_KR">
+			<Text>가는 중</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="ko_KR">
+			<Text>지원 요청</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="ko_KR">
+			<Text>적 사라짐</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="ko_KR">
+			<Text>신호 음량  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="ko_KR">
+			<Text>같은 이름이 여러 명입니다. #자리번호를 사용하세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="ko_KR">
+			<Text>/mute 또는 /unmute 뒤에 다른 플레이어의 이름이나 #자리번호를 입력하세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="ko_KR">
+			<Text>{1} 님을 차단했습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ko_KR">
+			<Text>{1} 님의 차단을 해제했습니다.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

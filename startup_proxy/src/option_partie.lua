@@ -41,6 +41,10 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 			id = "BGD_INDICATEURS_OFF", nom = "Disable Advanced UI indicators (BGE)", ordre = 44, defaut = 0,
 			aide = "LOC_BGD_OPTION_INDICATEURS_AIDE",
 		},
+		{
+			id = "BGD_TEAM_PINGS", nom = "LOC_BGD_PINGS_NAME", ordre = 45, defaut = 1,
+			aide = "LOC_BGD_PINGS_HELP",
+		},
 	};
 
 	local function Presente(id)
@@ -66,7 +70,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
 			.. "VALUES (?1, ?2, ?3, 'bool', " .. o.defaut .. ", 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
-			o.id, o.nom, BGD_Txt(o.aide), o.ordre);
+			o.id, BGD_Txt(o.nom), BGD_Txt(o.aide), o.ordre);
 		local ok = Presente(o.id);
 		if ok then
 			-- Le cache de CachedQuery ne voit pas forcément l'écriture : on le vide.

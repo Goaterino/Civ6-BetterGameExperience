@@ -76,7 +76,7 @@ local function NewLobby(joueurs, options)
 			GetCurrentLanguage = function() return { Type = options.lang or "fr_FR" }; end,
 			Lookup = function(s) return s; end,
 		};
-		env.SlotStatus = { SS_TAKEN = 1, SS_OPEN = 2 };
+		env.SlotStatus = { SS_TAKEN = 1, SS_OPEN = 2, SS_OBSERVER = 3 };
 		env.ChatTargetTypes = { CHATTARGET_ALL = -1, CHATTARGET_PLAYER = -3 };
 		-- `options.controles` : le XML du salon a le bouton et le minuteur (Controls), comme en jeu.
 		if options.controles then
@@ -99,6 +99,7 @@ local function NewLobby(joueurs, options)
 			env.UI = { PlaySound = function() end };
 		end
 		env.GameConfiguration = {
+			GetValue = function(key) if key == "BGD_TEAM_PINGS" then return options.pings; end end,
 			IsNetworkMultiplayer = function() return not options.hotseat; end,
 			IsHotseat = function() return options.hotseat == true; end,
 			IsPlayByCloud = function() return false; end,
@@ -117,7 +118,7 @@ local function NewLobby(joueurs, options)
 					m.values[pid][k] = v;
 				end,
 				IsHuman = function() return joueurs[pid + 1].ia ~= true; end,
-				GetSlotStatus = function() return 1; end,
+				GetSlotStatus = function() return joueurs[pid + 1].observer and 3 or 1; end,
 				GetPlayerName = function() return joueurs[pid + 1].nom; end,
 				GetReady = function() return joueurs[pid + 1].pret == true; end,
 			};
@@ -702,6 +703,21 @@ do
 	l.open();
 	l.tic();
 	check(not (l.machines[0].log or ""):find("erreur", 1, true), "salon de base : pas d'erreur");
+end
+
+do
+    local l = NewLobby({ { nom = "Host" }, { nom = "Observer", ia = true, observer = true } }, {pings=true});
+    l.open();
+    l.countdown();
+    check(Pol(l, 0) == "actifs" and Pol(l, 1) == "actifs", "observateur admis par le verdict de l’hôte");
+    local mixed = NewLobby({ { nom = "Host" }, { nom = "Observer", ia = true, observer = true, proxy = false } }, {pings=true});
+    mixed.open();
+    mixed.countdown();
+    check(Pol(mixed, 0) == "désactivés", "observateur connecté sans BGE : POL coupés");
+    local off = NewLobby({ { nom="Host" }, { nom="Observer", ia=true, observer=true, proxy=false } }, {pings=false});
+    off.open();
+    off.countdown();
+    check(Pol(off, 0) == "actifs", "signaux désactivés : les observateurs ne changent pas les autres POL");
 end
 
 if failures > 0 then

@@ -650,5 +650,44 @@
 		<Row Tag="LOC_BGD_IMHOTEP_EFFET" Language="en_US">
 			<Text>Grants {1} [ICON_Production] Production towards wonder construction, {2} if the wonder is from the Ancient or Classical Era.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_PINGS_NAME" Language="en_US">
+			<Text>Team pings (BGE)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_WHEEL" Language="en_US">
+			<Text>Team ping wheel</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_HELP" Language="en_US">
+			<Text>Hold X over the map and release toward a call. Teammates and spectators receive it when all players have the same BGE lobby version.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_LOOK" Language="en_US">
+			<Text>Look here</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_DANGER" Language="en_US">
+			<Text>Danger</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_COMING" Language="en_US">
+			<Text>On my way</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_ASSIST" Language="en_US">
+			<Text>Assist me</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MISSING" Language="en_US">
+			<Text>Enemy missing</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_VOLUME" Language="en_US">
+			<Text>Team ping volume  {1}%</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_AMBIGUOUS" Language="en_US">
+			<Text>That name is shared. Use #seat.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_PLAYER" Language="en_US">
+			<Text>Use /mute or /unmute with another player’s name or #seat.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_MUTED" Language="en_US">
+			<Text>Muted {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="en_US">
+			<Text>Unmuted {1}.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>
