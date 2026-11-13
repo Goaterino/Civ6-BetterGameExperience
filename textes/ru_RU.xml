@@ -29,12 +29,6 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="ru_RU">
 			<Text>Каждое сообщение игры</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="ru_RU">
-			<Text>Только Всемирный конгресс</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="ru_RU">
-			<Text>Всё, кроме Всемирного конгресса</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="ru_RU">
 			<Text>Тест</Text>
 		</Row>
@@ -209,12 +203,6 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="ru_RU">
 			<Text>На основе Better Report Screen (Infixo). Переработанный экран отчётов с вкладками «Сделки», «Отряды», «Политика», «Города-государства» и «Города» и эффектом каждой политики и города-государства, исправленным, как на карточках. Заменяет мод, если он включён.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="ru_RU">
-			<Text>Better Spectator Mod для зрителей</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="ru_RU">
-			<Text>Заменяет скрипты интерфейса Better Spectator Mod (города-государства, дипломатическая лента, значки лидеров, Всемирный конгресс) версиями прокси, написанными для зрителей, исключённых из числа главных цивилизаций. Только если у всех игроков есть прокси; уровень зрителей всегда следует этому правилу.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="ru_RU">
 			<Text>Журнал загруженных скриптов и XML</Text>
 		</Row>
@@ -238,12 +226,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ru_RU">
 			<Text>Записывает в Lua.log отправленные и полученные предложения сделок и то, что показывает экран сделки, чтобы разобраться в перекрёстных сделках между людьми.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="ru_RU">
-			<Text>Заменяемые скрипты Better Spectator Mod</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="ru_RU">
-			<Text>Диагностика: какие скрипты интерфейса Better Spectator Mod заменяет прокси, чтобы выделить проблемный.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ru_RU">
 			<Text>Показывать сигналы одновременного начала и конца хода</Text>

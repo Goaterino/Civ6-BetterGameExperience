@@ -252,22 +252,6 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_rapports=") {
             mods_ui::set_rapports(v.trim() != "off");
         }
-        if let Some(v) = line.trim().strip_prefix("ui_spectateur=") {
-            mods_ui::set_spectateur(v.trim() != "off");
-        }
-        // Diagnostic. Scripts d'interface de BSM : 2 CityStates, 4 ruban, 8 icône, 16 popup du Congrès ;
-        // 31 = tous. Spectator.lua (gameplay) n'en dépend pas : il suit les correctifs POL.
-        #[cfg(feature = "diag")]
-        if let Some(v) = line.trim().strip_prefix("ui_spectateur_fichiers=") {
-            let m = match v.trim() {
-                "all" => 31,
-                "aucun" => 0,
-                "ui" => 14,
-                "congres" => 16,
-                s => s.parse::<usize>().unwrap_or(31),
-            };
-            mods_ui::set_spectateur_fichiers(m);
-        }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");
         }

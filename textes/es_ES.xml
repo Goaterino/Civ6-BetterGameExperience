@@ -29,12 +29,6 @@
 		<Row Tag="LOC_BGD_OPT_CHOIX_MESSAGES" Language="es_ES">
 			<Text>Cada mensaje del juego</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_CONGRES_SEUL" Language="es_ES">
-			<Text>Solo el Congreso Mundial</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_CHOIX_SANS_CONGRES" Language="es_ES">
-			<Text>Todo salvo el Congreso Mundial</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_CHOIX_TEST" Language="es_ES">
 			<Text>Prueba</Text>
 		</Row>
@@ -209,12 +203,6 @@
 		<Row Tag="LOC_BGD_OPT_UI_RAPPORTS_AIDE" Language="es_ES">
 			<Text>Basado en Better Report Screen (Infixo). Pantalla de informes rehecha, con las pestañas Acuerdos, Unidades, Políticas, Ciudades-estado y Ciudades, y el efecto de cada política y ciudad-estado, corregido como las cartas. Sustituye al mod si está activo.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_NOM" Language="es_ES">
-			<Text>Better Spectator Mod para espectadores</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_AIDE" Language="es_ES">
-			<Text>Sustituye los scripts de interfaz de Better Spectator Mod (ciudades-estado, cinta diplomática, iconos de líderes, Congreso Mundial) por los del proxy, escritos para espectadores fuera de las civilizaciones principales. Solo si todos los jugadores tienen el proxy; el nivel de los espectadores sigue siempre esta regla.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_JOURNAL_NOM" Language="es_ES">
 			<Text>Registrar los scripts y XML cargados</Text>
 		</Row>
@@ -238,12 +226,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="es_ES">
 			<Text>Escribe en Lua.log las propuestas de acuerdo enviadas y recibidas, y lo que muestra la pantalla de acuerdo, para entender los acuerdos cruzados entre humanos.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_NOM" Language="es_ES">
-			<Text>Scripts de Better Spectator Mod sustituidos</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UI_SPECTATEUR_FICHIERS_AIDE" Language="es_ES">
-			<Text>Diagnóstico: qué scripts de interfaz de Better Spectator Mod sustituye el proxy, para aislar el que falla.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="es_ES">
 			<Text>Mostrar las señales del inicio y del final simultáneos</Text>
