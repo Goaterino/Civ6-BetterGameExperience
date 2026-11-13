@@ -2,6 +2,19 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## Nächste Version
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Zuschauer (Better Spectator Mod)**: Die Überarbeitung der Zuschauer aus 0.9.0 wird
+  zurückgenommen, weil Partien mit Zuschauer weniger stabil waren. BetterGameExperience ändert nicht
+  mehr die Zivilisationsstufe der Zuschauer und ersetzt keine Skripte von Better Spectator Mod mehr;
+  die Einstellung « Better Spectator Mod für Zuschauer » entfällt. Zuschauer zählen für Skripte, Siege
+  und Punktestand wieder als Hauptzivilisationen, wie mit Better Spectator Mod allein. Tourismus und
+  Abstimmungen des Weltkongresses lassen sie weiterhin außen vor.
+- **Für Zuschauer beibehalten**: Ein Wechsel des beobachteten Spielers führt weiterhin zu keiner
+  Desynchronisation, und der Zug des Zuschauers endet nach einer MPH-Pause weiterhin von selbst. Beide
+  Korrekturen gelten jetzt für die originalen Skripte von Better Spectator Mod.
+
 ## BetterGameExperience 0.9.1
 
 Im Mehrspielermodus mit 0.9.0 kompatibel: Spieler mit 0.9.0 und 0.9.1 spielen zusammen, mit allen

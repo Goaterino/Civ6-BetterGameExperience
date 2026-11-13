@@ -2,6 +2,12 @@
 
 [English](../CHANGELOG.md) · 다른 언어: [영어 변경 내역](../CHANGELOG.md)을 참고하세요.
 
+## 다음 버전
+
+### 멀티플레이 수정 [모든 플레이어]
+- **관전자 (Better Spectator Mod)**: 관전자가 있는 게임이 덜 안정적이어서 0.9.0의 관전자 개편을 철회합니다. BetterGameExperience는 더 이상 관전자의 문명 등급을 바꾸지 않고 Better Spectator Mod의 스크립트도 교체하지 않으며, 「관전자용 Better Spectator Mod」 설정도 사라집니다. 관전자는 Better Spectator Mod만 쓸 때처럼 스크립트, 승리, 점수에서 다시 주요 문명으로 계산됩니다. 관광과 세계 의회 투표에서는 계속 제외됩니다.
+- **관전자를 위해 유지**: 관전 대상 플레이어를 바꿔도 여전히 비동기화가 일어나지 않고, MPH 일시 정지 후에도 관전자의 턴은 여전히 자동으로 끝납니다. 두 수정은 이제 Better Spectator Mod의 원래 스크립트에 적용됩니다.
+
 ## BetterGameExperience 0.9.1
 
 멀티플레이에서 0.9.0과 호환됩니다. 0.9.0과 0.9.1 플레이어는 모든 수정이 켜진 채로 함께 플레이합니다.
