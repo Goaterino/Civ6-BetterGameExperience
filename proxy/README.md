@@ -620,16 +620,16 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Le défaut du jeu.** Après `EndTurn`, le prochain `Game::Processor::Update` démarre le tour
   suivant, quel qu'en soit l'appelant. `GameUpdate` attend le contrôle de synchro, mais
   `DiplomacyAction`, `DiplomacyDeal` et `DiplomacySession` lancent l'étape de mise à jour
-  (`18060eca0`) sans regarder le drapeau de fin de tour : reçus dans ce créneau, ils démarrent le
+  (`18063e2e0`) sans regarder le drapeau de fin de tour : reçus dans ce créneau, ils démarrent le
   tour chez l'hôte avant la synchro, et des joueurs commencent le tour « tour fini ».
-- **Le détour.** Les trois appels (`jmp` terminal en `1800308cf` et `180030b98`, `call` en
-  `1800310d2`) sont redirigés vers un relais (`mov edx,quel ; jmp [rip+0]`) qui saute l'étape quand
-  le drapeau est levé (`180045dc0`), comme `GameUpdate::Execute`. L'action est appliquée ; le
+- **Le détour.** Les trois appels (`jmp` terminal en `18003514f` et `1800353b8`, `call` en
+  `1800358f2`) sont redirigés vers un relais (`mov edx,quel ; jmp [rip+0]`) qui saute l'étape quand
+  le drapeau est levé (`18004ab90`), comme `GameUpdate::Execute`. L'action est appliquée ; le
   `GameUpdate` initial lance la mise à jour. Pendant le tour (joueur qui a passé son tour puis
   agit), rien ne change.
 - **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`).
-- **Garde-fou.** Les trois sites (instruction qui précède, opcode, cible `18060eca0`) et les octets
-  de `180045dc0` doivent correspondre, sinon rien n'est redirigé. Les appels d'origine reviennent au
+- **Garde-fou.** Les trois sites (instruction qui précède, opcode, cible `18063e2e0`) et les octets
+  de `18004ab90` doivent correspondre, sinon rien n'est redirigé. Les appels d'origine reviennent au
   déchargement du proxy.
 - **Le journal.** `fin de tour : mise à jour après DiplomacyAction/Deal/Session suspendue pendant le
   passage de tour (3 appels redirigés)`, puis les 20 premières mises à jour sautées de chaque partie.

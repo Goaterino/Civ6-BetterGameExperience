@@ -132,10 +132,10 @@ for rva in PILE_RVAS:
     assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
     print(f"empilement : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
-# Passage de tour (fin_tour.rs) : l'étape de mise à jour `18060eca0` en fin de DiplomacyAction,
+# Passage de tour (fin_tour.rs) : l'étape de mise à jour `18063e2e0` en fin de DiplomacyAction,
 # DiplomacyDeal (jmp terminal) et DiplomacySession (call) redirigée vers un relais
 # `mov edx,quel ; jmp [rip+0]`.
-FIN_APPELS, FIN_CALLEE = ((0x308CF, 0xE9), (0x30B98, 0xE9), (0x310D2, 0xE8)), 0x60ECA0
+FIN_APPELS, FIN_CALLEE = ((0x3514F, 0xE9), (0x353B8, 0xE9), (0x358F2, 0xE8)), 0x63E2E0
 for i, (rva, opcode) in enumerate(FIN_APPELS):
     code = ctypes.string_at(base + rva, 5)
     assert code[0] == opcode, f"fin de tour {rva:#x} : pas de jmp/call ({code.hex()})"
