@@ -104,10 +104,28 @@ fn lua_block() -> String {
     }
 }
 
+// Scope the extra actions to the stock key-binding screen. Other consumers of Input
+// (including standalone mods) keep the engine object.
+const KEY_BINDING_INIT: &[u8] = b"function InitializeKeyBinding()";
+const PING_BINDINGS: &str = concat!(
+    "\nlocal Input = (function(engine)\n",
+    include_str!("../../proxy/src/mods/pings/catalog.lua"), "\n",
+    include_str!("../../proxy/src/mods/pings/bindings.lua"), "\n",
+    include_str!("ping_bindings.lua"), "\nend)(Input)\n"
+);
+
 /// Options.lua suivi du bloc de l'onglet. Octets laissés tels quels : les fichiers du jeu ne sont
 /// pas tous en UTF-8.
 pub fn patch_options_lua(src: &[u8]) -> Vec<u8> {
-    let mut out = src.to_vec();
+    let mut out = Vec::new();
+    if let Some(at) = src.windows(KEY_BINDING_INIT.len()).position(|w| w == KEY_BINDING_INIT) {
+        let cut = at + KEY_BINDING_INIT.len();
+        out.extend_from_slice(&src[..cut]);
+        out.extend_from_slice(PING_BINDINGS.as_bytes());
+        out.extend_from_slice(&src[cut..]);
+    } else {
+        out.extend_from_slice(src);
+    }
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(lua_block().as_bytes());
     out

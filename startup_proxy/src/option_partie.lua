@@ -31,7 +31,8 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 	-- Départ et fin simultanés (ui_depart.lua), cochée par défaut : l'hôte peut la décocher.
 	-- Indicateurs avancés coupés pour tous (BGD_INDICATEURS_OFF : x/y (+z) de la recherche et du
 	-- dogme, production en réserve ; ui_avancement.lua, ui_debordement.lua), décochée par défaut,
-	-- juste en dessous.
+	-- juste en dessous. Signaux d'équipe (BGD_TEAM_PINGS, proxy/src/mods/pings), décochée par
+	-- défaut : l'hôte l'active.
 	local OPTIONS = {
 		{
 			id = "BGD_DEPART_SIMULTANE", nom = "No First/Last moves (BGE)", ordre = 43, defaut = 1,
@@ -40,6 +41,10 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		{
 			id = "BGD_INDICATEURS_OFF", nom = "Disable Advanced UI indicators (BGE)", ordre = 44, defaut = 0,
 			aide = "LOC_BGD_OPTION_INDICATEURS_AIDE",
+		},
+		{
+			id = "BGD_TEAM_PINGS", nom = "LOC_BGD_PINGS_NAME", ordre = 45, defaut = 0,
+			aide = "LOC_BGD_PINGS_HELP",
 		},
 	};
 
@@ -66,7 +71,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
 			.. "VALUES (?1, ?2, ?3, 'bool', " .. o.defaut .. ", 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
-			o.id, o.nom, BGD_Txt(o.aide), o.ordre);
+			o.id, BGD_Txt(o.nom), BGD_Txt(o.aide), o.ordre);
 		local ok = Presente(o.id);
 		if ok then
 			-- Le cache de CachedQuery ne voit pas forcément l'écriture : on le vide.
