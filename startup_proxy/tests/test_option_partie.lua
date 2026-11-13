@@ -95,7 +95,7 @@ do
 	env.SetupParameters.Data_DiscoverParameters({});
 	Check("ancienne ligne : cochée par défaut, sans doublon", #rows == 3 and rows[1].DefaultValue == 1);
 	Check("ancienne ligne des indicateurs : décochée par défaut", rows[2].DefaultValue == 0);
-	Check("ancienne ligne des signaux d'équipe (0.11.0, cochée) : décochée par défaut", rows[3].DefaultValue == 0);
+	Check("ancienne ligne des signaux d'équipe (pré-0.10.0, cochée) : décochée par défaut", rows[3].DefaultValue == 0);
 	Check("ancienne ligne : cache vidé, journal", next(env.QueryCache) == nil
 		and #journal == 3 and journal[1] == "option : BGD_DEPART_SIMULTANE : cochée par défaut"
 		and journal[2] == "option : BGD_INDICATEURS_OFF : décochée par défaut"
