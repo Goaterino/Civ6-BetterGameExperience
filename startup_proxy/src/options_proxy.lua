@@ -56,8 +56,10 @@ local PROXY_CACHE = {
 -- locaux (feature `diag` des proxys) ; la release ne le compile pas et l'onglet ne le montre pas.
 local PROXY_REGLAGES = {
 	{ titre = "LOC_BGD_OPT_TITRE_GENERAL" },
-	-- Interrupteur général : off, les autres réglages sont grisés (et gardés dans le fichier).
-	{ cle = "actif", defaut = "on", general = true,
+	-- Interrupteur général : off, les autres réglages sont grisés (et gardés dans le fichier). Lu
+	-- aussi par le proxy de démarrage au lancement du jeu (garde des messages, re-link, signaux,
+	-- options de partie grisées) : son changement demande donc toujours le redémarrage.
+	{ cle = "actif", defaut = "on", general = true, demarrage = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "verif_maj", defaut = "on", libre = true, demarrage = true,
 		choix = PROXY_ON_OFF },
@@ -257,9 +259,11 @@ local function Proxy_Populate()
 			if not known then
 				table.insert(values, { Proxy_T("LOC_BGD_OPT_VALEUR_FICHIER", current), current });
 			end
-			local saved = m_proxySaved[r.cle] or r.defaut;
 			PopulateComboBox(m_proxyPullDowns[r.cle], values, current, function(value)
-				if value == saved then
+				-- Valeur du fichier lue au moment du choix, pas à la construction de la liste : après
+				-- une confirmation sans réouverture, l'ancienne valeur faisait ignorer le retour en
+				-- arrière (un changement sur deux perdu).
+				if value == (m_proxySaved[r.cle] or r.defaut) then
 					m_proxyPending[r.cle] = nil;
 				else
 					m_proxyPending[r.cle] = value;

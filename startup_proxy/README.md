@@ -118,6 +118,9 @@ partie Gathering Storm ; son nom vient de `Expansion2.modinfo`. Il n'importe que
   - Déjà lu : **Confirmer** écrit le fichier puis lève `_PromptRestartApp`. Le jeu affiche son
     propre message « redémarrage nécessaire » (`LOC_OPTIONS_CHANGES_REQUIRE_APP_RESTART`), et
     l'avertissement le dit aussi.
+  - **L'interrupteur général** (`actif`) demande toujours le redémarrage, partie lancée ou non : le
+    proxy de démarrage le lit aussi au lancement du jeu (garde des messages, re-link, signaux,
+    options de partie grisées). Il est marqué `demarrage = true`, comme `verif_maj`.
   - **Annuler** n'écrit rien. Chaque ouverture relit le fichier et met l'avertissement à jour.
 - **Langue.** Textes dans la langue du jeu, parmi les 11 de BBG ([textes/](../textes/README.md)).
   Le nom et l'aide d'un réglage sont les clés `LOC_BGD_OPT_<CLÉ>_NOM` et `LOC_BGD_OPT_<CLÉ>_AIDE` :
