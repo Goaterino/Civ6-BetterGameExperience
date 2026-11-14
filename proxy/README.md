@@ -636,6 +636,23 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Tests.** `cargo test` (octets des sites dans le GameCore installé, s'il est là),
   `check_hooks.py` (redirection et restauration).
 
+## Modificateurs de production d'unités sans dérive au retrait (correctif POL)
+
+[src/production_modifiers.rs](src/production_modifiers.rs). Analyse :
+[modificateurs_production/README.md](../modificateurs_production/README.md). Contribution de Serianol
+(PR 8) pour le joueur, étendue aux villes.
+
+- **Le défaut du jeu.** Un pourcentage passe en 24.8 par `floorf` : un négatif est arrondi vers −∞.
+  Retirer Ilkum (+30 % : 76/256) enlève 77/256, et la perte s'accumule à chaque échange.
+- **Les détours.** `1809497a0` (joueur, `MODIFIER_PLAYER_UNITS_ADJUST_UNIT_PRODUCTION`), `1809444e0`
+  et `180973c20` (ajout et retrait sur une ville, `MODIFIER_PLAYER_CITIES_…` et
+  `MODIFIER_SINGLE_CITY_…`). Une variation négative qui dérive applique l'opposé exact de la
+  positive ; tout le reste passe par l'originale, sans changement.
+- **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`) ; `VERSION` 0.11.0.
+- **Garde-fou.** Les corps entiers des trois fonctions doivent correspondre, sinon aucun détour et
+  `ST_POL` est retiré.
+- **Tests.** `cargo test`, `check_hooks.py`.
+
 ## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGE) »)
 
 [src/depart.rs](src/depart.rs), [src/ui_depart.lua](src/ui_depart.lua),

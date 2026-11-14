@@ -2,6 +2,18 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.11.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.11.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.10.0 und 0.11.0 mischt, schaltet sie ab.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Einheiten-Produktionsboni, die schwinden**: Das Entfernen eines prozentualen Bonus auf die
+  Einheitenproduktion (die +30 % für Bautrupps durch Ilkum oder der Bonus einer Stadt für einen
+  Einheitentyp) zog etwas mehr ab, als er hinzugefügt hatte, jedes Mal etwa 0,4 %, und der Verlust
+  wuchs mit jedem Tausch der Karte. Das Entfernen eines Bonus zieht jetzt genau ab, was er
+  hinzugefügt hat. Spielstände behalten den bereits angesammelten Verlust. Beitrag von Serianol.
+
 ## BetterGameExperience 0.10.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.10.0 für die Korrekturen **[alle
