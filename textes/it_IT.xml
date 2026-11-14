@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="it_IT">
 			<Text>{1} non ha segnalato di essere pronto per due turni di fila: l'inizio del turno non lo aspetta più.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="it_IT">
+			<Text>nessun segnale di avvio dall'host dopo {1} s: il tuo turno inizia ora.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="it_IT">
 			<Text>fine del turno: il timer dell'host è scaduto.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="it_IT">
 			<Text>La partita di {1} era desincronizzata ({2}) ed è stata riparata senza ricaricare.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="it_IT">
+			<Text>Il gioco di {1} non è la versione Steam attuale: le correzioni di rete di BGE sono inattive sul suo PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="it_IT">
 			<Text>{1} e {2} sono collegati tramite l'host (0 ms). Tentativo di collegamento diretto durante il cambio di turno.</Text>

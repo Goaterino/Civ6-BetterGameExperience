@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pt_BR">
 			<Text>{1} não sinalizou que estava pronto por dois turnos seguidos: o início do turno não espera mais.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="pt_BR">
+			<Text>nenhum sinal de início do anfitrião após {1} s: seu turno começa agora.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pt_BR">
 			<Text>fim do turno: o cronômetro do anfitrião acabou.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="pt_BR">
 			<Text>O jogo de {1} estava fora de sincronia ({2}) e foi reparado sem recarregar.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="pt_BR">
+			<Text>O jogo de {1} não é a versão atual da Steam: as correções de rede do BGE estão inativas no PC dele.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pt_BR">
 			<Text>{1} e {2} estão conectados pelo anfitrião (0 ms). Tentando conectá-los diretamente durante a troca de turno.</Text>

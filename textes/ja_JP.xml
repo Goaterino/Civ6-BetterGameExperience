@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ja_JP">
 			<Text>{1} が2ターン連続で準備完了を送信しませんでした。今後、ターン開始時に待ちません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="ja_JP">
+			<Text>{1} 秒経ってもホストから開始の合図がありません。あなたのターンを開始します。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ja_JP">
 			<Text>ターン終了: ホストのタイマーが切れました。</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ja_JP">
 			<Text>{1} のゲームが同期ずれを起こしました ({2})。再読み込みなしで修復されました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="ja_JP">
+			<Text>{1} のゲームは現在の Steam バージョンではありません。この PC では BGE のネットワーク修正が無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ja_JP">
 			<Text>{1}と{2}はホスト経由で接続されています（0 ms）。ターン切り替え中に直接接続を試みます。</Text>

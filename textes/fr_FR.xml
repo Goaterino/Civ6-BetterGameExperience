@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="fr_FR">
 			<Text>{1} ne s'est jamais signalé prêt deux tours de suite : les débuts de tour ne l'attendent plus.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="fr_FR">
+			<Text>aucun signal de départ de l'hôte après {1} s : votre tour commence maintenant.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="fr_FR">
 			<Text>fin du tour : le minuteur de l'hôte est écoulé.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="fr_FR">
 			<Text>La partie de {1} était désynchronisée ({2}) : elle a été réparée sans rechargement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="fr_FR">
+			<Text>Le jeu de {1} n'est pas la version Steam actuelle : les correctifs réseau de BGE sont inactifs sur son PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="fr_FR">
 			<Text>{1} et {2} passent par l'hôte (0 ms). Tentative de lien direct pendant le changement de tour.</Text>

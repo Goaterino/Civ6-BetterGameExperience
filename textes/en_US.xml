@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="en_US">
 			<Text>{1} was never ready two turns in a row: turn starts no longer wait for them.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="en_US">
+			<Text>no start signal from the host after {1} s: your turn starts now.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="en_US">
 			<Text>turn over: the host's turn timer ran out.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="en_US">
 			<Text>{1}'s game was out of sync ({2}) and was repaired without a reload.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="en_US">
+			<Text>{1}'s copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="en_US">
 			<Text>{1} and {2} are linked through the host (0 ms). Trying to connect them directly during the turn change.</Text>

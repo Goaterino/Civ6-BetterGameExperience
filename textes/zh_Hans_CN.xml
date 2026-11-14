@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="zh_Hans_CN">
 			<Text>{1} 连续两个回合未发出准备信号：回合开始将不再等待。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="zh_Hans_CN">
+			<Text>{1} 秒后仍未收到主机的开始信号：你的回合现在开始。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="zh_Hans_CN">
 			<Text>回合结束：主机的计时器已到。</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="zh_Hans_CN">
 			<Text>{1} 的游戏不同步（{2}），已在不重新加载的情况下修复。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="zh_Hans_CN">
+			<Text>{1} 的游戏不是当前的 Steam 版本：BGE 的网络修复在其电脑上未启用。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="zh_Hans_CN">
 			<Text>{1} 和 {2} 通过主机连接（0 ms）。将在回合切换时尝试直接连接。</Text>
