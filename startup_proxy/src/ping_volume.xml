@@ -1,0 +1,4 @@
+<Stack ID="BGD_PingVolumeRow" Hidden="1" Anchor="R,T" StackGrowth="Left" Padding="5">
+  <Slider ID="BGD_PingVolume" Style="SliderControl" Anchor="C,C" Offset="5,0" Size="300,13"/>
+  <Label ID="BGD_PingCaption" Anchor="L,C" Style="ShellOptionText"/>
+</Stack>

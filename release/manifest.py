@@ -31,6 +31,12 @@ FILES = {
     "winmm.dll": "Base/Binaries/Win64Steam",
 }
 
+# The updater installs these alongside the proxies, under Civ's local content tree.
+for asset in sorted((ROOT / "ping_assets").rglob("*")):
+    if asset.is_file():
+        relative = asset.relative_to(ROOT / "ping_assets")
+        FILES[asset.name] = (Path("DLC/BGEPings") / relative.parent).as_posix()
+
 
 def lobby_version():
     """Version annoncée dans le salon multijoueur (proxy/src/version.rs)."""
