@@ -86,11 +86,15 @@ local function highlight(call)
     Controls.Call:SetText(BGD_Txt(call.label))
 end
 
+-- Hauteur des cercles au sol par rapport à leur largeur (0.50 suit l'inclinaison de la caméra,
+-- mais les écrase trop).
+local RING_RATIO = 0.62
+
 local function ripple(image, elapsed)
     if elapsed < 0 then image:SetAlpha(0); return end
     local phase = (elapsed % 1.24) / 1.24
     local width = 30 + 97 * (1 - (1-phase)^2)
-    image:SetSizeVal(width, width * 0.50)
+    image:SetSizeVal(width, width * RING_RATIO)
     image:SetAlpha((1-phase)^0.85)
 end
 
@@ -175,7 +179,7 @@ local function showPing(sender, call, x, y)
     art.Wave:SetTexture(pingSkin.ripple)
     art.Echo:SetTexture(pingSkin.ripple)
     art.Foot:SetTexture(pingSkin.ripple)
-    art.Foot:SetSizeVal(35, 17)
+    art.Foot:SetSizeVal(35, math.floor(35 * RING_RATIO + 0.5))
     art.Wave:SetColor(call.tint)
     art.Echo:SetColor(call.tint)
     art.Foot:SetColor(call.tint)
