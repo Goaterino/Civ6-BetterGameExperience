@@ -10,6 +10,8 @@
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0) : 0 à chaque
 --                                         ouverture du salon, puis notre conclusion du verdict
 --   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
+--   Civ6Proxy_PostLoad()               -> 1 if this machine answers and sends the sync check after
+--                                         loading (BGD_SYNC in its player configuration)
 --   Civ6Proxy_ExeInconnu()             -> 1 if the game exe is not a build BGE knows: its network
 --                                         fixes are not installed, said to everyone on arrival
 --
@@ -207,6 +209,13 @@ local function BGD_Publier()
 	local medias = (Civ6Proxy_MediasPings ~= nil and Civ6Proxy_MediasPings() == 1) and BGD.perso or "";
 	if cfg:GetValue(BGD_CLE_MEDIAS) ~= medias then
 		cfg:SetValue(BGD_CLE_MEDIAS, medias);
+		change = true;
+	end
+	-- This machine answers, as host, and sends, as client, the sync check after loading
+	-- (startup_proxy/src/postload.rs): our token of this lobby, as for the media.
+	local sync = (Civ6Proxy_PostLoad ~= nil and Civ6Proxy_PostLoad() == 1) and BGD.perso or "";
+	if cfg:GetValue("BGD_SYNC") ~= sync then
+		cfg:SetValue("BGD_SYNC", sync);
 		change = true;
 	end
 	if Network.IsGameHost() then

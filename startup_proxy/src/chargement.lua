@@ -32,6 +32,33 @@ local function BGD_PolAuLancement()
 	return false;
 end
 
+-- Does the host of this game answer a sync check sent after loading at once (postload.rs)? It says
+-- so with its token of this lobby in BGD_SYNC, and its verdict lists our token: its BGE is the one
+-- of this session, not a value left in a save.
+local function BGD_HoteRepond()
+	local moi, hote = Network.GetLocalPlayerID(), Network.GetGameHostPlayerID();
+	local cm, ch = PlayerConfigurations[moi], PlayerConfigurations[hote];
+	if cm == nil or ch == nil or moi == hote then return false; end
+	local _, _, perso = string.match(tostring((cm:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+	local _, jetonHote, persoHote = string.match(tostring((ch:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+	local _, vJeton, _, liste = string.match(tostring((ch:GetValue("BGD_VERDICT"))), "^([^@#:]*)@([^@#:]*):([01]):(.*)$");
+	if perso == nil or persoHote == nil or persoHote == "" or vJeton == nil or vJeton ~= jetonHote then return false; end
+	if tostring((ch:GetValue("BGD_SYNC"))) ~= persoHote then return false; end
+	for j in string.gmatch(liste, "[^,]+") do
+		if j == perso then return true; end
+	end
+	return false;
+end
+
+if Civ6Proxy_HostAnswers ~= nil then
+	Events.LoadScreenContentReady.Add(function()
+		local ok, oui = pcall(function()
+			return GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud() and BGD_HoteRepond();
+		end);
+		Civ6Proxy_HostAnswers((ok and oui) and "1" or "0");
+	end);
+end
+
 if Civ6Proxy_FixerPol ~= nil then
 	local dit = false;
 	local function BGD_PolDuChargement()

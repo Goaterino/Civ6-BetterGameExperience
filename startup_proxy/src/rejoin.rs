@@ -15,6 +15,9 @@
 //! host, and every barrier entered at a turn end, are untouched. The snapshot's flags come from the
 //! snapshot guard's hook (`snapshots.rs`); without it, nothing is skipped.
 //!
+//! When the host says it answers that check at once (`postload.rs`, `set_host_answers`), the check
+//! is sent after all: the host repairs the client before the next turn.
+//!
 //! Settings in `rollover_proxy.cfg`: `actif=off` installs nothing; `rejoin_barrier=off` turns off
 //! this fix alone (`on` by default). Addresses of both exes of 2026-11-05, checked at startup.
 
@@ -131,6 +134,25 @@ static TURN_END_ORIG: AtomicUsize = AtomicUsize::new(0);
 static AFTER_TURN_END: AtomicBool = AtomicBool::new(false);
 /// The last snapshot handed to the game (`pack`), until a barrier entered by a load reads it.
 static LAST_SNAPSHOT: AtomicU64 = AtomicU64::new(0);
+/// The host of the game being loaded answers a check after loading at once (`chargement.lua`).
+static HOST_ANSWERS: AtomicBool = AtomicBool::new(false);
+static INSTALLED: AtomicBool = AtomicBool::new(false);
+
+pub fn installed() -> bool {
+    INSTALLED.load(Ordering::Relaxed)
+}
+
+pub fn set_host_answers(on: bool) {
+    HOST_ANSWERS.store(on, Ordering::Relaxed);
+}
+
+/// The session the sync manager belongs to, if this machine hosts it.
+pub(crate) unsafe fn host_session() -> Option<usize> {
+    let t = EXES.get(TABLE.load(Ordering::Relaxed))?;
+    let s = session(t)?;
+    let f: unsafe extern "C-unwind" fn(usize) -> u8 = std::mem::transmute(read::<usize>(read::<usize>(s) + SESSION_IS_HOST));
+    (f(s) != 0).then_some(s)
+}
 const SNAPSHOT_KNOWN: u64 = 1 << 63;
 const SNAPSHOT_ACK: u64 = 1 << 32;
 
@@ -184,6 +206,7 @@ pub unsafe fn snapshot_arrives(msg: *const u8) {
     let Some(t) = EXES.get(TABLE.load(Ordering::Relaxed)) else { return };
     let sync: usize = read(image(t.sync));
     let ack = sync != 0 && read::<u8>(sync + SYNC_ACK_OWED) != 0;
+    HOST_ANSWERS.store(false, Ordering::Relaxed);
     LAST_SNAPSHOT.store(pack(read(msg as usize + SNAPSHOT_FLAGS), ack), Ordering::Relaxed);
 }
 
@@ -235,6 +258,7 @@ unsafe fn local_reason(t: &Exe) -> Option<i32> {
 unsafe extern "C-unwind" fn turn_end(ctl: *mut u8) {
     AFTER_TURN_END.store(true, Ordering::Relaxed);
     LAST_SNAPSHOT.store(0, Ordering::Relaxed);
+    crate::postload::controller_seen(ctl as usize);
     let orig: unsafe extern "C-unwind" fn(*mut u8) = std::mem::transmute(TURN_END_ORIG.load(Ordering::Relaxed));
     orig(ctl)
 }
@@ -254,11 +278,15 @@ unsafe extern "C-unwind" fn update(ctl: *mut u8) {
         if packed != 0 {
             let load = local_reason(t).and_then(|reason| unpack(packed, reason));
             if skip(after_turn_end, host, load) {
-                *ctl.add(CTL_IN_BARRIER) = 0;
-                log(&describe("turn barrier after loading left without a sync check", load));
-                return;
+                if !HOST_ANSWERS.load(Ordering::Relaxed) {
+                    *ctl.add(CTL_IN_BARRIER) = 0;
+                    log(&describe("turn barrier after loading left without a sync check", load));
+                    return;
+                }
+                log(&describe("sync check after loading kept, the host answers it at once", load));
+            } else {
+                log(&describe("sync check after loading kept, the host waits for it", load));
             }
-            log(&describe("sync check after loading kept, the host waits for it", load));
         }
     }
     if *ctl.add(CTL_JOBS) != 0 {
@@ -352,7 +380,10 @@ pub unsafe fn install() {
     }
     let update_at = at(t.update);
     match patch::install_at("rejoin barrier update", update_at, &[], update_at, update as *const () as usize) {
-        Ok(_) => log(&format!("rejoin: no turn barrier after loading on clients ({})", t.name)),
+        Ok(_) => {
+            INSTALLED.store(true, Ordering::Relaxed);
+            log(&format!("rejoin: no turn barrier after loading on clients ({})", t.name));
+        }
         Err(e) => log(&format!("rejoin: {e}, fix not installed")),
     }
 }
