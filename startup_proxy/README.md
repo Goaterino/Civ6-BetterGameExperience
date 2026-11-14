@@ -655,6 +655,41 @@ answers with two bytes.
   the bytes occur once in it.
 - Not tried in a game yet: to check by joining a public game, where 0 ms is common.
 
+## Double load when entering a game
+
+[src/snapshots.rs](src/snapshots.rs); analysis and captures in
+[analyses/double_load](../analyses/double_load/README.md).
+
+**The problem.** When a game is entered, the host sends everyone the same snapshot (the save), then,
+as soon as its own load is over, a second one to every player whose acknowledgement it has not
+received yet. The client ignores a snapshot that arrives while its loading screen is up, but loads
+any other one. The client starts loading later than the host, by the transfer time of the first
+snapshot: when the host finishes first, and the second snapshot takes longer to arrive than what the
+client has left to load, the client reloads the game from the game view, then stays stuck in
+GameCore's deserialization. Captured on both sides on 2026-11-13: 2.9 MB snapshot, 11 s of transfer,
+second snapshot received 1.7 s after the end of the load; the same thing an entry earlier in the
+same session.
+
+**What BGE does.** The "process" entry of the `NetSnapshot` vtable is replaced (`140810fa0`; DX11:
+`14080f230`). A snapshot is refused when the game view is the current view (`1400f1ab0`; DX11:
+`1400f0d60`, called as is) and the local player is not waiting for a snapshot (network player
+`+0x1a`). Entering from the lobby and reconnecting happen in the menu; a full resync,
+`Network.RequestSnapshot()` and a reload asked by the host all send `NetSnapshotRequest` for the
+local player to everyone, ourselves included, which raises `+0x1a` first: these snapshots go
+through. To refuse, the message's size (`+0x58`) is 0 for the duration of the original call: the
+original does everything else, but does not call `ProcessSnapshot`, as in its own "ignored" branch.
+Only the machine with BGE is protected; the others notice nothing.
+
+- Installed when `winmm.dll` loads, only if the vtable, the start of `NetSnapshot::Process` and the
+  "game view" test are the expected ones; log: `snapshots: double load guard installed (DX12)` or
+  `… (DX11)`, otherwise `snapshots: unknown exe (…), double load guard not installed`. Each refusal
+  is logged: `snapshots: snapshot of … bytes received in the game view without being asked for,
+  ignored`.
+- `actif=off` installs nothing; a pure bug fix, without its own setting.
+- `cargo test` checks that each table matches its own installed exe, and only that one.
+- Not tried in a game yet: it needs a client that finishes loading after the host by less than the
+  snapshot's transfer time (a late game, a slow link).
+
 ## Compiler, tester, installer
 
 ```bash
