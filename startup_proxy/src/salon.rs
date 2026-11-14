@@ -341,7 +341,12 @@ const PARTIE_NATIVES: Natives = &[
     (crate::relink::lua_state, b"Civ6Proxy_RelinkState\0"),
     (crate::relink::lua_forget, b"Civ6Proxy_RelayForgetPair\0"),
 ];
-const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_actif, b"Civ6Proxy_Actif\0")];
+const OPTION_NATIVES: Natives = &[
+    (lua_log, b"Civ6Proxy_Journal\0"),
+    (lua_actif, b"Civ6Proxy_Actif\0"),
+    (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
+    (lua_version, b"Civ6Proxy_Version\0"),
+];
 
 /// Appelée par l'accroche sur StagingRoom.lua : pose les natives, puis rend le texte à compiler.
 pub unsafe fn prepare(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {

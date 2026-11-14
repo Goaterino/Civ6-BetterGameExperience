@@ -157,6 +157,7 @@ local function NewLobby(joueurs, options)
 				return j.version or "0.1.0";
 			end
 			env.Civ6Proxy_FixerPol = function(actif) m.pol = (actif == 1); end
+			env.Civ6Proxy_PolActifs = function() return m.pol and 1 or 0; end;
 			env.Civ6Proxy_Jeton = function() lobby.tokens = lobby.tokens + 1; return "j" .. lobby.tokens; end
 			env.Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end
 			env.Civ6Proxy_VersionInstallee = function() return j.version or "0.1.0"; end
@@ -858,6 +859,58 @@ do
 	check(#h.BGD_mods == 2 and h.BGD_mods[1] == "BBG" and h.BGD_mods[2] == "MPH", "sauvegarde : autres mods gardés dans l'ordre");
 	h.Network.LaunchGame();
 	check(Media(b), "sauvegarde : remis au lancement");
+end
+
+-- Real option eligibility wrapped around the lobby's real token/verdict exchange.
+do
+	local optionBlock = ReadFile(dir .. "/../src/option_partie.lua");
+	local options = {pings=false, controles=true};
+	options.avant = function(env)
+		env.Network.IsInSession = function() return true; end;
+		env.GameStateTypes = {GAMESTATE_PREGAME=0};
+		env.GameConfiguration.GetGameState = function() return 0; end;
+		env.Civ6Proxy_Actif = function() return 1; end;
+		env.SetupParameters = {Data_DiscoverParameters=function() end,
+			Parameter_GetEnabled=function() return env.Network.IsGameHost(); end};
+		assert(load(optionBlock, "=option_partie.lua", "t", env))();
+		env.GameSetup_RefreshParameters = function()
+			env.refreshes = (env.refreshes or 0) + 1;
+			env.pingEnabled = env.SetupParameters:Parameter_GetEnabled({ParameterId="BGD_TEAM_PINGS"});
+			env.departEnabled = env.SetupParameters:Parameter_GetEnabled({ParameterId="BGD_DEPART_SIMULTANE"});
+			env.uiEnabled = env.SetupParameters:Parameter_GetEnabled({ParameterId="BGD_INDICATEURS_OFF"});
+		end;
+	end;
+	local players = {{nom="Host"},{nom="Peer"},{nom="Observer",observer=true,ia=true,proxy=false}};
+	local l = NewLobby(players, options);
+	l.open();
+	local h = l.machines[0].env;
+	check(l.actif() == "1" and h.departEnabled and not h.pingEnabled and h.uiEnabled,
+		"native observer without BGE blocks pings before selection, not other POL or indicators");
+	local refreshes = h.refreshes;
+	l.tic(3);
+	check(h.refreshes == refreshes, "unchanged verdict does not rebuild options each tick");
+	players[3].absent = true;
+	l.machines[0].events.MultiplayerPostPlayerDisconnected.Fire(2);
+	check(h.pingEnabled and h.refreshes > refreshes, "disconnect refreshes option availability");
+	options.pings = true;
+	l.machines[0].events.GameConfigChanged.Fire();
+	players[3].absent = false;
+	l.machines[0].events.MultiplayerPlayerConnected.Fire(2);
+	check(l.actif() == "0" and h.pingEnabled and not h.departEnabled,
+		"incompatible arrival: selected pings may be disabled, other POL cannot be enabled");
+	options.pings = false;
+	l.machines[0].events.GameConfigChanged.Fire();
+	check(l.actif() == "1" and not h.pingEnabled and h.departEnabled,
+		"unchecking pings restores other POL immediately without a player-info event");
+	check(not l.machines[1].env.pingEnabled and not l.machines[1].env.uiEnabled,
+		"clients retain host-only setup restrictions");
+	Lancer(l);
+	local pol, refreshes = l.machines[0].pol, h.refreshes;
+	players[2].absent = true;
+	l.machines[0].events.MultiplayerPostPlayerDisconnected.Fire(1);
+	l.machines[0].events.GameConfigChanged.Fire();
+	check(l.machines[0].pol == pol and h.refreshes == refreshes,
+		"in-game config/disconnect events do not renegotiate POL or rebuild lobby controls");
 end
 
 if failures > 0 then
