@@ -138,6 +138,15 @@ local function NewGame(opts)
 				return m.natives.attente and 1 or 0, m.natives.rejets or 0, 0, m.natives.retenu and 1 or 0;
 			end,
 			Civ6RolloverProxy_DepartJournal = function(t) table.insert(m.journal, t); end,
+			-- Kept by the proxy, across interfaces of the same machine.
+			Civ6RolloverProxy_DepartMemoriser = function(session, masque)
+				G.memoire = G.memoire or {};
+				G.memoire[id] = { session = session, masque = masque };
+			end,
+			Civ6RolloverProxy_DepartMemoire = function(session)
+				local r = G.memoire and G.memoire[id];
+				return (r ~= nil and session ~= "" and r.session == session) and r.masque or 0;
+			end,
 		};
 		m.journal = {};
 		-- ContextPtr:ClearUpdate() s'appelle avec « : ».
@@ -593,6 +602,42 @@ do
 	h.Minuteur(5, 60); h.Minuteur(60, 60);
 	Check("départ puis fin : fin reçue", a.natives.forcer == 1);
 	Check("depart_signaux=on : ligne locale de la fin", a.locaux[#a.locaux]:find("minuteur de l'hôte") ~= nil);
+end
+
+do
+	-- The host stops waiting for a player never ready two turns in a row, and still does not wait
+	-- after its interface is reloaded (remap, resync); a ready signal restores the wait.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	G.machines[2] = nil;   -- player 2 announces BGE but its turn start is inactive: it never signals
+	h.Charger(); a.Charger();
+	for tour = 11, 12 do
+		G.tour = tour;
+		h.Debut(); h.Publie(); a.Debut(); a.Publie();
+		G.clock = G.clock + 61; h.Tic(1);
+		Check("silent player: turn " .. tour .. " started after the delay", not h.natives.attente);
+	end
+	G.tour = 13;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("silent player: no longer waited for", not h.natives.attente);
+	-- The host's interface is reloaded: a new block on the same machine.
+	h = G.NewMachine(0);
+	h.Charger();
+	G.tour = 14;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("after a reload of the host: still not waited for", not h.natives.attente);
+	-- The player signals ready: waited for again, in this interface and the next.
+	h.Events.MultiplayerChat(2, 0, ".bgd_pret 14", 3);
+	G.tour = 15;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("ready again: waited for", h.natives.attente);
+	h = G.NewMachine(0);
+	h.Charger();
+	G.tour = 16;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("ready again, after a reload: waited for", h.natives.attente);
 end
 
 do
