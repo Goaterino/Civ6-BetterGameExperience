@@ -19,7 +19,7 @@ local function Check(name, ok)
 end
 
 -- Base simulée : SELECT et INSERT sur Parameters, ou écriture refusée.
-local function NewScreen(lang, refuse, rows)
+local function NewScreen(lang, refuse, rows, actif)
 	local rows, journal, discovered = rows or {}, {}, 0;
 	local DB = {
 		ConfigurationQuery = function(sql, ...)
@@ -45,13 +45,25 @@ local function NewScreen(lang, refuse, rows)
 	};
 	local SetupParameters = {};
 	function SetupParameters:Data_DiscoverParameters() discovered = discovered + 1; return "liste"; end
+	-- Règle du jeu simulée : le paramètre dit lui-même s'il est modifiable (client : false).
+	function SetupParameters:Parameter_GetEnabled(p) return p.base ~= false; end
 	local env = {
+		-- Pas de rawget, rawset ni setfenv : HavokScript ne les a pas.
 		pcall = pcall, print = function() end, tostring = tostring, tonumber = tonumber, type = type, string = string, ipairs = ipairs,
 		DB = DB, SetupParameters = SetupParameters, QueryCache = { vieux = true },
 		Locale = { GetCurrentLanguage = function() return { Type = lang }; end },
 		Civ6Proxy_Journal = function(t) table.insert(journal, t); end,
+		Civ6Proxy_Actif = actif ~= nil and function() return actif.valeur; end or nil,
 	};
 	assert(load(BLOC, "@option_partie.lua", "t", env))();
+	env.Recharger = function()
+		-- Nouvelle inclusion de SetupParameters.lua : la table est recréée, puis le bloc est relu.
+		local S = {};
+		function S:Data_DiscoverParameters() discovered = discovered + 1; return "liste"; end
+		function S:Parameter_GetEnabled(p) return p.base ~= false; end
+		env.SetupParameters = S;
+		assert(load(BLOC, "@option_partie.lua", "t", env))();
+	end;
 	return env, rows, journal, function() return discovered; end;
 end
 
@@ -111,6 +123,35 @@ do
 	Check("écriture refusée : journalisée une fois", #journal == 1 and journal[1]:find("erreur") ~= nil);
 	env.SetupParameters.Data_DiscoverParameters({});
 	Check("pas de répétition au journal", #journal == 1);
+end
+
+do
+	-- Options grisées chez un hôte dont BetterGameExperience est désactivé.
+	local actif = { valeur = 0 };
+	local env, _, journal = NewScreen("fr_FR", false, nil, actif);
+	local S = env.SetupParameters;
+	Check("BGE désactivé : les trois options grisées",
+		not S:Parameter_GetEnabled({ ParameterId = "BGD_DEPART_SIMULTANE" })
+		and not S:Parameter_GetEnabled({ ParameterId = "BGD_INDICATEURS_OFF" })
+		and not S:Parameter_GetEnabled({ ParameterId = "BGD_TEAM_PINGS" }));
+	Check("BGE désactivé : les options du jeu restent modifiables", S:Parameter_GetEnabled({ ParameterId = "GameSpeeds" }) == true);
+	Check("BGE désactivé : journalisé une fois", #journal == 1 and journal[1]:find("grisées") ~= nil);
+	actif.valeur = 1;
+	Check("BGE réactivé : options modifiables", S:Parameter_GetEnabled({ ParameterId = "BGD_TEAM_PINGS" }) == true
+		and #journal == 2 and journal[2]:find("modifiables") ~= nil);
+	Check("client : règle du jeu gardée", S:Parameter_GetEnabled({ ParameterId = "BGD_TEAM_PINGS", base = false }) == false);
+	env.Recharger();
+	actif.valeur = 0;
+	Check("SetupParameters.lua inclus une deuxième fois : nouvelle table enveloppée aussi",
+		env.SetupParameters:Parameter_GetEnabled({ ParameterId = "BGD_TEAM_PINGS" }) == false);
+	local S = env.SetupParameters;
+	assert(load(BLOC, "@option_partie.lua", "t", env))();
+	Check("bloc relu sur la même table : une seule enveloppe", env.SetupParameters == S
+		and S:Parameter_GetEnabled({ ParameterId = "BGD_TEAM_PINGS" }) == false);
+	actif.valeur = nil;
+	local env2 = NewScreen("fr_FR");
+	Check("sans la native (ancien proxy) : options modifiables",
+		env2.SetupParameters:Parameter_GetEnabled({ ParameterId = "BGD_DEPART_SIMULTANE" }) == true);
 end
 
 print(failures == 0 and "tout est bon" or (failures .. " échec(s)"));

@@ -2,8 +2,10 @@
 -- BetterGameDLLs : options de partie « No First/Last moves (BGE) » (BGD_DEPART_SIMULTANE, voir
 -- depart_tour/README.md) et « Disable Advanced UI indicators (BGE) » (BGD_INDICATEURS_OFF),
 -- ajoutées à la fin de SetupParameters.lua (ou de son remplaçant du même nom, celui de MPH) par le
--- proxy de démarrage (startup_proxy/src/salon.rs). Fonction native :
+-- proxy de démarrage (startup_proxy/src/salon.rs). Fonctions natives :
 --   Civ6Proxy_Journal(texte) -> écrit dans RolloverProxy.log
+--   Civ6Proxy_Actif() -> 1 si BetterGameExperience est actif sur cette machine, sinon 0 ; les options
+--     sont alors grisées (hôte qui a désactivé BGE)
 --
 -- Les options de partie sont les lignes de la table Parameters de la base Configuration, lues par
 -- Data_DiscoverParameters. Le proxy n'est pas un mod : avant chaque lecture, on y insère la ligne
@@ -17,10 +19,15 @@
 -- ===========================================================================
 do
 local BGD_OptionOk, BGD_OptionErr = pcall(function()
-	if BGD_OptionPartie ~= nil or SetupParameters == nil or SetupParameters.Data_DiscoverParameters == nil then
+	-- Le garde est posé sur la table SetupParameters, pas dans une globale : chaque inclusion de
+	-- SetupParameters.lua recrée la table (« SetupParameters = {} »), sans nos enveloppes. Avec un
+	-- drapeau global, la deuxième inclusion s'arrêtait là et la table utilisée par le salon restait
+	-- sans enveloppe (options jamais grisées). Pas de rawget : HavokScript ne l'a pas (tout le bloc
+	-- échouait, options absentes) ; SetupParameters n'a pas de métatable, l'accès simple suffit.
+	if SetupParameters == nil or SetupParameters.Data_DiscoverParameters == nil or SetupParameters.BGD_OptionPartie ~= nil then
 		return;
 	end
-	BGD_OptionPartie = true;
+	SetupParameters.BGD_OptionPartie = true;
 
 	local function J(texte)
 		if Civ6Proxy_Journal ~= nil then
@@ -92,6 +99,35 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 	local function Ajouter()
 		for _, o in ipairs(OPTIONS) do
 			AjouterUne(o);
+		end
+	end
+
+	-- Options grisées chez un hôte dont BetterGameExperience est désactivé (actif=off, ou proxy de
+	-- GameCore absent) : elles n'auraient pas d'effet chez lui, et il ne doit pas les régler pour les
+	-- autres. Les clients ne peuvent de toute façon pas changer une option de partie (règle du jeu).
+	-- La valeur reste celle de la config de partie. Native absente (ancien proxy) : rien ne change.
+	local NOTRE = {};
+	for _, o in ipairs(OPTIONS) do
+		NOTRE[o.id] = true;
+	end
+	local griseesJournal = nil;
+	local enabledBase = SetupParameters.Parameter_GetEnabled;
+	if enabledBase ~= nil then
+		SetupParameters.Parameter_GetEnabled = function(self, parameter, ...)
+			local enabled = enabledBase(self, parameter, ...);
+			if enabled and parameter ~= nil and NOTRE[parameter.ParameterId] and Civ6Proxy_Actif ~= nil then
+				local ok, actif = pcall(Civ6Proxy_Actif);
+				local grisee = ok and actif == 0;
+				if grisee ~= griseesJournal then
+					griseesJournal = grisee;
+					J(grisee and "BetterGameExperience désactivé : options de partie BGE grisées"
+						or "BetterGameExperience actif : options de partie BGE modifiables");
+				end
+				if grisee then
+					return false;
+				end
+			end
+			return enabled;
 		end
 	end
 

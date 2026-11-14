@@ -687,7 +687,9 @@ cd startup_proxy && cargo build --release
   Advanced UI indicators (BGE) » (décochée par défaut, juste en dessous) (`option_partie.lua`, à la
   fin de `SetupParameters.lua`) : lignes ajoutées à `Parameters` avant chaque lecture des options,
   sans doublon, valeur par défaut remise sur une ligne d'une version précédente, cache vidé,
-  libellés français et anglais, écriture refusée sans casser l'écran. Voir
+  libellés français et anglais, écriture refusée sans casser l'écran ; options grisées chez un hôte
+  dont BetterGameExperience est désactivé (`actif=off` ou proxy de GameCore absent, native
+  `Civ6Proxy_Actif()`), les autres options intactes, règle du jeu gardée chez les clients. Voir
   [depart_tour/README.md](../depart_tour/README.md).
 
   ```bash
