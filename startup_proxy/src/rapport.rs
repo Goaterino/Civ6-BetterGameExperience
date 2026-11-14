@@ -26,11 +26,13 @@
 //! - `meta.json` : version de BGE, exe (DX11 ou DX12), ce que dit le bloc Lua (tour, joueur, civ,
 //!   multijoueur…), la liste des fichiers ;
 //! - `bge/RolloverProxy.log`, `bge/rollover_proxy.cfg` ;
-//! - `logs/…` : le dossier `Logs` du jeu, `AppOptions.txt` et `Mods.sqlite` ;
+//! - `logs/…`: the game's `Logs` folder except `FiraxisLive.log` and `EOS.log` (they hold the
+//!   player's account tokens), `AppOptions.txt` and `Mods.sqlite`;
 //! - `saves/…` : la sauvegarde du rapport et les 3 derniers autosaves.
 //!
-//! Les fichiers texte de plus de 5 Mo sont coupés à leurs 5 derniers Mo, et le nom d'utilisateur
-//! Windows est retiré des chemins (`C:\Users\<utilisateur>`).
+//! Text files over 20 MB keep their first 2 MB (the session's lobby and launch) and their last
+//! 18 MB, cut at line starts, and the Windows user name is removed from paths
+//! (`C:\Users\<utilisateur>`).
 
 use crate::options::{hks, publish_natives, push_str, Natives};
 use crate::salon::lua_log;
@@ -79,8 +81,9 @@ const CLE_CLIENT: &str = "16ea4c738b288eb2852868d2670e169e";
 
 /// Nom de la sauvegarde demandée par le bloc Lua (`Network.SaveGame`).
 const SAUVEGARDE: &str = "BGE_rapport";
-/// Fichiers texte coupés au-delà, et fichiers binaires laissés de côté au-delà.
-const MAX_TEXTE: usize = 5 << 20;
+/// Text files cut beyond this size (their start and their end are kept), binary files left out
+/// beyond the next one.
+const MAX_TEXTE: usize = 20 << 20;
 const MAX_BINAIRE: u64 = 16 << 20;
 /// Taille au-delà de laquelle on retire des autosaves (le relais refuse au-delà de 50 Mo).
 const MAX_ZIP: usize = 40 << 20;
@@ -290,18 +293,28 @@ pub fn meta_json(lua: &[(String, String)], proxy: &[(&str, String)], fichiers: &
     format!("{{\n{}\n}}\n", champs.join(",\n"))
 }
 
-/// Fin d'un fichier texte trop long : ses `max` derniers octets, à partir d'un début de ligne.
+/// A text file that is too long: its first tenth of `max` and its end, `max` bytes in all, both cut
+/// at line starts, with a line saying how much was removed in between.
 pub fn couper(data: Vec<u8>, max: usize) -> Vec<u8> {
     if data.len() <= max {
         return data;
     }
-    let mut debut = data.len() - max;
+    let tete = data[..max / 10].iter().rposition(|&b| b == b'\n').map_or(0, |i| i + 1);
+    let mut debut = data.len() - (max - tete);
     if let Some(nl) = data[debut..].iter().position(|&b| b == b'\n') {
         debut += nl + 1;
     }
-    let mut out = format!("[BGE : {} premiers octets retirés]\r\n", debut).into_bytes();
+    let mut out = data[..tete].to_vec();
+    out.extend_from_slice(format!("[BGE: {} bytes removed]\r\n", debut - tete).as_bytes());
     out.extend_from_slice(&data[debut..]);
     out
+}
+
+/// Logs never put in a report: they hold the player's account tokens.
+const TOKEN_LOGS: [&str; 2] = ["FiraxisLive.log", "EOS.log"];
+
+pub fn holds_tokens(file_name: &str) -> bool {
+    TOKEN_LOGS.iter().any(|t| t.eq_ignore_ascii_case(file_name))
 }
 
 /// Le nom d'utilisateur retiré des chemins : `\Users\<nom>` et `/Users/<nom>`, casse ignorée.
@@ -601,7 +614,7 @@ fn collecter(lua: &[(String, String)], depart: SystemTime) -> Collecte {
     if let Some(civ) = dossier_civ_local() {
         for e in std::fs::read_dir(civ.join("Logs")).into_iter().flatten().flatten() {
             let p = e.path();
-            if p.is_file() {
+            if p.is_file() && !holds_tokens(&nom_fichier(&p)) {
                 ajouter(format!("logs/{}", nom_fichier(&p)), &p);
             }
         }
@@ -967,10 +980,20 @@ mod tests {
     fn coupe_et_anonymise() {
         assert_eq!(couper(b"abc".to_vec(), 10), b"abc");
         let c = String::from_utf8(couper(b"ligne1\nligne2\nligne3\n".to_vec(), 10)).unwrap();
-        assert!(c.ends_with("\r\nligne3\n") && c.starts_with("[BGE : 14 premiers"), "{c}");
+        assert!(c.ends_with("\r\nligne3\n") && c.starts_with("[BGE: 14 bytes removed]"), "{c}");
+        // The start is kept too: 4 lines of "aaaa", 20 of "bbbb", 50 bytes kept.
+        let data = [b"aaaa\n".repeat(4), b"bbbb\n".repeat(20)].concat();
+        let c = String::from_utf8(couper(data, 50)).unwrap();
+        assert_eq!(c, format!("aaaa\n[BGE: 75 bytes removed]\r\n{}", "bbbb\n".repeat(8)));
         let a = anonymiser(br"C:\Users\Jean\AppData et c:\users\JEAN\x, C:\Users\Jeanne\y, /Users/jean/z", "Jean");
         assert_eq!(String::from_utf8(a).unwrap(), r"C:\Users\<utilisateur>\AppData et c:\Users\<utilisateur>\x, C:\Users\Jeanne\y, /Users/<utilisateur>/z");
         assert_eq!(anonymiser(b"x", ""), b"x");
+    }
+
+    #[test]
+    fn token_logs_left_out() {
+        assert!(holds_tokens("FiraxisLive.log") && holds_tokens("firaxislive.log") && holds_tokens("EOS.log"));
+        assert!(!holds_tokens("Lua.log") && !holds_tokens("net_message_debug.log"));
     }
 
     #[test]
