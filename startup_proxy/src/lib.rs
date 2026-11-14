@@ -10,8 +10,10 @@
 //! the multiplayer lobby (`salon`), adds to the Escape menu a button that sends a bug report
 //! (`rapport`), bounds the counts read by the network message deserializer, against the freeze when
 //! a player disconnects (`messages`), re-links pairs of players relayed through the host
-//! (`relink`), and re-sends pings left unanswered, which would otherwise stay frozen at "0 ms" in
-//! the player list (`pings`). Log shared by both proxies:
+//! (`relink`), re-sends pings left unanswered, which would otherwise stay frozen at "0 ms" in the
+//! player list (`pings`), and refuses the host's second snapshot when it arrives after the end of
+//! the load, against the double load when entering a game (`snapshots`). It also writes the team
+//! ping artwork and audio next to the game (`medias`), before the game scans its mods. Log shared by both proxies:
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
 // Modules communs avec le proxy de GameCore, qui y trouvent `crate::win` et `crate::patch`.
@@ -36,6 +38,8 @@ mod rapport;
 mod messages;
 mod relink;
 mod pings;
+mod snapshots;
+mod medias;
 mod rejoin;
 #[cfg(feature = "diag")]
 mod zones;
@@ -102,11 +106,14 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         // Hors de l'exe du jeu (tests), on ne pose rien.
         let name = exe.rsplit(['/', '\\']).next().unwrap_or("").to_ascii_lowercase();
         if name.starts_with("civilizationvi") {
+            // Avant que le jeu ne cherche ses mods (DLC\BGEPings).
+            medias::installer();
             chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
             options::install();
             messages::install();
             relink::install();
             pings::install();
+            snapshots::install();
             rejoin::install();
             #[cfg(feature = "diag")]
             zones::install();

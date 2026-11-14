@@ -295,6 +295,44 @@ do
 end
 
 do
+	-- Interrupteur général : redémarrage demandé à chaque changement, même sans partie lancée.
+	local m = NewScreen("ui_boutons=on\r\n", 1, 0);
+	local C = m.env.Controls;
+	local actif = m.Row("Proxys BetterGameExperience");
+	m.Choose(actif, "Désactivé");
+	C.ConfirmButton.callbacks.LClick();
+	Check("actif=off : redémarrage demandé sans partie lancée", m.written[1] == "actif=off"
+		and m.env._PromptRestartApp == true and m.RestartShown());
+	m.env._PromptRestartApp = nil;
+	m.show();
+	m.Choose(m.Row("Proxys BetterGameExperience"), "Activé");
+	C.ConfirmButton.callbacks.LClick();
+	Check("actif=on : redémarrage demandé aussi", m.written[#m.written] == "actif=on" and m.env._PromptRestartApp == true);
+end
+
+do
+	-- Écran resté ouvert : changer, confirmer, revenir en arrière, confirmer. Le deuxième changement
+	-- doit être écrit (il était ignoré : la liste comparait à la valeur du fichier lue à sa construction).
+	local m = NewScreen("ui_boutons=on\r\n", 1, 0);
+	local C = m.env.Controls;
+	m.Choose(m.Row("Boutons d'attaque au-dessus des drapeaux d'unités"), "Désactivé");
+	C.ConfirmButton.callbacks.LClick();
+	m.Choose(m.Row("Boutons d'attaque au-dessus des drapeaux d'unités"), "Activé");
+	C.ConfirmButton.callbacks.LClick();
+	Check("deuxième changement sans réouverture : écrit", #m.written == 2 and m.written[2] == "ui_boutons=on");
+	m.Choose(m.Row("Boutons d'attaque au-dessus des drapeaux d'unités"), "Désactivé");
+	C.ConfirmButton.callbacks.LClick();
+	Check("troisième changement : écrit", #m.written == 3 and m.written[3] == "ui_boutons=off");
+	-- Interrupteur général, même cycle.
+	local actif = m.Row("Proxys BetterGameExperience");
+	m.Choose(actif, "Désactivé");
+	C.ConfirmButton.callbacks.LClick();
+	m.Choose(m.Row("Proxys BetterGameExperience"), "Activé");
+	C.ConfirmButton.callbacks.LClick();
+	Check("général : retour à on sans réouverture, écrit", m.written[#m.written] == "actif=on");
+end
+
+do
 	-- Jeu en anglais, puis en allemand (textes/de_DE.xml), puis dans une langue sans traduction.
 	local LANGUES = {
 		{ "en_US", "Attack buttons above unit flags", "Enabled", "stay clickable", "General", "GameCore proxy installed.", "next game starts", "Nuclear strike animation speed-up", "7 (value from file)" },

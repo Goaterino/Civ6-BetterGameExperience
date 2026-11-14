@@ -23,6 +23,31 @@ function Test-Ours($path) {
     [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($path)).Contains("StartupProxyStatus")
 }
 
+function Sync-PingAssets([switch]$Remove) {
+    $source = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\ping_assets"))
+    $destination = [IO.Path]::GetFullPath((Join-Path $GameDir "DLC\BGEPings"))
+    $registration = Join-Path $destination "BGEPings.modinfo"
+    if ((Test-Path -LiteralPath $registration) -and
+        -not (Get-Content -LiteralPath $registration -Raw).Contains("863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd")) {
+        throw "Unrecognized BGE ping media registration in $destination"
+    }
+    $files = Get-ChildItem -LiteralPath $source -File -Recurse |
+        Sort-Object @{Expression={ $_.Name -eq "BGEPings.modinfo" }}, FullName
+    foreach ($file in $files) {
+        $relative = $file.FullName.Substring($source.Length + 1)
+        $target = Join-Path $destination $relative
+        if ($Remove) {
+            if ((Test-Path -LiteralPath $target) -and
+                (Get-FileHash -LiteralPath $target).Hash -eq (Get-FileHash -LiteralPath $file.FullName).Hash) {
+                Remove-Item -LiteralPath $target
+            }
+        } else {
+            New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $file.FullName -Destination $target -Force
+        }
+    }
+}
+
 # Ancienne installation : l'original revient ; un _orig à côté d'un original remis par Steam est périmé.
 if (Test-Ours $old) {
     if (-not (Test-Path $oldOrig)) { throw "Un ancien proxy est à la place de l'original mais $oldOrig manque : vérifie les fichiers du jeu dans Steam." }
@@ -35,6 +60,7 @@ if (Test-Ours $old) {
 }
 
 if ($Uninstall) {
+    Sync-PingAssets -Remove
     if (Test-Ours $proxy) { Remove-Item $proxy }
     Write-Host "Proxy de démarrage retiré."
     return
@@ -43,6 +69,7 @@ if ($Uninstall) {
 if ((Test-Path $proxy) -and -not (Test-Ours $proxy)) { throw "$proxy n'est pas le proxy de démarrage (un autre mod ?) : retire-le d'abord." }
 $built = Join-Path $PSScriptRoot "target\release\winmm.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
+# Les images et sons des signaux (DLC\BGEPings) sont posés par le proxy lui-même au lancement du jeu.
 Copy-Item $built $proxy -Force
 Write-Host "Proxy de démarrage installé : $proxy."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

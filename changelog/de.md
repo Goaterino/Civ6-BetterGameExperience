@@ -2,18 +2,65 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
-## Nächste Version
+## BetterGameExperience 0.11.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.11.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.10.0 und 0.11.0 mischt, schaltet sie ab.
 
 ### Mehrspieler-Korrekturen [alle Spieler]
-- **Zuschauer (Better Spectator Mod)**: Die Überarbeitung der Zuschauer aus 0.9.0 wird
-  zurückgenommen, weil Partien mit Zuschauer weniger stabil waren. BetterGameExperience ändert nicht
-  mehr die Zivilisationsstufe der Zuschauer und ersetzt keine Skripte von Better Spectator Mod mehr;
-  die Einstellung « Better Spectator Mod für Zuschauer » entfällt. Zuschauer zählen für Skripte, Siege
-  und Punktestand wieder als Hauptzivilisationen, wie mit Better Spectator Mod allein. Tourismus und
-  Abstimmungen des Weltkongresses lassen sie weiterhin außen vor.
+- **Einheiten-Produktionsboni, die schwinden**: Das Entfernen eines prozentualen Bonus auf die
+  Einheitenproduktion (die +30 % für Bautrupps durch Ilkum oder der Bonus einer Stadt für einen
+  Einheitentyp) zog etwas mehr ab, als er hinzugefügt hatte, jedes Mal etwa 0,4 %, und der Verlust
+  wuchs mit jedem Tausch der Karte. Das Entfernen eines Bonus zieht jetzt genau ab, was er
+  hinzugefügt hat. Spielstände behalten den bereits angesammelten Verlust. Beitrag von Serianol.
+
+## BetterGameExperience 0.10.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.10.0 für die Korrekturen **[alle
+Spieler]** und die Teamsignale: Eine Lobby, die 0.9.x und 0.10.0 mischt, schaltet sie ab.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Spieler hängen auf „nicht bereit“**: Eine diplomatische Aktion (Botschaft, Abkommen), die genau
+  am Rundenende ankam, konnte den Host die nächste Runde zu früh beginnen lassen. Einige Spieler
+  begannen sie dann bereits als fertig markiert und konnten nicht wieder bereit werden. Die nächste
+  Runde wartet jetzt auf die Prüfung des Spiels, und die Aktion wird trotzdem ausgeführt.
+- **Zuschauer (Better Spectator Mod)**: Die Überarbeitung der Zuschauer aus 0.9.0 wird ausgesetzt,
+  bis sie gründlicher getestet ist, weil Partien mit Zuschauer weniger stabil waren.
+  BetterGameExperience ändert nicht mehr die Zivilisationsstufe der Zuschauer und ersetzt keine
+  Skripte von Better Spectator Mod mehr; die Einstellung « Better Spectator Mod für Zuschauer »
+  entfällt vorerst. Zuschauer zählen für Skripte, Siege und Punktestand wieder als
+  Hauptzivilisationen, wie mit Better Spectator Mod allein. Tourismus und Abstimmungen des
+  Weltkongresses lassen sie weiterhin außen vor.
 - **Für Zuschauer beibehalten**: Ein Wechsel des beobachteten Spielers führt weiterhin zu keiner
   Desynchronisation, und der Zug des Zuschauers endet nach einer MPH-Pause weiterhin von selbst. Beide
   Korrekturen gelten jetzt für die originalen Skripte von Better Spectator Mod.
+
+### Neu
+- **Teamsignale (BGE)**: Markiere mit **X** ein Feld für dein Team, oder halte **X** gedrückt für ein
+  Rad mit Rufen (Gefahr, bin unterwegs, Hilfe, Feind verschwunden); **Alt+1–4** senden sie direkt.
+  Teammitglieder sehen und hören das Signal mit dem Namen des Absenders, Zuschauer sehen beide
+  Teams. Standardmäßig aus: Der Host aktiviert **Teamsignale (BGE)** in der Spieleinrichtung.
+  Tastenkürzel in den Tastenbelegungs-Optionen des Spiels, Lautstärke in den Audio-Optionen;
+  `/mute Name` blockiert Chat und Signale eines Spielers. Beitrag von mariusbw.
+
+### Mehrspieler
+- **Über den Host weitergeleitete Spieler**: Zwei Spieler, deren direkte Verbindung beim Beitritt
+  fehlschlug, laufen für den Rest der Partie über den Host und werden beide getrennt, wenn der Host
+  geht. Beim gleichzeitigen Rundenstart versucht BetterGameExperience jetzt, sie wieder direkt zu
+  verbinden (höchstens drei Versuche), und meldet es im Chat. Beitrag von yodha.
+- **Pings bei 0 ms hängen geblieben**: Der Ping eines Spielers in der Spielerliste bleibt nach dem
+  Beitritt nicht mehr bei 0 ms stehen; er wird wieder alle 5 Sekunden gemessen. Verlassen und
+  erneutes Beitreten, um ihn zu „reparieren“, was oft eine Desynchronisation auslöste, ist nicht mehr
+  nötig. Beitrag von yodha.
+- **Beschädigte Netzwerknachrichten**: Der in 0.9.0 hinzugefügte Schutz funktioniert jetzt auch mit
+  der DirectX-11-Version des Spiels. Beitrag von yodha.
+- **Spieler ohne BetterGameExperience**: Die Warnung im Spiel zu einem Spieler, der ohne
+  BetterGameExperience beigetreten ist, bricht nicht mehr mit einem Skriptfehler ab. Beitrag von
+  yodha.
+
+### Installation und Updates
+- Das Installationsprogramm lädt herunter und startet das Spiel neu, ohne versteckte Hilfsprogramme
+  zu starten, und trägt Versionsinformationen: Virenscanner sollten es seltener melden.
 
 ## BetterGameExperience 0.9.1
 

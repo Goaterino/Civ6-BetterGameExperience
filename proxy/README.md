@@ -620,21 +620,38 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Le défaut du jeu.** Après `EndTurn`, le prochain `Game::Processor::Update` démarre le tour
   suivant, quel qu'en soit l'appelant. `GameUpdate` attend le contrôle de synchro, mais
   `DiplomacyAction`, `DiplomacyDeal` et `DiplomacySession` lancent l'étape de mise à jour
-  (`18060eca0`) sans regarder le drapeau de fin de tour : reçus dans ce créneau, ils démarrent le
+  (`18063e2e0`) sans regarder le drapeau de fin de tour : reçus dans ce créneau, ils démarrent le
   tour chez l'hôte avant la synchro, et des joueurs commencent le tour « tour fini ».
-- **Le détour.** Les trois appels (`jmp` terminal en `1800308cf` et `180030b98`, `call` en
-  `1800310d2`) sont redirigés vers un relais (`mov edx,quel ; jmp [rip+0]`) qui saute l'étape quand
-  le drapeau est levé (`180045dc0`), comme `GameUpdate::Execute`. L'action est appliquée ; le
+- **Le détour.** Les trois appels (`jmp` terminal en `18003514f` et `1800353b8`, `call` en
+  `1800358f2`) sont redirigés vers un relais (`mov edx,quel ; jmp [rip+0]`) qui saute l'étape quand
+  le drapeau est levé (`18004ab90`), comme `GameUpdate::Execute`. L'action est appliquée ; le
   `GameUpdate` initial lance la mise à jour. Pendant le tour (joueur qui a passé son tour puis
   agit), rien ne change.
 - **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`).
-- **Garde-fou.** Les trois sites (instruction qui précède, opcode, cible `18060eca0`) et les octets
-  de `180045dc0` doivent correspondre, sinon rien n'est redirigé. Les appels d'origine reviennent au
+- **Garde-fou.** Les trois sites (instruction qui précède, opcode, cible `18063e2e0`) et les octets
+  de `18004ab90` doivent correspondre, sinon rien n'est redirigé. Les appels d'origine reviennent au
   déchargement du proxy.
 - **Le journal.** `fin de tour : mise à jour après DiplomacyAction/Deal/Session suspendue pendant le
   passage de tour (3 appels redirigés)`, puis les 20 premières mises à jour sautées de chaque partie.
 - **Tests.** `cargo test` (octets des sites dans le GameCore installé, s'il est là),
   `check_hooks.py` (redirection et restauration).
+
+## Modificateurs de production d'unités sans dérive au retrait (correctif POL)
+
+[src/production_modifiers.rs](src/production_modifiers.rs). Analyse :
+[modificateurs_production/README.md](../modificateurs_production/README.md). Contribution de Serianol
+(PR 8) pour le joueur, étendue aux villes.
+
+- **Le défaut du jeu.** Un pourcentage passe en 24.8 par `floorf` : un négatif est arrondi vers −∞.
+  Retirer Ilkum (+30 % : 76/256) enlève 77/256, et la perte s'accumule à chaque échange.
+- **Les détours.** `1809497a0` (joueur, `MODIFIER_PLAYER_UNITS_ADJUST_UNIT_PRODUCTION`), `1809444e0`
+  et `180973c20` (ajout et retrait sur une ville, `MODIFIER_PLAYER_CITIES_…` et
+  `MODIFIER_SINGLE_CITY_…`). Une variation négative qui dérive applique l'opposé exact de la
+  positive ; tout le reste passe par l'originale, sans changement.
+- **Correctif POL, sans réglage.** Même règle que les précédents (`BgdPolActifs`) ; `VERSION` 0.11.0.
+- **Garde-fou.** Les corps entiers des trois fonctions doivent correspondre, sinon aucun détour et
+  `ST_POL` est retiré.
+- **Tests.** `cargo test`, `check_hooks.py`.
 
 ## Départ et fin de tour simultanés (option de partie « No First/Last moves (BGE) »)
 

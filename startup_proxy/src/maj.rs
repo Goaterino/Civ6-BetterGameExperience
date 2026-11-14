@@ -279,6 +279,7 @@ pub fn patch_main_menu_lua(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(block.as_bytes());
+    out.extend_from_slice(include_str!("ping_assets.lua").as_bytes());
     out
 }
 

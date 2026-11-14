@@ -10,16 +10,13 @@ local calls = {
     {id="missing",label="LOC_BGD_PINGS_MISSING",icon="?",                         color={255,205,64},  sound="missing", skin="Missing",angle=270, shortcut=1, action="TeamPingLook"},
 }
 
--- Retain the installed standalone mod's media as an optional skin. BGE owns input and routing.
-local pingSkin
-if Modding and Modding.IsModActive("6471536e-c80a-4db4-8ddf-58cceaab9308") then
-    pingSkin = {wheel="TPWheel.dds", focus="TPFocus.dds", ripple="TPRipple.dds", denied="TPDenied.dds"}
-    for _, call in ipairs(calls) do
-        if call.skin then
-            call.texture = "TP" .. call.skin .. ".dds"
-            call.event = "Play_TeamPing_" .. call.skin
-            call.eventsByVolume = {}
-            for _, percent in ipairs({25,50,75}) do call.eventsByVolume[percent] = call.event .. "_" .. percent end
-        end
+-- Installed with BGE. The same artwork and Wwise cues apply to every client.
+local pingSkin = {wheel="TPWheel.dds", focus="TPFocus.dds", ripple="TPRipple.dds", denied="TPDenied.dds"}
+for _, call in ipairs(calls) do
+    if call.skin then
+        call.texture = "TP" .. call.skin .. ".dds"
+        call.event = "Play_TeamPing_" .. call.skin
+        call.eventsByVolume = {}
+        for _, percent in ipairs({25,50,75}) do call.eventsByVolume[percent] = call.event .. "_" .. percent end
     end
 end

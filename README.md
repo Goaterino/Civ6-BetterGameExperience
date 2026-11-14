@@ -4,6 +4,7 @@
 
 Fixes and speed-ups for **Civilization VI: Gathering Storm**, delivered as two DLLs placed next to
 the game files. No game file is replaced, so Steam file checks and game updates leave it alone.
+The startup DLL also writes the team ping artwork and audio to `DLC\BGEPings` when the game starts.
 
 - Faster turns: the war-declaration cascades and AI checks that slow down big multiplayer turns are
   batched and cached, with results identical to the base game.
@@ -66,6 +67,9 @@ right is on my way, down is assist, and left is enemy missing. **Alt+1–4** sen
 on my way and assist directly. Change the wheel or individual shortcuts in **Options → Key Bindings**. Teammates see the sender’s name for four seconds. Spectators see both teams.
 Adjust **Team ping volume** under **Audio**. Type `/mute name` or `/unmute name` in chat to control
 both chat and pings from that player. A blocked ping gives a silent local animation.
+BGE ships the wheel artwork, transparent markers and sound cues. The host adds them
+to the game when it launches, only if every player has BGE, so players without BGE can still join
+the lobby.
 [Editing ping types, icons and sounds](proxy/src/mods/pings/README.md).
 
 ## Settings

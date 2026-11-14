@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Mod id="863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd" version="1">
+  <Properties>
+    <Name>Better Game Experience - Ping assets</Name>
+    <Description>Artwork and audio installed with Better Game Experience. Added to multiplayer games with team pings when every player has BGE.</Description>
+    <Authors>BGE contributors</Authors>
+    <AffectsSavedGames>0</AffectsSavedGames>
+    <CompatibleVersions>1.2,2.0</CompatibleVersions>
+    <EnabledByDefault>0</EnabledByDefault>
+    <ShowInBrowser>AlwaysHidden</ShowInBrowser>
+  </Properties>
+  <InGameActions>
+    <ImportFiles id="BGE_PingArtwork">
+      <File>Art/TPAssist.dds</File>
+      <File>Art/TPComing.dds</File>
+      <File>Art/TPDanger.dds</File>
+      <File>Art/TPDenied.dds</File>
+      <File>Art/TPFocus.dds</File>
+      <File>Art/TPLook.dds</File>
+      <File>Art/TPMissing.dds</File>
+      <File>Art/TPRipple.dds</File>
+      <File>Art/TPWheel.dds</File>
+    </ImportFiles>
+    <UpdateAudio id="BGE_PingAudio">
+      <File>Platforms/Windows/Audio/TeamPingsAudio.bnk</File>
+      <File>Platforms/Windows/Audio/TeamPingsAudio.xml</File>
+      <File>Platforms/Windows/Audio/TeamPingsBanks.ini</File>
+    </UpdateAudio>
+  </InGameActions>
+  <Files>
+    <File>Art/TPAssist.dds</File>
+    <File>Art/TPComing.dds</File>
+    <File>Art/TPDanger.dds</File>
+    <File>Art/TPDenied.dds</File>
+    <File>Art/TPFocus.dds</File>
+    <File>Art/TPLook.dds</File>
+    <File>Art/TPMissing.dds</File>
+    <File>Art/TPRipple.dds</File>
+    <File>Art/TPWheel.dds</File>
+    <File>Platforms/Windows/Audio/TeamPingsAudio.bnk</File>
+    <File>Platforms/Windows/Audio/TeamPingsAudio.xml</File>
+    <File>Platforms/Windows/Audio/TeamPingsBanks.ini</File>
+  </Files>
+</Mod>

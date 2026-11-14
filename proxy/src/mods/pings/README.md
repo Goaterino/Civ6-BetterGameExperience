@@ -13,16 +13,23 @@ Edit [catalog.lua](catalog.lua). Each entry supplies a stable wire ID, a transla
 label, a color, an icon, a sound, and optionally a wheel angle and direct shortcut.
 The call without an angle is the center tap. Other angles are clockwise from the top.
 Digits 1–9 define default Alt shortcuts. Players can rebind the wheel and direct calls in Options → Key Bindings. Keep the action ID stable to preserve saved bindings.
+Saved native actions remain visible under **Team pings (BGE)** when their original
+mod is disabled. **Team ping volume** appears below sound effects in the shared
+Audio options, both at the main menu and in a match.
 
 - Set `icon` to text or a Civ font icon such as `[ICON_Movement]`. Use `texture`
   for a DDS available to Civ’s texture manager. The map and wheel use the same entry.
 - Drop a signed 16-bit PCM WAV in [audio/](audio/) and set `sound` to its filename
   without the extension. Cargo automatically embeds it in the GameCore DLL. The cue
   honors the ping, master, effects and mute-on-focus-loss settings.
-- An active copy of the standalone v9 mod supplies the wheel, selection ring,
-  ground ripples and blocked indicator. Its call icons and Wwise events apply to
-  entries with a `skin` name. BGE handles input and delivery. The public
-  build ships its own sounds and uses Civ’s installed UI art by default.
+- BGE installs the approved wheel, selection ring, ground ripples, blocked
+  indicator, call icons and Wwise cues from [ping_assets](../../../../ping_assets).
+  The media component is a hidden local mod, never in the lobby's game configuration:
+  a player without it would be kicked on joining. The host adds it just before
+  `Network.LaunchGame`, only when team pings are on and every human has BGE (end of
+  [salon.lua](../../../../startup_proxy/src/salon.lua)).
+  Entries with a `skin` name use the matching DDS and audio event in that package.
+  The signed release manifest covers every asset as well as both DLLs.
 - Put new label keys in each [translation XML](../../../../textes/README.md) and run
   `python textes/gen_textes.py --strict` from the repository root.
 
