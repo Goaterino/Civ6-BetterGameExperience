@@ -39,6 +39,7 @@ mod patch;
 mod pings;
 mod pol;
 mod ports;
+mod production_modifiers;
 mod rendements;
 mod rendements_empire;
 mod spectateurs;
@@ -274,6 +275,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             congres::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();
+            production_modifiers::on_proxy_unload();
             fin_tour::on_proxy_unload();
             empilement::on_proxy_unload();
             depart::on_proxy_unload();
