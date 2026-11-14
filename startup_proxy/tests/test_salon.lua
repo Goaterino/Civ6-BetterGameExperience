@@ -388,6 +388,28 @@ do
 	check(#l.chat == 1, "pas de message pour une reconnexion équipée");
 end
 
+-- 13b. The host's final verdict reaches a client after its lobby was hidden for the launch (too late
+-- for PlayerInfoChanged): at load, the launch data decides, the same as everyone else.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } });
+	l.open();
+	local z = l.machines[2];
+	local final = z.values[0].BGD_VERDICT;
+	local perso = z.values[2].BGD_VERSION:match("#(.*)$");
+	local i, j = final:find(perso, 1, true);
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	z.events.PlayerInfoChanged.Fire(0);
+	l.countdown();
+	check(Pol(l, 2) == "désactivés", "stale verdict at the countdown: Zoé off (" .. Pol(l, 2) .. ")");
+	z.cache = true;
+	z.values[0].BGD_VERDICT = final;
+	z.events.PlayerInfoChanged.Fire(0);
+	check(z.pol ~= true, "verdict applied while the lobby is hidden: still off");
+	Lancer(l);
+	check(z.pol == true and l.machines[0].pol == true and l.machines[1].pol == true, "at load: on, like everyone else");
+	check(z.log:find("load: POL fixes on (launch data)", 1, true) ~= nil, "decision at load logged");
+end
+
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une
 -- fois, quand il est prêt.
 do
