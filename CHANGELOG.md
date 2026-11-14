@@ -15,6 +15,30 @@ mixes 0.10.0 and 0.11.0 turns them off.
   added, about 0.4% each time, and the loss grew with every swap of the card. Removing a bonus now
   takes away exactly what it added. Saves keep the loss already built up. Contributed by Serianol.
 
+### Multiplayer
+- **Game frozen right after loading in**: a player on a slow connection could receive the game a
+  second time from the host just after their own load ended, reload it from the map and freeze. That
+  late second copy is now turned down; joining, reconnecting and resyncs work as before.
+- **Crash when loading a save after another game**: the reconnection of players relayed through the
+  host (0.10.0) could read the previous game's connection, already closed, and crash the game while
+  the next one loaded. Contributed by yodha.
+- **Game setup**: the game options added by BetterGameExperience are greyed out when the host has
+  BetterGameExperience turned off.
+
+### Team pings
+- New artwork and sounds for the wheel, the markers and each call, installed with
+  BetterGameExperience. They are only added to a game when the host turns team pings on and every
+  player has BetterGameExperience, so a player without it can still join the lobby. Contributed by
+  mariusbw.
+- **Team ping volume** sits right under sound effects in the audio options, at the main menu as well
+  as in a game, and the ping shortcuts stay listed in the key binding options. Contributed by
+  mariusbw.
+
+### Settings
+- **BetterGameExperience tab**: turning BetterGameExperience on or off always asks to restart the
+  game. Switching a setting back to its previous value without reopening the screen is saved again;
+  it used to be ignored.
+
 ## BetterGameExperience 0.10.0
 
 Multiplayer games need every human player on 0.10.0 for the **[all players]** fixes and for team

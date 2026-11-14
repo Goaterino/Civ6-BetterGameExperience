@@ -14,6 +14,31 @@ Spieler]**: Eine Lobby, die 0.10.0 und 0.11.0 mischt, schaltet sie ab.
   wuchs mit jedem Tausch der Karte. Das Entfernen eines Bonus zieht jetzt genau ab, was er
   hinzugefügt hat. Spielstände behalten den bereits angesammelten Verlust. Beitrag von Serianol.
 
+### Mehrspieler
+- **Spiel friert direkt nach dem Laden ein**: Ein Spieler mit langsamer Verbindung konnte das Spiel
+  kurz nach dem Ende seines Ladevorgangs ein zweites Mal vom Host erhalten, es von der Karte aus neu
+  laden und einfrieren. Diese verspätete zweite Kopie wird jetzt abgelehnt; Beitreten,
+  Wiederverbinden und Resynchronisierungen funktionieren wie bisher.
+- **Absturz beim Laden eines Spielstands nach einem anderen Spiel**: Die Wiederverbindung von über
+  den Host weitergeleiteten Spielern (0.10.0) konnte die bereits geschlossene Verbindung des
+  vorherigen Spiels lesen und das Spiel beim Laden des nächsten abstürzen lassen. Beitrag von yodha.
+- **Spieleinrichtung**: Die von BetterGameExperience hinzugefügten Spieloptionen sind ausgegraut,
+  wenn der Host BetterGameExperience ausgeschaltet hat.
+
+### Teamsignale
+- Neue Grafiken und Klänge für das Rad, die Markierungen und jeden Ruf, mit BetterGameExperience
+  installiert. Sie werden einem Spiel nur hinzugefügt, wenn der Host Teamsignale einschaltet und alle
+  Spieler BetterGameExperience haben: Ein Spieler ohne BGE kann der Lobby weiterhin beitreten.
+  Beitrag von mariusbw.
+- Die **Lautstärke der Teamsignale** steht direkt unter den Soundeffekten in den Audio-Optionen, im
+  Hauptmenü wie im Spiel, und die Tastenkürzel der Signale bleiben in den Tastenbelegungs-Optionen
+  aufgeführt. Beitrag von mariusbw.
+
+### Einstellungen
+- **Reiter BetterGameExperience**: Das Ein- oder Ausschalten von BetterGameExperience fordert immer
+  zum Neustart des Spiels auf. Eine Einstellung ohne erneutes Öffnen des Bildschirms auf ihren
+  vorherigen Wert zurückzusetzen, wird wieder gespeichert; das wurde bisher ignoriert.
+
 ## BetterGameExperience 0.10.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.10.0 für die Korrekturen **[alle
