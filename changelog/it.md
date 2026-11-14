@@ -14,6 +14,31 @@ giocatori]**: una sala d'attesa che mescola 0.10.0 e 0.11.0 le disattiva.
   cresceva a ogni scambio della carta. Rimuovere un bonus ora toglie esattamente ciò che aveva
   aggiunto. I salvataggi conservano la perdita già accumulata. Contributo di Serianol.
 
+### Multigiocatore
+- **Partita bloccata subito dopo il caricamento**: un giocatore con una connessione lenta poteva
+  ricevere la partita una seconda volta dall'host subito dopo la fine del proprio caricamento,
+  ricaricarla dalla mappa e restare bloccato. Quella seconda copia tardiva ora viene rifiutata;
+  l'ingresso, la riconnessione e le risincronizzazioni funzionano come prima.
+- **Crash caricando un salvataggio dopo un'altra partita**: la riconnessione dei giocatori
+  instradati tramite l'host (0.10.0) poteva leggere la connessione della partita precedente, già
+  chiusa, e far chiudere il gioco durante il caricamento della successiva. Contributo di yodha.
+- **Configurazione della partita**: le opzioni di partita aggiunte da BetterGameExperience sono
+  disattivate in grigio quando l'host ha BetterGameExperience spento.
+
+### Segnali di squadra
+- Nuove immagini e nuovi suoni per la ruota, gli indicatori e ogni richiamo, installati con
+  BetterGameExperience. Vengono aggiunti a una partita solo se l'host attiva i segnali di squadra e
+  tutti i giocatori hanno BetterGameExperience: un giocatore senza BGE può ancora entrare nella sala
+  d'attesa. Contributo di mariusbw.
+- Il **volume dei segnali di squadra** si trova subito sotto gli effetti sonori nelle opzioni audio,
+  nel menu principale come in partita, e le scorciatoie dei segnali restano elencate nelle opzioni
+  dei tasti. Contributo di mariusbw.
+
+### Impostazioni
+- **Scheda BetterGameExperience**: attivare o disattivare BetterGameExperience chiede sempre di
+  riavviare il gioco. Riportare un'impostazione al valore precedente senza riaprire la schermata
+  viene di nuovo salvato; prima veniva ignorato.
+
 ## BetterGameExperience 0.10.0
 
 In multigiocatore, tutti i giocatori umani devono avere la 0.10.0 per le correzioni **[tutti i
