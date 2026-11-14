@@ -23,23 +23,23 @@ pub struct Target {
     marker: &'static [u8],
 }
 
-pub const TARGETS: [Target; 15] = [
+pub const TARGETS: [Target; 2] = [
     Target { name: noms::GAMECORE_PROXY, dest: "DLC/Expansion2/Binaries/Win64", marker: b"RolloverProxyStatus" },
     Target { name: noms::DEMARRAGE, dest: "Base/Binaries/Win64Steam", marker: b"StartupProxyStatus" },
-    Target { name: "TPAssist.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPComing.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPDanger.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPDenied.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPFocus.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPLook.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPMissing.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPRipple.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TPWheel.dds", dest: "DLC/BGEPings/Art", marker: b"DDS " },
-    Target { name: "TeamPingsAudio.bnk", dest: "DLC/BGEPings/Platforms/Windows/Audio", marker: b"BKHD" },
-    Target { name: "TeamPingsAudio.xml", dest: "DLC/BGEPings/Platforms/Windows/Audio", marker: b"SoundBanksInfo" },
-    Target { name: "TeamPingsBanks.ini", dest: "DLC/BGEPings/Platforms/Windows/Audio", marker: b"TeamPingsAudio.bnk" },
-    // Publish the content registration after all of the media it references.
-    Target { name: "BGEPings.modinfo", dest: "DLC/BGEPings", marker: b"863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd" },
+];
+
+/// Images et sons des signaux d'équipe : posés au lancement du jeu par le proxy de démarrage
+/// (startup_proxy/src/medias.rs), qui les embarque, et non par l'installeur : un installeur déjà
+/// distribué refuse tout manifeste qui liste plus que les deux DLL. Retirés à la désinstallation si
+/// leur `.modinfo` est le nôtre.
+const MEDIAS_DOSSIER: &str = "DLC/BGEPings";
+const MEDIAS_ID: &[u8] = b"863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd";
+const MEDIAS: [&str; 13] = [
+    "BGEPings.modinfo",
+    "Art/TPAssist.dds", "Art/TPComing.dds", "Art/TPDanger.dds", "Art/TPDenied.dds", "Art/TPFocus.dds",
+    "Art/TPLook.dds", "Art/TPMissing.dds", "Art/TPRipple.dds", "Art/TPWheel.dds",
+    "Platforms/Windows/Audio/TeamPingsAudio.bnk", "Platforms/Windows/Audio/TeamPingsAudio.xml",
+    "Platforms/Windows/Audio/TeamPingsBanks.ini",
 ];
 
 /// Marques des anciens proxys, posés sous le nom des originaux.
@@ -115,9 +115,7 @@ fn is_old_proxy(dll: &Path) -> Result<bool, String> {
 /// État de chaque proxy, puis de chaque ancien proxy encore posé à la place d'un original.
 pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
     let mut out: Vec<(&'static str, State)> =
-        TARGETS.iter()
-            .filter(|t| m.is_none_or(|m| m.files.iter().any(|f| f.name == t.name)))
-            .map(|t| (t.name, t.state(game, m).unwrap_or(State::Foreign))).collect();
+        TARGETS.iter().map(|t| (t.name, t.state(game, m).unwrap_or(State::Foreign))).collect();
     for ((_, name), (dll, _)) in noms::ANCIENS.iter().zip(old_files(game)) {
         if is_old_proxy(&dll).unwrap_or(false) {
             out.push((name, State::Old));
@@ -176,7 +174,7 @@ fn apply(action: Action, game: &Path, work: &Path) -> Result<(), String> {
 }
 
 fn writable(game: &Path) -> bool {
-    TARGETS[..2].iter().all(|t| {
+    TARGETS.iter().all(|t| {
         let probe = game.join(t.dest).join(".bgd_test");
         let ok = fs::write(&probe, b"").is_ok();
         let _ = fs::remove_file(&probe);
@@ -220,8 +218,7 @@ fn check_foreign(game: &Path) -> Result<(), String> {
 fn install(game: &Path, m: &Manifest, data: &[Vec<u8>]) -> Result<(), String> {
     // La release doit poser exactement nos cibles, aux mêmes endroits.
     let known = |f: &release::File| TARGETS.iter().any(|t| t.name == f.name && t.dest == f.dest);
-    // Older releases contain the two proxies. New releases include the complete media set.
-    let targets = if m.files.len() == 2 { &TARGETS[..2] } else { &TARGETS[..] };
+    let targets = &TARGETS;
     if m.files.len() != targets.len() || data.len() != m.files.len() || !m.files.iter().all(known)
         || !targets.iter().all(|t| m.files.iter().filter(|f| f.name == t.name).count() == 1) {
         return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
@@ -273,6 +270,27 @@ fn uninstall(game: &Path) -> Result<(), String> {
             let dll = t.path(game);
             fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
         }
+    }
+    remove_medias(game)
+}
+
+/// Retire les images et sons des signaux, si leur `.modinfo` est le nôtre : nos fichiers, puis
+/// leurs dossiers devenus vides. Un fichier ajouté par le joueur reste, avec son dossier.
+fn remove_medias(game: &Path) -> Result<(), String> {
+    let dossier = game.join(MEDIAS_DOSSIER);
+    let modinfo = dossier.join(MEDIAS[0]);
+    if !modinfo.exists() || !contains(&modinfo, MEDIAS_ID)? {
+        return Ok(());
+    }
+    // Le .modinfo d'abord : le jeu ne voit plus le mod, même si la suite échoue.
+    for relatif in MEDIAS {
+        let p = dossier.join(relatif);
+        if p.exists() {
+            fs::remove_file(&p).map_err(|e| format!("{}: {e}", p.display()))?;
+        }
+    }
+    for sous in ["Platforms/Windows/Audio", "Platforms/Windows", "Platforms", "Art", ""] {
+        let _ = fs::remove_dir(dossier.join(sous));
     }
     Ok(())
 }
@@ -364,31 +382,23 @@ mod tests {
     }
 
     #[test]
-    fn ping_media_install_repair_and_uninstall() {
-        let dir = game("ping_media", &[]);
-        let mut data = vec![b"proxy RolloverProxyStatus".to_vec(), b"startup StartupProxyStatus".to_vec()];
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../ping_assets");
-        for target in &TARGETS[2..] {
-            let relative = Path::new(target.dest).strip_prefix("DLC/BGEPings").unwrap();
-            data.push(fs::read(root.join(relative).join(target.name)).unwrap());
-        }
-        let files = TARGETS.iter().zip(&data).map(|(t, bytes)| release::File {
-            name: t.name.into(), dest: t.dest.into(), sha256: release::sha256_hex(bytes),
-        }).collect();
-        let manifest = Manifest { version: "9.9.9".into(), files };
-        install(&dir, &manifest, &data).unwrap();
-        assert!(status(&dir, Some(&manifest)).iter().all(|(_, s)| *s == State::UpToDate));
-        for (target, expected) in TARGETS.iter().zip(&data) {
-            assert_eq!(fs::read(target.path(&dir)).unwrap(), *expected);
-        }
-        fs::remove_file(dir.join("DLC/BGEPings/Art/TPWheel.dds")).unwrap();
-        assert!(status(&dir, Some(&manifest)).iter().any(|(_, s)| *s == State::Absent));
-        install(&dir, &manifest, &data).unwrap();
-        assert!(status(&dir, Some(&manifest)).iter().all(|(_, s)| *s == State::UpToDate));
-        fs::write(dir.join("DLC/BGEPings/user-file.txt"), "keep").unwrap();
+    fn desinstallation_retire_les_medias_poses_par_le_proxy() {
+        let modinfo = b"<Mod id=\"863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd\"/>";
+        let mut files: Vec<(String, Vec<u8>)> =
+            MEDIAS.iter().map(|r| (format!("{MEDIAS_DOSSIER}/{r}"), b"media".to_vec())).collect();
+        files[0].1 = modinfo.to_vec();
+        files.push((format!("{MEDIAS_DOSSIER}/Art/mien.dds"), b"joueur".to_vec()));
+        let refs: Vec<(&str, &[u8])> = files.iter().map(|(p, d)| (p.as_str(), d.as_slice())).collect();
+        let dir = game("medias", &refs);
         uninstall(&dir).unwrap();
-        assert!(TARGETS.iter().all(|t| !t.path(&dir).exists()));
-        assert_eq!(fs::read(dir.join("DLC/BGEPings/user-file.txt")).unwrap(), b"keep");
+        assert!(MEDIAS.iter().all(|r| !dir.join(MEDIAS_DOSSIER).join(r).exists()));
+        assert!(!dir.join(MEDIAS_DOSSIER).join("Platforms").exists());
+        assert_eq!(read(&dir, "DLC/BGEPings/Art/mien.dds").unwrap(), b"joueur");
+        fs::remove_dir_all(&dir).unwrap();
+        // Un autre mod sous ce nom n'est pas touché.
+        let dir = game("medias_autre", &[("DLC/BGEPings/BGEPings.modinfo", b"<Mod id=\"autre\"/>"), ("DLC/BGEPings/Art/TPWheel.dds", b"x")]);
+        uninstall(&dir).unwrap();
+        assert!(dir.join("DLC/BGEPings/Art/TPWheel.dds").exists());
         fs::remove_dir_all(dir).unwrap();
     }
 

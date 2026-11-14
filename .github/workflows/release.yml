@@ -72,7 +72,6 @@ jobs:
           (cd updater && cargo +stable-x86_64-pc-windows-msvc build --release)
           mkdir dist
           cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
-          python release/ping_assets.py dist
           # Nom versionné : un joueur voit quelle version il a téléchargée. Lancé, l'installeur retire
           # les plus anciens du même dossier et se copie sous le nom fixe BetterGameExperience.exe
           # (updater/README.md).

@@ -13,11 +13,14 @@ jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |
 
-Les scripts d'interface sont compilés dans les DLL (`include_str!`).
-`release/ping_assets.py dist` ajoute les neuf textures DDS, la banque audio, ses deux
-fichiers de configuration et `BGEPings.modinfo` depuis `ping_assets/`.
-Le manifeste signé les installe dans `DLC/BGEPings`. Le menu principal de BGE active
-automatiquement ces médias locaux, y compris dans les profils déjà existants.
+Les scripts Lua et XML sont compilés dans les DLL (`include_str!`) : aucun autre fichier à installer.
+Les images et sons des signaux d'équipe (`ping_assets/`) sont embarqués dans `winmm.dll`
+(`include_bytes!`, startup_proxy/src/medias.rs), qui les pose dans `DLC/BGEPings` au lancement du
+jeu. Le manifeste ne liste que les deux DLL : un installeur déjà distribué (0.10.0 et avant) refuse
+tout manifeste qui en liste plus, et c'est lui que lance la mise à jour depuis le jeu. Ce mod local reste décoché (le menu
+principal de BGE le décoche) et caché du Contenu additionnel : l'hôte ne l'ajoute à la
+configuration de la partie qu'au lancement, quand tous les joueurs ont BGE (fin de
+`startup_proxy/src/salon.lua`). Un joueur sans BGE peut donc toujours rejoindre le salon.
 
 L'updater lit `releases/latest/download/manifest.json` (une redirection, sans l'API GitHub ni sa
 limite de requêtes), vérifie la signature avec [public_key.txt](public_key.txt), puis télécharge

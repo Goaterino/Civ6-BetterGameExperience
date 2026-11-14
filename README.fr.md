@@ -3,7 +3,9 @@
 [English](README.md)
 
 Correctifs et accélérations pour **Civilization VI: Gathering Storm**, sous la forme de deux DLL
-et des images et sons des signaux d'équipe. L'installeur les ajoute à côté des fichiers du jeu.
+posées à côté des fichiers du jeu. Aucun fichier du jeu n'est remplacé : ni la vérification des
+fichiers par Steam ni les mises à jour du jeu n'y touchent. La DLL de démarrage pose aussi, au
+lancement du jeu, les images et sons des signaux d'équipe dans `DLC\BGEPings`.
 
 - Des tours plus rapides : les cascades de déclarations de guerre et les vérifications de l'IA qui
   alourdissent les gros tours en multijoueur sont regroupées et mises en cache, avec des résultats

@@ -52,6 +52,7 @@
 
 local BGD_CLE_VERSION = "BGD_VERSION";
 local BGD_CLE_VERDICT = "BGD_VERDICT";
+local BGD_CLE_MEDIAS = "BGD_MEDIAS";
 
 local BGD = {
 	version = nil,     -- notre version, nil si cette machine n'appliquerait pas les correctifs POL
@@ -190,6 +191,13 @@ local function BGD_Publier()
 	local change = false;
 	if cfg:GetValue(BGD_CLE_VERSION) ~= annonce then
 		cfg:SetValue(BGD_CLE_VERSION, annonce);
+		change = true;
+	end
+	-- Images et sons des signaux en place (posés par le proxy de démarrage) : notre jeton de ce
+	-- salon, qu'une valeur restée d'une sauvegarde ne peut pas porter. Lu par l'hôte au lancement.
+	local medias = (Civ6Proxy_MediasPings ~= nil and Civ6Proxy_MediasPings() == 1) and BGD.perso or "";
+	if cfg:GetValue(BGD_CLE_MEDIAS) ~= medias then
+		cfg:SetValue(BGD_CLE_MEDIAS, medias);
 		change = true;
 	end
 	if Network.IsGameHost() then
@@ -691,5 +699,137 @@ if OnChat ~= nil and BGD_TxtChat ~= nil and BGD_SalonChat == nil then
 			text = traduit;
 		end
 		return BGD_OnChatBase(fromPlayer, toPlayer, text, ...);
+	end
+end
+
+-- ===========================================================================
+-- Images et sons des signaux d'équipe : mod local « BGE - Ping assets » (DLC\BGEPings, installé
+-- avec BGE, sans identifiant Workshop). Présent dans la configuration de la partie, il ferait
+-- expulser tout joueur qui ne l'a pas dès son arrivée dans le salon (KICK_MOD_MISSING) : il n'y est
+-- donc jamais pendant le salon. Le menu principal le laisse décoché (src/ping_assets.lua) et
+-- l'hôte le retire d'une configuration qui l'a déjà (sauvegarde d'une partie jouée avec les
+-- signaux) à l'ouverture du salon.
+-- L'hôte ne l'ajoute qu'au lancement, juste avant Network.LaunchGame (par où passent tous les
+-- lancements de StagingRoom.lua et de MPH : fin du compte à rebours, départ forcé, phases de
+-- MPH), et seulement si les signaux d'équipe sont cochés et que les correctifs POL sont actifs :
+-- tous les humains ont alors cette version de BGE. Chacun dit en plus dans sa configuration de
+-- joueur s'il a le mod (BGD_MEDIAS, posé par le proxy de démarrage, src/medias.rs) : s'il manque
+-- chez l'un d'eux, il n'est pas ajouté. La configuration part avant l'ordre de lancement.
+-- StagingRoom.lua (et celui de MPH) retire le « Prêt » du joueur local à chaque GameConfigChanged :
+-- quand le seul changement est l'arrivée ou le départ de ce mod, SetLocalReady(false) est ignoré.
+-- ===========================================================================
+do
+	local BGD_MEDIA_PINGS = "863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd";
+
+	local function DansConfig()
+		if type(GameConfiguration.GetEnabledMods) ~= "function" then return false; end
+		for _, mod in ipairs(GameConfiguration.GetEnabledMods() or {}) do
+			if mod.Id == BGD_MEDIA_PINGS then return true; end
+		end
+		return false;
+	end
+
+	local vu = nil;  -- présence du mod dans la configuration au dernier GameConfigChanged
+
+	-- Hôte, à l'ouverture du salon : retire le mod (il n'y a pas de RemoveEnabledMods : la liste est
+	-- refaite sans lui).
+	local function Retirer()
+		vu = DansConfig();
+		if not Network.IsGameHost() or not vu or type(GameConfiguration.ClearEnabledMods) ~= "function" then
+			return;
+		end
+		local autres = {};
+		for _, mod in ipairs(GameConfiguration.GetEnabledMods()) do
+			if mod.Id ~= BGD_MEDIA_PINGS then table.insert(autres, mod.Id); end
+		end
+		GameConfiguration.ClearEnabledMods();
+		for _, id in ipairs(autres) do
+			GameConfiguration.AddEnabledMods(id);
+		end
+		local reste = #(GameConfiguration.GetEnabledMods() or {});
+		Network.BroadcastGameConfig();
+		BGD_Journal("signaux : images et sons retirés de la configuration du salon ("
+			.. reste .. " mods sur " .. #autres .. " attendus)");
+	end
+
+	-- Hôte, juste avant le lancement.
+	local function Ajouter()
+		if not Network.IsGameHost() or DansConfig() then return; end
+		local pings = GameConfiguration.GetValue("BGD_TEAM_PINGS");
+		if not (pings == true or pings == 1) then return; end
+		if not BGD_PolActifs() then
+			BGD_Journal("signaux : images et sons non ajoutés, correctifs POL inactifs");
+			return;
+		end
+		-- Chacun doit avoir le mod sur sa machine (BGD_MEDIAS, écrit par BGD_Publier), sinon il
+		-- serait expulsé au lancement : sans lui, les signaux restent sans images ni sons.
+		local manquants = {};
+		if Civ6Proxy_MediasPings == nil or Civ6Proxy_MediasPings() ~= 1 then
+			table.insert(manquants, "hôte");
+		end
+		for _, id in ipairs(BGD_AutresHumains()) do
+			local _, _, perso = BGD_LireAnnonce(BGD_Valeur(id, BGD_CLE_VERSION));
+			if perso == nil or BGD_Valeur(id, BGD_CLE_MEDIAS) ~= perso then
+				table.insert(manquants, Locale.Lookup(PlayerConfigurations[id]:GetPlayerName()));
+			end
+		end
+		if #manquants > 0 then
+			BGD_Journal("signaux : images et sons non ajoutés, absents chez " .. table.concat(manquants, ", "));
+			return;
+		end
+		if Modding == nil or Modding.GetModHandle(BGD_MEDIA_PINGS) == nil then
+			BGD_Journal("signaux : mod des images et sons introuvable, non ajouté");
+			return;
+		end
+		GameConfiguration.AddEnabledMods(BGD_MEDIA_PINGS);
+		if not DansConfig() then
+			BGD_Journal("signaux : AddEnabledMods sans effet, images et sons absents");
+			return;
+		end
+		Network.BroadcastGameConfig();
+		BGD_Journal("signaux : images et sons ajoutés à la configuration, lancement");
+	end
+
+	-- Network est en lecture seule (« Attempt to modify read-only table ») : la globale Network de
+	-- ce script est remplacée par une table qui renvoie tout au vrai Network, sauf LaunchGame. Les
+	-- fonctions du salon la lisent à chaque appel. Un bloc rechargé repart du vrai Network.
+	if type(Network) == "table" and type(Network.LaunchGame) == "function" then
+		local ok, err = pcall(function()
+			local vrai = Network.BGD_Vrai or Network;
+			local avant = BGD_Protege(Ajouter);
+			Network = setmetatable({
+				BGD_Vrai = vrai,
+				LaunchGame = function(...)
+					avant();
+					return vrai.LaunchGame(...);
+				end,
+			}, { __index = vrai });
+		end);
+		if not ok then BGD_Journal("signaux : Network.LaunchGame non enveloppé : " .. tostring(err)); end
+	else
+		BGD_Journal("signaux : Network.LaunchGame introuvable, images et sons jamais ajoutés");
+	end
+
+	-- Le « Prêt » gardé quand le seul changement de configuration est ce mod.
+	if type(SetLocalReady) == "function" then
+		local base = SetLocalReady;
+		SetLocalReady = function(pret, ...)
+			if pret == false and vu ~= nil then
+				local maintenant = DansConfig();
+				if maintenant ~= vu then
+					vu = maintenant;
+					BGD_Journal("signaux : « Prêt » gardé (images et sons " .. (maintenant and "ajoutés" or "retirés") .. ")");
+					return;
+				end
+			end
+			return base(pret, ...);
+		end
+	end
+	-- Après le gestionnaire de StagingRoom.lua (ajouté avant ce bloc) : l'état vu suit la configuration
+	-- même quand le salon est caché et n'appelle pas SetLocalReady.
+	if Events ~= nil and LuaEvents ~= nil then
+		Events.GameConfigChanged.Add(BGD_Protege(function() vu = DansConfig(); end));
+		LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(Retirer));
+		LuaEvents.JoiningRoom_ShowStagingRoom.Add(BGD_Protege(function() vu = DansConfig(); end));
 	end
 end
