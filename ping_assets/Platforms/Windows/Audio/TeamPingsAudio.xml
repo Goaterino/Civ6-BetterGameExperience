@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SoundBanksInfo Platform="Windows" BasePlatform="Windows" SchemaVersion="10" SoundbankVersion="113">
+  <SoundBanks>
+    <SoundBank Id="2943814425" GUID="{0B033C7C-F3A2-5255-94E5-F064F07D93AD}" Language="SFX">
+      <ShortName>TeamPingsAudio</ShortName>
+      <Path>TeamPingsAudio.bnk</Path>
+      <IncludedEvents>
+        <Event Id="750761333" Name="Play_TeamPing_Look" GUID="{289CC646-9D85-5B4F-9C2D-D25D842F9D4B}" />
+        <Event Id="2478123068" Name="Play_TeamPing_Missing" GUID="{DF6B8035-3523-5F3B-A2E9-8120DC92E1E3}" />
+        <Event Id="1714503997" Name="Play_TeamPing_Danger" GUID="{7B2B8C7F-A77D-5BA2-BD84-7A0DD2A81462}" />
+        <Event Id="388566845" Name="Play_TeamPing_Coming" GUID="{23A78B59-1714-51DA-8191-3E4BB8C1F4C0}" />
+        <Event Id="302360705" Name="Play_TeamPing_Assist" GUID="{A4013439-D66B-59B7-A385-05F321C0DD90}" />
+        <Event Id="1036659059" Name="Play_TeamPing_Look_25" GUID="{458281FD-AAA1-52C4-88F2-E0341D0B574D}" />
+        <Event Id="1086991823" Name="Play_TeamPing_Look_50" GUID="{F1444827-CA90-5417-802B-3B243C3CB5E8}" />
+        <Event Id="1120547088" Name="Play_TeamPing_Look_75" GUID="{FFD00512-D95C-5CB1-B4F2-3CA12B894DEC}" />
+        <Event Id="2590477580" Name="Play_TeamPing_Missing_25" GUID="{C643EB9F-F9F7-5A11-8129-BA40CCB9B71D}" />
+        <Event Id="2607255292" Name="Play_TeamPing_Missing_50" GUID="{654AC800-EC4C-5455-A9E8-E75899EE9183}" />
+        <Event Id="2640810439" Name="Play_TeamPing_Missing_75" GUID="{D055EA93-576F-590C-A960-256EEE5826F4}" />
+        <Event Id="4238527995" Name="Play_TeamPing_Danger_25" GUID="{001423FC-917E-5280-9BA0-AF39ED0AA971}" />
+        <Event Id="4288860855" Name="Play_TeamPing_Danger_50" GUID="{E4D57FF4-7B1A-53CA-8160-DF5627F711F1}" />
+        <Event Id="27448728" Name="Play_TeamPing_Danger_75" GUID="{80A4F4A8-99E9-5C9D-95EC-E96877190582}" />
+        <Event Id="776349691" Name="Play_TeamPing_Coming_25" GUID="{122C9286-61CA-5BE3-B50C-DF95858A1ABF}" />
+        <Event Id="826682551" Name="Play_TeamPing_Coming_50" GUID="{6842BE24-9FE2-5D44-9637-3D9D597A6319}" />
+        <Event Id="860237720" Name="Play_TeamPing_Coming_75" GUID="{9C4E34D6-B943-5A49-A375-8E0BBF5A2368}" />
+        <Event Id="1189985303" Name="Play_TeamPing_Assist_25" GUID="{5CA352DF-B8FC-56A0-87B3-D1C98CBE602A}" />
+        <Event Id="1106097267" Name="Play_TeamPing_Assist_50" GUID="{0BEF4CD5-6CEF-5B2A-93C2-984D4819D648}" />
+        <Event Id="1139652444" Name="Play_TeamPing_Assist_75" GUID="{73B144CA-E4EB-5876-8C55-A79C0FCBE6C2}" />
+      </IncludedEvents>
+    </SoundBank>
+  </SoundBanks>
+</SoundBanksInfo>

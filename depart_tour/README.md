@@ -343,18 +343,26 @@ ambassade au joueur 9, la fin simultanée part, et l'acceptation du joueur 9
 comme au 9 novembre. Le correctif Lua ne retient que les accords commerciaux : l'ambassade passe.
 
 Lu dans GameCore (Ghidra, noms de fonctions repris du `.map` d'une compilation voisine) :
-- `EndTurn` (`180044b20`, journal `Game Turn Ended`) lève le drapeau de fin de tour (`180b13a81`,
-  lu par `180045dc0`). Le prochain `Game::Processor::Update` (`180046200`) le trouve levé et appelle
-  `BeginTurn` (`180044700`, journal `Game Turn: %i`), **quel qu'en soit l'appelant**. GameCore
+
+> Adresses : l'analyse a d'abord été faite sur une autre compilation de GameCore, où le correctif ne
+> trouvait pas ses octets (« version inattendue de GameCore » en jeu). Les adresses du correctif et
+> des fonctions qu'il touche sont celles du GameCore de Steam (TimeDateStamp `0x6ae8e9d4`),
+> retrouvées le 2026-11-13 : chaînes `Game Turn Ended` / `Game Turn: %i`, drapeau écrit par
+> `EndTurn`, et tables de méthodes de chaque message (rangées après son nom dans `.rdata`, `Execute`
+> en entrée 3). Les autres adresses de cette section (tables de messages, `DiplomacyStatement`,
+> `PlayerSwap`, troisième drapeau…) n'ont pas été revérifiées et viennent de l'ancienne compilation.
+- `EndTurn` (`1800498f0`, journal `Game Turn Ended`) lève le drapeau de fin de tour (`180b8ab21`,
+  lu par `18004ab90`). Le prochain `Game::Processor::Update` (`18004afc0`) le trouve levé et appelle
+  `BeginTurn` (`180049390`, journal `Game Turn: %i`), **quel qu'en soit l'appelant**. GameCore
   n'attend rien : l'attente des `GameTurnComplete` et le contrôle de synchro sont dans l'exe, qui
   envoie ensuite `GameUpdate InitialTurnProcessing=1`.
-- `GameUpdate::Execute` (`1800318d0`) ignore toute autre mise à jour tant que le drapeau est levé
-  (« GameUpdate (Ignored): … outside a game turn »). `GameTurnComplete::Execute` (`180031710`)
+- `GameUpdate::Execute` (`180036180`) ignore toute autre mise à jour tant que le drapeau est levé
+  (« GameUpdate (Ignored): … outside a game turn »). `GameTurnComplete::Execute` (`180035f70`)
   aussi : un `GameTurnComplete` n'est appliqué que pendant un tour. Dans un passage normal, ils
   arrivent tous après `Game Turn Ended` et ne font rien dans GameCore.
-- `DiplomacyAction::Execute` (`1800308b0`) et `DiplomacyDeal::Execute` (`180030b70`) appliquent
-  l'action, puis lancent l'étape de mise à jour (`18060eca0`) **sans regarder le drapeau**.
-  `DiplomacySession::Execute` (`180030fe0`) aussi, pour le type `0x1baabc8b` quand aucun joueur n'a
+- `DiplomacyAction::Execute` (`180035130`) et `DiplomacyDeal::Execute` (`180035390`) appliquent
+  l'action, puis lancent l'étape de mise à jour (`18063e2e0`) **sans regarder le drapeau**.
+  `DiplomacySession::Execute` (`180035800`) aussi, pour le type `0x1baabc8b` quand aucun joueur n'a
   son tour actif, ce qui est le cas après `EndTurn`.
 
 Reçu entre `EndTurn` et le `GameUpdate` initial, un tel message démarre donc le tour avant le
@@ -368,7 +376,7 @@ diplomatie reprend son tour. Le créneau dangereux n'est donc pas « tour passé
 terminé », après `EndTurn`, que seul le drapeau de GameCore indique.
 
 **Correctif** ([proxy/src/fin_tour.rs](../proxy/src/fin_tour.rs), correctif POL) : les trois appels
-à l'étape de mise à jour (`1800308cf`, `180030b98`, `1800310d2`) passent par un relais qui la saute
+à l'étape de mise à jour (`18003514f`, `1800353b8`, `1800358f2`) passent par un relais qui la saute
 quand le drapeau de fin de tour est levé, comme `GameUpdate::Execute`. L'action est appliquée ; le
 `GameUpdate` initial qui suit le contrôle de synchro lance la mise à jour et le tour. Drapeau
 baissé, rien ne change. Journal : `fin de tour : DiplomacyAction exécuté après la fin du tour…`.
@@ -376,7 +384,7 @@ baissé, rien ne change. Journal : `fin de tour : DiplomacyAction exécuté apr�
 Les messages sont identifiés par leur vtable, qui suit leur nom dans `.rdata` (`DiplomacyAction`
 `18095d718`, `DiplomacyDeal` `18095d7f8`, `DiplomacySession` `18095d8e0`). `DiplomacyStatement::Execute`
 (`180031440`) ne lance que la mise à jour de la diplomatie (`180173130`), pas `Game::Processor::Update`
-(appelée par la seule étape `18060eca0`) : le `MAKE_DEAL` du 9 novembre ne démarre pas le tour, le
+(appelée par la seule étape `18063e2e0`) : le `MAKE_DEAL` du 9 novembre ne démarre pas le tour, le
 `DiplomacyDeal` qui le précède si. Autres appelants de l'étape : `GameUpdate`, `GameTurnComplete`,
 `PlayerTurnComplete`, `PlayerSwap` (`180034b70`) et `PlayerConnectionChange` (`180033910`), un chemin
 local qui termine le tour d'un joueur (`18035e840`), et l'interface de l'exe (`180576a70`). Par

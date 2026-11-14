@@ -26,7 +26,7 @@ use crate::{log, win};
 use std::ffi::{c_char, c_void, CStr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("options_proxy.lua"));
+pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("options_proxy.lua"), include_str!("ping_volume.lua"));
 const XML_TAB: &str = include_str!("options_proxy_tab.xml");
 const XML_PANEL: &str = include_str!("options_proxy_panel.xml");
 
@@ -73,6 +73,7 @@ pub fn patch_options_xml(src: &[u8]) -> Result<Vec<u8>, String> {
     out.push_str(&text[tab_end..panel]);
     out.push_str(XML_PANEL.trim_end());
     out.push_str("\r\n");
+    out.push_str(include_str!("ping_volume.xml"));
     match confirm_end {
         Some(end) => {
             out.push_str(&text[panel..end]);

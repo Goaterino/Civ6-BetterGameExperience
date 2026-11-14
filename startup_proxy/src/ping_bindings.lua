@@ -1,14 +1,16 @@
 -- Local Input adapter for Firaxis' InitializeKeyBinding only. Its normal sorted
 -- rows, primary and alternate buttons, clear/cancel popup and confirm flow are reused.
-local extra, baseCount = {}, 0
+local extra, nativeBindings, baseCount = {}, {}, 0
 local view = setmetatable({}, {__index=engine})
 
 function view.GetActionCount()
     baseCount = engine.GetActionCount()
     local native = nativeActions()
-    extra = {}
+    extra, nativeBindings = {}, {}
     for _, binding in ipairs(pingBindings) do
-        if not native[binding] then extra[#extra+1] = binding end
+        local id = native[binding]
+        if id then nativeBindings[id] = binding
+        else extra[#extra+1] = binding end
     end
     LuaEvents.BGD_PingBindingsChanged()
     return baseCount + #extra
@@ -20,22 +22,24 @@ function view.GetActionId(i)
 end
 
 function view.ShouldShowActionKeybinding(action)
-    return type(action)=="table" or engine.ShouldShowActionKeybinding(action)
+    return type(action)=="table" or nativeBindings[action]~=nil or engine.ShouldShowActionKeybinding(action)
 end
 
 local function text(key)
     return BGD_Txt and BGD_Txt(key) or key
 end
 function view.GetActionName(action)
-    if type(action)=="table" then return text(action.label) end
+    local binding = type(action)=="table" and action or nativeBindings[action]
+    if binding then return text(binding.label) end
     return engine.GetActionName(action)
 end
 function view.GetActionCategory(action)
-    if type(action)=="table" then return text("LOC_BGD_PINGS_NAME") end
+    if type(action)=="table" or nativeBindings[action] then return text("LOC_BGD_PINGS_NAME") end
     return engine.GetActionCategory(action)
 end
 function view.GetActionDescription(action)
-    if type(action)=="table" then return text(action.label) end
+    local binding = type(action)=="table" and action or nativeBindings[action]
+    if binding then return text(binding.label) end
     return engine.GetActionDescription(action)
 end
 function view.GetGestureDisplayString(action, slot)

@@ -10,22 +10,19 @@ local wheel, failureStart, mouseX, mouseY
 local held = {}
 local center
 
-if pingSkin then
-    Controls.NativeWheel:SetHide(true)
-    Controls.SkinWheel:SetTexture(pingSkin.wheel)
-    Controls.SkinWheel:SetSizeVal(216, 216)
-    Controls.SkinWheel:SetHide(false)
-    Controls.Focus:SetTexture(pingSkin.focus)
-    Controls.Focus:SetSizeVal(68, 68)
-    Controls.FailedCross:SetHide(true)
-    Controls.FailedSlash:SetTexture(pingSkin.denied)
-    Controls.FailedSlash:SetSizeVal(64, 64)
-    Controls.FailedSlash:SetHide(false)
-    Controls.BlockedCross:SetHide(true)
-    Controls.BlockedSlash:SetTexture(pingSkin.denied)
-    Controls.BlockedSlash:SetSizeVal(44, 44)
-    Controls.BlockedSlash:SetHide(false)
-end
+Controls.SkinWheel:SetTexture(pingSkin.wheel)
+Controls.SkinWheel:SetSizeVal(216, 216)
+Controls.SkinWheel:SetHide(false)
+Controls.Focus:SetTexture(pingSkin.focus)
+Controls.Focus:SetSizeVal(68, 68)
+Controls.FailedCross:SetHide(true)
+Controls.FailedSlash:SetTexture(pingSkin.denied)
+Controls.FailedSlash:SetSizeVal(64, 64)
+Controls.FailedSlash:SetHide(false)
+Controls.BlockedCross:SetHide(true)
+Controls.BlockedSlash:SetTexture(pingSkin.denied)
+Controls.BlockedSlash:SetSizeVal(44, 44)
+Controls.BlockedSlash:SetHide(false)
 
 local function setIcon(glyph, image, call)
     glyph:SetHide(call.texture ~= nil)
@@ -90,11 +87,8 @@ local function highlight(call)
 end
 
 -- Hauteur des cercles au sol par rapport à leur largeur (0.50 suit l'inclinaison de la caméra,
--- mais les écrase trop), taille du caractère d'appel, taille de l'icône et hauteur du badge au repos.
+-- mais les écrase trop).
 local RING_RATIO = 0.62
-local GLYPH_SIZE = 50
-local ICON_SIZE = 90
-local BADGE_Y = -34
 
 local function ripple(image, elapsed)
     if elapsed < 0 then image:SetAlpha(0); return end
@@ -125,9 +119,9 @@ local function animate()
             ripple(art.Echo, age-0.24)
             local drop = math.max(0, 1-age/0.18)
             local spring = math.sin(math.max(0,age-0.18)*21) * math.exp(-math.max(0,age-0.18)*8)
-            local size = ICON_SIZE + 27*drop + 7*spring
+            local size = 76 + 27*drop + 7*spring
             art.Icon:SetSizeVal(size, size)
-            art.Badge:SetOffsetY(BADGE_Y - 31*drop*drop + 4*spring)
+            art.Badge:SetOffsetY(-28 - 31*drop*drop + 4*spring)
             art.Art:SetAlpha(math.min(1, (lifetime-age)/0.62))
         end
     end
@@ -182,17 +176,14 @@ local function showPing(sender, call, x, y)
     local art = markers:GetInstance()
     local worldX, worldY, worldZ = UI.GridToWorld(x, y)
     art.Anchor:SetWorldPositionVal(worldX, worldY, worldZ)
-    if pingSkin then
-        art.Wave:SetTexture(pingSkin.ripple)
-        art.Echo:SetTexture(pingSkin.ripple)
-        art.Foot:SetTexture(pingSkin.ripple)
-        art.Foot:SetSizeVal(35, math.floor(35 * RING_RATIO + 0.5))
-    end
+    art.Wave:SetTexture(pingSkin.ripple)
+    art.Echo:SetTexture(pingSkin.ripple)
+    art.Foot:SetTexture(pingSkin.ripple)
+    art.Foot:SetSizeVal(35, math.floor(35 * RING_RATIO + 0.5))
     art.Wave:SetColor(call.tint)
     art.Echo:SetColor(call.tint)
     art.Foot:SetColor(call.tint)
     setIcon(art.Glyph, art.Icon, call)
-    art.Glyph:SetFontSize(GLYPH_SIZE)
     TruncateString(art.Sender, 130, playerName(sender))
     table.insert(active, {controls=art, start=now, sender=sender})
     wake()
@@ -359,48 +350,13 @@ local function resetInput()
     closeWheel()
 end
 
-local volumeParent
-local refreshing = false
-local function refreshVolume()
-    refreshing = true
-    Controls.BGD_PingVolume:SetValue(volume()/100)
-    Controls.BGD_PingCaption:SetText(BGD_Txt("LOC_BGD_PINGS_VOLUME", volume()))
-    refreshing = false
-end
 local function onReady()
     Controls.BGD_PingMap:SetHide(false)
     ContextPtr:SetHide(false)
-    if volumeParent then return end
-    local slider = ContextPtr:LookUpControl("/InGame/TopOptionsMenu/Options/SFXVolSlider")
-    if not slider then return end
-    local sfx = slider:GetParent()
-    local stack = sfx:GetParent()
-    local row = Controls.BGD_PingVolumeRow
-    volumeParent = row:GetParent()
-    row:ChangeParent(stack)
-    for i, child in ipairs(stack:GetChildren()) do
-        if child == sfx or (sfx.CData ~= nil and child.CData == sfx.CData) then
-            stack:AddChildAtIndex(row, i)
-            break
-        end
-    end
-    row:SetHide(false)
-    refreshVolume()
-    stack:CalculateSize()
-    stack:ReprocessAnchoring()
 end
-Controls.BGD_PingVolume:RegisterSliderCallback(function(value)
-    if refreshing then return end
-    local percent = math.floor(value*4 + 0.5)*25
-    local changed = percent ~= volume()
-    UserConfiguration.SetValue("TeamPings_Volume", percent)
-    refreshVolume()
-    if changed then
-        local confirm = ContextPtr:LookUpControl("/InGame/TopOptionsMenu/Options/ConfirmButton")
-        if confirm then confirm:SetDisabled(false) end
-        play(center)
-    end
-end)
+local function previewVolume()
+    play(center)
+end
 refreshBindings()
 LuaEvents.BGD_PingBindingsChanged.Add(refreshBindings)
 Events.InputActionStarted.Add(onActionStarted)
@@ -409,7 +365,7 @@ Events.LoadGameViewStateDone.Add(onReady)
 Events.LoadScreenClose.Add(onReady)
 Events.MultiplayerChat.Add(onChat)
 LuaEvents.BGD_PingMuted.Add(hideSender)
-LuaEvents.BGD_PingVolumeChanged.Add(refreshVolume)
+LuaEvents.BGD_PingVolumePreview.Add(previewVolume)
 ContextPtr:SetInputHandler(onInput,true)
 ContextPtr:SetAppLostFocusHandler(resetInput)
 ContextPtr:SetShutdown(function()
@@ -420,8 +376,7 @@ ContextPtr:SetShutdown(function()
     Events.LoadScreenClose.Remove(onReady)
     Events.MultiplayerChat.Remove(onChat)
     LuaEvents.BGD_PingMuted.Remove(hideSender)
-    LuaEvents.BGD_PingVolumeChanged.Remove(refreshVolume)
-    if volumeParent then Controls.BGD_PingVolumeRow:ChangeParent(volumeParent) end
+    LuaEvents.BGD_PingVolumePreview.Remove(previewVolume)
     ContextPtr:ClearUpdate()
     markers:ResetInstances()
     if Civ6Proxy_PingSound then Civ6Proxy_PingSound(nil) end -- release asynchronous audio buffers

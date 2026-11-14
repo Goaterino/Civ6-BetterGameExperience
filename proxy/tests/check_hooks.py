@@ -65,6 +65,9 @@ SITES = (  # nom, RVA, prologue d'origine
     ("rendement", 0x37EC60, "44894424185553574154415541564157"),
     ("attente IA", 0x4A16E0, "40534883ec30488d05d34852"),
     ("citoyens", 0x10F050, "4c8bdc45894b204989531049894b08"),
+    ("modificateur de production", 0x9497A0, "48895c2408574883ec404863da488bf9"),
+    ("modificateur de production (ville, ajout)", 0x9444E0, "48895c2420574883ec50837930"),
+    ("modificateur de production (ville, retrait)", 0x973C20, "48895c2420574883ec50837930"),
     ("promotion de gouverneur", 0x2DF340, "48895c240848896c2410488974241857"),
     ("retrait de gouverneur", 0x2DF800, "48895c2408488974241048897c2418"),
     ("établissement de gouverneur", 0x259B10, "4c8bdc4989732055498dabb8feffff"),
@@ -132,10 +135,10 @@ for rva in PILE_RVAS:
     assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
     print(f"empilement : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
-# Passage de tour (fin_tour.rs) : l'étape de mise à jour `18060eca0` en fin de DiplomacyAction,
+# Passage de tour (fin_tour.rs) : l'étape de mise à jour `18063e2e0` en fin de DiplomacyAction,
 # DiplomacyDeal (jmp terminal) et DiplomacySession (call) redirigée vers un relais
 # `mov edx,quel ; jmp [rip+0]`.
-FIN_APPELS, FIN_CALLEE = ((0x308CF, 0xE9), (0x30B98, 0xE9), (0x310D2, 0xE8)), 0x60ECA0
+FIN_APPELS, FIN_CALLEE = ((0x3514F, 0xE9), (0x353B8, 0xE9), (0x358F2, 0xE8)), 0x63E2E0
 for i, (rva, opcode) in enumerate(FIN_APPELS):
     code = ctypes.string_at(base + rva, 5)
     assert code[0] == opcode, f"fin de tour {rva:#x} : pas de jmp/call ({code.hex()})"

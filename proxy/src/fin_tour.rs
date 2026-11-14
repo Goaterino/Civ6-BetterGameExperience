@@ -3,21 +3,21 @@
 //! ont le proxy (voir `pol`). Analyse : depart_tour/README.md, « Diplomatie reçue pendant le
 //! passage de tour ».
 //!
-//! `EndTurn` (`180044b20`, journal `Game Turn Ended`) lève le drapeau de fin de tour (`180b13a81`,
-//! lu par `180045dc0`). Le prochain `Game::Processor::Update` (`180046200`) le trouve levé et
-//! appelle aussitôt `BeginTurn` (`180044700`, journal `Game Turn: %i`), quel qu'en soit l'appelant.
+//! `EndTurn` (`1800498f0`, journal `Game Turn Ended`) lève le drapeau de fin de tour (`180b8ab21`,
+//! lu par `18004ab90`). Le prochain `Game::Processor::Update` (`18004afc0`) le trouve levé et
+//! appelle aussitôt `BeginTurn` (`180049390`, journal `Game Turn: %i`), quel qu'en soit l'appelant.
 //! L'attente des `GameTurnComplete` et le contrôle de synchro sont dans l'exe, qui envoie ensuite
 //! `GameUpdate` avec `InitialTurnProcessing=1` pour démarrer le tour. `GameUpdate::Execute`
-//! (`1800318d0`) ignore toute autre mise à jour tant que le drapeau est levé, mais les messages de
-//! diplomatie lancent l'étape de mise à jour (`18060eca0`) sans le regarder :
-//! - `DiplomacyAction::Execute` (`1800308b0`), sans condition ;
-//! - `DiplomacyDeal::Execute` (`180030b70`), sans condition ;
-//! - `DiplomacySession::Execute` (`180030fe0`), pour le type `0x1baabc8b` quand aucun joueur n'a
+//! (`180036180`) ignore toute autre mise à jour tant que le drapeau est levé, mais les messages de
+//! diplomatie lancent l'étape de mise à jour (`18063e2e0`) sans le regarder :
+//! - `DiplomacyAction::Execute` (`180035130`), sans condition ;
+//! - `DiplomacyDeal::Execute` (`180035390`), sans condition ;
+//! - `DiplomacySession::Execute` (`180035800`), pour le type `0x1baabc8b` quand aucun joueur n'a
 //!   son tour actif, ce qui est le cas après `EndTurn`.
 //!
 //! Reçu dans ce créneau, un tel message fait démarrer le tour chez l'hôte avant le contrôle de
 //! synchro, et les `GameTurnComplete` du tour fini arrivés ensuite comptent pour le nouveau tour
-//! (`GameTurnComplete::Execute`, `180031710`, ne les ignore que drapeau levé) : leurs joueurs
+//! (`GameTurnComplete::Execute`, `180035f70`, ne les ignore que drapeau levé) : leurs joueurs
 //! commencent le tour « tour fini » (BGE-FB5126).
 //!
 //! On redirige ces trois appels vers un relais qui saute l'étape de mise à jour quand le drapeau
@@ -30,10 +30,10 @@ use crate::{log, pol};
 use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
 /// Étape de mise à jour du jeu : `Game::Processor::Update` puis deux autres mises à jour.
-const ETAPE: u64 = 0x1_8060_eca0;
-/// `movzx eax, byte [rip+…]` (drapeau de fin de tour `180b13a81`) puis `ret`.
-const TOUR_FINI: u64 = 0x1_8004_5dc0;
-const TOUR_FINI_OCTETS: [u8; 8] = [0x0f, 0xb6, 0x05, 0xba, 0xdc, 0xac, 0x00, 0xc3];
+const ETAPE: u64 = 0x1_8063_e2e0;
+/// `movzx eax, byte [rip+…]` (drapeau de fin de tour `180b8ab21`) puis `ret`.
+const TOUR_FINI: u64 = 0x1_8004_ab90;
+const TOUR_FINI_OCTETS: [u8; 8] = [0x0f, 0xb6, 0x05, 0x8a, 0xff, 0xb3, 0x00, 0xc3];
 
 struct Appel {
     message: &'static str,
@@ -45,12 +45,12 @@ struct Appel {
 }
 
 const APPELS: [Appel; 3] = [
-    // add rsp,28h / jmp 18060eca0
-    Appel { message: "DiplomacyAction", site: 0x1_8003_08cf, opcode: 0xe9, avant: &[0x48, 0x83, 0xc4, 0x28] },
-    // add rsp,38h / jmp 18060eca0
-    Appel { message: "DiplomacyDeal", site: 0x1_8003_0b98, opcode: 0xe9, avant: &[0x48, 0x83, 0xc4, 0x38] },
-    // mov rcx,rax / call 18060eca0
-    Appel { message: "DiplomacySession", site: 0x1_8003_10d2, opcode: 0xe8, avant: &[0x48, 0x8b, 0xc8] },
+    // add rsp,28h / jmp 18063e2e0
+    Appel { message: "DiplomacyAction", site: 0x1_8003_514f, opcode: 0xe9, avant: &[0x48, 0x83, 0xc4, 0x28] },
+    // add rsp,38h / jmp 18063e2e0
+    Appel { message: "DiplomacyDeal", site: 0x1_8003_53b8, opcode: 0xe9, avant: &[0x48, 0x83, 0xc4, 0x38] },
+    // mov rcx,rax / call 18063e2e0
+    Appel { message: "DiplomacySession", site: 0x1_8003_58f2, opcode: 0xe8, avant: &[0x48, 0x8b, 0xc8] },
 ];
 
 /// Écart entre deux relais dans la page.

@@ -28,6 +28,20 @@ pub const TARGETS: [Target; 2] = [
     Target { name: noms::DEMARRAGE, dest: "Base/Binaries/Win64Steam", marker: b"StartupProxyStatus" },
 ];
 
+/// Images et sons des signaux d'équipe : posés au lancement du jeu par le proxy de démarrage
+/// (startup_proxy/src/medias.rs), qui les embarque, et non par l'installeur : un installeur déjà
+/// distribué refuse tout manifeste qui liste plus que les deux DLL. Retirés à la désinstallation si
+/// leur `.modinfo` est le nôtre.
+const MEDIAS_DOSSIER: &str = "DLC/BGEPings";
+const MEDIAS_ID: &[u8] = b"863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd";
+const MEDIAS: [&str; 13] = [
+    "BGEPings.modinfo",
+    "Art/TPAssist.dds", "Art/TPComing.dds", "Art/TPDanger.dds", "Art/TPDenied.dds", "Art/TPFocus.dds",
+    "Art/TPLook.dds", "Art/TPMissing.dds", "Art/TPRipple.dds", "Art/TPWheel.dds",
+    "Platforms/Windows/Audio/TeamPingsAudio.bnk", "Platforms/Windows/Audio/TeamPingsAudio.xml",
+    "Platforms/Windows/Audio/TeamPingsBanks.ini",
+];
+
 /// Marques des anciens proxys, posés sous le nom des originaux.
 const ANCIENNES_MARQUES: [&[u8]; 2] = [b"RolloverProxyStatus", b"StartupProxyStatus"];
 
@@ -204,31 +218,79 @@ fn check_foreign(game: &Path) -> Result<(), String> {
 fn install(game: &Path, m: &Manifest, data: &[Vec<u8>]) -> Result<(), String> {
     // La release doit poser exactement nos cibles, aux mêmes endroits.
     let known = |f: &release::File| TARGETS.iter().any(|t| t.name == f.name && t.dest == f.dest);
-    if m.files.len() != TARGETS.len() || data.len() != m.files.len() || !m.files.iter().all(known) {
+    let targets = &TARGETS;
+    if m.files.len() != targets.len() || data.len() != m.files.len() || !m.files.iter().all(known)
+        || !targets.iter().all(|t| m.files.iter().filter(|f| f.name == t.name).count() == 1) {
         return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
     }
     check_foreign(game)?;
     restore_old(game)?;
-    for t in &TARGETS {
-        // Un manifeste qui citerait deux fois la même cible n'a pas celle-ci.
-        let Some(i) = m.files.iter().position(|f| f.name == t.name) else {
-            return Err(f(tx::VERSION_X_NEEDS_A_NEWER_INSTALLER, &[&m.version]));
-        };
-        let dll = t.path(game);
-        let new = dll.with_extension("dll.new");
-        fs::write(&new, &data[i]).map_err(|e| format!("{}: {e}", new.display()))?;
-        fs::rename(&new, &dll).map_err(|e| format!("{}: {e}", dll.display()))?;
+    let mut staged = Vec::new();
+    let mut published = 0;
+    let result = (|| {
+        for t in targets {
+            let i = m.files.iter().position(|f| f.name == t.name).unwrap();
+            let path = t.path(game);
+            fs::create_dir_all(path.parent().unwrap()).map_err(|e| format!("{}: {e}", path.display()))?;
+            let previous = match fs::read(&path) {
+                Ok(data) => Some(data),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+                Err(e) => return Err(format!("{}: {e}", path.display())),
+            };
+            let temporary = path.with_file_name(format!("{}.bge-new-{}", t.name, std::process::id()));
+            staged.push((path, temporary, previous));
+            let temporary = &staged.last().unwrap().1;
+            fs::write(temporary, &data[i]).map_err(|e| format!("{}: {e}", temporary.display()))?;
+        }
+        for (path, temporary, _) in &staged {
+            fs::rename(temporary, path).map_err(|e| format!("{}: {e}", path.display()))?;
+            published += 1;
+        }
+        Ok(())
+    })();
+    if result.is_err() {
+        for (path, temporary, previous) in staged[..published].iter().rev() {
+            match previous {
+                Some(bytes) => {
+                    fs::write(temporary, bytes).map_err(|e| format!("Rollback {}: {e}", path.display()))?;
+                    fs::rename(temporary, path).map_err(|e| format!("Rollback {}: {e}", path.display()))?;
+                }
+                None => fs::remove_file(path).map_err(|e| format!("Rollback {}: {e}", path.display()))?,
+            }
+        }
     }
-    Ok(())
+    for (_, temporary, _) in staged { let _ = fs::remove_file(temporary); }
+    result
 }
 
 fn uninstall(game: &Path) -> Result<(), String> {
     restore_old(game)?;
-    for t in &TARGETS {
+    for t in TARGETS.iter().rev() {
         if matches!(t.state(game, None)?, State::Installed | State::UpToDate) {
             let dll = t.path(game);
             fs::remove_file(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
         }
+    }
+    remove_medias(game)
+}
+
+/// Retire les images et sons des signaux, si leur `.modinfo` est le nôtre : nos fichiers, puis
+/// leurs dossiers devenus vides. Un fichier ajouté par le joueur reste, avec son dossier.
+fn remove_medias(game: &Path) -> Result<(), String> {
+    let dossier = game.join(MEDIAS_DOSSIER);
+    let modinfo = dossier.join(MEDIAS[0]);
+    if !modinfo.exists() || !contains(&modinfo, MEDIAS_ID)? {
+        return Ok(());
+    }
+    // Le .modinfo d'abord : le jeu ne voit plus le mod, même si la suite échoue.
+    for relatif in MEDIAS {
+        let p = dossier.join(relatif);
+        if p.exists() {
+            fs::remove_file(&p).map_err(|e| format!("{}: {e}", p.display()))?;
+        }
+    }
+    for sous in ["Platforms/Windows/Audio", "Platforms/Windows", "Platforms", "Art", ""] {
+        let _ = fs::remove_dir(dossier.join(sous));
     }
     Ok(())
 }
@@ -317,6 +379,27 @@ mod tests {
         // Une release qui ne pose pas exactement nos cibles est refusée.
         assert!(install(&dir, &m, &data[..1]).is_err());
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn desinstallation_retire_les_medias_poses_par_le_proxy() {
+        let modinfo = b"<Mod id=\"863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd\"/>";
+        let mut files: Vec<(String, Vec<u8>)> =
+            MEDIAS.iter().map(|r| (format!("{MEDIAS_DOSSIER}/{r}"), b"media".to_vec())).collect();
+        files[0].1 = modinfo.to_vec();
+        files.push((format!("{MEDIAS_DOSSIER}/Art/mien.dds"), b"joueur".to_vec()));
+        let refs: Vec<(&str, &[u8])> = files.iter().map(|(p, d)| (p.as_str(), d.as_slice())).collect();
+        let dir = game("medias", &refs);
+        uninstall(&dir).unwrap();
+        assert!(MEDIAS.iter().all(|r| !dir.join(MEDIAS_DOSSIER).join(r).exists()));
+        assert!(!dir.join(MEDIAS_DOSSIER).join("Platforms").exists());
+        assert_eq!(read(&dir, "DLC/BGEPings/Art/mien.dds").unwrap(), b"joueur");
+        fs::remove_dir_all(&dir).unwrap();
+        // Un autre mod sous ce nom n'est pas touché.
+        let dir = game("medias_autre", &[("DLC/BGEPings/BGEPings.modinfo", b"<Mod id=\"autre\"/>"), ("DLC/BGEPings/Art/TPWheel.dds", b"x")]);
+        uninstall(&dir).unwrap();
+        assert!(dir.join("DLC/BGEPings/Art/TPWheel.dds").exists());
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

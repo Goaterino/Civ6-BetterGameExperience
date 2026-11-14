@@ -2,18 +2,64 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
-## Prossima versione
+## BetterGameExperience 0.11.0
+
+In multigiocatore, tutti i giocatori umani devono avere la 0.11.0 per le correzioni **[tutti i
+giocatori]**: una sala d'attesa che mescola 0.10.0 e 0.11.0 le disattiva.
 
 ### Correzioni multigiocatore [tutti i giocatori]
-- **Spettatori (Better Spectator Mod)**: la revisione degli spettatori della 0.9.0 viene ritirata,
-  perché le partite con uno spettatore erano meno stabili. BetterGameExperience non cambia più il
-  livello di civiltà degli spettatori e non sostituisce più gli script di Better Spectator Mod, e
-  l'impostazione « Better Spectator Mod per gli spettatori » scompare. Gli spettatori contano di nuovo
-  come civiltà principali per script, vittorie e punteggio, come con il solo Better Spectator Mod.
-  Turismo e votazioni del Congresso Mondiale continuano a escluderli.
+- **Bonus di produzione delle unità che si consumano**: rimuovere un bonus percentuale alla
+  produzione delle unità (il +30 % ai costruttori di Ilkum, o il bonus di una città a un tipo di
+  unità) toglieva un po' più di quanto avesse aggiunto, circa lo 0,4 % ogni volta, e la perdita
+  cresceva a ogni scambio della carta. Rimuovere un bonus ora toglie esattamente ciò che aveva
+  aggiunto. I salvataggi conservano la perdita già accumulata. Contributo di Serianol.
+
+## BetterGameExperience 0.10.0
+
+In multigiocatore, tutti i giocatori umani devono avere la 0.10.0 per le correzioni **[tutti i
+giocatori]** e i segnali di squadra: una sala d'attesa che mescola 0.9.x e 0.10.0 li disattiva.
+
+### Correzioni multigiocatore [tutti i giocatori]
+- **Giocatori bloccati su « non pronto »**: un'azione diplomatica (ambasciata, accordo) ricevuta
+  proprio alla fine del turno poteva far iniziare all'host il turno successivo troppo presto. Alcuni
+  giocatori lo iniziavano allora già segnati come finiti e non potevano tornare pronti. Il turno
+  successivo ora attende il controllo del gioco, e l'azione viene comunque applicata.
+- **Spettatori (Better Spectator Mod)**: la revisione degli spettatori della 0.9.0 è sospesa in
+  attesa di test più approfonditi, perché le partite con uno spettatore erano meno stabili.
+  BetterGameExperience non cambia più il livello di civiltà degli spettatori e non sostituisce più
+  gli script di Better Spectator Mod, e l'impostazione « Better Spectator Mod per gli spettatori »
+  scompare per ora. Gli spettatori contano di nuovo come civiltà principali per script, vittorie e
+  punteggio, come con il solo Better Spectator Mod. Turismo e votazioni del Congresso Mondiale
+  continuano a escluderli.
 - **Mantenuto per gli spettatori**: cambiare il giocatore osservato continua a non desincronizzare la
   partita, e il turno dello spettatore continua a terminare da solo dopo una pausa di MPH. Entrambe le
   correzioni si applicano ora agli script originali di Better Spectator Mod.
+
+### Novità
+- **Segnali di squadra (BGE)**: segna una casella per la tua squadra con **X**, o tieni premuto **X**
+  per una ruota di avvisi (pericolo, sto arrivando, aiuto, nemico sparito); **Alt+1–4** li inviano
+  direttamente. I compagni vedono e sentono il segnale con il nome di chi lo invia, gli spettatori
+  vedono entrambe le squadre. Disattivato per impostazione predefinita: l'host spunta **Segnali di
+  squadra (BGE)** nella configurazione della partita. Scorciatoie nelle opzioni dei tasti del gioco,
+  volume nelle opzioni audio; `/mute nome` blocca chat e segnali di un giocatore. Contributo di
+  mariusbw.
+
+### Multigiocatore
+- **Giocatori inoltrati dall'host**: due giocatori la cui connessione diretta è fallita all'ingresso
+  passano per l'host per il resto della partita, e vengono entrambi disconnessi se l'host esce.
+  Durante l'inizio del turno simultaneo, BetterGameExperience ora prova a ricollegarli direttamente
+  (al massimo tre tentativi) e lo annuncia in chat. Contributo di yodha.
+- **Ping bloccati a 0 ms**: il ping di un giocatore nell'elenco dei giocatori non resta più fermo a
+  0 ms dopo l'ingresso; viene di nuovo misurato ogni 5 secondi. Non serve più uscire e rientrare per
+  « sistemarlo », cosa che spesso causava una desincronizzazione. Contributo di yodha.
+- **Messaggi di rete danneggiati**: la protezione aggiunta nella 0.9.0 funziona anche con la
+  versione DirectX 11 del gioco. Contributo di yodha.
+- **Giocatori senza BetterGameExperience**: l'avviso in partita su un giocatore entrato senza
+  BetterGameExperience non si interrompe più per un errore di script. Contributo di yodha.
+
+### Installazione e aggiornamenti
+- Il programma di installazione scarica e riavvia il gioco senza avviare programmi ausiliari
+  nascosti, e contiene informazioni di versione: gli antivirus dovrebbero segnalarlo meno spesso.
 
 ## BetterGameExperience 0.9.1
 

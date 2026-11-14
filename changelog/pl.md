@@ -2,18 +2,63 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
-## Następna wersja
+## BetterGameExperience 0.11.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.11.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.10.0 i 0.11.0, je wyłącza.
 
 ### Poprawki gry wieloosobowej [wszyscy gracze]
-- **Obserwatorzy (Better Spectator Mod)**: przebudowa obserwatorów z 0.9.0 zostaje wycofana, bo
-  rozgrywki z obserwatorem były mniej stabilne. BetterGameExperience nie zmienia już poziomu
-  cywilizacji obserwatorów ani nie zastępuje skryptów Better Spectator Mod, a ustawienie « Better
-  Spectator Mod dla obserwatorów » znika. Obserwatorzy znów liczą się jako główne cywilizacje dla
-  skryptów, zwycięstw i wyniku, jak przy samym Better Spectator Mod. Turystyka i głosowania Kongresu
-  Światowego nadal ich pomijają.
+- **Premie do produkcji jednostek, które się zużywają**: usunięcie procentowej premii do produkcji
+  jednostek (+30 % do budowniczych z Ilkum albo premii miasta do typu jednostki) odejmowało nieco
+  więcej, niż premia dodała, za każdym razem około 0,4 %, a strata rosła przy każdej zamianie karty.
+  Usunięcie premii odejmuje teraz dokładnie tyle, ile dodała. Zapisy gry zachowują już narosłą
+  stratę. Wkład Serianol.
+
+## BetterGameExperience 0.10.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.10.0, aby działały poprawki
+**[wszyscy gracze]** i sygnały drużyny: poczekalnia, w której są 0.9.x i 0.10.0, je wyłącza.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Gracze zablokowani na « nie gotowy »**: akcja dyplomatyczna (ambasada, umowa) odebrana tuż przy
+  końcu tury mogła sprawić, że host zaczynał następną turę za wcześnie. Niektórzy gracze zaczynali ją
+  wtedy już oznaczeni jako skończeni i nie mogli znów być gotowi. Następna tura czeka teraz na
+  sprawdzenie przez grę, a akcja nadal zostaje wykonana.
+- **Obserwatorzy (Better Spectator Mod)**: przebudowa obserwatorów z 0.9.0 zostaje zawieszona do
+  czasu dokładniejszych testów, bo rozgrywki z obserwatorem były mniej stabilne.
+  BetterGameExperience nie zmienia już poziomu cywilizacji obserwatorów ani nie zastępuje skryptów
+  Better Spectator Mod, a ustawienie « Better Spectator Mod dla obserwatorów » na razie znika.
+  Obserwatorzy znów liczą się jako główne cywilizacje dla skryptów, zwycięstw i wyniku, jak przy
+  samym Better Spectator Mod. Turystyka i głosowania Kongresu Światowego nadal ich pomijają.
 - **Zachowane dla obserwatorów**: zmiana obserwowanego gracza nadal nie powoduje desynchronizacji, a
   tura obserwatora nadal kończy się sama po pauzie MPH. Obie poprawki dotyczą teraz oryginalnych
   skryptów Better Spectator Mod.
+
+### Nowości
+- **Sygnały drużyny (BGE)**: zaznacz pole dla swojej drużyny klawiszem **X** albo przytrzymaj **X**,
+  by otworzyć koło wezwań (niebezpieczeństwo, już idę, pomoc, wróg zniknął); **Alt+1–4** wysyłają je
+  od razu. Członkowie drużyny widzą i słyszą sygnał z nazwą nadawcy, obserwatorzy widzą obie
+  drużyny. Domyślnie wyłączone: host zaznacza **Sygnały drużyny (BGE)** w ustawieniach rozgrywki.
+  Skróty w opcjach klawiszy gry, głośność w opcjach dźwięku; `/mute nazwa` blokuje czat i sygnały
+  gracza. Wkład: mariusbw.
+
+### Tryb wieloosobowy
+- **Gracze przekazywani przez hosta**: dwaj gracze, których bezpośrednie połączenie nie powiodło
+  się przy dołączaniu, do końca rozgrywki łączą się przez hosta i obaj zostają rozłączeni, gdy host
+  wyjdzie. Podczas równoczesnego startu tury BetterGameExperience próbuje teraz połączyć ich znów
+  bezpośrednio (najwyżej trzy próby) i informuje o tym na czacie. Wkład: yodha.
+- **Pingi zablokowane na 0 ms**: ping gracza na liście graczy nie zamarza już na 0 ms po
+  dołączeniu; jest znów mierzony co 5 sekund. Nie trzeba już wychodzić i wracać, by go « naprawić »,
+  co często kończyło się desynchronizacją. Wkład: yodha.
+- **Uszkodzone wiadomości sieciowe**: ochrona dodana w 0.9.0 działa teraz także z wersją
+  DirectX 11 gry. Wkład: yodha.
+- **Gracze bez BetterGameExperience**: ostrzeżenie w grze o graczu, który dołączył bez
+  BetterGameExperience, nie przerywa się już na błędzie skryptu. Wkład: yodha.
+
+### Instalacja i aktualizacje
+- Instalator pobiera pliki i ponownie uruchamia grę bez uruchamiania ukrytych programów
+  pomocniczych, a do tego zawiera informacje o wersji: programy antywirusowe powinny rzadziej go
+  zgłaszać.
 
 ## BetterGameExperience 0.9.1
 
