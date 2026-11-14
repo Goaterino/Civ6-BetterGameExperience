@@ -276,6 +276,14 @@ unsafe extern "C-unwind" fn lua_medias(l: *mut std::ffi::c_void) -> i32 {
     1
 }
 
+/// `Civ6Proxy_ExeInconnu()` → 1 if the game exe is not a build BGE knows (network fixes not
+/// installed), else 0.
+unsafe extern "C-unwind" fn lua_unknown_exe(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, crate::messages::unknown_exe() as i32);
+    1
+}
+
 pub(crate) unsafe fn arg_str(l: *mut std::ffi::c_void, i: i32) -> Option<String> {
     let h = hks()?;
     let mut len = 0usize;
@@ -329,6 +337,7 @@ pub const NATIVES: Natives = &[
     (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
     (lua_version_installee, b"Civ6Proxy_VersionInstallee\0"),
     (lua_medias, b"Civ6Proxy_MediasPings\0"),
+    (lua_unknown_exe, b"Civ6Proxy_ExeInconnu\0"),
 ];
 
 const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
