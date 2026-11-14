@@ -2,8 +2,8 @@
 
 [Français](README.fr.md)
 
-Fixes and speed-ups for **Civilization VI: Gathering Storm**, delivered as two DLLs placed next to
-the game files. No game file is replaced, so Steam file checks and game updates leave it alone.
+Fixes and speed-ups for **Civilization VI: Gathering Storm**, delivered as two DLLs and
+bundled ping artwork and audio. The installer adds these alongside the game files.
 
 - Faster turns: the war-declaration cascades and AI checks that slow down big multiplayer turns are
   batched and cached, with results identical to the base game.
@@ -66,6 +66,8 @@ right is on my way, down is assist, and left is enemy missing. **Alt+1–4** sen
 on my way and assist directly. Change the wheel or individual shortcuts in **Options → Key Bindings**. Teammates see the sender’s name for four seconds. Spectators see both teams.
 Adjust **Team ping volume** under **Audio**. Type `/mute name` or `/unmute name` in chat to control
 both chat and pings from that player. A blocked ping gives a silent local animation.
+The installer includes the wheel artwork, transparent markers and sound cues and enables
+their media component automatically.
 [Editing ping types, icons and sounds](proxy/src/mods/pings/README.md).
 
 ## Settings

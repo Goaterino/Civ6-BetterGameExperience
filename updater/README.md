@@ -1,6 +1,6 @@
 # Installeur : `BetterGameExperience_V<version>.exe`
 
-Installe, met à jour, répare ou retire les deux proxys à partir de la dernière release publiée sur
+Installe, met à jour, répare ou retire les deux proxys et les médias des signaux d'équipe à partir de la dernière release publiée sur
 GitHub (voir [release/README.md](../release/README.md)). Il est publié avec chaque release, sous
 le nom `BetterGameExperience_V<version>.exe` (`BetterGameExperience_V0.6.0.exe`) ; compilé, et à son
 emplacement fixe, il s'appelle `BetterGameExperience.exe`.
