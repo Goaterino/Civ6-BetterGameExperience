@@ -20,6 +20,9 @@
 --    - If the startup proxy is re-linking a pair of players relayed through the host
 --      (BGD_RelinkHolding, startup_proxy/src/partie.lua), the `.bgd_pret` signal waits for the end
 --      of the attempt (45 s at most): nobody plays meanwhile.
+--    - A player the host had to start without two turns in a row (never ready: BGE inactive on
+--      their side) is no longer waited for, until they send a ready signal again or rejoin.
+--    - Leaving the game releases a hold still running.
 --    Les signaux passent par le chat, en message privé, et ChatPanel.lua les cache
 --    (ui_depart_chat.lua). Le proxy lève lui-même l'attente au bout de 120 s.
 -- 3. Même option, mêmes conditions, et minuteur de l'exe détourné : quand le
@@ -92,8 +95,13 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		return Civ6RolloverProxy_DepartDispo ~= nil and Civ6RolloverProxy_DepartDispo() == 1;
 	end
 
+	-- Once active, active for the whole game: the option and POL are fixed at launch, and a game
+	-- configuration wiped by a bad network message must not turn it off halfway.
 	local function Actif()
-		return Reseau() and OptionCochee() and Dispo();
+		if not D.actif then
+			D.actif = Reseau() and OptionCochee() and Dispo();
+		end
+		return D.actif;
 	end
 
 	-- Le début du tour peut-il être retenu avant l'interface (publication des événements détournée) ?
@@ -169,6 +177,9 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	D.arme = false;       -- la prochaine activation du tour local sera retenue avant l'interface
 	D.retenu = false;     -- activation retenue par le proxy, déjà prise en compte ici
 	D.relink = false;     -- "ready" signal held while a relayed pair is re-linked (partie.lua)
+	D.manques = {};       -- host: D.manques[id] = turns started without that player in a row
+	D.ignores = {};       -- host: players no longer waited for (never ready)
+	local MANQUES_MAX = 2;
 
 	local Partir, Evaluer, SurRetenue, EnvoyerPret;
 
@@ -249,6 +260,14 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			local noms = {};
 			for _, id in ipairs(absents) do table.insert(noms, Nom(id)); end
 			Afficher(BGD_Txt("LOC_BGD_DEPART_SANS", table.concat(noms, ", "), DELAI_HOTE));
+			for _, id in ipairs(absents) do
+				D.manques[id] = (D.manques[id] or 0) + 1;
+				if D.manques[id] >= MANQUES_MAX and not D.ignores[id] then
+					D.ignores[id] = true;
+					Afficher(BGD_Txt("LOC_BGD_DEPART_IGNORE", Nom(id)));
+					J("player " .. id .. " not ready " .. D.manques[id] .. " turns in a row, no longer waited for");
+				end
+			end
 		end
 		J("tour " .. tour .. " lancé" .. ((absents and #absents > 0) and (", sans " .. #absents .. " joueur(s)") or ""));
 		Partir("départ de l'hôte, tour " .. tour);
@@ -262,7 +281,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		local prets = D.prets[tour] or {};
 		local absents = {};
 		for _, id in ipairs(Attendus()) do
-			if id ~= Moi() and not prets[id] then
+			if id ~= Moi() and not prets[id] and not D.ignores[id] then
 				table.insert(absents, id);
 			end
 		end
@@ -333,7 +352,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	SurRetenue = function()
 		local tour = Game.GetCurrentGameTurn();
 		if D.recu >= tour or D.parti >= tour or not Actif() then
-			Civ6RolloverProxy_DepartPartir("départ déjà donné, tour " .. tour);
+			Civ6RolloverProxy_DepartPartir((Actif() and "start already given, turn " or "simultaneous start inactive, turn ") .. tour);
 			return;
 		end
 		if D.tour ~= tour then
@@ -475,6 +494,8 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			if tour == nil or not Network.IsGameHost() then return; end
 			D.prets[tour] = D.prets[tour] or {};
 			D.prets[tour][fromPlayer] = true;
+			D.manques[fromPlayer] = nil;
+			D.ignores[fromPlayer] = nil;
 			if D.parti >= tour then
 				Envoyer(DEPART .. tour, fromPlayer);  -- reconnexion en plein tour, ou retardataire
 			else
@@ -494,10 +515,24 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		end
 	end
 
-	-- Un joueur part : il n'est plus attendu.
-	local function OnDepartJoueur()
+	-- Un joueur part : il n'est plus attendu. Back later, they are waited for again.
+	local function OnDepartJoueur(id)
+		if id ~= nil then
+			D.manques[id] = nil;
+			D.ignores[id] = nil;
+		end
 		if Network.IsGameHost() then
 			Evaluer(D.tour);
+		end
+	end
+
+	-- Leaving the game (main menu, game abandoned): a hold still running is released now, while the
+	-- game is alive, rather than by the proxy's safety timer in the menu.
+	local function OnQuitter()
+		local tenu = D.attente or D.retenu;
+		D.attente, D.arme, D.retenu = false, false, false;
+		if tenu and Civ6RolloverProxy_DepartPartir ~= nil then
+			Civ6RolloverProxy_DepartPartir("game left");
 		end
 	end
 
@@ -528,6 +563,8 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		Events.MultiplayerPostPlayerDisconnected.Add(Protege(OnDepartJoueur));
 		Events.MultiplayerHostMigrated.Add(Protege(OnHoteMigre));
 		Events.TurnTimerUpdated.Add(Protege(OnTurnTimerUpdated));
+		Events.ExitToMainMenu.Add(Protege(OnQuitter));
+		Events.MultiplayerGameAbandoned.Add(Protege(OnQuitter));
 	end
 end);
 if not BGD_DepartOk then

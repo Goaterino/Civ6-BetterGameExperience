@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="es_ES">
 			<Text>turno iniciado sin {1} (no estaban listos tras {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="es_ES">
+			<Text>{1} no indicó que estaba listo dos turnos seguidos: el inicio del turno ya no lo espera.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="es_ES">
 			<Text>fin del turno: el temporizador del anfitrión ha terminado.</Text>
 		</Row>

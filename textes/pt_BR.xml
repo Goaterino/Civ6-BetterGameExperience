@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="pt_BR">
 			<Text>turno iniciado sem {1} (não estavam prontos após {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pt_BR">
+			<Text>{1} não sinalizou que estava pronto por dois turnos seguidos: o início do turno não espera mais.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pt_BR">
 			<Text>fim do turno: o cronômetro do anfitrião acabou.</Text>
 		</Row>

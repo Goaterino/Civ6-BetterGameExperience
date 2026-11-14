@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="zh_Hans_CN">
 			<Text>已在没有 {1} 的情况下开始（{2} 秒后仍未准备好）。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="zh_Hans_CN">
+			<Text>{1} 连续两个回合未发出准备信号：回合开始将不再等待。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="zh_Hans_CN">
 			<Text>回合结束：主机的计时器已到。</Text>
 		</Row>

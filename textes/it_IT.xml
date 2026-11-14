@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="it_IT">
 			<Text>turno avviato senza {1} (non pronti dopo {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="it_IT">
+			<Text>{1} non ha segnalato di essere pronto per due turni di fila: l'inizio del turno non lo aspetta più.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="it_IT">
 			<Text>fine del turno: il timer dell'host è scaduto.</Text>
 		</Row>

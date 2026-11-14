@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="pl_PL">
 			<Text>rozpoczęto bez: {1} (niegotowi po {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pl_PL">
+			<Text>{1} dwie tury z rzędu nie zgłosił gotowości: początek tury już na niego nie czeka.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pl_PL">
 			<Text>koniec tury: zegar hosta dobiegł końca.</Text>
 		</Row>

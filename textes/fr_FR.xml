@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="fr_FR">
 			<Text>départ donné sans {1} (pas prêts après {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="fr_FR">
+			<Text>{1} ne s'est jamais signalé prêt deux tours de suite : les débuts de tour ne l'attendent plus.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="fr_FR">
 			<Text>fin du tour : le minuteur de l'hôte est écoulé.</Text>
 		</Row>

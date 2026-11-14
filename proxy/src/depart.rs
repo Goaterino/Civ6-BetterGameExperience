@@ -338,11 +338,9 @@ unsafe extern "system" fn hook_publier(p: usize) {
         while taille != 0 && cur < fin {
             let genre = rd::<u32>(cur + E_TYPE);
             if (genre == TYPE_DEBUT_LOCAL || genre == TYPE_ACTIVE) && DIAG.fetch_add(1, Ordering::Relaxed) < MAX_DIAG {
-                log(&format!(
-                    "depart : publication du type {genre} (joueur {}), {}",
-                    rd::<i32>(cur + E_DONNEES + ACTIVE_JOUEUR),
-                    if ARME.load(Ordering::Relaxed) { "armé" } else { "pas armé" }
-                ));
+                // Only a "turn activated" event carries a player.
+                let joueur = if genre == TYPE_ACTIVE { format!(" (player {})", rd::<i32>(cur + E_DONNEES + ACTIVE_JOUEUR)) } else { String::new() };
+                log(&format!("depart: event type {genre}{joueur} published, {}", if ARME.load(Ordering::Relaxed) { "armed" } else { "not armed" }));
             }
             if ARME.load(Ordering::Relaxed) && activation_locale(cur) {
                 *((q + F_LU) as *mut u32) = (cur - base) as u32;
@@ -809,6 +807,16 @@ pub fn reset() {
     MINUTEUR_THIS.store(0, Ordering::Relaxed);
     REJETS.store(0, Ordering::Relaxed);
     LOGS.store(0, Ordering::Relaxed);
+}
+
+/// The game is destroyed: a hold still running is dropped, without touching the game's turn timer,
+/// which goes away with it.
+pub fn game_destroyed() {
+    let held = ATTENTE.load(Ordering::Relaxed) || RETENU.load(Ordering::Relaxed);
+    reset();
+    if held {
+        log("depart: game destroyed, turn-start hold dropped");
+    }
 }
 
 /// Le proxy est déchargé alors que l'exe et l'originale restent en mémoire : on remet leurs octets.
