@@ -7,10 +7,12 @@
 
 use crate::exe::{iat_slot, write_slot};
 use crate::{log, noms, win};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 static REAL_W: AtomicUsize = AtomicUsize::new(0);
 static REAL_A: AtomicUsize = AtomicUsize::new(0);
+/// A GameCore proxy was handed to the exe since the last release of the original.
+static HANDED_OUT: AtomicBool = AtomicBool::new(false);
 
 type LoadW = unsafe extern "system" fn(*const u16) -> win::HMODULE;
 type LoadA = unsafe extern "system" fn(*const u8) -> win::HMODULE;
@@ -55,6 +57,29 @@ fn redirection(path: &[u16]) -> Option<Vec<u16>> {
     Some(proxy)
 }
 
+/// The GameCore proxy loads the original and never frees it, so once the exe has freed the proxy
+/// the original stays loaded with the previous game's state (GameEffects ID counter and other
+/// statics). Without BGE the exe's FreeLibrary unloads GameCore and every game starts fresh: the
+/// previous proxy's reference is released here, before the next game loads the proxy.
+unsafe fn release_previous_original() {
+    let proxy_loaded = !win::GetModuleHandleW(win::wide(noms::GAMECORE_PROXY).as_ptr()).is_null();
+    let original = win::GetModuleHandleW(win::wide(noms::GAMECORE).as_ptr());
+    if !must_release(HANDED_OUT.load(Ordering::Relaxed), proxy_loaded, !original.is_null()) {
+        return;
+    }
+    HANDED_OUT.store(false, Ordering::Relaxed);
+    win::FreeLibrary(original);
+    if win::GetModuleHandleW(win::wide(noms::GAMECORE).as_ptr()).is_null() {
+        log("loader: previous game's GameCore unloaded, the new game starts from a fresh one");
+    } else {
+        log("loader: previous game's GameCore still loaded (another reference holds it)");
+    }
+}
+
+fn must_release(handed_out: bool, proxy_loaded: bool, original_loaded: bool) -> bool {
+    handed_out && !proxy_loaded && original_loaded
+}
+
 unsafe fn wide_len(s: *const u16) -> usize {
     (0..).take_while(|&i| *s.add(i) != 0).count()
 }
@@ -63,8 +88,10 @@ unsafe extern "system" fn load_w(name: *const u16) -> win::HMODULE {
     let real: LoadW = std::mem::transmute(REAL_W.load(Ordering::Relaxed));
     if !name.is_null() {
         if let Some(proxy) = redirection(std::slice::from_raw_parts(name, wide_len(name))) {
+            release_previous_original();
             let h = real(proxy.as_ptr());
             if !h.is_null() {
+                HANDED_OUT.store(true, Ordering::Relaxed);
                 return h;
             }
             log(&format!("chargeur : chargement du proxy impossible, erreur {} : original chargé", win::GetLastError()));
@@ -82,8 +109,10 @@ unsafe extern "system" fn load_a(name: *const u8) -> win::HMODULE {
             let mut path = vec![0u16; n as usize];
             win::MultiByteToWideChar(win::CP_ACP, 0, name, -1, path.as_mut_ptr(), n);
             if let Some(proxy) = redirection(&path[..n as usize - 1]) {
+                release_previous_original();
                 let h = win::LoadLibraryW(proxy.as_ptr());
                 if !h.is_null() {
+                    HANDED_OUT.store(true, Ordering::Relaxed);
                     return h;
                 }
                 log(&format!("chargeur : chargement du proxy impossible, erreur {} : original chargé", win::GetLastError()));
@@ -109,6 +138,14 @@ mod tests {
         assert_eq!(gamecore(&w(r"C:\x\GameCore_XP1_FinalRelease.dll")), None);
         assert_eq!(gamecore(&w(r"C:\x\BGD_GameCore_XP2.dll")), None);
         assert_eq!(gamecore(&w(r"C:\x\GameCore_XP2_FinalRelease.dll.bak")), None);
+    }
+
+    #[test]
+    fn releases_only_what_a_freed_proxy_left() {
+        assert!(must_release(true, false, true));
+        assert!(!must_release(true, true, true), "proxy still in use");
+        assert!(!must_release(false, false, true), "no proxy handed out since the last release");
+        assert!(!must_release(true, false, false), "original already unloaded");
     }
 
     #[test]
