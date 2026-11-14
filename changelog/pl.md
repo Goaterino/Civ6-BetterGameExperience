@@ -2,6 +2,18 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.11.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.11.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.10.0 i 0.11.0, je wyłącza.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Premie do produkcji jednostek, które się zużywają**: usunięcie procentowej premii do produkcji
+  jednostek (+30 % do budowniczych z Ilkum albo premii miasta do typu jednostki) odejmowało nieco
+  więcej, niż premia dodała, za każdym razem około 0,4 %, a strata rosła przy każdej zamianie karty.
+  Usunięcie premii odejmuje teraz dokładnie tyle, ile dodała. Zapisy gry zachowują już narosłą
+  stratę. Wkład Serianol.
+
 ## BetterGameExperience 0.10.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.10.0, aby działały poprawki

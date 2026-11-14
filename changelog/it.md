@@ -2,6 +2,18 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.11.0
+
+In multigiocatore, tutti i giocatori umani devono avere la 0.11.0 per le correzioni **[tutti i
+giocatori]**: una sala d'attesa che mescola 0.10.0 e 0.11.0 le disattiva.
+
+### Correzioni multigiocatore [tutti i giocatori]
+- **Bonus di produzione delle unità che si consumano**: rimuovere un bonus percentuale alla
+  produzione delle unità (il +30 % ai costruttori di Ilkum, o il bonus di una città a un tipo di
+  unità) toglieva un po' più di quanto avesse aggiunto, circa lo 0,4 % ogni volta, e la perdita
+  cresceva a ogni scambio della carta. Rimuovere un bonus ora toglie esattamente ciò che aveva
+  aggiunto. I salvataggi conservano la perdita già accumulata. Contributo di Serianol.
+
 ## BetterGameExperience 0.10.0
 
 In multigiocatore, tutti i giocatori umani devono avere la 0.10.0 per le correzioni **[tutti i

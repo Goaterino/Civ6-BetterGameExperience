@@ -2,6 +2,19 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.11.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.11.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.10.0 y 0.11.0 las desactiva.
+
+### Correcciones multijugador [todos los jugadores]
+- **Bonificaciones de producción de unidades que se desgastan**: quitar una bonificación porcentual
+  a la producción de unidades (el +30 % a los constructores de Ilkum, o la bonificación de una
+  ciudad a un tipo de unidad) restaba un poco más de lo que había sumado, alrededor de un 0,4 % cada
+  vez, y la pérdida crecía con cada cambio de la carta. Quitar una bonificación ahora resta
+  exactamente lo que sumó. Las partidas guardadas conservan la pérdida ya acumulada. Contribución de
+  Serianol.
+
 ## BetterGameExperience 0.10.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.10.0 para las correcciones

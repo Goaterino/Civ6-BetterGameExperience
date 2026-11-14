@@ -2,6 +2,18 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.11.0
+
+En multijoueur, tous les humains doivent être en 0.11.0 pour les correctifs **[tous les
+joueurs]** : un salon qui mélange 0.10.0 et 0.11.0 les coupe.
+
+### Correctifs multijoueur [tous les joueurs]
+- **Bonus de production d'unités qui s'usent** : retirer un bonus de production d'unités en
+  pourcentage (les +30 % aux ouvriers d'Ilkum, ou le bonus d'une ville à un type d'unité) enlevait un
+  peu plus que ce qu'il avait ajouté, environ 0,4 % à chaque fois, et la perte grandissait à chaque
+  échange de la carte. Retirer un bonus enlève maintenant exactement ce qu'il avait ajouté. Les
+  sauvegardes gardent la perte déjà accumulée. Contribution de Serianol.
+
 ## BetterGameExperience 0.10.0
 
 En multijoueur, tous les humains doivent être en 0.10.0 pour les correctifs **[tous les

@@ -4,6 +4,17 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.11.0
+
+Multiplayer games need every human player on 0.11.0 for the **[all players]** fixes: a lobby that
+mixes 0.10.0 and 0.11.0 turns them off.
+
+### Multiplayer fixes [all players]
+- **Unit production bonuses that wear away**: removing a percentage bonus to unit production (the
+  +30% to Builders from Ilkum, or a city's bonus to a unit type) took away slightly more than it had
+  added, about 0.4% each time, and the loss grew with every swap of the card. Removing a bonus now
+  takes away exactly what it added. Saves keep the loss already built up. Contributed by Serianol.
+
 ## BetterGameExperience 0.10.0
 
 Multiplayer games need every human player on 0.10.0 for the **[all players]** fixes and for team
