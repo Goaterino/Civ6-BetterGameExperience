@@ -20,7 +20,13 @@
 //! written by `salon.lua`, passed by `partie.lua`); a client sends it only to a host that says it
 //! answers (`chargement.lua`, `rejoin::set_host_answers`).
 //!
-//! Setting `postload_answer=off` in `rollover_proxy.cfg` installs nothing and announces nothing.
+//! That answer carries each differing object whole (the game's "create" form, which a client applies
+//! in place), not only the fields either side has flagged as changed: after a load, objects differ
+//! in fields that no side has flagged, and the usual repair leaves those out. The call that adds a
+//! repair is the one `sync_notes.rs` hooks, which asks `whole_archive` first.
+//!
+//! Setting `postload_answer=off` in `rollover_proxy.cfg` installs nothing and announces nothing;
+//! `postload_full=off` keeps the usual repair in the immediate answer.
 //! Addresses of both exes of 2026-11-05, checked at startup.
 
 use crate::exe::rd;
@@ -44,11 +50,13 @@ struct Exe {
     game_update: u64,
     /// Global: the sync manager.
     sync: u64,
+    /// Adds one whole archive to an answer (manager, answer, serializer, key, archive).
+    create: u64,
 }
 
 const EXES: [Exe; 2] = [
-    Exe { name: "DX12", set_waiting: 0x1_4081_79e0, handler: 0x1_407f_65b0, ack: 0x1_4080_fc20, game_update: 0x1_400f_7330, sync: 0x1_4239_2ee8 },
-    Exe { name: "DX11", set_waiting: 0x1_4081_6210, handler: 0x1_407f_46c0, ack: 0x1_4080_deb0, game_update: 0x1_400f_6970, sync: 0x1_4235_b868 },
+    Exe { name: "DX12", set_waiting: 0x1_4081_79e0, handler: 0x1_407f_65b0, ack: 0x1_4080_fc20, game_update: 0x1_400f_7330, sync: 0x1_4239_2ee8, create: 0x1_407f_88c0 },
+    Exe { name: "DX11", set_waiting: 0x1_4081_6210, handler: 0x1_407f_46c0, ack: 0x1_4080_deb0, game_update: 0x1_400f_6970, sync: 0x1_4235_b868, create: 0x1_407f_69d0 },
 ];
 
 /// The whole function, replaced: `mov [rcx+1ah],dl ; test dl,dl ; jne ; mov byte [rcx+1ch],1 ; ret ;
@@ -78,6 +86,8 @@ const GAME_UPDATE: [u8; 24] = [
     0x00,
 ];
 const GAME_UPDATE_MOVED: usize = 16;
+/// `mov [rsp+8],rbx ; mov [rsp+10h],rbp ; mov [rsp+18h],rsi ; mov [rsp+20h],r9`.
+const CREATE: [u8; 20] = [0x48, 0x89, 0x5c, 0x24, 0x08, 0x48, 0x89, 0x6c, 0x24, 0x10, 0x48, 0x89, 0x74, 0x24, 0x18, 0x4c, 0x89, 0x4c, 0x24, 0x20];
 
 // Network player: waiting for a snapshot, has processed one, reason of its request, acknowledged
 // the sync round.
@@ -172,6 +182,11 @@ static TURN: AtomicU32 = AtomicU32::new(0);
 /// Bit per player ID: its BGE sends the check after loading (`partie.lua`).
 static SENDERS: AtomicU64 = AtomicU64::new(0);
 static STATE: Mutex<Option<State>> = Mutex::new(None);
+/// `postload_full`: whole archives in the immediate answer.
+static FULL_ENABLED: AtomicBool = AtomicBool::new(false);
+/// An immediate compare is running: differing archives go whole. And how many did.
+static FULL: AtomicBool = AtomicBool::new(false);
+static FULL_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
     let mut guard = STATE.lock().unwrap_or_else(|e| e.into_inner());
@@ -181,6 +196,24 @@ fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
 /// The `postload_answer` setting (last occurrence wins; `on` by default).
 pub fn enabled(cfg: &str) -> bool {
     cfg.lines().filter_map(|l| l.trim().strip_prefix("postload_answer=")).last().map(str::trim) != Some("off")
+}
+
+/// The `postload_full` setting (last occurrence wins; `on` by default).
+pub fn full_enabled(cfg: &str) -> bool {
+    cfg.lines().filter_map(|l| l.trim().strip_prefix("postload_full=")).last().map(str::trim) != Some("off")
+}
+
+/// Called by the hook on the host's "add a repair" call (`sync_notes.rs`): during an immediate
+/// compare, the archive is added whole instead; true if it was.
+pub unsafe fn whole_archive(sync: usize, answer: usize, serializer: usize, key: u64, archive: usize) -> bool {
+    if !FULL.load(Ordering::Relaxed) {
+        return false;
+    }
+    let Some(t) = EXES.get(TABLE.load(Ordering::Relaxed)) else { return false };
+    let create: unsafe extern "system" fn(usize, usize, usize, u64, usize) = std::mem::transmute(image(t.create));
+    create(sync, answer, serializer, key, archive);
+    FULL_COUNT.fetch_add(1, Ordering::Relaxed);
+    true
 }
 
 /// Are the hooks in place? What this machine announces (`BGD_SYNC`).
@@ -296,11 +329,17 @@ unsafe extern "system" fn on_check(sync: usize, message: usize) -> u64 {
     }
     // The game compares a check when the host has acknowledged its own round: said so for this call.
     *((me + PLAYER_ACK) as *mut u8) = 1;
+    FULL_COUNT.store(0, Ordering::Relaxed);
+    FULL.store(FULL_ENABLED.load(Ordering::Relaxed), Ordering::Relaxed);
     let handled = original(sync, message);
+    FULL.store(false, Ordering::Relaxed);
     *((me + PLAYER_ACK) as *mut u8) = 0;
     if handled as u8 != 0 {
         with_state(|s| s.acks.push(id));
-        log(&format!("postload: check of player {id} after loading answered at once"));
+        log(&format!(
+            "postload: check of player {id} after loading answered at once ({} differing archives sent whole)",
+            FULL_COUNT.load(Ordering::Relaxed)
+        ));
     } else {
         log(&format!("postload: check of player {id} after loading not compared, left to the next round"));
     }
@@ -363,6 +402,9 @@ fn fingerprint<'a>(t: &Exe, read: impl Fn(u64, usize) -> &'a [u8]) -> Result<(),
     if read(t.handler, HANDLER.len()) != HANDLER {
         return Err(format!("check handler: unexpected bytes at {:#x}", t.handler));
     }
+    if read(t.create, CREATE.len()) != CREATE {
+        return Err(format!("whole archive: unexpected bytes at {:#x}", t.create));
+    }
     if read(t.game_update, GAME_UPDATE.len()) != GAME_UPDATE {
         return Err(format!("GameUpdate send: unexpected bytes at {:#x}", t.game_update));
     }
@@ -405,6 +447,7 @@ pub unsafe fn install() {
     let t = &EXES[i];
     MODULE.store(module, Ordering::Relaxed);
     TABLE.store(i, Ordering::Relaxed);
+    FULL_ENABLED.store(full_enabled(&cfg), Ordering::Relaxed);
     // The two trampolines first: once they exist, the other two hooks cannot fail half-way.
     let (handler, update) = (at(t.handler), at(t.game_update));
     let tramps = patch::install_at("postload check handler", handler, &HANDLER[..HANDLER_MOVED], handler + HANDLER_MOVED, on_check as *const () as usize)
@@ -420,7 +463,8 @@ pub unsafe fn install() {
     match tramps {
         Ok(_) => {
             INSTALLED.store(true, Ordering::Relaxed);
-            log(&format!("postload: the host answers the sync check after loading at once ({})", t.name));
+            let full = if FULL_ENABLED.load(Ordering::Relaxed) { ", whole archives" } else { "" };
+            log(&format!("postload: the host answers the sync check after loading at once ({}{full})", t.name));
         }
         Err(e) => log(&format!("postload: {e}, not announced")),
     }
@@ -523,5 +567,6 @@ mod tests {
         assert!(enabled(""));
         assert!(!enabled("postload_answer=off\r\n"));
         assert!(enabled("postload_answer=off\npostload_answer=on\n"), "the last occurrence wins");
+        assert!(full_enabled("") && !full_enabled("postload_full=off\n"));
     }
 }
