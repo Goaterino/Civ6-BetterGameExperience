@@ -347,6 +347,7 @@ pub fn patch_in_game_lua(src: &[u8]) -> Vec<u8> {
 
 /// Appelée par l'accroche sur InGame.lua.
 pub unsafe fn prepare_partie(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
+    crate::relink::new_game();
     publish_natives(l, PARTIE_NATIVES, "partie");
     patch_in_game_lua(src)
 }

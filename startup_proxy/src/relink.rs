@@ -223,37 +223,57 @@ unsafe fn session_valid(s: usize) -> bool {
     })
 }
 
-/// The game's session: the one seen with the last handled message, otherwise the first one of the
-/// network manager (table session → object at + 0x10, number of buckets at + 0x18).
-unsafe fn session() -> Option<usize> {
-    let s = SESSION.load(Ordering::Relaxed);
-    if session_valid(s) {
-        return Some(s);
-    }
-    let t = table()?;
+/// A new game (the in-game interface loads): forget what belongs to the previous one.
+pub fn new_game() {
+    SESSION.store(0, Ordering::Relaxed);
+    *ATTEMPT.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    RELINKED.store(0, Ordering::Relaxed);
+    RECENT.lock().unwrap_or_else(|e| e.into_inner()).clear();
+}
+
+/// The sessions the network manager lists (table: buckets at + 0x10, their number at + 0x18; entry:
+/// session at + 8, next at + 0x10). Civ6 removes a session from this table when it frees it.
+unsafe fn listed_sessions() -> Vec<usize> {
+    let mut out = Vec::new();
+    let Some(t) = table() else { return out };
     let manager: usize = read(image(t.net_manager));
     if manager == 0 {
-        return None;
+        return out;
     }
     let buckets: usize = read(manager + 0x10);
     let n: u32 = read(manager + 0x18);
     if buckets == 0 || n == 0 || n > 4096 {
-        return None;
+        return out;
     }
+    let end: usize = read(buckets + 8 * n as usize);
     for i in 0..n as usize {
         let mut e: usize = read(buckets + 8 * i);
         let mut guard = 0;
-        while e != 0 && guard < 64 {
+        while e != 0 && e != end && guard < 64 {
             let s: usize = read(e + 8);
-            if session_valid(s) {
-                SESSION.store(s, Ordering::Relaxed);
-                return Some(s);
+            if s != 0 {
+                out.push(s);
             }
             e = read(e + 0x10);
             guard += 1;
         }
     }
-    None
+    out
+}
+
+/// Among the listed sessions: the remembered one if it is still listed, otherwise the first valid one.
+/// A session that is no longer listed was freed and is never read.
+pub fn choose(remembered: usize, listed: &[usize], valid: impl Fn(usize) -> bool) -> Option<usize> {
+    let known = listed.iter().copied().find(|&s| s == remembered && valid(s));
+    known.or_else(|| listed.iter().copied().find(|&s| valid(s)))
+}
+
+/// The game's session: the one seen with the last handled message while Civ6 still lists it,
+/// otherwise the first valid one of the network manager.
+unsafe fn session() -> Option<usize> {
+    let s = choose(SESSION.load(Ordering::Relaxed), &listed_sessions(), |s| session_valid(s));
+    SESSION.store(s.unwrap_or(0), Ordering::Relaxed);
+    s
 }
 
 unsafe fn object(s: usize, offset: usize) -> Option<usize> {
@@ -809,6 +829,29 @@ pub unsafe fn install() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn freed_session_is_never_chosen() {
+        let valid = |s: usize| s != 30;
+        assert_eq!(choose(10, &[20, 10], valid), Some(10));
+        assert_eq!(choose(10, &[30, 20], valid), Some(20), "no longer listed: freed");
+        assert_eq!(choose(30, &[30, 20], valid), Some(20));
+        assert_eq!(choose(10, &[], valid), None);
+        assert_eq!(choose(0, &[30], valid), None);
+    }
+
+    #[test]
+    fn new_game_forgets_the_previous_one() {
+        SESSION.store(0x1234, Ordering::Relaxed);
+        RELINKED.store(0b101, Ordering::Relaxed);
+        *ATTEMPT.lock().unwrap() = Some(Attempt { partner: 3, start_ms: 1 });
+        RECENT.lock().unwrap().push((7, u64::MAX));
+        new_game();
+        assert_eq!(SESSION.load(Ordering::Relaxed), 0);
+        assert_eq!(RELINKED.load(Ordering::Relaxed), 0);
+        assert!(ATTEMPT.lock().unwrap().is_none());
+        assert!(RECENT.lock().unwrap().is_empty());
+    }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
     const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
