@@ -62,7 +62,7 @@ local function NewGame(opts)
 		local cfg = G.config;
 		local env = {
 			pcall = pcall, print = function() end, tostring = tostring, tonumber = tonumber, type = type,
-			ipairs = ipairs, pairs = pairs, table = table, string = string, os = { clock = function() return G.clock; end },
+			ipairs = ipairs, pairs = pairs, table = table, string = string, math = math, os = { clock = function() return G.clock; end },
 			Events = Events, LuaEvents = LuaEvents,
 			Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end, Lookup = function(s) return s; end },
 			GameConfiguration = {
@@ -593,6 +593,44 @@ do
 	h.Minuteur(5, 60); h.Minuteur(60, 60);
 	Check("départ puis fin : fin reçue", a.natives.forcer == 1);
 	Check("depart_signaux=on : ligne locale de la fin", a.locaux[#a.locaux]:find("minuteur de l'hôte") ~= nil);
+end
+
+do
+	-- The host gives no start: the client starts alone after 75 s and says so once; then after 5 s
+	-- on the following turns, until the host gives a start again.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.tour = 11;
+	a.Debut(); a.Publie();
+	G.clock = 74; a.Tic(1);
+	Check("silent host: still waiting at 74 s", a.natives.attente);
+	G.clock = 76; a.Tic(1);
+	Check("silent host: client starts alone after 75 s", not a.natives.attente and a.natives.partir == 1);
+	local lines = #a.locaux;
+	Check("silent host: said once", lines >= 1 and a.locaux[lines]:find("75") ~= nil or a.locaux[lines]:find("76") ~= nil);
+	G.tour = 12;
+	a.Debut(); a.Publie();
+	G.clock = 80; a.Tic(1);
+	Check("silent host, next turn: still waiting at 4 s", a.natives.attente);
+	G.clock = 82; a.Tic(1);
+	Check("silent host, next turn: starts after 5 s, nothing more said", not a.natives.attente and #a.locaux == lines);
+	-- The host is back: its start restores the full wait.
+	G.tour = 13;
+	a.Debut(); a.Publie();
+	h.Debut(); h.Publie();
+	Check("host back: start received", not a.natives.attente);
+	G.tour = 14;
+	a.Debut(); a.Publie();
+	G.clock = 100; a.Tic(1);
+	Check("host back: full wait again", a.natives.attente);
+	-- The host itself never uses this timer.
+	G.tour = 15;
+	h.Debut(); h.Publie();
+	G.clock = 130; h.Tic(1);
+	Check("host: waits for its own delay only", h.natives.attente);
 end
 
 do

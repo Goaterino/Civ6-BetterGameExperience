@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ko_KR">
 			<Text>{1}이(가) 두 턴 연속으로 준비 신호를 보내지 않았습니다. 이제 턴 시작 시 기다리지 않습니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="ko_KR">
+			<Text>{1}초가 지나도 호스트의 시작 신호가 없습니다. 지금 턴을 시작합니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ko_KR">
 			<Text>턴 종료: 호스트의 타이머가 끝났습니다.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ko_KR">
 			<Text>{1}의 게임이 동기화되지 않았으나({2}) 다시 불러오지 않고 복구되었습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="ko_KR">
+			<Text>{1}의 게임이 현재 Steam 버전이 아닙니다. 해당 PC에서는 BGE의 네트워크 수정이 비활성화됩니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ko_KR">
 			<Text>{1}와(과) {2}이(가) 호스트를 통해 연결되어 있습니다(0 ms). 턴 전환 중에 직접 연결을 시도합니다.</Text>

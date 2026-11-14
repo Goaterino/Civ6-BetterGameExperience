@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ru_RU">
 			<Text>{1} два хода подряд не сообщил о готовности: начало хода больше его не ждёт.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="ru_RU">
+			<Text>нет сигнала старта от хоста через {1} с: ваш ход начинается сейчас.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ru_RU">
 			<Text>конец хода: таймер хоста истёк.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ru_RU">
 			<Text>Игра {1} рассинхронизировалась ({2}) и была исправлена без перезагрузки.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="ru_RU">
+			<Text>Игра у {1} — не текущая версия Steam: сетевые исправления BGE на этом ПК неактивны.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ru_RU">
 			<Text>{1} и {2} соединены через хоста (0 мс). Попытка прямого соединения во время смены хода.</Text>

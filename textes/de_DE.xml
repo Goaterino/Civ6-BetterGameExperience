@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="de_DE">
 			<Text>{1} hat sich zwei Runden in Folge nie bereit gemeldet: Der Rundenstart wartet nicht mehr darauf.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="de_DE">
+			<Text>kein Startsignal vom Host nach {1} s: Ihre Runde beginnt jetzt.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="de_DE">
 			<Text>Runde vorbei: Der Timer des Hosts ist abgelaufen.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="de_DE">
 			<Text>Das Spiel von {1} war nicht mehr synchron ({2}) und wurde ohne Neuladen repariert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="de_DE">
+			<Text>Das Spiel von {1} ist nicht die aktuelle Steam-Version: Die Netzwerk-Korrekturen von BGE sind auf diesem PC inaktiv.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="de_DE">
 			<Text>{1} und {2} sind über den Host verbunden (0 ms). Direkte Verbindung wird beim Rundenwechsel versucht.</Text>

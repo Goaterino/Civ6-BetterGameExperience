@@ -377,6 +377,9 @@
 		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pl_PL">
 			<Text>{1} dwie tury z rzędu nie zgłosił gotowości: początek tury już na niego nie czeka.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="pl_PL">
+			<Text>brak sygnału startu od hosta po {1} s: twoja tura zaczyna się teraz.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pl_PL">
 			<Text>koniec tury: zegar hosta dobiegł końca.</Text>
 		</Row>
@@ -619,6 +622,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="pl_PL">
 			<Text>Gra gracza {1} była niezsynchronizowana ({2}) i została naprawiona bez ponownego wczytywania.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="pl_PL">
+			<Text>Gra gracza {1} nie jest aktualną wersją ze Steam: poprawki sieciowe BGE są nieaktywne na tym komputerze.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pl_PL">
 			<Text>{1} i {2} są połączeni przez hosta (0 ms). Próba bezpośredniego połączenia podczas zmiany tury.</Text>
