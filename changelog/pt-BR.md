@@ -14,6 +14,31 @@ No multijogador, todos os jogadores humanos precisam estar na 0.11.0 para as cor
   cada troca da carta. Remover um bônus agora tira exatamente o que ele adicionou. Os jogos salvos
   mantêm a perda já acumulada. Contribuição de Serianol.
 
+### Multijogador
+- **Partida travada logo depois de carregar**: um jogador com conexão lenta podia receber a partida
+  uma segunda vez do anfitrião logo depois do fim do próprio carregamento, recarregá-la a partir do
+  mapa e travar. Essa segunda cópia atrasada agora é recusada; a entrada, a reconexão e as
+  ressincronizações funcionam como antes.
+- **Travamento ao carregar um jogo salvo depois de outra partida**: a reconexão dos jogadores
+  retransmitidos pelo anfitrião (0.10.0) podia ler a conexão da partida anterior, já fechada, e
+  fechar o jogo durante o carregamento da seguinte. Contribuição de yodha.
+- **Configuração da partida**: as opções de partida adicionadas pelo BetterGameExperience ficam
+  acinzentadas quando o anfitrião está com o BetterGameExperience desligado.
+
+### Sinais de equipe
+- Novas imagens e sons para a roda, os marcadores e cada chamado, instalados com o
+  BetterGameExperience. Eles só são adicionados a uma partida se o anfitrião ligar os sinais de
+  equipe e todos os jogadores tiverem o BetterGameExperience: um jogador sem BGE ainda pode entrar na
+  sala de espera. Contribuição de mariusbw.
+- O **volume dos sinais de equipe** fica logo abaixo dos efeitos sonoros nas opções de áudio, tanto
+  no menu principal quanto na partida, e os atalhos dos sinais continuam listados nas opções de
+  teclas. Contribuição de mariusbw.
+
+### Configurações
+- **Aba BetterGameExperience**: ligar ou desligar o BetterGameExperience sempre pede para reiniciar
+  o jogo. Voltar uma configuração ao valor anterior sem reabrir a tela é salvo de novo; antes era
+  ignorado.
+
 ## BetterGameExperience 0.10.0
 
 No multijogador, todos os jogadores humanos precisam estar na 0.10.0 para as correções
