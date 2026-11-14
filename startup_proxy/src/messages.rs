@@ -33,8 +33,8 @@
 //! l'identifiant du joueur (seulement -1) : un identifiant hors des emplacements n'est pas appliqué
 //! non plus (voir `MESSAGES`).
 //!
-//! A failed read leaves its destination untouched, so at the seven sites the destination is set to
-//! 0 before the read: a message read from garbage comes out empty, not with a leftover count. A
+//! A failed read leaves its destination untouched, so at the seven sites the destination is set
+//! before the read: no leftover count. A message whose root map count cannot be read is damaged. A
 //! `NetGameConfig` with no changed key and an empty map would replace the whole game configuration
 //! with nothing (every player's civ, leader and level): it is never applied. Such messages come from
 //! the game's queue flush after a load, when a chunked snapshot is still arriving.
@@ -99,6 +99,10 @@ const SITES: [(&str, Regle); 7] = [
 ];
 /// The read where test mode injects the freeze count: "carte : entrées".
 const SITE_INJECTION: usize = 1;
+/// The root map count of `NetGameConfig` and `NetPlayerInfo`: "carte nommée : compte".
+const SITE_RACINE: usize = 2;
+/// Written before that read; still there after it, the read failed. Not a possible count.
+const NON_LU: u32 = 0x7fff_fffe;
 /// `call qword ptr [rax+30h]`, juste avant chaque adresse de retour.
 const APPEL: [u8; 3] = [0xff, 0x50, 0x30];
 
@@ -307,10 +311,21 @@ unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, des
     let Some(i) = site else {
         return real(lecteur, desc, dest, n);
     };
-    // A failed read leaves the destination as it was: start from 0, not from a leftover value.
-    std::ptr::write_unaligned(dest as *mut u32, 0);
+    // A failed read leaves the destination as it was: start from a known value, not from a leftover
+    // one. A message whose root map count cannot be read is damaged (not applied); elsewhere 0, as
+    // the game itself does for the changed keys.
+    let racine = i == SITE_RACINE;
+    std::ptr::write_unaligned(dest as *mut u32, if racine { NON_LU } else { 0 });
     let r = real(lecteur, desc, dest, n);
     let (nom, regle) = SITES[i];
+    if racine && std::ptr::read_unaligned(dest as *const u32) == NON_LU {
+        std::ptr::write_unaligned(dest as *mut u32, 0);
+        let total = compter();
+        if total <= 20 || total % 100 == 0 {
+            log(&format!("messages: {nom}: read failed, count set to 0 ({total} corrections)"));
+        }
+        return r;
+    }
     if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
         std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
         log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
