@@ -68,12 +68,22 @@ unsafe fn release_previous_original() {
         return;
     }
     HANDED_OUT.store(false, Ordering::Relaxed);
+    let cfg = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
+    if !enabled(&cfg) {
+        log("loader: previous game's GameCore kept (fresh_gamecore=off)");
+        return;
+    }
     win::FreeLibrary(original);
     if win::GetModuleHandleW(win::wide(noms::GAMECORE).as_ptr()).is_null() {
         log("loader: previous game's GameCore unloaded, the new game starts from a fresh one");
     } else {
         log("loader: previous game's GameCore still loaded (another reference holds it)");
     }
+}
+
+/// The `fresh_gamecore` setting (last occurrence wins; `on` by default).
+fn enabled(cfg: &str) -> bool {
+    cfg.lines().filter_map(|l| l.trim().strip_prefix("fresh_gamecore=")).last().map(str::trim) != Some("off")
 }
 
 fn must_release(handed_out: bool, proxy_loaded: bool, original_loaded: bool) -> bool {

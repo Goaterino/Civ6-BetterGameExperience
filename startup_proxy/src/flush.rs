@@ -13,7 +13,7 @@
 //! update, so no chunk can arrive during the call. Queued messages always have a chunk count of 0.
 //!
 //! Addresses of both exes of 2026-11-05, checked byte by byte at startup. `actif=off` installs
-//! nothing; a pure bug fix, without its own setting.
+//! nothing; `queue_flush=off` turns off this fix alone.
 
 use crate::{log, patch, win};
 use std::ffi::c_void;
@@ -178,6 +178,10 @@ pub unsafe fn install() {
     let cfg = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
     if crate::salon::actif_off(&cfg) {
         log("queue flush: not installed (actif=off)");
+        return;
+    }
+    if cfg.lines().filter_map(|l| l.trim().strip_prefix("queue_flush=")).last().map(str::trim) == Some("off") {
+        log("queue flush: turned off (queue_flush=off)");
         return;
     }
     let module = win::GetModuleHandleW(std::ptr::null()) as usize;
