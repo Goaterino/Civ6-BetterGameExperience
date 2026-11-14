@@ -165,6 +165,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	D.parti = -1;         -- hôte : dernier tour lancé
 	D.pretDepuis = nil;   -- hôte : os.clock() quand il a été prêt
 	D.avisRejets = 0;     -- ordres retenus déjà signalés au joueur pour ce tour
+	D.avisVu = false;     -- « ordres retenus » puis « c'est parti » déjà affichés : une fois par partie
 	D.annonce = false;
 	D.arme = false;       -- la prochaine activation du tour local sera retenue avant l'interface
 	D.retenu = false;     -- activation retenue par le proxy, déjà prise en compte ici
@@ -206,7 +207,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 					-- Le proxy a levé l'attente de lui-même (délai de sécurité).
 					D.attente = false;
 				elseif rejets > D.avisRejets then
-					if D.avisRejets == 0 then
+					if D.avisRejets == 0 and not D.avisVu then
 						Afficher(BGD_Txt("LOC_BGD_DEPART_ORDRES_RETENUS"));
 					end
 					D.avisRejets = rejets;
@@ -232,8 +233,9 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			if Civ6RolloverProxy_DepartPartir ~= nil then
 				Civ6RolloverProxy_DepartPartir(raison);
 			end
-			if D.avisRejets > 0 then
+			if D.avisRejets > 0 and not D.avisVu then
 				Afficher(BGD_Txt("LOC_BGD_DEPART_PARTI"));
+				D.avisVu = true;
 			end
 		end
 	end

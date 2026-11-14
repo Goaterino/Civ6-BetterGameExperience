@@ -410,6 +410,13 @@ do
 	Check("une seule ligne d'avertissement", #a.locaux == 1 and a.locaux[1]:find("ordres retenus") ~= nil);
 	h.Debut(); h.Publie();
 	Check("puis « c'est parti »", #a.locaux == 2 and a.locaux[2]:find("parti") ~= nil);
+	-- Tour suivant, ordres de nouveau retenus : plus rien d'affiché (une fois par partie).
+	G.tour = 12;
+	a.Debut(); a.Publie();
+	a.natives.rejets = 1; a.Tic();
+	h.Debut(); h.Publie();
+	Check("tour suivant : pas de nouvel avertissement", #a.locaux == 2);
+	Check("tour suivant : départ quand même", not a.natives.attente);
 end
 
 -- Début de tour retenu avant l'interface (publication détournée) ---------------------------------

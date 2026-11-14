@@ -345,7 +345,7 @@
 			<Text>{1}: ohne BetterGameExperience (oder mit einer anderen Version) beigetreten, während POL-Korrekturen aktiv sind. Die Partie dieses Spielers wird desynchronisiert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="de_DE">
-			<Text>No First/Last moves aktiv: Alle Spieler beginnen ihre Runde gemeinsam, und die Runde endet für alle, wenn der Timer des Hosts abläuft.</Text>
+			<Text>No First/Last moves aktiv.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="de_DE">
 			<Text>No First/Last moves: gleichzeitiger Rundenbeginn aktiv; gleichzeitiges Rundenende nicht verfügbar (Timer des Spiels nicht umgeleitet).</Text>

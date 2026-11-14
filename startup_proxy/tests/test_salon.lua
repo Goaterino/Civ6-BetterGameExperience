@@ -523,7 +523,7 @@ do
 end
 
 -- 19. Annonce d'arrivée : chaque machine équipée et active dit à tous sa version, une fois par
--- ouverture ; pas la machine désactivée, ni à une migration d'hôte ; rien en hotseat.
+-- ouverture (sans Network.GetSessionID) ; pas la machine désactivée, ni à une migration d'hôte ; rien en hotseat.
 do
 	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob", version = "0.0.9" }, { nom = "Zoé", indispo = "actif=off" }, { nom = "Léo", proxy = false } }, { lang = "en_US" });
 	l.open();
@@ -554,6 +554,23 @@ do
 	check(#l.annonces == 2, "annonces au premier tic");
 	l.tic(3);
 	check(#l.annonces == 2, "une seule fois");
+end
+
+-- 20b. Une seule annonce par session réseau : le salon rouvert dans la même session (l'hôte à la
+-- création, un joueur qui revient) ne redit pas bonjour ; une nouvelle session, si.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } });
+	local session = 7;
+	for _, m in pairs(l.machines) do m.env.Network.GetSessionID = function() return session; end end
+	l.open();
+	check(#l.annonces == 2, "session 7 : deux annonces (" .. #l.annonces .. ")");
+	l.open();
+	l.machines[1].luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+	check(#l.annonces == 2, "même session : pas de nouvelle annonce (" .. #l.annonces .. ")");
+	check(l.machines[1].log:find("annonce déjà faite dans la session 7", 1, true), "journalisé");
+	session = 8;
+	l.open();
+	check(#l.annonces == 4, "nouvelle session : nouvelles annonces (" .. #l.annonces .. ")");
 end
 
 -- 21. Bouton BGE Check : visible chez l'hôte actif seulement, et hors draft de MPH.

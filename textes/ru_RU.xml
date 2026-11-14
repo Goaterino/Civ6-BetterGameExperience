@@ -345,7 +345,7 @@
 			<Text>{1}: вход без BetterGameExperience (или с другой версией), пока исправления POL включены. Партия этого игрока рассинхронизируется.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ru_RU">
-			<Text>No First/Last moves включено: все игроки начинают ход вместе, и ход заканчивается для всех, когда таймер хоста доходит до нуля.</Text>
+			<Text>No First/Last moves включено.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="ru_RU">
 			<Text>No First/Last moves: одновременное начало хода включено; одновременный конец недоступен (таймер игры не перехвачен).</Text>

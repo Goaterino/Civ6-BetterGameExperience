@@ -345,7 +345,7 @@
 			<Text>{1}: dołączenie bez BetterGameExperience (lub z inną wersją), gdy poprawki POL są włączone. Rozgrywka tego gracza ulegnie desynchronizacji.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="pl_PL">
-			<Text>No First/Last moves włączone: wszyscy gracze zaczynają turę razem, a tura kończy się dla wszystkich, gdy zegar hosta dojdzie do zera.</Text>
+			<Text>No First/Last moves włączone.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="pl_PL">
 			<Text>No First/Last moves: jednoczesny początek tury włączony; jednoczesny koniec niedostępny (zegar gry nie został przechwycony).</Text>

@@ -345,7 +345,7 @@
 			<Text>{1}: POL 수정이 켜져 있는데 BetterGameExperience 없이(또는 다른 버전으로) 참가했습니다. 이 플레이어의 게임은 동기화 오류가 발생합니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ko_KR">
-			<Text>No First/Last moves 사용: 모든 플레이어가 함께 턴을 시작하고, 호스트의 타이머가 0이 되면 모두의 턴이 끝납니다.</Text>
+			<Text>No First/Last moves 사용.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="ko_KR">
 			<Text>No First/Last moves: 동시 시작 사용, 동시 종료 사용 불가(게임 타이머를 가로채지 못함).</Text>
