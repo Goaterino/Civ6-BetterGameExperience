@@ -657,21 +657,8 @@ else
 	local function fermeture()
 		BGD.ouvert = false;
 	end
-	-- At load, POL is decided once more from the launch data: everything the host sent before
-	-- launching has been applied by then, while its last verdict may have arrived after this lobby
-	-- was hidden, too late for PlayerInfoChanged (a late client kept POL off while everyone else
-	-- had it on). Same rule, same data on every machine.
-	local decider = BGD_Protege(function()
-		if BGD_Concerne() then
-			local actif = BGD_PolActifs();
-			Civ6Proxy_FixerPol(actif and 1 or 0, "launch data");
-			BGD_Journal("load: POL fixes " .. (actif and "on" or "off") .. " (launch data)");
-		end
-	end);
-	Events.LoadScreenContentReady.Add(function()
-		decider();
-		fermeture();
-	end);
+	-- A verdict that arrives after this lobby is hidden is handled at load (chargement.lua).
+	Events.LoadScreenContentReady.Add(fermeture);
 	Events.LeaveGameComplete.Add(fermeture);
 	Events.MultiplayerPlayerConnected.Add(BGD_Protege(BGD_Publier));
 	Events.PlayerInfoChanged.Add(BGD_Protege(function()

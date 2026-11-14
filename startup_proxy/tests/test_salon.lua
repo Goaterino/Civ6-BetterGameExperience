@@ -405,9 +405,38 @@ do
 	z.values[0].BGD_VERDICT = final;
 	z.events.PlayerInfoChanged.Fire(0);
 	check(z.pol ~= true, "verdict applied while the lobby is hidden: still off");
-	Lancer(l);
+	-- The load screen of each machine, with that machine's copy of the player configurations.
+	local function Charger(m, reseau)
+		local ev = NewEvent();
+		local env = setmetatable({
+			Events = { LoadScreenContentReady = ev },
+			GameConfiguration = {
+				IsNetworkMultiplayer = function() return reseau ~= false; end,
+				IsHotseat = function() return false; end,
+				IsPlayByCloud = function() return false; end,
+			},
+			Network = { GetLocalPlayerID = function() return m.id; end, GetGameHostPlayerID = function() return l.host; end },
+			PlayerConfigurations = setmetatable({}, { __index = function(_, pid)
+				local v = m.values[pid];
+				return v and { GetValue = function(_, k) return v[k]; end };
+			end }),
+			Civ6Proxy_FixerPol = function(a) m.pol = (a == 1); end,
+			Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end,
+		}, { __index = _G });
+		assert(load(CHARGEMENT, "=chargement.lua", "t", env))();
+		ev.Fire();
+	end
+	for _, m in pairs(l.machines) do Charger(m); end
 	check(z.pol == true and l.machines[0].pol == true and l.machines[1].pol == true, "at load: on, like everyone else");
 	check(z.log:find("load: POL fixes on (launch data)", 1, true) ~= nil, "decision at load logged");
+	-- A verdict that does not name this machine, or is off, turns nothing on.
+	z.pol = false;
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	Charger(z);
+	check(z.pol == false, "at load, verdict without our token: stays off");
+	z.values[0].BGD_VERDICT = final:gsub(":1:", ":0:");
+	Charger(z);
+	check(z.pol == false, "at load, verdict off: stays off");
 end
 
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une
