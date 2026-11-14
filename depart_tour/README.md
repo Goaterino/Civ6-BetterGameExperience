@@ -427,8 +427,8 @@ Choix faits à l'implémentation :
 - **`CivicsCommand`** (choix de recherche ou de dogme) passe : son ordre n'a pas d'enjeu.
 - **Annonce** : au chargement, l'hôte écrit dans le chat, pour tous, si le départ simultané est
   actif, ou pourquoi il ne l'est pas.
-- **Prévenir le joueur** : au premier ordre retenu du tour, une ligne locale « ordres retenus »,
-  puis « c'est parti » au départ.
+- **Prévenir le joueur** : au premier ordre retenu, une ligne locale « ordres retenus », puis
+  « c'est parti » au départ ; une seule fois par partie, pas à chaque tour.
 
 ## Reste à vérifier en partie
 

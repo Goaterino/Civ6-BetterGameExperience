@@ -33,9 +33,12 @@
 --   client dont l'annonce a changé depuis l'ouverture du salon : une annonce restée d'une
 --   sauvegarde ne change pas. Un client arrivé après l'annonce d'un autre ne la voit pas changer :
 --   tous deux peuvent alors écrire, le même message. Il n'en manque jamais.
--- À chaque ouverture du salon (pas à une migration d'hôte), une machine équipée et active dit à tous,
+-- À l'ouverture du salon (pas à une migration d'hôte), une machine équipée et active dit à tous,
 -- en vert, qu'elle a BetterGameExperience et sa version exacte (« BGE - Bob has BetterGameExperience
 -- 0.9.0 enabled. »), une demi-seconde après l'ouverture (premier tic du minuteur, voir plus bas).
+-- Une seule fois par session réseau (Network.GetSessionID, comme StagingRoom.lua pour son « fresh
+-- session ») : le salon se rouvre dans la même session (l'hôte à la création, un joueur qui revient)
+-- sans redire bonjour.
 -- Le BGE Check : un bouton de l'hôte, placé comme le « MOD CHECK » de MPH mais à gauche (symétrique
 -- par rapport au centre de l'écran), demande à chaque humain connecté sa version par un message
 -- privé caché « .bgd_check <jeton> ». Le bloc de chaque machine équipée répond, même désactivée, par
@@ -63,6 +66,7 @@ local BGD = {
 	message = nil,     -- dernier message envoyé dans le chat
 	ouvert = false,    -- salon ouvert : de l'ouverture au chargement de la partie (ou au départ)
 	annonce = false,   -- annonce « BetterGameExperience activé » à envoyer au prochain tic
+	session = nil,     -- session réseau de la dernière annonce envoyée
 	check = nil,       -- hôte : BGE Check en cours { jeton, ordre, attendus, reponses, tics }
 };
 
@@ -296,9 +300,20 @@ local function BGD_Nom(id)
 end
 
 -- Annonce d'arrivée : cette machine a BetterGameExperience actif, à telle version.
+local function BGD_Session()
+	local ok, id = pcall(function() return Network.GetSessionID(); end);
+	return ok and id or nil;
+end
+
 local function BGD_Annoncer()
 	BGD.annonce = false;
 	if not BGD_Concerne() then return; end
+	local session = BGD_Session();
+	if session ~= nil and session == BGD.session then
+		BGD_Journal("annonce déjà faite dans la session " .. tostring(session));
+		return;
+	end
+	BGD.session = session;
 	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
 end
 

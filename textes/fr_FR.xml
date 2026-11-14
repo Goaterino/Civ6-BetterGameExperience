@@ -345,7 +345,7 @@
 			<Text>{1} : arrivée sans BetterGameExperience (ou d'une autre version) alors que les correctifs POL sont actifs. Sa partie va se désynchroniser.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="fr_FR">
-			<Text>No First/Last moves actif : tous les joueurs commencent leur tour ensemble, et le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.</Text>
+			<Text>No First/Last moves actif.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="fr_FR">
 			<Text>No First/Last moves : départ de tour simultané actif ; fin simultanée indisponible (minuteur de l'exe non détourné).</Text>
