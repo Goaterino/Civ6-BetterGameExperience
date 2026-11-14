@@ -251,6 +251,13 @@ unsafe extern "C-unwind" fn lua_version_installee(l: *mut std::ffi::c_void) -> i
     1
 }
 
+/// `Civ6Proxy_MediasPings()` → 1 si les images et sons des signaux sont en place (`medias`), sinon 0.
+unsafe extern "C-unwind" fn lua_medias(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, crate::medias::presents() as i32);
+    1
+}
+
 pub(crate) unsafe fn arg_str(l: *mut std::ffi::c_void, i: i32) -> Option<String> {
     let h = hks()?;
     let mut len = 0usize;
@@ -303,6 +310,7 @@ pub const NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
     (lua_version_installee, b"Civ6Proxy_VersionInstallee\0"),
+    (lua_medias, b"Civ6Proxy_MediasPings\0"),
 ];
 
 const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];

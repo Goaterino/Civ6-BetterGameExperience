@@ -1,6 +1,6 @@
 # Installeur : `BetterGameExperience_V<version>.exe`
 
-Installe, met à jour, répare ou retire les deux proxys et les médias des signaux d'équipe à partir de la dernière release publiée sur
+Installe, met à jour, répare ou retire les deux proxys à partir de la dernière release publiée sur
 GitHub (voir [release/README.md](../release/README.md)). Il est publié avec chaque release, sous
 le nom `BetterGameExperience_V<version>.exe` (`BetterGameExperience_V0.6.0.exe`) ; compilé, et à son
 emplacement fixe, il s'appelle `BetterGameExperience.exe`.
@@ -55,6 +55,11 @@ emplacement fixe, il s'appelle `BetterGameExperience.exe`.
   (`StartupProxyStatus`, `RolloverProxyStatus`). Une `winmm.dll` qui n'est pas la nôtre (un autre
   mod) n'est pas écrasée : l'installation s'arrête et le dit. `rollover_proxy.cfg` n'est jamais
   touché.
+- **Images et sons des signaux** (`DLC/BGEPings`) : pas posés par l'installeur, mais par
+  `winmm.dll` au lancement du jeu ([startup_proxy](../startup_proxy/README.md)), pour que les
+  installeurs déjà distribués, qui n'acceptent que deux fichiers, installent toujours les releases.
+  La désinstallation les retire si leur `.modinfo` est le nôtre, et laisse les fichiers ajoutés par
+  le joueur.
 - **Anciennes installations** (jusqu'à la v0.3.0, chaque proxy à la place d'un original,
   renommé `<nom>_orig.dll`) : l'installation et la désinstallation remettent l'original en place.
   Un `_orig` à côté d'un original remis par Steam est périmé : il est retiré. La fenêtre les montre

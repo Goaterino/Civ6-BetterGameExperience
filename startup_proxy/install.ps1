@@ -69,7 +69,7 @@ if ($Uninstall) {
 if ((Test-Path $proxy) -and -not (Test-Ours $proxy)) { throw "$proxy n'est pas le proxy de démarrage (un autre mod ?) : retire-le d'abord." }
 $built = Join-Path $PSScriptRoot "target\release\winmm.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
-Sync-PingAssets
+# Les images et sons des signaux (DLC\BGEPings) sont posés par le proxy lui-même au lancement du jeu.
 Copy-Item $built $proxy -Force
 Write-Host "Proxy de démarrage installé : $proxy."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

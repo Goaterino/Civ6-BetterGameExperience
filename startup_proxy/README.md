@@ -37,6 +37,12 @@ remis les originaux des deux anciens proxys.
 
 - Le proxy est posé dans `Base\Binaries\Win64Steam` sous le nom `winmm.dll`. Les noms des fichiers
   posés sont dans [proxy/src/noms.rs](../proxy/src/noms.rs), communs aux proxys et à l'installeur.
+- **Images et sons des signaux d'équipe** ([src/medias.rs](src/medias.rs)) : embarqués dans le
+  proxy (`include_bytes!` de `ping_assets/`), posés dans `DLC\BGEPings` dans `DllMain`, avant que
+  le jeu ne cherche ses mods. Un fichier identique n'est pas réécrit (le jeu garde son cache des
+  mods), le `.modinfo` est écrit en dernier, un `BGEPings.modinfo` étranger n'est pas touché. Le
+  journal le dit (`médias : …`). Sans droit d'écriture, rien n'est posé : le salon le sait
+  (`Civ6Proxy_MediasPings`, clé `BGD_MEDIAS`) et l'hôte n'ajoute alors pas le mod à la partie.
 - **Les relais.** Les 180 exports nommés de la winmm de Windows (liste dans
   [src/winmm_exports.txt](src/winmm_exports.txt)) et son ordinal 2, sans nom, sont des relais
   `jmp [rip+case]` générés par [build.rs](build.rs). Au début de `DllMain`, [src/relais.rs](src/relais.rs)

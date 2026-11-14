@@ -24,7 +24,10 @@ Audio options, both at the main menu and in a match.
   honors the ping, master, effects and mute-on-focus-loss settings.
 - BGE installs the approved wheel, selection ring, ground ripples, blocked
   indicator, call icons and Wwise cues from [ping_assets](../../../../ping_assets).
-  The media component registers automatically when Civ opens the main menu.
+  The media component is a hidden local mod, never in the lobby's game configuration:
+  a player without it would be kicked on joining. The host adds it just before
+  `Network.LaunchGame`, only when team pings are on and every human has BGE (end of
+  [salon.lua](../../../../startup_proxy/src/salon.lua)).
   Entries with a `skin` name use the matching DDS and audio event in that package.
   The signed release manifest covers every asset as well as both DLLs.
 - Put new label keys in each [translation XML](../../../../textes/README.md) and run

@@ -720,6 +720,129 @@ do
     check(Pol(off, 0) == "actifs", "signaux désactivés : les observateurs ne changent pas les autres POL");
 end
 
+-- Images et sons des signaux (mod local « BGE - Ping assets ») : jamais dans la configuration du
+-- salon, ajoutés par l'hôte juste avant Network.LaunchGame si les signaux sont cochés et les POL
+-- actifs ; le « Prêt » est gardé quand c'est le seul changement.
+local MEDIA = "863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd";
+-- Configuration de partie partagée : l'hôte modifie la sienne, BroadcastGameConfig la recopie chez
+-- tous et y lève GameConfigChanged, que StagingRoom.lua traite en retirant le « Prêt » local.
+local function LobbyPings(joueurs, options, modsDepart)
+	local partage = { mods = {} };
+	for _, id in ipairs(modsDepart or { "BBG" }) do table.insert(partage.mods, id); end
+	local lobby;
+	options.avant = function(env)
+		local m;
+		for _, mm in pairs(lobby and lobby.machines or {}) do if mm.env == env then m = mm; end end
+		local copie = {};
+		for _, id in ipairs(partage.mods) do table.insert(copie, id); end
+		env.BGD_mods = copie;
+		local base = env.GameConfiguration;
+		env.GameConfiguration = setmetatable({
+			GetEnabledMods = function()
+				local t = {};
+				for _, id in ipairs(env.BGD_mods) do table.insert(t, { Id = id }); end
+				return t;
+			end,
+			ClearEnabledMods = function() env.BGD_mods = {}; end,
+			AddEnabledMods = function(id)
+				assert(type(id) == "string");
+				for _, x in ipairs(env.BGD_mods) do if x == id then return; end end
+				table.insert(env.BGD_mods, id);
+			end,
+		}, { __index = base });
+		env.Modding = { GetModHandle = function(id) return id == MEDIA and 42 or nil; end };
+		-- `medias = false` : le proxy de démarrage n'a pas pu poser les images et sons.
+		local j = joueurs[env.Network.GetLocalPlayerID() + 1];
+		env.Civ6Proxy_MediasPings = function() return j.medias == false and 0 or 1; end
+		env.BGD_pret = true;
+		env.BGD_lances = 0;
+		env.SetLocalReady = function(v) env.BGD_pret = v; end
+		env.Network.LaunchGame = function()
+			env.BGD_lances = env.BGD_lances + 1;
+			env.BGD_modsAuLancement = #env.BGD_mods;
+			for _, id in ipairs(env.BGD_mods) do if id == MEDIA then env.BGD_mediaAuLancement = true; end end
+		end
+		env.Network.BroadcastGameConfig = function()
+			for _, d in pairs(lobby.machines) do
+				if d.env ~= env then
+					d.env.BGD_mods = {};
+					for _, id in ipairs(env.BGD_mods) do table.insert(d.env.BGD_mods, id); end
+				end
+				-- Gestionnaire de StagingRoom.lua, inscrit avant le bloc, puis celui du bloc.
+				d.env.SetLocalReady(false);
+				d.events.GameConfigChanged.Fire();
+			end
+		end
+		-- Comme dans le jeu : Network est en lecture seule.
+		local reel = env.Network;
+		env.Network = setmetatable({}, { __index = reel,
+			__newindex = function() error("Attempt to modify read-only table"); end });
+	end
+	lobby = NewLobby(joueurs, options);
+	return lobby;
+end
+local function Media(env)
+	for _, id in ipairs(env.BGD_mods) do if id == MEDIA then return true; end end
+	return false;
+end
+
+-- Tous équipés, signaux cochés : rien au salon, le mod part avec le lancement, « Prêt » gardé.
+do
+	local l = LobbyPings({ { nom = "Hôte" }, { nom = "Bob" } }, { pings = true });
+	l.open();
+	check(not Media(l.machines[0].env) and not Media(l.machines[1].env), "signaux : rien dans la configuration du salon");
+	l.countdown();
+	check(not Media(l.machines[0].env), "signaux : rien au début du compte à rebours");
+	l.machines[0].env.Network.LaunchGame();
+	local h, b = l.machines[0].env, l.machines[1].env;
+	check(h.BGD_lances == 1 and h.BGD_mediaAuLancement == true and h.BGD_modsAuLancement == 2, "signaux : mod ajouté avant le lancement");
+	check(Media(b), "signaux : configuration reçue par le client");
+	check(h.BGD_pret == true and b.BGD_pret == true, "signaux : « Prêt » gardé chez tous");
+	-- Un vrai changement de réglage retire toujours le « Prêt ».
+	h.Network.BroadcastGameConfig();
+	check(b.BGD_pret == false, "signaux : autre changement, « Prêt » retiré");
+	-- Un second lancement n'ajoute rien de plus.
+	h.Network.LaunchGame();
+	check(h.BGD_modsAuLancement == 2, "signaux : ajouté une seule fois");
+end
+
+-- Un joueur sans BGE, ou signaux décochés : jamais ajouté.
+do
+	local l = LobbyPings({ { nom = "Hôte" }, { nom = "Bob", proxy = false } }, { pings = true });
+	l.open();
+	l.machines[0].env.Network.LaunchGame();
+	check(l.machines[0].env.BGD_lances == 1 and not Media(l.machines[0].env), "signaux : joueur sans BGE, mod non ajouté");
+	local off = LobbyPings({ { nom = "Hôte" }, { nom = "Bob" } }, { pings = false });
+	off.open();
+	off.machines[0].env.Network.LaunchGame();
+	check(not Media(off.machines[0].env), "signaux décochés : mod non ajouté");
+end
+
+-- Images et sons absents chez un joueur (dossier du jeu non modifiable) : jamais ajoutés.
+do
+	local l = LobbyPings({ { nom = "Hôte" }, { nom = "Bob", medias = false } }, { pings = true });
+	l.open();
+	check(l.actif() == "1", "médias absents : les POL restent actifs");
+	l.machines[0].env.Network.LaunchGame();
+	check(l.machines[0].env.BGD_lances == 1 and not Media(l.machines[0].env), "médias absents chez un client : mod non ajouté");
+	check((l.machines[0].log or ""):find("absents chez Bob", 1, true) ~= nil, "médias absents : le journal nomme le joueur");
+	local h = LobbyPings({ { nom = "Hôte", medias = false }, { nom = "Bob" } }, { pings = true });
+	h.open();
+	h.machines[0].env.Network.LaunchGame();
+	check(not Media(h.machines[0].env), "médias absents chez l'hôte : mod non ajouté");
+end
+
+-- Sauvegarde d'une partie jouée avec les signaux : l'hôte retire le mod à l'ouverture, garde les autres.
+do
+	local l = LobbyPings({ { nom = "Hôte" }, { nom = "Bob" } }, { pings = true }, { "BBG", MEDIA, "MPH" });
+	l.open();
+	local h, b = l.machines[0].env, l.machines[1].env;
+	check(not Media(h) and not Media(b), "sauvegarde : mod retiré chez tous");
+	check(#h.BGD_mods == 2 and h.BGD_mods[1] == "BBG" and h.BGD_mods[2] == "MPH", "sauvegarde : autres mods gardés dans l'ordre");
+	h.Network.LaunchGame();
+	check(Media(b), "sauvegarde : remis au lancement");
+end
+
 if failures > 0 then
 	print(failures .. " échec(s)");
 	os.exit(1);
