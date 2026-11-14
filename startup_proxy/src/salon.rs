@@ -244,6 +244,24 @@ unsafe extern "C-unwind" fn lua_version(l: *mut std::ffi::c_void) -> i32 {
     }
 }
 
+/// BetterGameExperience actif sur cette machine : proxy de GameCore installé et pas `actif=off`.
+/// Fichier de réglages illisible : compté comme actif, comme `read_config` du proxy de GameCore qui
+/// garde alors ses valeurs par défaut.
+pub fn bge_actif(config: Result<(String, bool), String>) -> bool {
+    match config {
+        Ok((cfg, installe)) => installe && !actif_off(&cfg),
+        Err(_) => true,
+    }
+}
+
+/// `Civ6Proxy_Actif()` → 1 si BetterGameExperience est actif sur cette machine, sinon 0 (options de
+/// partie de BGE grisées chez un hôte qui l'a désactivé, `option_partie.lua`).
+unsafe extern "C-unwind" fn lua_actif(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, bge_actif(crate::options::read_config()) as i32);
+    1
+}
+
 /// `Civ6Proxy_VersionInstallee()` → la version de ce proxy, qu'il s'annonce ou non (BGE Check).
 unsafe extern "C-unwind" fn lua_version_installee(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
@@ -323,7 +341,7 @@ const PARTIE_NATIVES: Natives = &[
     (crate::relink::lua_state, b"Civ6Proxy_RelinkState\0"),
     (crate::relink::lua_forget, b"Civ6Proxy_RelayForgetPair\0"),
 ];
-const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0")];
+const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_actif, b"Civ6Proxy_Actif\0")];
 
 /// Appelée par l'accroche sur StagingRoom.lua : pose les natives, puis rend le texte à compiler.
 pub unsafe fn prepare(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
@@ -435,6 +453,9 @@ mod tests {
         assert!(actif_off("mode=coalesce\r\nactif=off\r\n"));
         assert!(!actif_off("actif=off\nactif=on\n"), "la dernière occurrence compte");
         assert!(!actif_off("mode=coalesce\n"), "absent : actif");
+        assert!(bge_actif(Ok(("mode=coalesce\n".into(), true))));
+        assert!(!bge_actif(Ok(("actif=off\n".into(), true))), "désactivé");
+        assert!(!bge_actif(Ok((String::new(), false))), "proxy de GameCore absent");
     }
 
     #[test]
@@ -449,6 +470,13 @@ mod tests {
         for &(_, name) in OPTION_NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(OPTION_BLOCK.contains(name), "{name} posée mais pas utilisée");
+        }
+        // Dans l'autre sens : chaque native appelée par le bloc doit être posée (sinon le bloc la
+        // voit nil et se tait, comme Civ6Proxy_Actif perdue au merge des PR #7 et #9).
+        let posees: Vec<&str> = OPTION_NATIVES.iter().map(|&(_, n)| std::str::from_utf8(&n[..n.len() - 1]).unwrap()).collect();
+        for (i, _) in OPTION_BLOCK.match_indices("Civ6Proxy_") {
+            let nom: String = OPTION_BLOCK[i..].chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '_').collect();
+            assert!(posees.contains(&nom.as_str()), "{nom} utilisée par option_partie.lua mais pas posée");
         }
         for &(_, name) in CHARGEMENT_NATIVES {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
