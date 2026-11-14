@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="en_US">
 			<Text>Blocked a damaged network message that would have frozen my game.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="en_US">
+			<Text>{1}'s game was out of sync ({2}) and is being reloaded from the host.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="en_US">
+			<Text>{1} is back in sync.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="en_US">
+			<Text>{1}'s game was out of sync ({2}) and was repaired without a reload.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="en_US">
 			<Text>{1} and {2} are linked through the host (0 ms). Trying to connect them directly during the turn change.</Text>
 		</Row>

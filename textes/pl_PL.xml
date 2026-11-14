@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pl_PL">
 			<Text>Zablokowano uszkodzoną wiadomość sieciową, która zamroziłaby grę.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="pl_PL">
+			<Text>Gra gracza {1} była niezsynchronizowana ({2}) i jest wczytywana ponownie od hosta.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="pl_PL">
+			<Text>{1} jest znowu zsynchronizowany.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="pl_PL">
+			<Text>Gra gracza {1} była niezsynchronizowana ({2}) i została naprawiona bez ponownego wczytywania.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pl_PL">
 			<Text>{1} i {2} są połączeni przez hosta (0 ms). Próba bezpośredniego połączenia podczas zmiany tury.</Text>
 		</Row>

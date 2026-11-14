@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="zh_Hans_CN">
 			<Text>已拦截一条损坏的网络消息，否则游戏会卡死。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="zh_Hans_CN">
+			<Text>{1} 的游戏不同步（{2}），正在从主机重新加载。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="zh_Hans_CN">
+			<Text>{1} 已恢复同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="zh_Hans_CN">
+			<Text>{1} 的游戏不同步（{2}），已在不重新加载的情况下修复。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="zh_Hans_CN">
 			<Text>{1} 和 {2} 通过主机连接（0 ms）。将在回合切换时尝试直接连接。</Text>
 		</Row>

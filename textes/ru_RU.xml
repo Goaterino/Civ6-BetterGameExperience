@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ru_RU">
 			<Text>Заблокировано повреждённое сетевое сообщение: из-за него игра зависла бы.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="ru_RU">
+			<Text>Игра {1} рассинхронизировалась ({2}) и перезагружается с хоста.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="ru_RU">
+			<Text>{1} снова синхронизирован.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ru_RU">
+			<Text>Игра {1} рассинхронизировалась ({2}) и была исправлена без перезагрузки.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ru_RU">
 			<Text>{1} и {2} соединены через хоста (0 мс). Попытка прямого соединения во время смены хода.</Text>
 		</Row>

@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="fr_FR">
 			<Text>Message réseau abîmé bloqué : il aurait gelé la partie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="fr_FR">
+			<Text>La partie de {1} était désynchronisée ({2}) : elle est rechargée depuis l'hôte.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="fr_FR">
+			<Text>{1} est de nouveau synchronisé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="fr_FR">
+			<Text>La partie de {1} était désynchronisée ({2}) : elle a été réparée sans rechargement.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="fr_FR">
 			<Text>{1} et {2} passent par l'hôte (0 ms). Tentative de lien direct pendant le changement de tour.</Text>
 		</Row>
