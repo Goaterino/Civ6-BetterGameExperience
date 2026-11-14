@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="it_IT">
 			<Text>Messaggio di rete danneggiato bloccato: avrebbe congelato la partita.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="it_IT">
+			<Text>La partita di {1} era desincronizzata ({2}) e viene ricaricata dall'host.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="it_IT">
+			<Text>{1} è di nuovo sincronizzato.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="it_IT">
+			<Text>La partita di {1} era desincronizzata ({2}) ed è stata riparata senza ricaricare.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="it_IT">
 			<Text>{1} e {2} sono collegati tramite l'host (0 ms). Tentativo di collegamento diretto durante il cambio di turno.</Text>
 		</Row>

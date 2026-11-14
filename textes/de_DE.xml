@@ -611,6 +611,15 @@
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="de_DE">
 			<Text>Beschädigte Netzwerknachricht blockiert: Sie hätte das Spiel eingefroren.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="de_DE">
+			<Text>Das Spiel von {1} war nicht mehr synchron ({2}) und wird vom Host neu geladen.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="de_DE">
+			<Text>{1} ist wieder synchron.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="de_DE">
+			<Text>Das Spiel von {1} war nicht mehr synchron ({2}) und wurde ohne Neuladen repariert.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="de_DE">
 			<Text>{1} und {2} sind über den Host verbunden (0 ms). Direkte Verbindung wird beim Rundenwechsel versucht.</Text>
 		</Row>

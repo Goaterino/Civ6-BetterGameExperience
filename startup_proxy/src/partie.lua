@@ -10,6 +10,7 @@
 --   Civ6Proxy_RelinkStart(partner, steamID) -> 1 if the direct link attempt started
 --   Civ6Proxy_RelinkState(partner) -> 0 in progress, 1 linked directly, 2 failed
 --   Civ6Proxy_RelayForgetPair(a, b) -> removes the pair from the local relay table (see below)
+--   Civ6Proxy_SyncNotes()     -> major objects repaired for a client at a turn end (host, see below)
 --
 -- Un joueur qui rejoint la partie en cours, ou s'y reconnecte, passe par le salon : il tire un
 -- nouveau jeton et ne croit le verdict de l'hôte que s'il l'y trouve (salon.lua). Or l'hôte est en
@@ -255,4 +256,104 @@ if Civ6Proxy_RelayedPairs ~= nil and Civ6Proxy_RelinkStart ~= nil and Civ6Proxy_
 			BGD_PartieJournal("relink: error: " .. tostring(err));
 		end
 	end);
+end
+
+-- Desyncs everyone should know about (sync_notes.rs). The game's silent repairs stay silent; the
+-- host says in the chat that a player's game is being reloaded after a desync (not a join, a rejoin
+-- or a remap), that they are back, and when a large repair of major objects went without a reload.
+--   Civ6Proxy_SyncNotes() -> "player|major archives|checks in a row|category, category" separated
+--                            by ";", since the last call (host only)
+if Civ6Proxy_SyncNotes ~= nil then
+	local LARGE = 20;          -- major archives repaired at one turn end worth a line
+	local JOIN_GRACE = 120;    -- seconds after a connection during which a snapshot is a (re)join
+	local RELOAD_LIMIT = 300;  -- seconds after which a reload that never finished is forgotten
+	local RECENT = 30;         -- seconds a turn end's categories stay attached to a reload
+	local S = { turnEnds = 0, joined = {}, reloading = {}, last = {} };
+
+	local function IsHost()
+		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
+	end
+
+	local function Name(id)
+		local pc = PlayerConfigurations[id];
+		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
+	end
+
+	local function Reloading(id)
+		local since = S.reloading[id];
+		return since ~= nil and os.clock() - since < RELOAD_LIMIT;
+	end
+
+	-- "<host>: BGE - …" to everyone, in English (each machine with BGE translates it on arrival).
+	local function Say(color, key, ...)
+		local text = color .. "BGE - " .. BGD_TxtAnglais(key, ...) .. "[ENDCOLOR]";
+		BGD_PartieJournal("message: " .. text);
+		if GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud() then
+			Network.SendChat(text, ChatTargetTypes.CHATTARGET_ALL, -1);
+		end
+	end
+
+	local function Safely(f)
+		return function(...)
+			local ok, err = pcall(f, ...);
+			if not ok then
+				BGD_PartieJournal("sync: error: " .. tostring(err));
+			end
+		end
+	end
+
+	-- Reads the host hook's notes: remembers each player's categories, announces a large repair.
+	local function Drain()
+		local notes = Civ6Proxy_SyncNotes();
+		if notes == nil or notes == "" or not IsHost() then
+			return;
+		end
+		for note in string.gmatch(notes, "[^;]+") do
+			local p, n, streak, list = string.match(note, "^(%-?%d+)|(%d+)|(%d+)|(.*)$");
+			p, n, streak = tonumber(p), tonumber(n), tonumber(streak);
+			if p ~= nil and n ~= nil and streak ~= nil then
+				S.last[p] = { at = os.clock(), list = list };
+				BGD_PartieJournal("sync: player " .. p .. ": " .. n .. " major archive(s) repaired (" .. list .. "), " .. streak .. " in a row");
+				if n >= LARGE and streak == 1 and not Reloading(p) then
+					Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_REPAIRED", Name(p), list);
+				end
+			end
+		end
+	end
+
+	Events.TurnEnd.Add(Safely(function()
+		S.turnEnds = S.turnEnds + 1;
+	end));
+
+	Events.MultiplayerPlayerConnected.Add(Safely(function(playerID)
+		if playerID ~= nil then
+			S.joined[playerID] = os.clock();
+		end
+	end));
+
+	-- A client asks for the host's whole game: the game could not repair it.
+	Events.MultiplayerSnapshotRequested.Add(Safely(function(playerID)
+		if not IsHost() or playerID == nil or playerID < 0 or playerID == Network.GetLocalPlayerID() or Reloading(playerID) then
+			return;
+		end
+		Drain();
+		local joined = S.joined[playerID];
+		if S.turnEnds == 0 or Network.IsPlayerHotJoining(playerID) or (joined ~= nil and os.clock() - joined < JOIN_GRACE) then
+			BGD_PartieJournal("sync: player " .. tostring(playerID) .. " asked for the host's game (join or remap, not announced)");
+			return;
+		end
+		S.reloading[playerID] = os.clock();
+		local last = S.last[playerID];
+		local list = (last ~= nil and os.clock() - last.at < RECENT and last.list ~= "") and last.list or "game state";
+		Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_RELOADING", Name(playerID), list);
+	end));
+
+	Events.MultiplayerSnapshotProcessed.Add(Safely(function(playerID)
+		if IsHost() and playerID ~= nil and S.reloading[playerID] ~= nil then
+			S.reloading[playerID] = nil;
+			Say("[COLOR_GREEN]", "LOC_BGD_CHAT_SYNC_BACK", Name(playerID));
+		end
+	end));
+
+	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
 end
