@@ -35,6 +35,12 @@
 //!
 //! Every snapshot handed to the game is also reported to `rejoin.rs`, which reads its flags.
 //!
+//! Host side: the host never records that its launch broadcast (flag 0x10) reached the players, so
+//! the second snapshot goes to everyone still loading. When the host processes its own copy of the
+//! broadcast, every other player still waiting on the launch request is marked "snapshot sent"
+//! (network player + 0x1b): no second save, no second snapshot. Any later snapshot request clears
+//! the mark (rejoin, resync, remap). Setting `launch_guard=off` turns off this host part alone.
+//!
 //! Addresses of both exes of 2026-11-05 (`EXES`), checked byte by byte at startup; DX11 was found
 //! from the vtables next to the ones of `relink` and from the bytes of the "game view" test (in DX11
 //! the current view is at + 0x5400, not + 0x5420). Settings: `actif=off` installs nothing (BGE's
@@ -42,7 +48,7 @@
 
 use crate::{log, win};
 use std::ffi::c_void;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 /// Base of the exe's Ghidra addresses.
 const BASE: u64 = 0x1_4000_0000;
@@ -57,6 +63,18 @@ const SESSION_LOCAL: usize = 0x148;
 const SESSION_PLAYER: usize = 0x158;
 /// Network player: waiting for a snapshot.
 const PLAYER_WAITING: usize = 0x1a;
+/// NetSnapshot flags; 0x10 only on the launch broadcast.
+const MSG_FLAGS: usize = 0x38;
+const FLAG_LAUNCH: u32 = 0x10;
+/// Session vtable: "is host". Network player: snapshot sent; settled (in the session before the
+/// launch); reason of the last snapshot request (2: launch).
+const SESSION_IS_HOST: usize = 0x1c0;
+const PLAYER_SENT: usize = 0x1b;
+const PLAYER_SETTLED: usize = 0x1c;
+const PLAYER_REASON: usize = 0x28;
+const REASON_LAUNCH: i32 = 2;
+/// Player IDs covered by the game's own broadcast.
+const PLAYER_IDS: i32 = 64;
 
 /// Start of `NetSnapshot::Process`, the same in both exes, up to the call to `ProcessSnapshot`:
 /// local player (`call [rbx+148h]`, `call [rbx+158h]`), `mov byte [rax+1bh],1`, the data test
@@ -89,6 +107,71 @@ const IN_GAME_BYTES: [Option<u8>; 50] = {
 /// Offset of the current view's low bytes in `IN_GAME_BYTES` (`cmp rcx,[rax+…]`).
 const IN_GAME_VIEW_AT: usize = 32;
 
+const X: Option<u8> = None;
+const fn b(x: u8) -> Option<u8> {
+    Some(x)
+}
+
+/// NetSnapshotRequest::Process: `call [rax+158h]`, `call set_waiting` (rel32 at 0x3b),
+/// `mov byte [rsi+1bh],0`.
+const REQUEST: [Option<u8>; 0x66] = [
+    b(0x48), b(0x85), b(0xd2), b(0x74), b(0x60), b(0x48), b(0x89), b(0x5c), b(0x24), b(0x10), b(0x57), b(0x48), b(0x83), b(0xec), b(0x20), b(0x48),
+    b(0x8b), b(0x02), b(0x48), b(0x8b), b(0xda), b(0x8b), b(0x51), b(0x38), b(0x48), b(0x8b), b(0xf9), b(0x48), b(0x8b), b(0xcb), b(0x48), b(0x89),
+    b(0x74), b(0x24), b(0x30), b(0xff), b(0x90), b(0x58), b(0x01), b(0x00), b(0x00), b(0x48), b(0x8b), b(0xf0), b(0x48), b(0x85), b(0xc0), b(0x74),
+    b(0x25), b(0x44), b(0x8b), b(0x47), b(0x3c), b(0xb2), b(0x01), b(0x48), b(0x8b), b(0xc8), b(0xe8), X, X, X, X, b(0xc6),
+    b(0x46), b(0x1b), b(0x00), b(0x48), b(0x8b), b(0xcb), b(0x48), b(0x8b), b(0x03), b(0x44), b(0x8b), b(0x47), b(0x3c), b(0x8b), b(0x57), b(0x38),
+    b(0xff), b(0x90), b(0xa0), b(0x03), b(0x00), b(0x00), b(0x48), b(0x8b), b(0x74), b(0x24), b(0x30), b(0x48), b(0x8b), b(0x5c), b(0x24), b(0x38),
+    b(0x48), b(0x83), b(0xc4), b(0x20), b(0x5f), b(0xc3),
+];
+const REQUEST_CALL_AT: u64 = 0x3b;
+
+/// "Set waiting for a snapshot" (player, waiting, reason): `mov [rcx+1ah],dl ; test dl,dl ; jne ;
+/// mov byte [rcx+1ch],1 ; ret ; mov [rcx+28h],r8d ; ret`.
+const SET_WAITING: [u8; 17] = [0x88, 0x51, 0x1a, 0x84, 0xd2, 0x75, 0x05, 0xc6, 0x41, 0x1c, 0x01, 0xc3, 0x44, 0x89, 0x41, 0x28, 0xc3];
+
+/// HandleSnapshots, up to its per-player test: `call [rax+1c0h]` (host), then per player
+/// `cmp byte [rax+1ah],0 ; je`, `cmp byte [rax+1bh],0 ; jne`, `call [rax+0d8h]`. Calls at 0x73, 0xaa.
+const HANDLE: [Option<u8>; 0x138] = [
+    b(0x40), b(0x55), b(0x41), b(0x54), b(0x48), b(0x8d), b(0xac), b(0x24), b(0x18), b(0xfe), b(0xff), b(0xff), b(0x48), b(0x81), b(0xec), b(0xe8),
+    b(0x02), b(0x00), b(0x00), b(0x48), b(0x8b), b(0x01), b(0x4c), b(0x8b), b(0xe1), b(0xff), b(0x90), b(0xc0), b(0x01), b(0x00), b(0x00), b(0x84),
+    b(0xc0), b(0x0f), b(0x84), b(0x6e), b(0x05), b(0x00), b(0x00), b(0x41), b(0x80), b(0xbc), b(0x24), b(0xe0), b(0x01), b(0x00), b(0x00), b(0x00),
+    b(0x0f), b(0x85), b(0x5f), b(0x05), b(0x00), b(0x00), b(0x49), b(0x8b), b(0x4c), b(0x24), b(0x18), b(0x48), b(0x8b), b(0x01), b(0xff), b(0x90),
+    b(0xd0), b(0x00), b(0x00), b(0x00), b(0x84), b(0xc0), b(0x0f), b(0x84), b(0x49), b(0x05), b(0x00), b(0x00), b(0x49), b(0x8b), b(0x4c), b(0x24),
+    b(0x18), b(0x48), b(0x8b), b(0x01), b(0xff), b(0x90), b(0xc8), b(0x00), b(0x00), b(0x00), b(0x84), b(0xc0), b(0x0f), b(0x84), b(0x33), b(0x05),
+    b(0x00), b(0x00), b(0x49), b(0x8b), b(0x04), b(0x24), b(0x49), b(0x8b), b(0xcc), b(0xff), b(0x90), b(0x70), b(0x02), b(0x00), b(0x00), b(0x48),
+    b(0x8b), b(0xc8), b(0xe8), X, X, X, X, b(0x84), b(0xc0), b(0x0f), b(0x85), b(0x16), b(0x05), b(0x00), b(0x00), b(0x49),
+    b(0x8b), b(0x04), b(0x24), b(0x0f), b(0x57), b(0xc0), b(0x0f), b(0x57), b(0xc9), b(0x66), b(0x0f), b(0x7f), b(0x45), b(0x80), b(0x49), b(0x8b),
+    b(0xcc), b(0xf3), b(0x0f), b(0x7f), b(0x4c), b(0x24), b(0x70), b(0xff), b(0x90), b(0x70), b(0x02), b(0x00), b(0x00), b(0x48), b(0x8b), b(0xc8),
+    b(0x4c), b(0x8d), b(0x44), b(0x24), b(0x70), b(0x48), b(0x8d), b(0x55), b(0x80), b(0xe8), X, X, X, X, b(0x66), b(0x0f),
+    b(0x6f), b(0x45), b(0x80), b(0x48), b(0x8b), b(0x4c), b(0x24), b(0x70), b(0x66), b(0x48), b(0x0f), b(0x7e), b(0xc0), b(0x66), b(0x0f), b(0x7f),
+    b(0x44), b(0x24), b(0x50), b(0x48), b(0x3b), b(0xc1), b(0x0f), b(0x84), b(0xc9), b(0x04), b(0x00), b(0x00), b(0x48), b(0x89), b(0x9c), b(0x24),
+    b(0xe0), b(0x02), b(0x00), b(0x00), b(0x48), b(0x8b), b(0x5c), b(0x24), b(0x50), b(0x4c), b(0x89), b(0xac), b(0x24), b(0xc8), b(0x02), b(0x00),
+    b(0x00), b(0x41), b(0xbd), b(0x17), b(0x01), b(0x00), b(0x00), b(0x4c), b(0x89), b(0xbc), b(0x24), b(0xb8), b(0x02), b(0x00), b(0x00), b(0x4c),
+    b(0x8b), b(0x7c), b(0x24), b(0x58), b(0x48), b(0x89), b(0xb4), b(0x24), b(0xd8), b(0x02), b(0x00), b(0x00), b(0x48), b(0x89), b(0xbc), b(0x24),
+    b(0xd0), b(0x02), b(0x00), b(0x00), b(0x4c), b(0x89), b(0xb4), b(0x24), b(0xc0), b(0x02), b(0x00), b(0x00), b(0x0f), b(0x1f), b(0x40), b(0x00),
+    b(0x48), b(0x8b), b(0x43), b(0x08), b(0x80), b(0x78), b(0x1a), b(0x00), b(0x0f), b(0x84), b(0x3e), b(0x02), b(0x00), b(0x00), b(0x80), b(0x78),
+    b(0x1b), b(0x00), b(0x0f), b(0x85), b(0x34), b(0x02), b(0x00), b(0x00), b(0x49), b(0x8b), b(0x4c), b(0x24), b(0x18), b(0x8b), b(0x13), b(0x48),
+    b(0x8b), b(0x01), b(0xff), b(0x90), b(0xd8), b(0x00), b(0x00), b(0x00),
+];
+
+/// Launch callback: `lea r9d,[r12+10h]` (flags 0x10), `call` NetSnapshot constructor (rel32 at 0x0d),
+/// then the session broadcast `call [rax+0b8h]`.
+const LAUNCH: [Option<u8>; 0x2f] = [
+    b(0x45), b(0x8d), b(0x4c), b(0x24), b(0x10), b(0x44), b(0x8b), b(0xc3), b(0x48), b(0x8d), b(0x4d), b(0x80), b(0xe8), X, X, X,
+    X, b(0x48), b(0x8b), b(0x05), X, X, X, X, b(0x48), b(0x8d), b(0x55), b(0x80), b(0x45), b(0x33), b(0xc9), b(0x41),
+    b(0xb0), b(0x01), b(0x48), b(0x8b), b(0x48), b(0x08), b(0x48), b(0x8b), b(0x01), b(0xff), b(0x90), b(0xb8), b(0x00), b(0x00), b(0x00),
+];
+const LAUNCH_CALL_AT: u64 = 0x0d;
+
+/// NetSnapshot constructor: type 0x4e8, flags stored at + 0x38, vtable `lea` (rel32 at 0x32).
+const CTOR: [Option<u8>; 0x3e] = [
+    b(0x48), b(0x89), b(0x5c), b(0x24), b(0x08), b(0x48), b(0x89), b(0x6c), b(0x24), b(0x10), b(0x56), b(0x57), b(0x41), b(0x56), b(0x48), b(0x83),
+    b(0xec), b(0x20), b(0x49), b(0x63), b(0xf0), b(0x48), b(0x8b), b(0xea), b(0x45), b(0x33), b(0xc0), b(0xba), b(0xe8), b(0x04), b(0x00), b(0x00),
+    b(0x41), b(0x8b), b(0xd9), b(0x48), b(0x8b), b(0xf9), b(0xe8), X, X, X, X, b(0xc6), b(0x47), b(0x08), b(0x01), b(0x48),
+    b(0x8d), b(0x05), X, X, X, X, b(0x48), b(0x89), b(0x07), b(0x33), b(0xc0), b(0x89), b(0x5f), b(0x38),
+];
+const CTOR_VTABLE_AT: u64 = 0x32;
+
 /// Everything that depends on the exe (Ghidra addresses, base `0x140000000`).
 struct Exe {
     name: &'static str,
@@ -97,6 +180,13 @@ struct Exe {
     /// The "game view" test, and the offset of the current view in the state manager.
     in_game: u64,
     current_view: u16,
+    /// Host part: NetSnapshotRequest vtable and its "process" entry, "set waiting for a snapshot",
+    /// HandleSnapshots (the second snapshot), the launch broadcast site, the NetSnapshot constructor.
+    request: (u64, u64),
+    set_waiting: u64,
+    handle: u64,
+    launch: u64,
+    ctor: u64,
 }
 
 const EXES: [Exe; 2] = [
@@ -105,12 +195,22 @@ const EXES: [Exe; 2] = [
         snapshot: (0x1_4105_0c58, [0x1_4080_e510, 0x1_4080_f6c0, 0x1_4081_1530, 0x1_4081_1f20, 0x1_4081_0fa0]),
         in_game: 0x1_400f_1ab0,
         current_view: 0x5420,
+        request: (0x1_4105_0c30, 0x1_4081_10a0),
+        set_waiting: 0x1_4081_79e0,
+        handle: 0x1_4084_0260,
+        launch: 0x1_4027_d106,
+        ctor: 0x1_4080_def0,
     },
     Exe {
         name: "DX11",
         snapshot: (0x1_4104_17e8, [0x1_4080_c7a0, 0x1_4080_d950, 0x1_4080_f810, 0x1_4081_01b0, 0x1_4080_f230]),
         in_game: 0x1_400f_0d60,
         current_view: 0x5400,
+        request: (0x1_4104_17c0, 0x1_4080_f330),
+        set_waiting: 0x1_4081_6210,
+        handle: 0x1_4083_e680,
+        launch: 0x1_4027_af66,
+        ctor: 0x1_4080_c1d0,
     },
 ];
 
@@ -121,6 +221,75 @@ type InGame = unsafe extern "C" fn() -> u8;
 
 static ORIG: AtomicUsize = AtomicUsize::new(0);
 static IN_GAME: AtomicUsize = AtomicUsize::new(0);
+/// The host part is installed.
+static LAUNCH_GUARD: AtomicBool = AtomicBool::new(false);
+
+/// The `launch_guard` setting (last occurrence wins; `on` by default).
+pub fn launch_guard_enabled(cfg: &str) -> bool {
+    cfg.lines().filter_map(|l| l.trim().strip_prefix("launch_guard=")).last().map(str::trim) != Some("off")
+}
+
+/// What the host part relies on. An error leaves only the host part out.
+fn launch_fingerprint<'a>(t: &Exe, read: impl Fn(u64, usize) -> &'a [u8], entry: impl Fn(u64) -> u64) -> Result<(), String> {
+    let same = |at: u64, want: &[Option<u8>]| {
+        let f = read(at, want.len());
+        f.len() == want.len() && want.iter().zip(f).all(|(w, f)| w.map_or(true, |w| w == *f))
+    };
+    let rel = |at: u64| at.wrapping_add(4).wrapping_add_signed(i64::from(i32::from_le_bytes(read(at, 4).try_into().unwrap_or_default())));
+    let (vtable, request) = t.request;
+    if entry(vtable + 8 * PROCESS as u64) != request || !same(request, &REQUEST) || rel(request + REQUEST_CALL_AT) != t.set_waiting {
+        return Err(format!("NetSnapshotRequest::Process: unexpected bytes at {request:#x}"));
+    }
+    if read(t.set_waiting, SET_WAITING.len()) != SET_WAITING {
+        return Err(format!("set waiting for a snapshot: unexpected bytes at {:#x}", t.set_waiting));
+    }
+    if !same(t.handle, &HANDLE) {
+        return Err(format!("HandleSnapshots: unexpected bytes at {:#x}", t.handle));
+    }
+    if !same(t.launch, &LAUNCH) || rel(t.launch + LAUNCH_CALL_AT) != t.ctor {
+        return Err(format!("launch broadcast: unexpected bytes at {:#x}", t.launch));
+    }
+    if !same(t.ctor, &CTOR) || rel(t.ctor + CTOR_VTABLE_AT) != t.snapshot.0 {
+        return Err(format!("NetSnapshot constructor: unexpected bytes at {:#x}", t.ctor));
+    }
+    Ok(())
+}
+
+/// Mark this network player as already sent? Only one still waiting on the launch request, sent
+/// nothing since, and in the session before the launch.
+pub fn launch_recipient(waiting: bool, sent: bool, settled: bool, reason: i32) -> bool {
+    waiting && !sent && settled && reason == REASON_LAUNCH
+}
+
+/// Host, processing its own copy of the launch broadcast: marks the other recipients as sent.
+unsafe fn mark_launch_recipients(s: *mut c_void) -> Vec<i32> {
+    let vt: usize = std::ptr::read(s as *const usize);
+    if vt == 0 {
+        return Vec::new();
+    }
+    let method = |off: usize| std::ptr::read((vt + off) as *const usize);
+    let is_host: unsafe extern "C" fn(*mut c_void) -> u8 = std::mem::transmute(method(SESSION_IS_HOST));
+    if is_host(s) == 0 {
+        return Vec::new();
+    }
+    let local: LocalPlayer = std::mem::transmute(method(SESSION_LOCAL));
+    let player_by_id: PlayerById = std::mem::transmute(method(SESSION_PLAYER));
+    let me = local(s);
+    let mut marked = Vec::new();
+    for id in (0..PLAYER_IDS).filter(|&id| id != me) {
+        let p = player_by_id(s, id);
+        if p == 0 {
+            continue;
+        }
+        let flag = |off: usize| std::ptr::read((p + off) as *const u8) != 0;
+        let reason = std::ptr::read_unaligned((p + PLAYER_REASON) as *const i32);
+        if launch_recipient(flag(PLAYER_WAITING), flag(PLAYER_SENT), flag(PLAYER_SETTLED), reason) {
+            std::ptr::write((p + PLAYER_SENT) as *mut u8, 1);
+            marked.push(id);
+        }
+    }
+    marked
+}
 
 /// Checks one table against an exe; `read(address, n)` returns n bytes, `entry(address)` the
 /// address stored at `address`.
@@ -188,7 +357,16 @@ unsafe extern "C-unwind" fn process(msg: *mut u8, s: *mut c_void) {
         if size > 0 {
             crate::rejoin::snapshot_arrives(msg);
         }
-        return orig(msg, s);
+        let flags = std::ptr::read_unaligned(msg.add(MSG_FLAGS) as *const u32);
+        orig(msg, s);
+        if size > 0 && flags & FLAG_LAUNCH != 0 && LAUNCH_GUARD.load(Ordering::Relaxed) {
+            let marked = mark_launch_recipients(s);
+            if !marked.is_empty() {
+                let ids = marked.iter().map(i32::to_string).collect::<Vec<_>>().join(", ");
+                log(&format!("snapshots: saved game sent to players {ids}, no second snapshot after the host's load"));
+            }
+        }
+        return;
     }
     std::ptr::write_unaligned(size_at, 0);
     orig(msg, s);
@@ -220,6 +398,22 @@ pub unsafe fn install() {
     *slot = process as Process as usize;
     win::VirtualProtect(slot as *mut c_void, 8, old, &mut old);
     log(&format!("snapshots: double load guard installed ({})", t.name));
+    if !launch_guard_enabled(&cfg) {
+        log("snapshots: host launch guard turned off (launch_guard=off)");
+        return;
+    }
+    let image = |address: u64| module + (address - BASE) as usize;
+    match launch_fingerprint(
+        t,
+        |address, n| std::slice::from_raw_parts(image(address) as *const u8, n),
+        |address| (*(image(address) as *const usize)).wrapping_sub(module) as u64 + BASE,
+    ) {
+        Ok(()) => {
+            LAUNCH_GUARD.store(true, Ordering::Relaxed);
+            log("snapshots: as host, a saved game is sent once (no second snapshot after the host's load)");
+        }
+        Err(e) => log(&format!("snapshots: {e}, host launch guard not installed")),
+    }
 }
 
 #[cfg(test)]
@@ -238,6 +432,27 @@ mod tests {
         // Unknown local player, empty snapshot: the game decides.
         assert!(!refuse(true, None, 2_913_189));
         assert!(!refuse(true, Some(false), 0));
+    }
+
+    #[test]
+    fn who_is_marked_at_launch() {
+        // Received the launch broadcast, still loading: marked.
+        assert!(launch_recipient(true, false, true, 2));
+        // Acknowledged already, or already sent a snapshot.
+        assert!(!launch_recipient(false, false, true, 2));
+        assert!(!launch_recipient(true, true, true, 2));
+        // Joined or rejoined after the launch started (new network player).
+        assert!(!launch_recipient(true, false, false, -1));
+        assert!(!launch_recipient(true, false, false, 2));
+        // Asked for its own snapshot (resync, Network.RequestSnapshot, remap).
+        assert!(!launch_recipient(true, false, true, 0));
+    }
+
+    #[test]
+    fn launch_guard_setting() {
+        assert!(launch_guard_enabled(""));
+        assert!(!launch_guard_enabled("launch_guard=off\r\n"));
+        assert!(launch_guard_enabled("launch_guard=off\nlaunch_guard=on\n"), "the last occurrence wins");
     }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
@@ -273,6 +488,9 @@ mod tests {
                 let r = file_fingerprint(t, &file);
                 if i == j {
                     assert_eq!(r, Ok(()), "table {} on {name}", t.name);
+                    let read = |address: u64, n: usize| offset(&file, address).map_or(&[][..], |o| &file[o..][..n]);
+                    let entry = |address: u64| u64::from_le_bytes(read(address, 8).try_into().unwrap_or_default());
+                    assert_eq!(launch_fingerprint(t, read, entry), Ok(()), "host tables {} on {name}", t.name);
                 } else {
                     assert!(r.is_err(), "the {} table must not match {name}", t.name);
                 }
