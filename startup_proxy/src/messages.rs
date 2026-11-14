@@ -33,6 +33,12 @@
 //! l'identifiant du joueur (seulement -1) : un identifiant hors des emplacements n'est pas appliqué
 //! non plus (voir `MESSAGES`).
 //!
+//! A failed read leaves its destination untouched, so at the seven sites the destination is set to
+//! 0 before the read: a message read from garbage comes out empty, not with a leftover count. A
+//! `NetGameConfig` with no changed key and an empty map would replace the whole game configuration
+//! with nothing (every player's civ, leader and level): it is never applied. Such messages come from
+//! the game's queue flush after a load, when a chunked snapshot is still arriving.
+//!
 //! Names: Ghidra project `civ6-netcode`, bookmarks "Gel 2026-11-09" (DX12 addresses above). The
 //! same rules, installed by an external hook during development, ran over two whole ten-player
 //! games (162 turns, 108,000 messages received) without a false alarm.
@@ -119,6 +125,12 @@ const LIRE: usize = 3;
 const TRAITER: usize = 4;
 /// The configuration's player slots, 0x40 bytes each, run from `[+0x2e0]` to `[+0x2e8]`.
 const EMPLACEMENTS: usize = 0x2e0;
+/// `NetGameConfig`: number of changed keys (0: the whole configuration is replaced), received map.
+const CONFIG_CHANGED_KEYS: usize = 0x458;
+const CONFIG_MAP: usize = 0x468;
+/// Map: end marker, first entry (equal when the map is empty).
+const MAP_END: usize = 0x30;
+const MAP_FIRST: usize = 0x38;
 
 /// Everything that depends on the exe: Ghidra addresses (base `0x140000000`) and bytes that contain
 /// a relative displacement.
@@ -257,6 +269,18 @@ pub fn joueur_valide(id: i32, emplacements: usize) -> bool {
     id == -1 || usize::try_from(id).is_ok_and(|i| i < emplacements)
 }
 
+/// Would this `NetGameConfig` wipe the game configuration? No changed key (whole replacement) and an
+/// empty map (first entry = end marker).
+pub fn wipes_configuration(changed_keys: u32, first: usize, end: usize) -> bool {
+    changed_keys == 0 && first == end
+}
+
+unsafe fn config_wipes(msg: *mut u8) -> bool {
+    let changed_keys = std::ptr::read_unaligned(msg.add(CONFIG_CHANGED_KEYS) as *const u32);
+    let map = msg as usize + CONFIG_MAP;
+    wipes_configuration(changed_keys, std::ptr::read_unaligned((map + MAP_FIRST) as *const usize), map + MAP_END)
+}
+
 /// Une correction de plus (journal, chat) ; le total.
 fn compter() -> u32 {
     A_ANNONCER.fetch_add(1, Ordering::Relaxed);
@@ -279,25 +303,25 @@ type Lecture = unsafe extern "C-unwind" fn(*mut c_void, *mut c_void, *mut u8, us
 /// désérialiseur. Après la lecture d'origine, une valeur impossible à l'un des sept sites devient 0.
 unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut u8, n: usize, retour: usize) -> usize {
     let real: Lecture = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
+    let site = if n == 4 && !dest.is_null() { RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) } else { None };
+    let Some(i) = site else {
+        return real(lecteur, desc, dest, n);
+    };
+    // A failed read leaves the destination as it was: start from 0, not from a leftover value.
+    std::ptr::write_unaligned(dest as *mut u32, 0);
     let r = real(lecteur, desc, dest, n);
-    if n == 4 && !dest.is_null() {
-        if let Some(i) = RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) {
-            let (nom, regle) = SITES[i];
-            if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
-                std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
-                log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
-            }
-            let valeur = std::ptr::read_unaligned(dest as *const u32);
-            let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
-            if let Some(motif) = absurde(regle, valeur, drapeaux) {
-                std::ptr::write_unaligned(dest as *mut u32, 0);
-                let total = compter();
-                if total <= 20 || total % 100 == 0 {
-                    log(&format!(
-                        "messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"
-                    ));
-                }
-            }
+    let (nom, regle) = SITES[i];
+    if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
+        std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
+        log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
+    }
+    let valeur = std::ptr::read_unaligned(dest as *const u32);
+    let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
+    if let Some(motif) = absurde(regle, valeur, drapeaux) {
+        std::ptr::write_unaligned(dest as *mut u32, 0);
+        let total = compter();
+        if total <= 20 || total % 100 == 0 {
+            log(&format!("messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"));
         }
     }
     r
@@ -370,6 +394,11 @@ unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
     };
     if abime {
         log(&format!("messages: damaged {} not applied, the configuration is kept", MESSAGES[i]));
+        return;
+    }
+    if i == 0 && config_wipes(msg) {
+        let total = compter();
+        log(&format!("messages: NetGameConfig replacing the whole configuration with nothing, not applied ({total} corrections)"));
         return;
     }
     if i == 1 {
@@ -541,6 +570,14 @@ mod tests {
         A_ANNONCER.store(3, Ordering::Relaxed);
         assert_eq!(a_annoncer(), 3);
         assert_eq!(a_annoncer(), 0, "une correction n'est annoncée qu'une fois");
+    }
+
+    #[test]
+    fn empty_whole_replacement_wipes() {
+        let end = 0x1000_0030;
+        assert!(wipes_configuration(0, end, end), "no changed key, empty map");
+        assert!(!wipes_configuration(0, 0x2000_0000, end), "whole replacement with entries");
+        assert!(!wipes_configuration(3, end, end), "only the changed keys are touched");
     }
 
     #[test]
