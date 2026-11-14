@@ -182,9 +182,6 @@ unsafe extern "system" fn on_repair(sync: usize, repair: usize, serializer: usiz
     if let Some(name) = type_name(archive) {
         with_notes(|n| n.differs(&name));
     }
-    if crate::postload::whole_archive(sync, repair, serializer, key, archive) {
-        return;
-    }
     original(sync, repair, serializer, entry, key, archive);
 }
 

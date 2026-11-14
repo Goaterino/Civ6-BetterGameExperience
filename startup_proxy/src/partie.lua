@@ -102,41 +102,11 @@ local function BGD_PartieRelais()
 	end
 end
 
--- Host: the players whose BGE sends its sync check after loading (BGD_SYNC, written by their lobby
--- with their token of this session), for postload.rs, which waits for that check and answers it.
-local function BGD_PartieSync()
-	if Civ6Proxy_PostLoadPlayers == nil or not GameConfiguration.IsNetworkMultiplayer()
-		or GameConfiguration.IsPlayByCloud() or not Network.IsGameHost() then
-		return;
-	end
-	local localID = Network.GetLocalPlayerID();
-	local cfg = PlayerConfigurations[localID];
-	if cfg == nil then return; end
-	local _, jeton = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#");
-	local ids = {};
-	if jeton ~= nil and jeton ~= "" then
-		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
-			local pc = PlayerConfigurations[id];
-			if id ~= localID and pc ~= nil and pc:IsHuman() and Network.IsPlayerConnected(id) then
-				local _, jh, perso = string.match(tostring((pc:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
-				if jh == jeton and perso ~= nil and perso ~= "" and tostring((pc:GetValue("BGD_SYNC"))) == perso then
-					table.insert(ids, tostring(id));
-				end
-			end
-		end
-	end
-	Civ6Proxy_PostLoadPlayers(table.concat(ids, ","));
-end
-
 if Civ6Proxy_PolActifs ~= nil then
 	local function protege()
 		local ok, err = pcall(BGD_PartieRelais);
 		if not ok then
 			BGD_PartieJournal("erreur : " .. tostring(err));
-		end
-		ok, err = pcall(BGD_PartieSync);
-		if not ok then
-			BGD_PartieJournal("sync: error: " .. tostring(err));
 		end
 	end
 	Events.PlayerInfoChanged.Add(protege);

@@ -44,7 +44,6 @@ mod rejoin;
 mod flush;
 mod sync_notes;
 mod remap;
-mod postload;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]
@@ -121,7 +120,6 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             rejoin::install();
             flush::install();
             sync_notes::install();
-            postload::install();
             #[cfg(feature = "diag")]
             zones::install();
         }

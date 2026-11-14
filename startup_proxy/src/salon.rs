@@ -338,14 +338,9 @@ pub const NATIVES: Natives = &[
     (lua_version_installee, b"Civ6Proxy_VersionInstallee\0"),
     (lua_medias, b"Civ6Proxy_MediasPings\0"),
     (lua_unknown_exe, b"Civ6Proxy_ExeInconnu\0"),
-    (crate::postload::lua_installed, b"Civ6Proxy_PostLoad\0"),
 ];
 
-const CHARGEMENT_NATIVES: Natives = &[
-    (lua_log, b"Civ6Proxy_Journal\0"),
-    (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
-    (crate::postload::lua_host_answers, b"Civ6Proxy_HostAnswers\0"),
-];
+const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
 const PARTIE_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
@@ -355,7 +350,6 @@ const PARTIE_NATIVES: Natives = &[
     (crate::relink::lua_state, b"Civ6Proxy_RelinkState\0"),
     (crate::relink::lua_forget, b"Civ6Proxy_RelayForgetPair\0"),
     (crate::sync_notes::lua_notes, b"Civ6Proxy_SyncNotes\0"),
-    (crate::postload::lua_players, b"Civ6Proxy_PostLoadPlayers\0"),
 ];
 const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_actif, b"Civ6Proxy_Actif\0")];
 
@@ -392,7 +386,6 @@ pub unsafe fn prepare_partie(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
     crate::relink::new_game();
     crate::rejoin::new_game();
     crate::sync_notes::new_game();
-    crate::postload::new_game();
     publish_natives(l, PARTIE_NATIVES, "partie");
     patch_in_game_lua(src)
 }
