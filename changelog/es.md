@@ -15,6 +15,31 @@ En multijugador, todos los jugadores humanos deben tener la 0.11.0 para las corr
   exactamente lo que sumó. Las partidas guardadas conservan la pérdida ya acumulada. Contribución de
   Serianol.
 
+### Multijugador
+- **Partida congelada justo después de cargar**: un jugador con una conexión lenta podía recibir la
+  partida por segunda vez del anfitrión justo después de terminar su carga, volver a cargarla desde
+  el mapa y quedarse congelado. Esa segunda copia tardía ahora se rechaza; la entrada, la reconexión
+  y las resincronizaciones funcionan como antes.
+- **Cierre al cargar una partida guardada después de otra partida**: la reconexión de los jugadores
+  retransmitidos por el anfitrión (0.10.0) podía leer la conexión de la partida anterior, ya cerrada,
+  y cerrar el juego mientras se cargaba la siguiente. Contribución de yodha.
+- **Configuración de la partida**: las opciones de partida añadidas por BetterGameExperience aparecen
+  en gris cuando el anfitrión tiene BetterGameExperience desactivado.
+
+### Señales de equipo
+- Nuevas imágenes y sonidos para la rueda, los marcadores y cada llamada, instalados con
+  BetterGameExperience. Solo se añaden a una partida si el anfitrión activa las señales de equipo y
+  todos los jugadores tienen BetterGameExperience: un jugador sin BGE puede seguir uniéndose a la
+  sala. Contribución de mariusbw.
+- El **volumen de las señales de equipo** está justo debajo de los efectos de sonido en las opciones
+  de audio, tanto en el menú principal como en partida, y los atajos de las señales siguen
+  apareciendo en las opciones de teclas. Contribución de mariusbw.
+
+### Ajustes
+- **Pestaña BetterGameExperience**: activar o desactivar BetterGameExperience siempre pide reiniciar
+  el juego. Volver al valor anterior de un ajuste sin reabrir la pantalla se guarda de nuevo; antes
+  se ignoraba.
+
 ## BetterGameExperience 0.10.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.10.0 para las correcciones

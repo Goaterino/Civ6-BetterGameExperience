@@ -14,6 +14,30 @@ W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.11.0, aby działały p
   Usunięcie premii odejmuje teraz dokładnie tyle, ile dodała. Zapisy gry zachowują już narosłą
   stratę. Wkład Serianol.
 
+### Tryb wieloosobowy
+- **Gra zawieszona tuż po wczytaniu**: gracz z wolnym połączeniem mógł otrzymać grę od gospodarza
+  drugi raz tuż po zakończeniu własnego wczytywania, wczytać ją ponownie z mapy i się zawiesić. Ta
+  spóźniona druga kopia jest teraz odrzucana; dołączanie, ponowne łączenie i resynchronizacje
+  działają jak wcześniej.
+- **Awaria przy wczytywaniu zapisu po innej grze**: ponowne łączenie graczy przekazywanych przez
+  gospodarza (0.10.0) mogło odczytać połączenie poprzedniej gry, już zamknięte, i spowodować awarię
+  gry podczas wczytywania następnej. Wkład yodha.
+- **Ustawienia gry**: opcje gry dodane przez BetterGameExperience są wyszarzone, gdy gospodarz ma
+  wyłączone BetterGameExperience.
+
+### Sygnały drużyny
+- Nowe grafiki i dźwięki koła, znaczników i każdego wezwania, instalowane z BetterGameExperience.
+  Są dodawane do gry tylko wtedy, gdy gospodarz włączy sygnały drużyny, a wszyscy gracze mają
+  BetterGameExperience: gracz bez BGE nadal może dołączyć do poczekalni. Wkład mariusbw.
+- **Głośność sygnałów drużyny** znajduje się tuż pod efektami dźwiękowymi w opcjach dźwięku, zarówno
+  w menu głównym, jak i w grze, a skróty sygnałów pozostają widoczne w opcjach klawiszy. Wkład
+  mariusbw.
+
+### Ustawienia
+- **Zakładka BetterGameExperience**: włączenie lub wyłączenie BetterGameExperience zawsze prosi o
+  ponowne uruchomienie gry. Przywrócenie poprzedniej wartości ustawienia bez ponownego otwierania
+  ekranu jest znów zapisywane; wcześniej było ignorowane.
+
 ## BetterGameExperience 0.10.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.10.0, aby działały poprawki

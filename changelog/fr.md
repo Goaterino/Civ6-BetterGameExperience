@@ -14,6 +14,31 @@ joueurs]** : un salon qui mélange 0.10.0 et 0.11.0 les coupe.
   échange de la carte. Retirer un bonus enlève maintenant exactement ce qu'il avait ajouté. Les
   sauvegardes gardent la perte déjà accumulée. Contribution de Serianol.
 
+### Multijoueur
+- **Partie figée juste après le chargement** : un joueur à la connexion lente pouvait recevoir la
+  partie une seconde fois de l'hôte juste après la fin de son chargement, la recharger depuis la
+  carte et rester figé. Cette seconde copie tardive est maintenant refusée ; l'arrivée, la
+  reconnexion et les resynchronisations fonctionnent comme avant.
+- **Plantage au chargement d'une sauvegarde après une autre partie** : la reconnexion des joueurs
+  relayés par l'hôte (0.10.0) pouvait lire la connexion de la partie précédente, déjà fermée, et
+  faire planter le jeu pendant le chargement de la suivante. Contribution de yodha.
+- **Configuration de la partie** : les options de partie ajoutées par BetterGameExperience sont
+  grisées quand l'hôte a désactivé BetterGameExperience.
+
+### Signaux d'équipe
+- Nouvelles images et nouveaux sons pour la roue, les marqueurs et chaque appel, installés avec
+  BetterGameExperience. Ils ne sont ajoutés à la partie que si l'hôte active les signaux d'équipe et
+  que tous les joueurs ont BetterGameExperience : un joueur sans BGE peut toujours rejoindre le
+  salon. Contribution de mariusbw.
+- Le **volume des signaux d'équipe** se règle juste sous les effets sonores dans les options audio,
+  au menu principal comme en partie, et les raccourcis des signaux restent listés dans les options
+  des touches. Contribution de mariusbw.
+
+### Réglages
+- **Onglet BetterGameExperience** : activer ou désactiver BetterGameExperience demande toujours de
+  redémarrer le jeu. Revenir à la valeur précédente d'un réglage sans rouvrir l'écran est de nouveau
+  enregistré ; ce changement était ignoré.
+
 ## BetterGameExperience 0.10.0
 
 En multijoueur, tous les humains doivent être en 0.10.0 pour les correctifs **[tous les
