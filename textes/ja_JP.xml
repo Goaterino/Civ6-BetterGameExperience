@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="ja_JP">
 			<Text>{1} を待たずに開始しました ({2} 秒経っても準備ができていません)。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ja_JP">
+			<Text>{1} が2ターン連続で準備完了を送信しませんでした。今後、ターン開始時に待ちません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ja_JP">
 			<Text>ターン終了: ホストのタイマーが切れました。</Text>
 		</Row>

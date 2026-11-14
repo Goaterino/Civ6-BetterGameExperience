@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="en_US">
 			<Text>started without {1} (not ready after {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="en_US">
+			<Text>{1} was never ready two turns in a row: turn starts no longer wait for them.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="en_US">
 			<Text>turn over: the host's turn timer ran out.</Text>
 		</Row>

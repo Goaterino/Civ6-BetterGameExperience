@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="de_DE">
 			<Text>ohne {1} gestartet (nach {2} s nicht bereit).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="de_DE">
+			<Text>{1} hat sich zwei Runden in Folge nie bereit gemeldet: Der Rundenstart wartet nicht mehr darauf.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="de_DE">
 			<Text>Runde vorbei: Der Timer des Hosts ist abgelaufen.</Text>
 		</Row>

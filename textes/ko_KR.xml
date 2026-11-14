@@ -374,6 +374,9 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="ko_KR">
 			<Text>{1} 없이 시작했습니다({2}초 후에도 준비되지 않음).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ko_KR">
+			<Text>{1}이(가) 두 턴 연속으로 준비 신호를 보내지 않았습니다. 이제 턴 시작 시 기다리지 않습니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ko_KR">
 			<Text>턴 종료: 호스트의 타이머가 끝났습니다.</Text>
 		</Row>

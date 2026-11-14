@@ -48,7 +48,8 @@ local function NewGame(opts)
 		-- Événements du jeu seulement : un nom inconnu vaut nil, comme en partie (relevés dans l'UI du jeu).
 		local Events = {};
 		for _, k in ipairs({ "LocalPlayerTurnBegin", "TurnBegin", "TurnEnd", "GameCoreEventPublishComplete", "LoadScreenClose",
-			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated" }) do
+			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated",
+			"ExitToMainMenu", "MultiplayerGameAbandoned" }) do
 			Events[k] = NewEvent();
 		end
 		local LuaEvents = setmetatable({}, { __index = function(t, k)
@@ -343,6 +344,57 @@ do
 	Check("l'hôte nomme le retardataire", nomme);
 	b.Debut(); b.Publie();
 	Check("le retardataire, déjà lancé, n'attend pas", not b.natives.attente);
+end
+
+do
+	-- A player whose BGE never signals (inactive on their side): after two turns started without
+	-- them, the host stops waiting; a ready signal makes them waited for again.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	G.machines[2] = nil;
+	for _, m in pairs(G.machines) do m.Charger(); end
+	for tour = 11, 12 do
+		G.tour = tour;
+		h.Debut(); h.Publie(); a.Debut(); a.Publie();
+		G.clock = G.clock + 61; h.Tic();
+	end
+	Check("never ready: started without them twice", not h.natives.attente and not a.natives.attente);
+	local annonce = false;
+	for _, t in ipairs(h.locaux) do if t:find("J2") and t:find("attendent plus") then annonce = true; end end
+	Check("never ready: the host says it no longer waits", annonce);
+	G.tour = 13;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("never ready: the next turn starts without waiting", not h.natives.attente and not a.natives.attente);
+	h.Events.MultiplayerChat(2, 0, ".bgd_pret 13", 3);
+	G.tour = 14;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("ready again: waited for again", h.natives.attente and a.natives.attente);
+end
+
+do
+	-- Leaving the game during a hold: released at once, not by the proxy's safety timer.
+	local G = NewGame({ option = true, players = { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
+	local a = G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.tour = 11;
+	a.Debut(); a.Publie();
+	Check("hold before leaving", a.natives.attente);
+	a.Events.ExitToMainMenu();
+	Check("leaving the game releases the hold", not a.natives.attente and a.natives.partir == 1);
+end
+
+do
+	-- A game configuration wiped mid-game (bad network message) does not turn the start off.
+	local G = NewGame({ option = true, players = { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
+	local a = G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.config.BGD_DEPART_SIMULTANE = nil;
+	G.sent = {};
+	G.tour = 11;
+	a.Debut(); a.Publie();
+	Check("configuration wiped: the client still signals ready", #G.sent == 1 and G.sent[1].text == ".bgd_pret 11");
 end
 
 do
