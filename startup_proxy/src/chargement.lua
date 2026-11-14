@@ -10,6 +10,8 @@
 -- after its lobby stopped following it (launch countdown), so the lobby concluded "off" while
 -- everyone else had "on". The player configurations as loaded with the game hold that last
 -- verdict: if it is active and names this machine, POL is turned on. Never turned off here.
+-- Checked when the game is loaded and again when the load screen closes: a verdict received during
+-- the load (a player who joined a game in progress) is applied before the player plays.
 -- ===========================================================================
 
 -- The lobby's rule (salon.lua, BGD_PolActifs), on the launch data: the host's verdict is active, for
@@ -31,13 +33,15 @@ local function BGD_PolAuLancement()
 end
 
 if Civ6Proxy_FixerPol ~= nil then
-	Events.LoadScreenContentReady.Add(function()
+	local dit = false;
+	local function BGD_PolDuChargement()
 		local ok, err = pcall(function()
 			if not GameConfiguration.IsNetworkMultiplayer() then
 				Civ6Proxy_FixerPol(1, GameConfiguration.IsHotseat() and "hotseat" or "partie solo");
 			elseif not GameConfiguration.IsPlayByCloud() and BGD_PolAuLancement() then
 				Civ6Proxy_FixerPol(1, "launch data");
-				if Civ6Proxy_Journal ~= nil then
+				if Civ6Proxy_Journal ~= nil and not dit then
+					dit = true;
 					Civ6Proxy_Journal("load: POL fixes on (launch data)");
 				end
 			end
@@ -45,5 +49,10 @@ if Civ6Proxy_FixerPol ~= nil then
 		if not ok and Civ6Proxy_Journal ~= nil then
 			Civ6Proxy_Journal("chargement : erreur : " .. tostring(err));
 		end
+	end
+	Events.LoadScreenContentReady.Add(function()
+		dit = false;
+		BGD_PolDuChargement();
 	end);
+	Events.LoadScreenClose.Add(BGD_PolDuChargement);
 end

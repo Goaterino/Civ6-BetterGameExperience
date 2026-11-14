@@ -403,13 +403,22 @@ do
 	check(Pol(l, 2) == "désactivés", "stale verdict at the countdown: Zoé off (" .. Pol(l, 2) .. ")");
 	z.cache = true;
 	z.values[0].BGD_VERDICT = final;
+	local said = #l.tout;
 	z.events.PlayerInfoChanged.Fire(0);
-	check(z.pol ~= true, "verdict applied while the lobby is hidden: still off");
+	check(z.pol == true, "verdict that arrives while the lobby is hidden for the launch: on");
+	check(#l.tout == said, "hidden lobby: nothing said");
+	-- A verdict off, or without our token, never turns a hidden lobby off or on.
+	z.values[0].BGD_VERDICT = final:gsub(":1:", ":0:");
+	z.events.PlayerInfoChanged.Fire(0);
+	check(z.pol == true, "hidden lobby: never turned off");
+	-- The same verdict arriving during the load instead (queued): decided at the load screen.
+	z.pol = false;
+	z.values[0].BGD_VERDICT = final;
 	-- The load screen of each machine, with that machine's copy of the player configurations.
-	local function Charger(m, reseau)
+	local function Charger(m, reseau, fermeture)
 		local ev = NewEvent();
 		local env = setmetatable({
-			Events = { LoadScreenContentReady = ev },
+			Events = { LoadScreenContentReady = ev, LoadScreenClose = fermeture or NewEvent() },
 			GameConfiguration = {
 				IsNetworkMultiplayer = function() return reseau ~= false; end,
 				IsHotseat = function() return false; end,
@@ -437,6 +446,79 @@ do
 	z.values[0].BGD_VERDICT = final:gsub(":1:", ":0:");
 	Charger(z);
 	check(z.pol == false, "at load, verdict off: stays off");
+	-- The verdict arrives between the end of the load and the closing of the load screen.
+	local fermeture = NewEvent();
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	Charger(z, true, fermeture);
+	check(z.pol == false, "verdict not there yet when the game is loaded: off");
+	z.values[0].BGD_VERDICT = final;
+	fermeture.Fire();
+	check(z.pol == true, "verdict there when the load screen closes: on");
+end
+
+-- 13c. With the lobby's timer: a line that may be one message early waits a few ticks, and is not
+-- said when the verdict arrives meanwhile; a host without BGE is still reported.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } }, { controles = true });
+	l.open();
+	l.tic();
+	local z = l.machines[2];
+	local final = z.values[0].BGD_VERDICT;
+	local perso = z.values[2].BGD_VERSION:match("#(.*)$");
+	local i, j = final:find(perso, 1, true);
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	z.events.PlayerInfoChanged.Fire(0);
+	l.countdown();
+	check(#l.chat == 1 and l.chat[1].from == 0, "late verdict: only the host's line at the countdown");
+	z.values[0].BGD_VERDICT = final;
+	z.events.PlayerInfoChanged.Fire(0);
+	l.tic(6);
+	check(#l.chat == 1, "late verdict arrived: no false line from the client");
+	check(Pol(l, 2):find("actifs") ~= nil and z.pol == true, "late verdict arrived: Zoé on");
+
+	local s = NewLobby({ { nom = "Hôte", proxy = false }, { nom = "Bob" } }, { controles = true });
+	s.open();
+	s.tic();
+	s.countdown();
+	check(#s.chat == 0, "host without BGE: not said at once");
+	s.tic(4);
+	check(#s.chat == 1 and s.chat[1].text:find("The host does not have BetterGameExperience", 1, true) ~= nil, "host without BGE: said after the delay");
+	s.tic(4);
+	check(#s.chat == 1, "host without BGE: said once");
+
+	-- The host misses a player: said after the delay, or at the launch if it comes first.
+	local h = NewLobby({ { nom = "Hôte" }, { nom = "Bob", proxy = false } }, { controles = true, avant = function(env)
+		env.Network.LaunchGame = function() end
+	end });
+	h.open();
+	h.tic();
+	h.countdown();
+	check(#h.chat == 0, "host, player without BGE: not said at once");
+	h.machines[0].env.Network.LaunchGame();
+	check(#h.chat == 1 and h.chat[1].text:find("Without BetterGameExperience: Bob", 1, true) ~= nil, "host: said at the launch at the latest");
+	h.tic(6);
+	check(#h.chat == 1, "host: said once");
+
+	-- Joining a game in progress: the client says nothing about the host.
+	local g = NewLobby({ { nom = "Hôte", proxy = false }, { nom = "Bob" } });
+	g.machines[1].env.Network.IsPlayerHotJoining = function() return true; end
+	g.open();
+	g.countdown();
+	check(#g.chat == 0, "game in progress: no line about the host");
+	check(g.machines[1].pol ~= true, "game in progress: off until the host's verdict names this machine");
+end
+
+-- 13d. A game exe BGE does not know: said to everyone on arrival, after the announcement.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { lang = "en_US", avant = function(env)
+		env.Civ6Proxy_ExeInconnu = function() return env.Network.GetLocalPlayerID() == 1 and 1 or 0; end
+	end });
+	l.open();
+	local n, text = 0, "";
+	for _, c in ipairs(l.chat) do
+		if c.text:find("not the current Steam version", 1, true) then n = n + 1; text = c.text; end
+	end
+	check(n == 1 and text == "[COLOR_RED]BGE - Bob's copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.[ENDCOLOR]", "unknown exe said once, by that player: " .. text);
 end
 
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une
@@ -491,7 +573,7 @@ do
 		local etat = false;
 		local ev = NewEvent();
 		local env = setmetatable({
-			Events = { LoadScreenContentReady = ev },
+			Events = { LoadScreenContentReady = ev, LoadScreenClose = NewEvent() },
 			GameConfiguration = {
 				IsNetworkMultiplayer = function() return cas.reseau; end,
 				IsHotseat = function() return false; end,

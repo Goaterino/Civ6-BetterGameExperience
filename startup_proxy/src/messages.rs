@@ -229,6 +229,12 @@ static CORRECTIONS: AtomicU32 = AtomicU32::new(0);
 static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
+/// The exe is not one of the builds BGE knows: none of the network fixes is installed.
+static UNKNOWN_EXE: AtomicBool = AtomicBool::new(false);
+
+pub fn unknown_exe() -> bool {
+    UNKNOWN_EXE.load(Ordering::Relaxed)
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Mode {
@@ -544,6 +550,7 @@ pub unsafe fn install() {
             "messages: unknown exe ({}), guard not installed (DX12 or DX11 exe of 2026-11-05 expected)",
             raisons.join("; ")
         ));
+        UNKNOWN_EXE.store(true, Ordering::Relaxed);
         return;
     };
     let image = |adresse: u64| exe + (adresse - BASE) as usize;

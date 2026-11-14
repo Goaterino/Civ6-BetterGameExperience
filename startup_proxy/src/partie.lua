@@ -97,6 +97,8 @@ if Civ6Proxy_PolActifs ~= nil then
 	end
 	Events.PlayerInfoChanged.Add(protege);
 	Events.MultiplayerPlayerConnected.Add(protege);
+	-- A player who joined while the host was loading announced itself before this block existed.
+	Events.LoadScreenClose.Add(protege);
 end
 
 -- Garde des messages réseau (startup_proxy/src/messages.rs) : quand elle a jeté un message abîmé
