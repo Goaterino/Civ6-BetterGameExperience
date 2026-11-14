@@ -33,6 +33,8 @@
 //! "ignored" branch, without calling any internal function. The other machines notice nothing: the
 //! host has already received our acknowledgement. Only the machine with BGE is protected.
 //!
+//! Every snapshot handed to the game is also reported to `rejoin.rs`, which reads its flags.
+//!
 //! Addresses of both exes of 2026-11-05 (`EXES`), checked byte by byte at startup; DX11 was found
 //! from the vtables next to the ones of `relink` and from the bytes of the "game view" test (in DX11
 //! the current view is at + 0x5400, not + 0x5420). Settings: `actif=off` installs nothing (BGE's
@@ -183,6 +185,9 @@ unsafe extern "C-unwind" fn process(msg: *mut u8, s: *mut c_void) {
     // The session is only asked in the game view: elsewhere the snapshot always goes through.
     let waiting = if game_view { local_waiting(s) } else { None };
     if !refuse(game_view, waiting, size) {
+        if size > 0 {
+            crate::rejoin::snapshot_arrives(msg);
+        }
         return orig(msg, s);
     }
     std::ptr::write_unaligned(size_at, 0);
