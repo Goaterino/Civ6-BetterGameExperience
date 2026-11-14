@@ -23,6 +23,8 @@
 --    - A player the host had to start without two turns in a row (never ready: BGE inactive on
 --      their side) is no longer waited for, until they send a ready signal again or rejoin.
 --    - Leaving the game releases a hold still running.
+--    - The host remembers who is no longer waited for across a reload of its interface (remap,
+--      resync), for the same lobby session.
 --    - A client whose ready signal gets no start from the host within SANS_HOTE seconds starts by
 --      itself and says so; on the following turns it waits SANS_HOTE_SUITE seconds only, until the
 --      host gives a start again.
@@ -190,6 +192,37 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 
 	local Partir, Evaluer, SurRetenue, EnvoyerPret;
 
+	-- The lobby session: the lobby token of our announcement, the same from launch to the end.
+	local function Session()
+		local pc = PlayerConfigurations[Moi()];
+		local v = pc and pc:GetValue("BGD_VERSION");
+		return string.match(tostring(v), "^[^@#:]*@([^@#:]*)#") or "";
+	end
+
+	-- Host: D.ignores kept by the proxy, which outlives this interface.
+	local function Memoriser()
+		if Civ6RolloverProxy_DepartMemoriser == nil then return; end
+		local masque = 0;
+		for id, v in pairs(D.ignores) do
+			if v and id >= 0 and id < 50 then masque = masque + 2 ^ id; end
+		end
+		Civ6RolloverProxy_DepartMemoriser(Session(), masque);
+	end
+
+	local function Rappeler()
+		if D.rappel or Civ6RolloverProxy_DepartMemoire == nil or not Network.IsGameHost() then return; end
+		D.rappel = true;
+		local masque = tonumber(Civ6RolloverProxy_DepartMemoire(Session())) or 0;
+		for id = 0, 49 do
+			if masque % 2 >= 1 then
+				D.ignores[id] = true;
+				D.manques[id] = MANQUES_MAX;
+				J("player " .. id .. " still not waited for (never ready before this reload)");
+			end
+			masque = math.floor(masque / 2);
+		end
+	end
+
 	-- Armé, à chaque image : la publication s'est-elle arrêtée devant le début du tour ?
 	-- En attente, deux fois par seconde : ordres retenus à signaler et délai de l'hôte.
 	D.cumul = 0;
@@ -283,6 +316,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 				D.manques[id] = (D.manques[id] or 0) + 1;
 				if D.manques[id] >= MANQUES_MAX and not D.ignores[id] then
 					D.ignores[id] = true;
+					Memoriser();
 					Afficher(BGD_Txt("LOC_BGD_DEPART_IGNORE", Nom(id)));
 					J("player " .. id .. " not ready " .. D.manques[id] .. " turns in a row, no longer waited for");
 				end
@@ -492,6 +526,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 
 	local function OnLoadScreenClose()
 		D.chargement = false;
+		Rappeler();
 		Annoncer();
 		local p = Players[Moi()];
 		if p ~= nil and p:IsTurnActive() then
@@ -515,7 +550,10 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			D.prets[tour] = D.prets[tour] or {};
 			D.prets[tour][fromPlayer] = true;
 			D.manques[fromPlayer] = nil;
-			D.ignores[fromPlayer] = nil;
+			if D.ignores[fromPlayer] then
+				D.ignores[fromPlayer] = nil;
+				Memoriser();
+			end
 			if D.parti >= tour then
 				Envoyer(DEPART .. tour, fromPlayer);  -- reconnexion en plein tour, ou retardataire
 			else
@@ -540,7 +578,10 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	local function OnDepartJoueur(id)
 		if id ~= nil then
 			D.manques[id] = nil;
-			D.ignores[id] = nil;
+			if D.ignores[id] then
+				D.ignores[id] = nil;
+				Memoriser();
+			end
 		end
 		if Network.IsGameHost() then
 			Evaluer(D.tour);

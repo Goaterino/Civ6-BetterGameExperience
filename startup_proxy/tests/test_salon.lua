@@ -388,6 +388,48 @@ do
 	check(#l.chat == 1, "pas de message pour une reconnexion équipée");
 end
 
+-- 13a. Host migration in game: the new host, a client at launch, takes the verdict over; players
+-- who join afterwards, the old host among them, conclude like everyone else.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } });
+	l.open();
+	l.countdown();
+	Lancer(l);
+	local bob = l.machines[1];
+	check(bob.values[1].BGD_VERDICT == nil, "a client has no verdict of its own");
+	bob.env.Civ6Proxy_PolActifs = function() return bob.pol and 1 or 0; end
+	assert(load(PARTIE, "=partie.lua", "t", bob.env))();
+	l.host = 1;
+	for _, m in pairs(l.machines) do m.events.MultiplayerHostMigrated.Fire(1); end
+	local jh = bob.values[1].BGD_VERSION:match("@(.-)#");
+	local pris = bob.values[1].BGD_VERDICT;
+	check(pris ~= nil and pris:find("^0%.1%.0@" .. jh .. ":1:") ~= nil, "new host: verdict taken over (" .. tostring(pris) .. ")");
+	check(bob.log:find("verdict taken over as the new host", 1, true) ~= nil, "taking over logged");
+	check(bob.pol == true, "new host: state unchanged");
+	for id = 0, 2, 2 do
+		local m = l.machines[id];
+		m.cache = false;
+		m.luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+		check(m.pol == true, "player " .. id .. " joining after the migration: on");
+		local perso = m.values[id].BGD_VERSION:match("#(.*)$");
+		check(bob.values[1].BGD_VERDICT:find(perso, 1, true) ~= nil, "player " .. id .. ": token relayed by the new host");
+	end
+	local avant = bob.values[1].BGD_VERDICT;
+	bob.events.PlayerInfoChanged.Fire(2);
+	check(bob.values[1].BGD_VERDICT == avant, "taken over once");
+	-- A game launched with POL off: the verdict taken over says off, nobody is turned on.
+	local o = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Léo", proxy = false } });
+	o.open();
+	o.countdown();
+	Lancer(o);
+	local b = o.machines[1];
+	b.env.Civ6Proxy_PolActifs = function() return b.pol and 1 or 0; end
+	assert(load(PARTIE, "=partie.lua", "t", b.env))();
+	o.host = 1;
+	b.events.MultiplayerHostMigrated.Fire(1);
+	check(tostring(b.values[1].BGD_VERDICT):find(":0:", 1, true) ~= nil and b.pol ~= true, "POL off at launch: taken over as off");
+end
+
 -- 13b. The host's final verdict reaches a client after its lobby was hidden for the launch (too late
 -- for PlayerInfoChanged): at load, the launch data decides, the same as everyone else.
 do

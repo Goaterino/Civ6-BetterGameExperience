@@ -18,6 +18,10 @@
 -- version et le jeton de l'hôte, l'hôte ajoute son jeton au verdict de la partie, sans changer
 -- l'état des correctifs POL (on ne peut pas les activer ou les couper en pleine partie sans
 -- désynchroniser). Le nouveau venu conclut alors comme tout le monde.
+-- Only the machine that launched the game has a verdict. A machine that becomes host by migration
+-- writes its own: its version, the lobby token of its announcement (the one every player of this
+-- game announces), its own POL state, and the tokens of the players present. Without it, nobody
+-- joining after a migration would find its token and all would run with POL off.
 -- Si les correctifs POL sont actifs et qu'un humain se met prêt sans s'être annoncé (sans le proxy
 -- ou d'une autre version), l'hôte le dit dans le chat : sa partie va se désynchroniser. Les couper pour tous demanderait de
 -- le faire au même point de la simulation sur chaque machine, ce qui n'est pas encore fait.
@@ -45,8 +49,18 @@ local function BGD_PartieRelais()
 	-- Extra parentheses: GetValue of a missing key returns no value at all, and tostring() fails
 	-- when given none (a player without BGE in a new game).
 	local _, jetonAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#");
+	local repris = false;
 	if version == nil or jeton ~= jetonAnnonce then
-		return;  -- pas de verdict de notre salon : partie lancée sans notre proxy
+		-- No verdict of this game in our configuration: we did not launch it. Host now, with an
+		-- announcement of this game: we take the verdict over.
+		local vAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@[^@#:]*#[^@#:,]*$");
+		if vAnnonce == nil or jetonAnnonce == nil or jetonAnnonce == "" then
+			return;  -- pas d'annonce de notre salon : partie lancée sans notre proxy
+		end
+		version, jeton, liste = vAnnonce, jetonAnnonce, "";
+		actif = (Civ6Proxy_PolActifs() == 1) and "1" or "0";
+		verdict = version .. "@" .. jeton .. ":" .. actif .. ":";
+		repris = true;
 	end
 	if (actif == "1") ~= (Civ6Proxy_PolActifs() == 1) then
 		BGD_PartieJournal("verdict " .. verdict .. " différent de l'état local, verdict laissé tel quel");
@@ -73,12 +87,12 @@ local function BGD_PartieRelais()
 			end
 		end
 	end
-	if #ajoutes > 0 then
+	if #ajoutes > 0 or repris then
 		local nouveau = version .. "@" .. jeton .. ":" .. actif .. ":" .. liste
 			.. ((liste ~= "") and "," or "") .. table.concat(ajoutes, ",");
 		cfg:SetValue("BGD_VERDICT", nouveau);
 		Network.BroadcastPlayerInfo();
-		BGD_PartieJournal("verdict relayé : " .. nouveau);
+		BGD_PartieJournal((repris and "verdict taken over as the new host: " or "verdict relayé : ") .. nouveau);
 	end
 	if #sans > 0 then
 		-- En anglais : chaque machine équipée l'affiche dans sa langue (ui_depart_chat.lua).
@@ -99,6 +113,7 @@ if Civ6Proxy_PolActifs ~= nil then
 	Events.MultiplayerPlayerConnected.Add(protege);
 	-- A player who joined while the host was loading announced itself before this block existed.
 	Events.LoadScreenClose.Add(protege);
+	Events.MultiplayerHostMigrated.Add(protege);
 end
 
 -- Garde des messages réseau (startup_proxy/src/messages.rs) : quand elle a jeté un message abîmé
