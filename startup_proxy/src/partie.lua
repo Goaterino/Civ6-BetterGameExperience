@@ -293,7 +293,8 @@ if Civ6Proxy_SyncNotes ~= nil then
 	local RECENT = 30;         -- seconds a turn end's categories stay attached to a reload
 	local ALL_WAIT = 10;       -- seconds for the host's own load to start
 	local ALL_MAX_AGE = 600;   -- seconds after which the clients' step is no longer done
-	local S = { turnEnds = 0, joined = {}, reloading = {}, last = {}, allAsked = nil };
+	local ALL_HOLD = 120;      -- seconds the turn start waits for the clients' loads (depart.rs safety)
+	local S = { turnEnds = 0, joined = {}, reloading = {}, last = {}, allAsked = nil, allClients = nil };
 
 	local function IsHost()
 		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
@@ -412,10 +413,17 @@ if Civ6Proxy_SyncNotes ~= nil then
 		end
 		if age <= ALL_MAX_AGE then
 			BGD_PartieJournal("sync: the host has loaded its own game; every client loads it now");
+			S.allClients = os.clock();
 			Network.SendChat(".mph_ui_snap", -2, -1);
 		else
 			BGD_PartieJournal("sync: reload of everyone older than " .. ALL_MAX_AGE .. " s ignored");
 		end
+	end
+
+	-- For ui_depart.lua (simultaneous turn start): the clients are loading the host's game, so the
+	-- host does not start the turn without them for ALL_HOLD seconds; everyone starts together.
+	function BGD_ReloadAllHolding()
+		return S.allClients ~= nil and os.clock() - S.allClients < ALL_HOLD;
 	end
 	Events.LoadScreenClose.Add(Safely(ReloadAllStep));
 

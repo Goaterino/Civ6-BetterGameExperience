@@ -341,6 +341,15 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		if #absents == 0 then
 			Lancer(tour);
 		elseif D.pretDepuis ~= nil and os.clock() - D.pretDepuis >= DELAI_HOTE then
+			-- Every client is loading the host's game after a desync (the startup proxy's
+			-- partie.lua, BGD_ReloadAllHolding): no start without them, everyone starts together.
+			if BGD_ReloadAllHolding ~= nil and BGD_ReloadAllHolding() then
+				if D.reloadAll ~= tour then
+					D.reloadAll = tour;
+					J("turn " .. tour .. ": start held, every client is loading the host's game");
+				end
+				return;
+			end
 			Lancer(tour, absents);
 		end
 	end

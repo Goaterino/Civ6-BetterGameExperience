@@ -57,6 +57,7 @@ local function NewMachine(host, all)
 		Civ6Proxy_ReloadAllConnected = all and function(p) all.used[p] = nil; end,
 	}, { __index = _G });
 	assert(load(PARTIE, "=partie.lua", "t", env))();
+	m.env = env;
 	return m;
 end
 
@@ -132,9 +133,16 @@ do
 	h2.loading = true;
 	h2.events.GameCoreEventPublishComplete.Fire();
 	check(#h2.chat == 0, "nothing while the host is still loading");
+	check(not h2.env.BGD_ReloadAllHolding(), "no turn-start hold before the clients are asked");
 	h2.loading = false;
 	h2.events.LoadScreenClose.Fire();
 	check(Last(h2) == ".mph_ui_snap", "clients asked to load: " .. Last(h2));
+	-- ui_depart.lua: the turn start waits for the clients' loads, at most 120 s.
+	h2.clock = h2.clock + 119;
+	check(h2.env.BGD_ReloadAllHolding(), "turn start held while the clients load");
+	h2.clock = h2.clock + 1;
+	check(not h2.env.BGD_ReloadAllHolding(), "hold over after 120 s");
+	h2.clock = h2.clock - 120;
 	check(all.pending == nil, "the clients' step is done once");
 	h2.events.GameCoreEventPublishComplete.Fire();
 	check(#h2.chat == 1, "not twice");
@@ -165,6 +173,7 @@ do
 	h.events.GameCoreEventPublishComplete.Fire();
 	check(all.pending == nil, "request dropped after the wait");
 	check(Last(h):find(".mph_ui_snap", 1, true) == nil, "clients not asked");
+	check(not h.env.BGD_ReloadAllHolding(), "no turn-start hold");
 end
 
 if failures > 0 then
