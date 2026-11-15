@@ -119,10 +119,11 @@ end
 -- Problems BGE prevented on this machine, said to everyone in English (each machine with BGE shows
 -- it in its language, ui_depart_chat.lua): a damaged network message that would have frozen the
 -- game, a wipe of the game settings (messages.rs), a second copy of the game after the load
--- (snapshots.rs). The host also names the players still loading when its load screen closes: they
--- would have received a second copy, which its launch guard stopped. Something prevented before
--- the game (lobby, load) is said at the first occasion. At most one line of each kind per minute;
--- the rest is in the log. Without chat (solo, hotseat, PlayByCloud), the log only.
+-- (snapshots.rs). The host logs the players still loading when its load screen closes: its launch
+-- guard kept a second copy from them, which only loads twice if it lands after their load, so it
+-- is not said. Something prevented before the game (lobby, load) is said at the first occasion. At
+-- most one line of each kind per minute. Without chat (solo, hotseat, PlayByCloud), the log only.
+-- The log names players by number, never by name.
 --   Civ6Proxy_GardeMessages(), Civ6Proxy_GardeWipes(), Civ6Proxy_DoubleLoadRefused() -> how many
 --   since the last call; Civ6Proxy_LaunchGuarded() -> "1,3" (host, once)
 do
@@ -131,8 +132,8 @@ do
 		local pc = PlayerConfigurations[id];
 		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
 	end
-	local function Prevented(kind, key, who)
-		BGD_PartieJournal(kind .. " prevented for " .. who);
+	local function Prevented(kind, key, me)
+		BGD_PartieJournal(kind .. " prevented for player " .. tostring(me));
 		local now = os.clock();
 		if last[kind] ~= nil and now - last[kind] < 60 then
 			return;
@@ -141,9 +142,9 @@ do
 		if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud() then
 			return;
 		end
-		local texte = "[COLOR_GREEN]BGE - " .. BGD_TxtAnglais(key, who) .. "[ENDCOLOR]";
+		local texte = "[COLOR_GREEN]BGE - " .. BGD_TxtAnglais(key, Name(me)) .. "[ENDCOLOR]";
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
-		BGD_PartieJournal("message : " .. texte);
+		BGD_PartieJournal("message sent: " .. key);
 	end
 	local KINDS = {
 		{ "freeze", Civ6Proxy_GardeMessages, "LOC_BGD_CHAT_GARDE" },
@@ -154,7 +155,7 @@ do
 		for _, k in ipairs(KINDS) do
 			local n = k[2] ~= nil and k[2]() or 0;
 			if n ~= nil and n > 0 then
-				Prevented(k[1], k[3], Name(Network.GetLocalPlayerID()));
+				Prevented(k[1], k[3], Network.GetLocalPlayerID());
 			end
 		end
 	end
@@ -162,15 +163,15 @@ do
 		if Civ6Proxy_LaunchGuarded == nil or not Network.IsGameHost() then
 			return;
 		end
-		local names = {};
+		local loading = {};
 		for id in string.gmatch(tostring(Civ6Proxy_LaunchGuarded() or ""), "%d+") do
 			id = tonumber(id);
 			if Network.IsPlayerHotJoining(id) or Network.IsPlayerResyncing(id) then
-				table.insert(names, Name(id));
+				table.insert(loading, tostring(id));
 			end
 		end
-		if #names > 0 then
-			Prevented("double load", "LOC_BGD_CHAT_DOUBLE_LOAD", table.concat(names, ", "));
+		if #loading > 0 then
+			BGD_PartieJournal("launch guard: no second copy for player(s) " .. table.concat(loading, ", ") .. ", still loading at the host's load end");
 		end
 	end
 	local function Safely(f)
@@ -402,7 +403,7 @@ if Civ6Proxy_SyncNotes ~= nil then
 		local last = S.last[playerID];
 		if last ~= nil and os.clock() - last.at < RECENT and last.missing + last.extra > 0 then
 			local text = "[COLOR_Civ6Yellow]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_SYNC_RELOAD_ALL", Name(playerID), last.missing, last.extra) .. "[ENDCOLOR]";
-			BGD_PartieJournal("message: " .. text);
+			BGD_PartieJournal("message sent: LOC_BGD_CHAT_SYNC_RELOAD_ALL for player " .. playerID);
 			Send(text);
 		end
 		BGD_PartieJournal("sync: player " .. playerID .. " out of sync: the host reloads everyone");

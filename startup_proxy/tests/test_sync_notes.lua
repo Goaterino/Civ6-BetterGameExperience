@@ -107,16 +107,15 @@ do
 	c.events.GameCoreEventPublishComplete.Fire();
 	check(c.chat[2] == "[COLOR_GREEN]BGE - Game settings wipe prevented for P1.[ENDCOLOR]", "wipe: " .. tostring(c.chat[2]));
 	check(c.chat[3] == "[COLOR_GREEN]BGE - Double load prevented for P1.[ENDCOLOR]", "double load: " .. tostring(c.chat[3]));
-	-- Host: players still loading when its load screen closes would have got a second copy.
+	check(Logged(c, "freeze prevented for player 1") and not Logged(c, "P1"), "the log has numbers, not names");
+	-- Host: players still loading when its load screen closes got no second copy (launch guard):
+	-- logged only, since that copy may well have landed during their load.
 	local h = NewMachine(true, game);
 	game.guarded = "1,2";
 	h.resyncing[2] = true;
 	h.events.LoadScreenClose.Fire();
-	check(Last(h) == "[COLOR_GREEN]BGE - Double load prevented for P2.[ENDCOLOR]", "launch guard: " .. Last(h));
-	game.guarded = "1";
-	h.clock = h.clock + 100;
-	h.events.LoadScreenClose.Fire();
-	check(Last(h):find("P1", 1, true) == nil, "a player who had finished loading is not named");
+	check(#h.chat == 0, "launch guard: nothing said");
+	check(Logged(h, "launch guard: no second copy for player(s) 2,") and not Logged(h, "player(s) 1"), "launch guard logged, still loading only");
 end
 
 do
