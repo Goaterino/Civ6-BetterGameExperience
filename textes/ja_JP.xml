@@ -345,7 +345,7 @@
 			<Text>{1}: POL 修正が有効なのに、BetterGameExperience なし (または別のバージョン) で参加しました。このプレイヤーのゲームは同期がずれます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ja_JP">
-			<Text>No First/Last moves 有効: 全プレイヤーが一緒にターンを開始し、ホストのタイマーがゼロになると全員のターンが終わります。</Text>
+			<Text>No First/Last moves 有効。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="ja_JP">
 			<Text>No First/Last moves: 同時開始は有効、同時終了は利用不可 (ゲームのタイマーをフックできません)。</Text>

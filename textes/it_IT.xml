@@ -345,7 +345,7 @@
 			<Text>{1}: entrato senza BetterGameExperience (o con un'altra versione) mentre le correzioni POL sono attive. La sua partita si desincronizzerà.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="it_IT">
-			<Text>No First/Last moves attivo: tutti i giocatori iniziano il turno insieme, e il turno finisce per tutti quando il timer dell'host arriva a zero.</Text>
+			<Text>No First/Last moves attivo.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="it_IT">
 			<Text>No First/Last moves: inizio del turno simultaneo attivo; fine simultanea non disponibile (timer del gioco non intercettato).</Text>

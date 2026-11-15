@@ -345,7 +345,7 @@
 			<Text>{1}: joined without BetterGameExperience (or with another version) while POL fixes are enabled. Their game will desync.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="en_US">
-			<Text>No First/Last moves enabled: every player starts their turn together, and the turn ends for everyone when the host's timer runs out.</Text>
+			<Text>No First/Last moves enabled.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="en_US">
 			<Text>No First/Last moves: simultaneous turn start enabled; simultaneous turn end unavailable (exe timer not hooked).</Text>
