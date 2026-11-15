@@ -38,7 +38,11 @@ local function NewMachine(host, game, opts)
 		LuaEvents = setmetatable({}, { __index = function(t, k) local e = NewEvent(); rawset(t, k, e); return e; end }),
 		os = { clock = function() return m.clock; end },
 		Locale = { GetCurrentLanguage = function() return { Type = "en_US" }; end, Lookup = function(s) return s; end },
-		GameConfiguration = { IsNetworkMultiplayer = function() return true; end, IsPlayByCloud = function() return false; end },
+		GameConfiguration = {
+			IsNetworkMultiplayer = function() return true; end,
+			IsPlayByCloud = function() return false; end,
+			GetMultiplayerPlayerIDs = function() return { 0, 1 }; end,
+		},
 		PlayerConfigurations = setmetatable({}, { __index = function(_, id)
 			game.values[id] = game.values[id] or {};
 			local v = game.values[id];
@@ -55,6 +59,7 @@ local function NewMachine(host, game, opts)
 			IsGameHost = function() return host; end,
 			IsPlayerHotJoining = function() return false; end,
 			IsPlayerResyncing = function(id) return m.resyncing[id] == true; end,
+			IsPlayerConnected = function() return true; end,
 			SendChat = function(text) table.insert(m.chat, text); end,
 			RequestSnapshot = function() m.snapshots = m.snapshots + 1; end,
 			BroadcastPlayerInfo = function() m.broadcasts = (m.broadcasts or 0) + 1; end,
@@ -171,9 +176,16 @@ do
 	check(game.mark == nil, "the mark is taken once");
 	h2.events.GameCoreEventPublishComplete.Fire();
 	check(#h2.chat == 1, "not twice");
-	check(h2.env.BGD_ReloadAllStep() == true, "start held while the clients load");
-	h2.clock = h2.clock + 120;
-	check(h2.env.BGD_ReloadAllStep() == false, "hold over after 120 s");
+	check(h2.env.BGD_ReloadAllStep() == true, "start held while the client loads");
+	h2.events.MultiplayerSnapshotProcessed.Fire(0);
+	check(h2.env.BGD_ReloadAllStep() == true, "the host's own processed message changes nothing");
+	h2.events.MultiplayerSnapshotProcessed.Fire(1);
+	local holding, loaded = h2.env.BGD_ReloadAllStep();
+	check(holding == false and loaded ~= nil and loaded[1] == true, "client loaded: start, counted as ready");
+	game.turn = 126;
+	local _, later = h2.env.BGD_ReloadAllStep();
+	check(later == nil, "counted as ready for that turn only");
+	game.turn = 125;
 	c.events.MultiplayerChat.Fire(0, 1, ".bgd_load 125");
 	check(c.snapshots == 1 and c.env.BGD_ReloadAllStep() == false, "client loads the host's game once");
 	-- Only the host's signals count.
@@ -198,6 +210,8 @@ do
 	h.clock = h.clock + 31;
 	check(h.env.BGD_ReloadAllStep() == true and Last(h) == ".bgd_load 124", "clients load the running game: " .. Last(h));
 	check(game.mark == nil, "mark dropped");
+	h.clock = h.clock + 120;
+	check(h.env.BGD_ReloadAllStep() == false, "a client that never loads holds the start 120 s at most");
 	-- A client told to wait that never gets the host's game reloads by itself after 180 s.
 	local c = NewMachine(false, game);
 	c.events.MultiplayerChat.Fire(0, 1, ".bgd_reload 124");
@@ -206,19 +220,22 @@ do
 end
 
 do
-	-- Without the simultaneous start (no hold), the turn start itself starts the takeover.
+	-- Without the simultaneous start (no hold), the local player's turn start (after every AI
+	-- turn) starts the takeover; the turn's very start, before the AI turns, does not.
 	local game = { values = {}, turn = 124 };
 	local h = NewMachine(true, game);
 	h.events.LoadScreenClose.Fire();
 	h.notes = "1|0|1|2|0|";
 	h.events.GameCoreEventPublishComplete.Fire();
 	h.events.TurnBegin.Fire();
-	check(h.snapshots == 1, "taken over at the turn start");
+	check(h.snapshots == 0, "not before the AI turns");
+	h.events.LocalPlayerTurnBegin.Fire();
+	check(h.snapshots == 1, "taken over at the local player's turn start");
 	-- A client sends no line and takes nothing over.
 	local c = NewMachine(false, game);
 	c.notes = "3|25|1|4|0|units";
 	c.events.GameCoreEventPublishComplete.Fire();
-	c.events.TurnBegin.Fire();
+	c.events.LocalPlayerTurnBegin.Fire();
 	check(#c.chat == 0 and c.snapshots == 0, "a client announces nothing");
 end
 

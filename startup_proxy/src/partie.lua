@@ -314,10 +314,11 @@ end
 -- whose game has objects the host's has not (or the other way round) would reload alone, and a
 -- game loaded alone drifts away from the running ones. While the host announces that it takes over
 -- (its BGD_RELOAD value), clients with BGE do not reload by themselves: they acknowledge the check
--- and wait. At the turn start (ui_depart.lua's hold, BGD_ReloadAllStep), the host says it, tells
--- the clients (`.bgd_reload`) and loads its own game; its fresh interface sends `.bgd_load` and
--- every client loads that game, once. The turn start waits until everyone is back. A client that
--- gets no `.bgd_load` reloads by itself after CLIENT_WAIT seconds.
+-- and wait. At the next turn start, held by ui_depart.lua once every AI turn is done
+-- (BGD_ReloadAllStep), the host says it, tells the clients (`.bgd_reload`) and loads its own game;
+-- its fresh interface sends `.bgd_load` and every client loads that game, once. The turn starts as
+-- soon as every client has loaded it. A client that gets no `.bgd_load` reloads by itself after
+-- CLIENT_WAIT seconds.
 --   Civ6Proxy_SyncNotes() -> "player|major|checks in a row|missing|extra|categories" separated by
 --                            ";", since the last call (host only)
 --   Civ6Proxy_ReloadAllReady() -> 1 if this machine, as host, can take a reload over
@@ -326,11 +327,11 @@ end
 if Civ6Proxy_SyncNotes ~= nil then
 	local ALL_WAIT = 30;       -- seconds for the host's own load to start
 	local ALL_MAX_AGE = 600;   -- seconds after which the clients' step is no longer done
-	local ALL_HOLD = 120;      -- seconds the turn start waits for the clients' loads (depart.rs safety)
+	local ALL_HOLD = 120;      -- at most, seconds the turn start waits for the clients' loads (depart.rs safety)
 	local CLIENT_WAIT = 180;   -- client: seconds to wait for `.bgd_load` before reloading by itself
 	local RELOAD, LOAD = ".bgd_reload ", ".bgd_load ";
 	local KEY = "BGD_RELOAD";
-	local S = { pending = nil, asked = nil, allClients = nil, waiting = nil, noSelf = nil };
+	local S = { pending = nil, asked = nil, clients = nil, waiting = nil, noSelf = nil };
 
 	local function IsHost()
 		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
@@ -429,6 +430,19 @@ if Civ6Proxy_SyncNotes ~= nil then
 		Network.RequestSnapshot();
 	end
 
+	-- Host: every connected human client loads the host's game; the turn start waits for them.
+	local function ClientsLoad()
+		local waiting = {};
+		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+			local pc = PlayerConfigurations[id];
+			if id ~= Network.GetLocalPlayerID() and pc ~= nil and pc:IsHuman() and Network.IsPlayerConnected(id) then
+				waiting[id] = true;
+			end
+		end
+		S.clients = { turn = Game.GetCurrentGameTurn(), since = os.clock(), waiting = waiting, loaded = {} };
+		Send(LOAD .. tostring(S.clients.turn));
+	end
+
 	-- Host, fresh interface after its own load: every client loads the same game.
 	local function AfterLoad()
 		if not IsHost() or S.asked ~= nil or Civ6Proxy_ReloadAllTake == nil or Loading(Network.GetLocalPlayerID()) then
@@ -443,14 +457,14 @@ if Civ6Proxy_SyncNotes ~= nil then
 			return;
 		end
 		BGD_PartieJournal("sync: the host has loaded its own game; every client loads it now");
-		S.allClients = os.clock();
-		Send(LOAD .. tostring(Game.GetCurrentGameTurn()));
+		ClientsLoad();
 	end
 
-	-- For ui_depart.lua, at every tick of the turn start: does it have to wait? Host: starts a
-	-- pending takeover; waits while its own load is asked for and while the clients load. Client:
-	-- waits for `.bgd_load` after `.bgd_reload`, and reloads by itself if it never comes.
-	-- Events may be held at the turn start: the notes and the after-load step are read here too.
+	-- For ui_depart.lua, at every tick of the held turn start (after every AI turn of that turn).
+	-- Host: starts a pending takeover; returns true while its own load is asked for or a client is
+	-- still loading (at most ALL_HOLD seconds), then the clients that loaded the host's game this
+	-- turn, which count as ready. Client: waits for `.bgd_load` after `.bgd_reload`, and reloads by
+	-- itself if it never comes. Events may be held there: notes and the after-load step are read here.
 	function BGD_ReloadAllStep()
 		if IsHost() then
 			Drain();
@@ -463,11 +477,13 @@ if Civ6Proxy_SyncNotes ~= nil then
 				-- The host's own load never started: the clients load its running game.
 				S.asked = nil;
 				Civ6Proxy_ReloadAllTake();
-				S.allClients = os.clock();
 				BGD_PartieJournal("sync: the host's own load did not start within " .. ALL_WAIT .. " s; the clients load its game");
-				Send(LOAD .. tostring(Game.GetCurrentGameTurn()));
+				ClientsLoad();
 			end
-			return S.asked ~= nil or (S.allClients ~= nil and os.clock() - S.allClients < ALL_HOLD);
+			local c = S.clients;
+			local loading = c ~= nil and next(c.waiting) ~= nil and os.clock() - c.since < ALL_HOLD;
+			local loaded = (c ~= nil and c.turn == Game.GetCurrentGameTurn()) and c.loaded or nil;
+			return S.asked ~= nil or loading, loaded;
 		end
 		if S.waiting ~= nil and os.clock() - S.waiting > CLIENT_WAIT then
 			S.waiting = nil;
@@ -499,8 +515,18 @@ if Civ6Proxy_SyncNotes ~= nil then
 	Events.TurnEnd.Add(Safely(Announce));
 	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
 	Events.GameCoreEventPublishComplete.Add(Safely(AfterLoad));
-	-- Without the simultaneous turn start (no hold), the turn start itself starts a pending takeover.
-	Events.TurnBegin.Add(Safely(function()
+	-- Host: a client has loaded the host's game.
+	Events.MultiplayerSnapshotProcessed.Add(Safely(function(playerID)
+		local c = S.clients;
+		if IsHost() and c ~= nil and playerID ~= nil and c.waiting[playerID] then
+			c.waiting[playerID] = nil;
+			c.loaded[playerID] = true;
+			BGD_PartieJournal("sync: player " .. playerID .. " has loaded the host's game");
+		end
+	end));
+	-- Without the simultaneous turn start (no hold), the local player's turn start starts a pending
+	-- takeover: it comes after every AI turn of the turn (TurnBegin comes before them).
+	Events.LocalPlayerTurnBegin.Add(Safely(function()
 		if IsHost() and S.pending ~= nil and S.asked == nil then
 			Start();
 		end

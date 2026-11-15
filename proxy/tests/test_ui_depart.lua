@@ -391,6 +391,22 @@ do
 end
 
 do
+	-- After the takeover, a client that has loaded the host's game counts as ready, even without
+	-- its ready signal: the start goes as soon as the others are ready, nobody named as late.
+	local G = NewGame({ option = true, reloadAll = function() return false, { [2] = true }; end, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.tour = 11;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("loaded client: start without its ready signal", not h.natives.attente and not a.natives.attente);
+	local sans = false;
+	for _, t in ipairs(h.locaux) do if t:find("sans J2") then sans = true; end end
+	Check("loaded client: not named as late", not sans);
+end
+
+do
 	-- A player whose BGE never signals (inactive on their side): after two turns started without
 	-- them, the host stops waiting; a ready signal makes them waited for again.
 	local G = NewGame({ option = true, players = {

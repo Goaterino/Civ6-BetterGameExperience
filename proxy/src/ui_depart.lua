@@ -336,8 +336,13 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 			return;
 		end
 		-- The host takes a desync over (the startup proxy's partie.lua, BGD_ReloadAllStep): it loads
-		-- its own game, then every client loads it. No start until everyone is back.
-		if BGD_ReloadAllStep ~= nil and BGD_ReloadAllStep() then
+		-- its own game, then every client loads it. No start until everyone is back; a client that
+		-- has loaded the host's game counts as ready (its loaded turn may not be held again).
+		local holding, loaded = false, nil;
+		if BGD_ReloadAllStep ~= nil then
+			holding, loaded = BGD_ReloadAllStep();
+		end
+		if holding then
 			if D.reloadAll ~= tour then
 				D.reloadAll = tour;
 				J("turn " .. tour .. ": start held, the host takes a desync over");
@@ -347,7 +352,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		local prets = D.prets[tour] or {};
 		local absents = {};
 		for _, id in ipairs(Attendus()) do
-			if id ~= Moi() and not prets[id] and not D.ignores[id] then
+			if id ~= Moi() and not prets[id] and not D.ignores[id] and not (loaded ~= nil and loaded[id]) then
 				table.insert(absents, id);
 			end
 		end
