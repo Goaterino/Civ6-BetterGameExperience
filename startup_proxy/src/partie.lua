@@ -329,9 +329,10 @@ if Civ6Proxy_SyncNotes ~= nil then
 	local ALL_MAX_AGE = 600;   -- seconds after which the clients' step is no longer done
 	local ALL_HOLD = 120;      -- at most, seconds the turn start waits for the clients' loads (depart.rs safety)
 	local CLIENT_WAIT = 180;   -- client: seconds to wait for `.bgd_load` before reloading by itself
+	local AFTER_LOAD_WAIT = 20; -- host: seconds after its load when the clients load even without a turn start
 	local RELOAD, LOAD = ".bgd_reload ", ".bgd_load ";
 	local KEY = "BGD_RELOAD";
-	local S = { pending = nil, asked = nil, clients = nil, waiting = nil, noSelf = nil };
+	local S = { pending = nil, asked = nil, loadedAt = nil, clients = nil, waiting = nil, noSelf = nil };
 
 	local function IsHost()
 		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
@@ -443,7 +444,9 @@ if Civ6Proxy_SyncNotes ~= nil then
 		Send(LOAD .. tostring(S.clients.turn));
 	end
 
-	-- Host, fresh interface after its own load: every client loads the same game.
+	-- Host, fresh interface after its own load: the clients load the same game once the host has
+	-- replayed the start of the turn (its turn start, held or not), not before. A client waiting
+	-- for its copy ignores the host's turn updates, and its game then stops halfway (2026-11-15).
 	local function AfterLoad()
 		if not IsHost() or S.asked ~= nil or Civ6Proxy_ReloadAllTake == nil or Loading(Network.GetLocalPlayerID()) then
 			return;
@@ -456,8 +459,17 @@ if Civ6Proxy_SyncNotes ~= nil then
 			BGD_PartieJournal("sync: reload of everyone older than " .. ALL_MAX_AGE .. " s ignored");
 			return;
 		end
-		BGD_PartieJournal("sync: the host has loaded its own game; every client loads it now");
-		ClientsLoad();
+		BGD_PartieJournal("sync: the host has loaded its own game; the clients load it at its turn start");
+		S.loadedAt = os.clock();
+	end
+
+	-- Host: its turn start is reached after its own load (or AFTER_LOAD_WAIT seconds went by).
+	local function TurnStartAfterLoad(force)
+		if S.loadedAt ~= nil and (force or os.clock() - S.loadedAt > AFTER_LOAD_WAIT) then
+			S.loadedAt = nil;
+			BGD_PartieJournal("sync: every client loads the host's game now");
+			ClientsLoad();
+		end
 	end
 
 	-- For ui_depart.lua, at every tick of the held turn start (after every AI turn of that turn).
@@ -469,6 +481,7 @@ if Civ6Proxy_SyncNotes ~= nil then
 		if IsHost() then
 			Drain();
 			AfterLoad();
+			TurnStartAfterLoad(true);
 			if S.pending ~= nil and S.asked == nil then
 				Start();
 			end
@@ -483,7 +496,7 @@ if Civ6Proxy_SyncNotes ~= nil then
 			local c = S.clients;
 			local loading = c ~= nil and next(c.waiting) ~= nil and os.clock() - c.since < ALL_HOLD;
 			local loaded = (c ~= nil and c.turn == Game.GetCurrentGameTurn()) and c.loaded or nil;
-			return S.asked ~= nil or loading, loaded;
+			return S.asked ~= nil or S.loadedAt ~= nil or loading, loaded;
 		end
 		if S.waiting ~= nil and os.clock() - S.waiting > CLIENT_WAIT then
 			S.waiting = nil;
@@ -515,6 +528,7 @@ if Civ6Proxy_SyncNotes ~= nil then
 	Events.TurnEnd.Add(Safely(Announce));
 	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
 	Events.GameCoreEventPublishComplete.Add(Safely(AfterLoad));
+	Events.GameCoreEventPublishComplete.Add(Safely(function() TurnStartAfterLoad(false); end));
 	-- Host: a client has loaded the host's game.
 	Events.MultiplayerSnapshotProcessed.Add(Safely(function(playerID)
 		local c = S.clients;
@@ -527,7 +541,11 @@ if Civ6Proxy_SyncNotes ~= nil then
 	-- Without the simultaneous turn start (no hold), the local player's turn start starts a pending
 	-- takeover: it comes after every AI turn of the turn (TurnBegin comes before them).
 	Events.LocalPlayerTurnBegin.Add(Safely(function()
-		if IsHost() and S.pending ~= nil and S.asked == nil then
+		if not IsHost() then
+			return;
+		end
+		TurnStartAfterLoad(true);
+		if S.pending ~= nil and S.asked == nil then
 			Start();
 		end
 	end));

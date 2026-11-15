@@ -172,9 +172,12 @@ do
 	check(#h2.chat == 0, "nothing while the host is still loading");
 	h2.loading = false;
 	h2.events.LoadScreenClose.Fire();
-	check(Last(h2) == ".bgd_load 125", "clients load now: " .. Last(h2));
-	check(game.mark == nil, "the mark is taken once");
 	h2.events.GameCoreEventPublishComplete.Fire();
+	check(#h2.chat == 0, "the clients wait for the host's turn start, after its turn updates");
+	check(game.mark == nil, "the mark is taken once");
+	check(h2.env.BGD_ReloadAllStep() == true and Last(h2) == ".bgd_load 125", "at the held turn start, clients load: " .. Last(h2));
+	h2.events.GameCoreEventPublishComplete.Fire();
+	h2.events.LocalPlayerTurnBegin.Fire();
 	check(#h2.chat == 1, "not twice");
 	check(h2.env.BGD_ReloadAllStep() == true, "start held while the client loads");
 	h2.events.MultiplayerSnapshotProcessed.Fire(0);
@@ -197,6 +200,22 @@ do
 	game.turn = 127;
 	check(h2.env.BGD_ReloadAllStep() == true and h2.snapshots == 1, "taken over again");
 	check(h2.chat[2]:find("missing 0 objects and has 2 extra", 1, true) ~= nil, "second line: " .. tostring(h2.chat[2]));
+end
+
+do
+	-- After the host's load, no turn start comes: the clients load after 20 s anyway; without the
+	-- hold, the local player's turn start sends them at once.
+	local game = { values = {}, turn = 124, mark = 0 };
+	local h = NewMachine(true, game);
+	h.events.LoadScreenClose.Fire();
+	check(#h.chat == 0, "waiting for the turn start");
+	h.clock = h.clock + 21;
+	h.events.GameCoreEventPublishComplete.Fire();
+	check(Last(h) == ".bgd_load 124", "after 20 s: " .. Last(h));
+	local h2 = NewMachine(true, { values = {}, turn = 124, mark = 0 });
+	h2.events.LoadScreenClose.Fire();
+	h2.events.LocalPlayerTurnBegin.Fire();
+	check(Last(h2) == ".bgd_load 124", "at the local player's turn start: " .. Last(h2));
 end
 
 do
