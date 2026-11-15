@@ -215,6 +215,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="fr_FR">
 			<Text>Affiche la production qu'une ville garde en réserve (débordement, au plus un tour), ajoutée à sa production du tour suivant : sur le bandeau de ville, dans le panneau de la ville et dans le panneau de production. Affichage seulement.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="fr_FR">
+			<Text>Alerte d'habitations sur le bandeau de ville</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="fr_FR">
+			<Text>Sur le bandeau de vos villes, une maison jaune apparaît quand il ne reste qu'une habitation avant la limite (croissance ralentie de 50 %), et une maison orange quand la limite est atteinte (75 %). Le jeu n'affiche son icône rouge qu'une fois la limite dépassée. Affichage seulement.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
 			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>
 		</Row>

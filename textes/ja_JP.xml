@@ -215,6 +215,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ja_JP">
 			<Text>都市が蓄えている生産力 (余剰分、最大 1 ターン分) を、都市バナー、都市パネル、生産パネルに表示します。これは次のターンの生産力に加算されます。表示のみ。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="ja_JP">
+			<Text>都市バナーの住宅の早期警告</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="ja_JP">
+			<Text>自分の都市バナーに、住宅の上限まであと 1 になると黄色の家 (人口増加率 50% 鈍化)、上限に達するとオレンジ色の家 (75% 鈍化) を表示します。ゲーム本来の赤いアイコンは、上限を超えてからしか表示されません。表示のみ。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ja_JP">
 			<Text>区域の割引: -{1}% (この種類の区域数が平均より少ない)。</Text>
 		</Row>

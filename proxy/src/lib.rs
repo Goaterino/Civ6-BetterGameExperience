@@ -12,7 +12,7 @@
 //! `ui_journal`, `ui_mesure_epingles`, `ui_epingles`, `ui_merveilles`, `ui_diag_accords` (voir `ui`), `ui_carte_entiere=on|off`
 //! (on par défaut, voir `carte`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`), `ui_debordement=on|off` (on, voir
-//! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_avancement` (on, voir `ui`),
+//! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_logement` et `ui_avancement` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `journal_chokepoints=on|off` (off, voir `journal_chokepoints`),
 //! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
@@ -221,6 +221,9 @@ pub(crate) fn read_config() {
         }
         if let Some(v) = line.trim().strip_prefix("ui_reduction_quartiers=") {
             ui::set_reduction_quartiers(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ui_logement=") {
+            ui::set_logement(v.trim() != "off");
         }
         if let Some(v) = line.trim().strip_prefix("ui_avancement=") {
             ui::set_avancement(v.trim() != "off");

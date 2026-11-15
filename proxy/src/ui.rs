@@ -34,6 +34,9 @@
 //! - `ui_avancement=on|off` (on) : ajoute `ui_avancement.lua` à WorldTracker.lua, et un libellé à
 //!   WorldTrackerResearch.xml et WorldTrackerCivic.xml : « x/y (+z) » (placé / coût, excédent lu par `avancement`) à droite du nom de
 //!   la technologie et du dogme en cours, dans le panneau en haut à gauche ;
+//! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. A yellow house on
+//!   the banner of a city one housing below its cap (growth -50%), an orange one at the cap (-75%),
+//!   before the game's own red icon, which only comes over the cap ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -77,6 +80,8 @@ const QUARTIERS_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_quartiers.lua"));
 const DEBORDEMENT_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
+/// Block of the `ui_logement` setting (CityBannerManager.lua). Its texts are the game's own.
+const LOGEMENT_BLOCK: &str = include_str!("ui_logement.lua");
 /// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
 /// WorldTrackerCivic.xml).
 const AVANCEMENT_BLOCK: &str = include_str!("ui_avancement.lua");
@@ -95,6 +100,7 @@ static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
 static ANNULER: AtomicBool = AtomicBool::new(true);
 static QUARTIERS: AtomicBool = AtomicBool::new(true);
 static AVANCEMENT: AtomicBool = AtomicBool::new(true);
+static LOGEMENT: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -142,6 +148,10 @@ pub fn set_avancement(on: bool) {
     AVANCEMENT.store(on, Ordering::Relaxed);
 }
 
+pub fn set_logement(on: bool) {
+    LOGEMENT.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -162,6 +172,7 @@ fn active() -> bool {
         || ANNULER.load(Ordering::Relaxed)
         || QUARTIERS.load(Ordering::Relaxed)
         || AVANCEMENT.load(Ordering::Relaxed)
+        || LOGEMENT.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
@@ -1340,6 +1351,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     if crate::debordement::pose() && crate::debordement::publier(l) {
         blocks.push(DEBORDEMENT_BLOCK);
         what.push("production en réserve sur le bandeau".into());
+    }
+    if LOGEMENT.load(Ordering::Relaxed) {
+        blocks.push(LOGEMENT_BLOCK);
+        what.push("alerte de logement sur le bandeau".into());
     }
     if blocks.is_empty() {
         return new;
