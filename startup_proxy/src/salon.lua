@@ -550,6 +550,7 @@ end
 -- nouveau jeton de l'hôte.
 local function BGD_Ouverture(migration)
 	BGD.ouvert = true;
+	BGD.openedSession = BGD_Session();
 	-- Correctifs POL coupés jusqu'au verdict ; disponibilité relue, elle change quand le proxy de
 	-- GameCore se charge (première partie) ou que ses réglages changent.
 	Civ6Proxy_FixerPol(0, "ouverture du salon");
@@ -569,6 +570,19 @@ local function BGD_Ouverture(migration)
 			BGD.instantane[id] = BGD_Valeur(id, BGD_CLE_VERSION);
 		end
 	end
+	BGD_Publier();
+	BGD_Armer();
+end
+
+-- Back from the lobby's Game Setup tab (HostGame_ShowStagingRoom, offered only inside a session):
+-- same lobby, so tokens and POL are kept, and the announcement and verdict catch up on what changed
+-- while the lobby was hidden. Anything else opens the lobby as new.
+local function BGD_BackToStagingRoom()
+	if not BGD.ouvert or BGD_Session() ~= BGD.openedSession then
+		BGD_Ouverture();
+		return;
+	end
+	BGD_Journal("back from Game Setup, tokens kept");
 	BGD_Publier();
 	BGD_Armer();
 end
@@ -681,7 +695,7 @@ else
 	else
 		BGD_Journal("StartLaunchCountdown introuvable : pas de message avant le lancement");
 	end
-	LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
+	LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(BGD_BackToStagingRoom));
 	LuaEvents.JoiningRoom_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
 	Events.MultiplayerHostMigrated.Add(BGD_Protege(function()
 		if BGD.ouvert then

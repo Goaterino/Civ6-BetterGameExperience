@@ -709,7 +709,8 @@ do
 	l.host = 1;
 	for _, m in pairs(l.machines) do m.events.MultiplayerHostMigrated.Fire(1); end
 	check(#l.annonces == 2, "pas de nouvelle annonce à une migration");
-	l.open();
+	-- A lobby entered again goes through JoiningRoom.lua, the host's too.
+	for _, m in pairs(l.machines) do m.luaEvents.JoiningRoom_ShowStagingRoom.Fire(); end
 	check(#l.annonces == 4, "nouvelle ouverture : nouvelles annonces");
 	local h = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { hotseat = true });
 	h.open();
@@ -746,6 +747,37 @@ do
 	session = 8;
 	l.open();
 	check(#l.annonces == 4, "nouvelle session : nouvelles annonces (" .. #l.annonces .. ")");
+end
+
+-- 20c. Back from the lobby's Game Setup tab (HostGame_ShowStagingRoom): same lobby, so tokens and
+-- POL are kept and a launch right after finds everyone on; a new lobby or session still draws new
+-- tokens.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } });
+	local session = 3;
+	for _, m in pairs(l.machines) do m.env.Network.GetSessionID = function() return session; end end
+	l.open();
+	local hote, bob = l.machines[0], l.machines[1];
+	local tokenHote, tokenBob = hote.values[0].BGD_VERSION, bob.values[1].BGD_VERSION;
+	check(Pol(l, 1) == "actifs", "lobby open: Bob on");
+	bob.luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(bob.values[1].BGD_VERSION == tokenBob, "client back from Game Setup: token kept (" .. tostring(bob.values[1].BGD_VERSION) .. ")");
+	check(bob.pol == true, "client back from Game Setup: still on");
+	check((bob.log or ""):find("back from Game Setup, tokens kept", 1, true) ~= nil, "client: logged");
+	hote.luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(hote.values[0].BGD_VERSION == tokenHote, "host back from Game Setup: token kept");
+	check(l.actif() == "1" and l.verdict():find(tokenBob:match("#(.*)$"), 1, true) ~= nil, "verdict still lists Bob (" .. tostring(l.verdict()) .. ")");
+	l.countdown();
+	check(Pol(l, 0) == "actifs" and Pol(l, 1) == "actifs", "launch right after: everyone on (" .. Pol(l, 0) .. ", " .. Pol(l, 1) .. ")");
+	bob.luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+	check(bob.values[1].BGD_VERSION ~= tokenBob, "new lobby: new token");
+	local tokenHote2 = hote.values[0].BGD_VERSION;
+	session = 4;
+	hote.luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(hote.values[0].BGD_VERSION ~= tokenHote2, "other session: opened as new");
+	local f = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } });
+	f.machines[0].luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(f.machines[0].values[0].BGD_VERSION ~= nil, "lobby not open yet: opened as usual");
 end
 
 -- 21. Bouton BGE Check : visible chez l'hôte actif seulement, et hors draft de MPH.
