@@ -26,11 +26,11 @@ local function NewEvent()
 end
 
 -- One machine: `host` or client. `game` is shared by the machines of one game: player values
--- (PlayerConfiguration), and the DLL's mark of the host (kept across its own load).
+-- (PlayerConfiguration).
 local function NewMachine(host, game, opts)
 	opts = opts or {};
 	local m = { chat = {}, notes = "", clock = 1000, snapshots = 0, loading = false, noSelf = nil, journal = {},
-		freezes = 0, wipes = 0, refused = 0, resyncing = {} };
+		freezes = 0, wipes = 0, refused = 0, resyncing = {}, hotJoining = {} };
 	m.events = setmetatable({}, { __index = function(t, k) local e = NewEvent(); rawset(t, k, e); return e; end });
 	local me = host and 0 or 1;
 	local env = setmetatable({
@@ -57,7 +57,7 @@ local function NewMachine(host, game, opts)
 			GetLocalPlayerID = function() return me; end,
 			GetGameHostPlayerID = function() return 0; end,
 			IsGameHost = function() return host; end,
-			IsPlayerHotJoining = function() return false; end,
+			IsPlayerHotJoining = function(id) return m.hotJoining[id] == true; end,
 			IsPlayerResyncing = function(id) return m.resyncing[id] == true; end,
 			IsPlayerConnected = function() return true; end,
 			SendChat = function(text) table.insert(m.chat, text); end,
@@ -74,9 +74,7 @@ local function NewMachine(host, game, opts)
 		Civ6Proxy_LaunchGuarded = function() local s = game.guarded or ""; game.guarded = nil; return s; end,
 		Civ6Proxy_SyncNotes = function() local n = m.notes; m.notes = ""; return n; end,
 		Civ6Proxy_ReloadAllReady = function() return opts.notReady and 0 or 1; end,
-		Civ6Proxy_ReloadAllMark = function() game.mark = 0; end,
-		Civ6Proxy_ReloadAllTake = function() local a = game.mark; game.mark = nil; return a or -1; end,
-		Civ6Proxy_ReloadAllNoSelfReload = function(on) m.noSelf = on; return 1; end,
+		Civ6Proxy_RejoinKeepCheck = function() m.kept = (m.kept or 0) + 1; end,
 	}, { __index = _G });
 	assert(load(PARTIE, "=partie.lua", "t", env))();
 	m.env = env;
@@ -122,140 +120,70 @@ do
 end
 
 do
-	-- The host announces that it takes reloads over; clients follow it.
-	local game = { values = {}, turn = 120 };
-	local h = NewMachine(true, game);
-	local c = NewMachine(false, game);
-	h.events.LoadScreenClose.Fire();
-	check(game.values[0].BGD_RELOAD == 1 and h.broadcasts == 1, "host announces it");
-	h.events.PlayerInfoChanged.Fire(0);
-	check(h.broadcasts == 1, "announced once");
-	c.events.PlayerInfoChanged.Fire(0);
-	check(c.noSelf == 1, "client waits for the host on a failed check");
-	-- A host that cannot take over (setting off): clients reload by themselves.
-	local game2 = { values = {}, turn = 120 };
-	local h2 = NewMachine(true, game2, { notReady = true });
-	local c2 = NewMachine(false, game2);
-	h2.events.LoadScreenClose.Fire();
-	c2.events.TurnEnd.Fire();
-	check(game2.values[0].BGD_RELOAD == 0 and c2.noSelf == 0, "no takeover announced: the game's own reload");
-	-- Notes without objects on one side: nothing pending, the start goes.
-	h.notes = "1|25|1|0|0|units, cities";
-	h.events.GameCoreEventPublishComplete.Fire();
-	check(h.env.BGD_ReloadAllStep() == false and #h.chat == 0 and h.snapshots == 0, "value repairs: no reload, no line");
-end
-
-do
-	-- Objects on one side only: at the turn start the host says it, tells the clients, loads its own
-	-- game; after its load, every client loads it once; the start waits until then.
+	-- A client's request after a desync, at the turn-end sync: the host says why, tells the clients
+	-- and asks for its own game, at once (the game makes one copy for all that asked).
 	local game = { values = {}, turn = 124 };
 	local h = NewMachine(true, game);
-	local c = NewMachine(false, game);
-	h.events.LoadScreenClose.Fire();
+	h.events.TurnEnd.Fire();
 	h.notes = "1|41|1|3|0|units, contracts";
-	h.events.GameCoreEventPublishComplete.Fire();
-	check(#h.chat == 0 and h.snapshots == 0, "nothing during the turn end");
-	game.turn = 125;
-	check(h.env.BGD_ReloadAllStep() == true, "turn start held");
+	h.events.MultiplayerSnapshotRequested.Fire(1);
 	check(h.chat[1] == "[COLOR_Civ6Yellow]BGE - P1's game is missing 3 objects and has 0 extra compared to the host's: everyone reloads the host's game to prevent P1's desync.[ENDCOLOR]", "line: " .. tostring(h.chat[1]));
-	check(h.chat[2] == ".bgd_reload 125", "clients told: " .. tostring(h.chat[2]));
-	check(h.snapshots == 1 and game.mark == 0, "host asks for its own load, the mark kept in the DLL");
-	h.env.BGD_ReloadAllStep();
-	check(h.snapshots == 1, "asked once");
-	-- The client waits, without starting alone.
-	c.events.MultiplayerChat.Fire(0, 1, ".bgd_reload 125");
-	check(c.env.BGD_ReloadAllStep() == true and c.snapshots == 0, "client waits for the host's game");
-	-- The host's fresh interface after its load.
-	local h2 = NewMachine(true, game);
-	h2.loading = true;
-	h2.events.GameCoreEventPublishComplete.Fire();
-	check(#h2.chat == 0, "nothing while the host is still loading");
-	h2.loading = false;
-	h2.events.LoadScreenClose.Fire();
-	h2.events.GameCoreEventPublishComplete.Fire();
-	check(#h2.chat == 0, "the clients wait for the host's turn start, after its turn updates");
-	check(game.mark == nil, "the mark is taken once");
-	check(h2.env.BGD_ReloadAllStep() == true and Last(h2) == ".bgd_load 125", "at the held turn start, clients load: " .. Last(h2));
-	h2.events.GameCoreEventPublishComplete.Fire();
-	h2.events.LocalPlayerTurnBegin.Fire();
-	check(#h2.chat == 1, "not twice");
-	check(h2.env.BGD_ReloadAllStep() == true, "start held while the client loads");
-	h2.events.MultiplayerSnapshotProcessed.Fire(0);
-	check(h2.env.BGD_ReloadAllStep() == true, "the host's own processed message changes nothing");
-	h2.events.MultiplayerSnapshotProcessed.Fire(1);
-	local holding, loaded = h2.env.BGD_ReloadAllStep();
-	check(holding == false and loaded ~= nil and loaded[1] == true, "client loaded: start, counted as ready");
-	game.turn = 126;
-	local _, later = h2.env.BGD_ReloadAllStep();
-	check(later == nil, "counted as ready for that turn only");
-	game.turn = 125;
-	c.events.MultiplayerChat.Fire(0, 1, ".bgd_load 125");
-	check(c.snapshots == 1 and c.env.BGD_ReloadAllStep() == false, "client loads the host's game once");
-	-- Only the host's signals count.
-	c.events.MultiplayerChat.Fire(2, 1, ".bgd_load 125");
-	check(c.snapshots == 1, "a client's signal is ignored");
-	-- Every desync is taken over, also the same player's again.
-	h2.notes = "1|5|1|0|2|units";
-	h2.events.GameCoreEventPublishComplete.Fire();
-	game.turn = 127;
-	check(h2.env.BGD_ReloadAllStep() == true and h2.snapshots == 1, "taken over again");
-	check(h2.chat[2]:find("missing 0 objects and has 2 extra", 1, true) ~= nil, "second line: " .. tostring(h2.chat[2]));
+	check(h.chat[2] == ".bgd_reload 124", "clients told: " .. tostring(h.chat[2]));
+	check(h.snapshots == 1, "host asks for its own game at once");
+	-- The clients' own requests of this reload start nothing more.
+	h.events.MultiplayerSnapshotRequested.Fire(2);
+	h.events.MultiplayerSnapshotRequested.Fire(1);
+	check(#h.chat == 2 and h.snapshots == 1, "one reload");
+	-- Every desync is taken over, also the same player's again, later.
+	h.clock = h.clock + 61;
+	h.events.TurnEnd.Fire();
+	h.notes = "1|5|1|0|2|units";
+	h.events.MultiplayerSnapshotRequested.Fire(1);
+	check(h.snapshots == 2 and h.chat[3]:find("missing 0 objects and has 2 extra", 1, true) ~= nil, "again: " .. tostring(h.chat[3]));
+	-- Without counts (none noted for that turn end), no line, still the reload.
+	h.clock = h.clock + 61;
+	h.events.MultiplayerSnapshotRequested.Fire(1);
+	check(h.snapshots == 3 and #h.chat == 5 and Last(h) == ".bgd_reload 124", "no counts: no line, reload");
 end
 
 do
-	-- After the host's load, no turn start comes: the clients load after 20 s anyway; without the
-	-- hold, the local player's turn start sends them at once.
-	local game = { values = {}, turn = 124, mark = 0 };
-	local h = NewMachine(true, game);
-	h.events.LoadScreenClose.Fire();
-	check(#h.chat == 0, "waiting for the turn start");
-	h.clock = h.clock + 21;
-	h.events.GameCoreEventPublishComplete.Fire();
-	check(Last(h) == ".bgd_load 124", "after 20 s: " .. Last(h));
-	local h2 = NewMachine(true, { values = {}, turn = 124, mark = 0 });
-	h2.events.LoadScreenClose.Fire();
-	h2.events.LocalPlayerTurnBegin.Fire();
-	check(Last(h2) == ".bgd_load 124", "at the local player's turn start: " .. Last(h2));
-end
-
-do
-	-- The host's own load never starts: after 30 s the clients load its running game.
+	-- Joins, rejoins, a remap, the launch: not desyncs. Setting off: the game's own reload.
 	local game = { values = {}, turn = 124 };
 	local h = NewMachine(true, game);
-	h.events.LoadScreenClose.Fire();
-	h.notes = "1|0|1|1|0|";
-	h.env.BGD_ReloadAllStep();
-	check(h.snapshots == 1, "asked");
-	h.clock = h.clock + 31;
-	check(h.env.BGD_ReloadAllStep() == true and Last(h) == ".bgd_load 124", "clients load the running game: " .. Last(h));
-	check(game.mark == nil, "mark dropped");
-	h.clock = h.clock + 120;
-	check(h.env.BGD_ReloadAllStep() == false, "a client that never loads holds the start 120 s at most");
-	-- A client told to wait that never gets the host's game reloads by itself after 180 s.
+	h.events.MultiplayerSnapshotRequested.Fire(1);
+	check(h.snapshots == 0, "nothing before the first turn end");
+	h.events.TurnEnd.Fire();
+	h.events.MultiplayerPlayerConnected.Fire(1);
+	h.events.MultiplayerSnapshotRequested.Fire(1);
+	h.hotJoining[2] = true;
+	h.events.MultiplayerSnapshotRequested.Fire(2);
+	check(h.snapshots == 0 and #h.chat == 0, "a (re)join is not a desync");
+	local h2 = NewMachine(true, game, { notReady = true });
+	h2.events.TurnEnd.Fire();
+	h2.notes = "1|0|1|3|0|";
+	h2.events.MultiplayerSnapshotRequested.Fire(1);
+	check(h2.snapshots == 0 and #h2.chat == 0, "reload_all off: the game reloads that player alone");
+end
+
+do
+	-- Client: the host reloads everyone. It asks once, and keeps its check after the load.
+	local game = { values = {}, turn = 124 };
 	local c = NewMachine(false, game);
 	c.events.MultiplayerChat.Fire(0, 1, ".bgd_reload 124");
-	c.clock = c.clock + 181;
-	check(c.env.BGD_ReloadAllStep() == false and c.snapshots == 1, "client reloads by itself");
-end
-
-do
-	-- Without the simultaneous start (no hold), the local player's turn start (after every AI
-	-- turn) starts the takeover; the turn's very start, before the AI turns, does not.
-	local game = { values = {}, turn = 124 };
-	local h = NewMachine(true, game);
-	h.events.LoadScreenClose.Fire();
-	h.notes = "1|0|1|2|0|";
-	h.events.GameCoreEventPublishComplete.Fire();
-	h.events.TurnBegin.Fire();
-	check(h.snapshots == 0, "not before the AI turns");
-	h.events.LocalPlayerTurnBegin.Fire();
-	check(h.snapshots == 1, "taken over at the local player's turn start");
-	-- A client sends no line and takes nothing over.
-	local c = NewMachine(false, game);
+	check(c.snapshots == 1 and c.kept == 1, "asks for the copy, keeps its next check");
+	-- The desynced client already asked: it does not ask again (one copy, one load).
+	local d = NewMachine(false, game);
+	d.resyncing[1] = true;
+	d.events.MultiplayerChat.Fire(0, 1, ".bgd_reload 124");
+	check(d.snapshots == 0 and d.kept == 1, "already waiting: no second request, check kept");
+	-- Only the host's signal counts; a client takes nothing over.
+	c.events.MultiplayerChat.Fire(2, 1, ".bgd_reload 124");
+	check(c.snapshots == 1, "a client's signal is ignored");
+	c.events.TurnEnd.Fire();
 	c.notes = "3|25|1|4|0|units";
 	c.events.GameCoreEventPublishComplete.Fire();
-	c.events.LocalPlayerTurnBegin.Fire();
-	check(#c.chat == 0 and c.snapshots == 0, "a client announces nothing");
+	c.events.MultiplayerSnapshotRequested.Fire(3);
+	check(#c.chat == 0 and c.snapshots == 1, "a client announces and reloads nothing itself");
 end
 
 if failures > 0 then

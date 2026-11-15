@@ -265,9 +265,7 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 				end
 			end
 			-- Client: the host gives no start (gone silent, or simultaneous start inactive on its side).
-			-- Not while the host loads its game after a desync (BGD_ReloadAllStep).
 			if D.attente and D.pret and D.pretA ~= nil and not Network.IsGameHost()
-				and not (BGD_ReloadAllStep ~= nil and BGD_ReloadAllStep())
 				and os.clock() - D.pretA >= (D.hoteMuet and SANS_HOTE_SUITE or SANS_HOTE) then
 				local attendu = math.floor(os.clock() - D.pretA + 0.5);
 				D.pretA = nil;
@@ -335,24 +333,10 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		if not Network.IsGameHost() or D.tour ~= tour or not D.pret or D.parti >= tour then
 			return;
 		end
-		-- The host takes a desync over (the startup proxy's partie.lua, BGD_ReloadAllStep): it loads
-		-- its own game, then every client loads it. No start until everyone is back; a client that
-		-- has loaded the host's game counts as ready (its loaded turn may not be held again).
-		local holding, loaded = false, nil;
-		if BGD_ReloadAllStep ~= nil then
-			holding, loaded = BGD_ReloadAllStep();
-		end
-		if holding then
-			if D.reloadAll ~= tour then
-				D.reloadAll = tour;
-				J("turn " .. tour .. ": start held, the host takes a desync over");
-			end
-			return;
-		end
 		local prets = D.prets[tour] or {};
 		local absents = {};
 		for _, id in ipairs(Attendus()) do
-			if id ~= Moi() and not prets[id] and not D.ignores[id] and not (loaded ~= nil and loaded[id]) then
+			if id ~= Moi() and not prets[id] and not D.ignores[id] then
 				table.insert(absents, id);
 			end
 		end

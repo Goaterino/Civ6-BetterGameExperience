@@ -131,6 +131,11 @@ static TURN_END_ORIG: AtomicUsize = AtomicUsize::new(0);
 static AFTER_TURN_END: AtomicBool = AtomicBool::new(false);
 /// The last snapshot handed to the game (`pack`), until a barrier entered by a load reads it.
 static LAST_SNAPSHOT: AtomicU64 = AtomicU64::new(0);
+/// The host reloads everyone (`partie.lua`, `.bgd_reload`): the host waits for the check of the
+/// next load, whatever the snapshot says. When it was asked; read once by the next load's barrier.
+static KEEP_NEXT: std::sync::Mutex<Option<std::time::Instant>> = std::sync::Mutex::new(None);
+/// After this, a request to keep the check is forgotten.
+const KEEP_MAX_AGE_S: u64 = 300;
 const SNAPSHOT_KNOWN: u64 = 1 << 63;
 const SNAPSHOT_ACK: u64 = 1 << 32;
 
@@ -168,6 +173,23 @@ pub fn new_game() {
 /// when the host is not waiting for that check.
 pub fn skip(after_turn_end: bool, host: Option<bool>, load: Option<Load>) -> bool {
     !after_turn_end && host == Some(false) && load.is_some_and(|l| l.stale())
+}
+
+/// The host reloads everyone: keep the check of the next load.
+pub fn keep_next_check() {
+    *KEEP_NEXT.lock().unwrap_or_else(|e| e.into_inner()) = Some(std::time::Instant::now());
+}
+
+/// Was the next check asked to be kept (recently)? Clears the request.
+fn take_keep() -> bool {
+    KEEP_NEXT.lock().unwrap_or_else(|e| e.into_inner()).take().is_some_and(|t| t.elapsed().as_secs() <= KEEP_MAX_AGE_S)
+}
+
+/// `Civ6Proxy_RejoinKeepCheck()`: the host reloads everyone; the next load keeps its sync check.
+pub(crate) unsafe extern "C-unwind" fn lua_keep_check(_l: *mut std::ffi::c_void) -> i32 {
+    keep_next_check();
+    log("rejoin: the host reloads everyone; the check after the next load is kept");
+    0
 }
 
 fn pack(flags: u32, ack_on_receipt: bool) -> u64 {
@@ -253,12 +275,15 @@ unsafe extern "C-unwind" fn update(ctl: *mut u8) {
         let packed = LAST_SNAPSHOT.swap(0, Ordering::Relaxed);
         if packed != 0 {
             let load = local_reason(t).and_then(|reason| unpack(packed, reason));
-            if skip(after_turn_end, host, load) {
+            if take_keep() {
+                log(&describe("sync check after loading kept: the host reloaded everyone", load));
+            } else if skip(after_turn_end, host, load) {
                 *ctl.add(CTL_IN_BARRIER) = 0;
                 log(&describe("turn barrier after loading left without a sync check", load));
                 return;
+            } else {
+                log(&describe("sync check after loading kept, the host waits for it", load));
             }
-            log(&describe("sync check after loading kept, the host waits for it", load));
         }
     }
     if *ctl.add(CTL_JOBS) != 0 {
@@ -440,6 +465,14 @@ mod tests {
         AFTER_TURN_END.store(true, Ordering::Relaxed);
         new_game();
         assert!(!AFTER_TURN_END.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn keep_request_is_read_once() {
+        assert!(!take_keep(), "nothing asked");
+        keep_next_check();
+        assert!(take_keep(), "the next load keeps its check");
+        assert!(!take_keep(), "only that one");
     }
 
     #[test]
