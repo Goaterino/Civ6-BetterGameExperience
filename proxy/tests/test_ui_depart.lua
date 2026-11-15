@@ -122,8 +122,8 @@ local function NewGame(opts)
 			Civ6RolloverProxy_FinForcer = function() m.natives.forcer = (m.natives.forcer or 0) + 1; return 1; end,
 			Civ6RolloverProxy_FinLever = function() m.natives.lever = (m.natives.lever or 0) + 1; end,
 			Civ6RolloverProxy_DepartSignaux = function() return opts.signaux and 1 or 0; end,
-			-- partie.lua (startup proxy), in the same interface: every client loads the host's game.
-			BGD_ReloadAllHolding = opts.reloadAll,
+			-- partie.lua (startup proxy), in the same interface: the host takes a desync over.
+			BGD_ReloadAllStep = opts.reloadAll,
 			Civ6RolloverProxy_DepartAttendre = function(joueur, exec)
 				m.natives.attente = true;
 				m.natives.attendre = m.natives.attendre + 1;
@@ -358,8 +358,8 @@ do
 end
 
 do
-	-- Every client loads the host's game after a desync (BGD_ReloadAllHolding): past 60 s the host
-	-- still waits for them, and everyone starts together when the last one is ready.
+	-- The host takes a desync over (BGD_ReloadAllStep): even with everyone ready, and past 60 s,
+	-- no start while it holds; everyone starts together when it is over.
 	local holding = true;
 	local G = NewGame({ option = true, reloadAll = function() return holding; end, players = {
 		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
@@ -367,26 +367,27 @@ do
 	local h, a, b = G.machines[0], G.machines[1], G.machines[2];
 	for _, m in pairs(G.machines) do m.Charger(); end
 	G.tour = 11;
-	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	h.Debut(); h.Publie(); a.Debut(); a.Publie(); b.Debut(); b.Publie();
+	Check("reload all: everyone ready, no start while held", h.natives.attente and a.natives.attente and b.natives.attente);
 	G.clock = 61; h.Tic();
-	G.clock = 100; h.Tic();
-	Check("reload all: 100 s, the host still waits for B", h.natives.attente and a.natives.attente);
+	G.clock = 100; h.Tic(); a.Tic();
+	Check("reload all: 100 s, still held", h.natives.attente and a.natives.attente and b.natives.attente);
 	local held = 0;
 	for _, t in ipairs(h.journal) do if t:find("start held", 1, true) then held = held + 1; end end
 	Check("reload all: the hold is logged once", held == 1);
-	b.Debut(); b.Publie();
-	Check("reload all: B ready, everyone starts together", not h.natives.attente and not a.natives.attente and not b.natives.attente);
-	local sans = false;
-	for _, t in ipairs(h.locaux) do if t:find("sans J2") then sans = true; end end
-	Check("reload all: nobody named as late", not sans);
-
-	-- Next turn, the hold is over: the usual 60 s rule.
+	local alone = false;
+	for _, t in ipairs(a.journal) do if t:find("started alone", 1, true) then alone = true; end end
+	Check("reload all: a client waiting for the host's game does not start alone", not alone);
 	holding = false;
+	h.Tic();
+	Check("reload all: hold over, everyone starts together", not h.natives.attente and not a.natives.attente and not b.natives.attente);
+
+	-- Next turn, nothing held: the usual 60 s rule.
 	G.tour = 12;
 	G.clock = 200;
 	h.Debut(); h.Publie(); a.Debut(); a.Publie();
 	G.clock = 261; h.Tic();
-	Check("reload all: hold over, start without B after 60 s", not h.natives.attente and not a.natives.attente);
+	Check("reload all: nothing held, start without B after 60 s", not h.natives.attente and not a.natives.attente);
 end
 
 do

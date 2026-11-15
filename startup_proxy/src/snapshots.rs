@@ -48,7 +48,9 @@
 
 use crate::{log, win};
 use std::ffi::c_void;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
+use std::sync::Mutex;
+use std::time::Instant;
 
 /// Base of the exe's Ghidra addresses.
 const BASE: u64 = 0x1_4000_0000;
@@ -223,6 +225,23 @@ static ORIG: AtomicUsize = AtomicUsize::new(0);
 static IN_GAME: AtomicUsize = AtomicUsize::new(0);
 /// The host part is installed.
 static LAUNCH_GUARD: AtomicBool = AtomicBool::new(false);
+/// Snapshots refused, not yet said in the chat (`partie.lua`).
+static REFUSED: AtomicU32 = AtomicU32::new(0);
+/// Host: players marked at the last launch, and when.
+static MARKED: Mutex<Option<(Instant, Vec<i32>)>> = Mutex::new(None);
+/// Marks older than this are not reported (the host's load screen never closed in time).
+const MARKED_MAX_AGE_S: u64 = 300;
+
+/// Snapshots refused since the last call (each a double load prevented), reset to 0.
+pub fn refused_to_announce() -> u32 {
+    REFUSED.swap(0, Ordering::Relaxed)
+}
+
+/// Host: the players marked at the last saved-game launch, once, if recent.
+pub fn take_marked() -> Vec<i32> {
+    let taken = MARKED.lock().unwrap_or_else(|e| e.into_inner()).take();
+    taken.filter(|(at, _)| at.elapsed().as_secs() <= MARKED_MAX_AGE_S).map(|(_, ids)| ids).unwrap_or_default()
+}
 
 /// The `launch_guard` setting (last occurrence wins; `on` by default).
 pub fn launch_guard_enabled(cfg: &str) -> bool {
@@ -364,6 +383,7 @@ unsafe extern "C-unwind" fn process(msg: *mut u8, s: *mut c_void) {
             if !marked.is_empty() {
                 let ids = marked.iter().map(i32::to_string).collect::<Vec<_>>().join(", ");
                 log(&format!("snapshots: saved game sent to players {ids}, no second snapshot after the host's load"));
+                *MARKED.lock().unwrap_or_else(|e| e.into_inner()) = Some((Instant::now(), marked));
             }
         }
         return;
@@ -371,6 +391,7 @@ unsafe extern "C-unwind" fn process(msg: *mut u8, s: *mut c_void) {
     std::ptr::write_unaligned(size_at, 0);
     orig(msg, s);
     std::ptr::write_unaligned(size_at, size);
+    REFUSED.fetch_add(1, Ordering::Relaxed);
     log(&format!("snapshots: snapshot of {size} bytes received in the game view without being asked for, ignored (double load avoided)"));
 }
 

@@ -612,19 +612,16 @@
 			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pt_BR">
-			<Text>Mensagem de rede danificada bloqueada: ela teria congelado a partida.</Text>
+			<Text>Congelamento da partida evitado para {1}.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="pt_BR">
-			<Text>O jogo de {1} estava fora de sincronia ({2}) e está sendo recarregado a partir do anfitrião.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="pt_BR">
+			<Text>Apagamento das configurações da partida evitado para {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="pt_BR">
+			<Text>Carregamento duplo evitado para {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pt_BR">
-			<Text>O jogo de {1} estava fora de sincronia ({2}): todos recarregam uma vez o jogo do anfitrião para que todos os jogos voltem a coincidir.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="pt_BR">
-			<Text>{1} está sincronizado novamente.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="pt_BR">
-			<Text>O jogo de {1} estava fora de sincronia ({2}) e foi reparado sem recarregar.</Text>
+			<Text>Faltam {2} objetos na partida de {1} e ela tem {3} a mais em relação à do anfitrião: todos recarregam a partida do anfitrião para evitar a dessincronização de {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="pt_BR">
 			<Text>O jogo de {1} não é a versão atual da Steam: as correções de rede do BGE estão inativas no PC dele.</Text>

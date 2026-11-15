@@ -612,19 +612,16 @@
 			<Text>{1}: the bug report could not be sent, it was kept on their computer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="en_US">
-			<Text>Blocked a damaged network message that would have frozen my game.</Text>
+			<Text>Game freeze prevented for {1}.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="en_US">
-			<Text>{1}'s game was out of sync ({2}) and is being reloaded from the host.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="en_US">
+			<Text>Game settings wipe prevented for {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="en_US">
+			<Text>Double load prevented for {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="en_US">
-			<Text>{1}'s game was out of sync ({2}): everyone reloads the host's game once, so that all games match again.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="en_US">
-			<Text>{1} is back in sync.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="en_US">
-			<Text>{1}'s game was out of sync ({2}) and was repaired without a reload.</Text>
+			<Text>{1}'s game is missing {2} objects and has {3} extra compared to the host's: everyone reloads the host's game to prevent {1}'s desync.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="en_US">
 			<Text>{1}'s copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.</Text>

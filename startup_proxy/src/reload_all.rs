@@ -1,50 +1,74 @@
-//! The first time a client's game must be reloaded after a desync, the host reloads everyone
-//! instead: it loads its own game, then every client loads it (Multiplayer Helper's `.mph_ui_snap`,
-//! as in `remap.rs`). A freshly loaded game differs from a running one in state the sync check does
-//! not cover (AI team counts, plot yields), so a player reloaded alone drifts from the host again;
-//! games that all loaded the host's game stay identical.
+//! When a client's game has objects the host's has not (or the other way round), the game would
+//! reload that client alone, inside the turn-end sync check. A freshly loaded game differs from a
+//! running one in state the sync check does not cover, so that player drifts away again. Instead
+//! the host takes over: at the turn start (BGE's hold), it loads its own game, then every client
+//! loads that game, once; games that all loaded the same save stay identical.
 //!
-//! Once per connection of a player; later reloads of that player are the game's own. Needs MPH. The
-//! Lua side is in `partie.lua`. Setting `reload_all=off` keeps the game's own reload.
+//! Client side: the sync manager's byte + 0x3a makes a failed check acknowledged instead of asking
+//! for a full copy (the client handler's tail, `CHECK`). Nothing in this build sets it otherwise;
+//! a host migration clears it. It is set only while the host announces that it takes over.
+//! Host side: `sync_notes.rs` counts the objects on one side only; `partie.lua` does the rest.
+//! Setting `reload_all=off` keeps the game's own reload.
 
-use std::collections::HashSet;
 use std::ffi::c_void;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
-/// MPH's VotePanel.lua was seen this session (set by `remap.rs`).
-static MPH: AtomicBool = AtomicBool::new(false);
-/// When the host asked for its own load for a reload of everyone. Kept in this DLL, which stays
+const BASE: u64 = 0x1_4000_0000;
+
+struct Exe {
+    name: &'static str,
+    /// Client handler: `mov r15,[rbp+380h] ; movzx eax,byte [r15+3Dh] ; test al,al ; jnz ;
+    /// test dil,dil ; jz ; cmp [r15+3Ah],al ; jz <full snapshot>`.
+    check: u64,
+    /// Sync manager global, and `NetSnapshot::Process`, whose `mov rcx,[sync]` confirms it.
+    sync: u64,
+    snapshot_process: u64,
+}
+
+const EXES: [Exe; 2] = [
+    Exe { name: "DX12", check: 0x1_407f_4c65, sync: 0x1_4239_2ee8, snapshot_process: 0x1_4081_0fa0 },
+    Exe { name: "DX11", check: 0x1_407f_2d75, sync: 0x1_4235_b868, snapshot_process: 0x1_4080_f230 },
+];
+
+/// `None` marks the jnz displacement.
+const CHECK: [Option<u8>; 30] = {
+    const fn b(x: u8) -> Option<u8> {
+        Some(x)
+    }
+    [
+        b(0x4c), b(0x8b), b(0xbd), b(0x80), b(0x03), b(0x00), b(0x00), b(0x41), b(0x0f), b(0xb6), b(0x47), b(0x3d), b(0x84), b(0xc0),
+        b(0x0f), b(0x85), None, None, None, None, b(0x40), b(0x84), b(0xff), b(0x74), b(0x0a), b(0x41), b(0x38), b(0x47), b(0x3a),
+        b(0x0f),
+    ]
+};
+/// In `NetSnapshot::Process`: `mov rcx,[sync]` at + 0x67.
+const PROCESS_SYNC_AT: u64 = 0x67;
+/// Sync manager: acknowledge a failed check instead of asking for a full copy.
+const SYNC_NO_FULL_RESYNC: usize = 0x3a;
+
+static MODULE: AtomicUsize = AtomicUsize::new(0);
+static TABLE: AtomicUsize = AtomicUsize::new(usize::MAX);
+/// When the host asked for its own load to take over a reload. Kept in this DLL, which stays
 /// loaded across that load.
 static PENDING: Mutex<Option<Instant>> = Mutex::new(None);
-/// Players who already had a reload of everyone since their last connection.
-static USED: Mutex<Option<HashSet<i32>>> = Mutex::new(None);
-
-/// MPH's VotePanel.lua has the clients' handler of `.mph_ui_snap` (a client loads the host's game).
-pub fn note_vote_panel(text: &str) {
-    if text.contains(r#"string.lower(text) == ".mph_ui_snap""#) && text.contains("Network.RequestSnapshot()") {
-        MPH.store(true, Ordering::Relaxed);
-    }
-}
 
 /// The `reload_all` setting (last occurrence wins; `on` by default).
 fn enabled(cfg: &str) -> bool {
     cfg.lines().filter_map(|l| l.trim().strip_prefix("reload_all=")).last().map(str::trim) != Some("off")
 }
 
-fn used() -> std::sync::MutexGuard<'static, Option<HashSet<i32>>> {
-    USED.lock().unwrap_or_else(|e| e.into_inner())
+fn config() -> String {
+    crate::options::read_config().map(|(t, _)| t).unwrap_or_default()
 }
 
-/// Can everyone be reloaded for this player now?
-fn ready(player: i32, cfg: &str) -> bool {
-    !crate::salon::actif_off(cfg) && enabled(cfg) && MPH.load(Ordering::Relaxed) && !used().as_ref().is_some_and(|u| u.contains(&player))
+/// Can this machine, as host, take a reload over? It must see the objects on one side only.
+fn host_ready(cfg: &str) -> bool {
+    !crate::salon::actif_off(cfg) && enabled(cfg) && crate::sync_notes::installed()
 }
 
-/// The host is about to load its own game for this player.
-fn mark(player: i32) {
-    used().get_or_insert_with(HashSet::new).insert(player);
+fn mark() {
     *PENDING.lock().unwrap_or_else(|e| e.into_inner()) = Some(Instant::now());
 }
 
@@ -53,33 +77,78 @@ fn take() -> Option<u64> {
     PENDING.lock().unwrap_or_else(|e| e.into_inner()).take().map(|t| t.elapsed().as_secs())
 }
 
-/// The player connected again: a reload of everyone is possible again for them.
-fn connected(player: i32) {
-    if let Some(u) = used().as_mut() {
-        u.remove(&player);
+/// Do the bytes at `check` and the global behind `sync` match this exe?
+fn fingerprint<'a>(t: &Exe, read: impl Fn(u64, usize) -> &'a [u8]) -> Result<(), String> {
+    let c = read(t.check, CHECK.len());
+    if c.len() != CHECK.len() || CHECK.iter().zip(c).any(|(w, f)| w.is_some_and(|w| w != *f)) {
+        return Err(format!("client check: unexpected bytes at {:#x}", t.check));
     }
+    let at = t.snapshot_process + PROCESS_SYNC_AT;
+    let p = read(at, 7);
+    if p.len() != 7 || p[..3] != [0x48, 0x8b, 0x0d] {
+        return Err(format!("NetSnapshot::Process: no sync manager read at {at:#x}"));
+    }
+    let rel = i32::from_le_bytes(p[3..7].try_into().unwrap());
+    if (at + 7).wrapping_add_signed(i64::from(rel)) != t.sync {
+        return Err(format!("NetSnapshot::Process: does not read the sync manager at {:#x}", t.sync));
+    }
+    Ok(())
 }
 
-fn arg_player(l: *mut c_void) -> Option<i32> {
-    // SAFETY: reads a Lua argument through the game's API.
-    unsafe { crate::salon::arg_str(l, 1) }.and_then(|v| v.trim().split('.').next().and_then(|x| x.parse().ok()))
+/// Client: acknowledge a failed check (`on`) or ask for a full copy as the game does. False when the
+/// switch is not installed or there is no sync manager yet.
+unsafe fn set_no_self_reload(on: bool) -> bool {
+    let Some(t) = EXES.get(TABLE.load(Ordering::Relaxed)) else { return false };
+    let global = MODULE.load(Ordering::Relaxed) + (t.sync - BASE) as usize;
+    let sync = std::ptr::read(global as *const usize);
+    if sync == 0 {
+        return false;
+    }
+    std::ptr::write_volatile((sync + SYNC_NO_FULL_RESYNC) as *mut u8, on as u8);
+    true
 }
 
-/// `Civ6Proxy_ReloadAllReady(player)` → 1 if everyone can be reloaded for this player, otherwise 0.
+/// Called by DllMain: finds the client switch.
+pub unsafe fn install() {
+    let cfg = config();
+    if crate::salon::actif_off(&cfg) {
+        log_line("not installed (actif=off)");
+        return;
+    }
+    if !enabled(&cfg) {
+        log_line("turned off (reload_all=off)");
+        return;
+    }
+    let module = crate::win::GetModuleHandleW(std::ptr::null()) as usize;
+    let image = |address: u64| module + (address - BASE) as usize;
+    let mut reasons = Vec::new();
+    let Some(i) = EXES.iter().position(|t| {
+        fingerprint(t, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n))
+            .map_err(|e| reasons.push(format!("{}: {e}", t.name)))
+            .is_ok()
+    }) else {
+        log_line(&format!("unknown exe ({}), the game's own reload is kept", reasons.join("; ")));
+        return;
+    };
+    MODULE.store(module, Ordering::Relaxed);
+    TABLE.store(i, Ordering::Relaxed);
+    log_line(&format!("installed ({}): the host takes reloads over when it announces it", EXES[i].name));
+}
+
+fn log_line(text: &str) {
+    crate::log(&format!("reload_all: {text}"));
+}
+
+/// `Civ6Proxy_ReloadAllReady()` → 1 if this machine, as host, can take a reload over.
 pub(crate) unsafe extern "C-unwind" fn lua_ready(l: *mut c_void) -> i32 {
     let Some(h) = crate::options::hks() else { return 0 };
-    let cfg = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
-    let ok = arg_player(l).is_some_and(|p| ready(p, &cfg));
-    (h.push_integer)(l, ok as i32);
+    (h.push_integer)(l, host_ready(&config()) as i32);
     1
 }
 
-/// `Civ6Proxy_ReloadAllMark(player)`: the host is about to load its own game for this player.
-pub(crate) unsafe extern "C-unwind" fn lua_mark(l: *mut c_void) -> i32 {
-    if let Some(p) = arg_player(l) {
-        mark(p);
-        crate::log(&format!("reload_all: player {p} out of sync; the host loads its own game, then every client"));
-    }
+/// `Civ6Proxy_ReloadAllMark()`: the host is about to load its own game to take a reload over.
+pub(crate) unsafe extern "C-unwind" fn lua_mark(_l: *mut c_void) -> i32 {
+    mark();
     0
 }
 
@@ -90,17 +159,55 @@ pub(crate) unsafe extern "C-unwind" fn lua_take(l: *mut c_void) -> i32 {
     1
 }
 
-/// `Civ6Proxy_ReloadAllConnected(player)`: the player connected again.
-pub(crate) unsafe extern "C-unwind" fn lua_connected(l: *mut c_void) -> i32 {
-    if let Some(p) = arg_player(l) {
-        connected(p);
-    }
-    0
+/// `Civ6Proxy_ReloadAllNoSelfReload(on)` → 1 if set: this client acknowledges a failed check and
+/// waits for the host instead of reloading by itself (`on` = 1), or behaves as the game does (0).
+pub(crate) unsafe extern "C-unwind" fn lua_no_self_reload(l: *mut c_void) -> i32 {
+    let Some(h) = crate::options::hks() else { return 0 };
+    // SAFETY: reads a Lua argument through the game's API.
+    let on = crate::salon::arg_str(l, 1).is_some_and(|v| v.trim().trim_end_matches(".0") == "1");
+    (h.push_integer)(l, set_no_self_reload(on) as i32);
+    1
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
+    const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+
+    /// File offset of a virtual address, from the PE section table.
+    fn offset(file: &[u8], address: u64) -> Option<usize> {
+        let rd32 = |o: usize| u32::from_le_bytes(file[o..o + 4].try_into().unwrap()) as usize;
+        let rd16 = |o: usize| u16::from_le_bytes(file[o..o + 2].try_into().unwrap()) as usize;
+        let nt = rd32(0x3c);
+        let sections = nt + 24 + rd16(nt + 20);
+        let rva = (address - BASE) as usize;
+        (0..rd16(nt + 6)).map(|i| sections + 40 * i).find_map(|s| {
+            let (va, size, raw) = (rd32(s + 12), rd32(s + 16), rd32(s + 20));
+            (rva >= va && rva < va + size).then(|| rva - va + raw)
+        })
+    }
+
+    /// Each table matches its own installed exe, and only that one.
+    #[test]
+    fn bytes_in_installed_exes() {
+        for (i, name) in FILES.iter().enumerate() {
+            let Ok(file) = std::fs::read(format!(r"{EXE_DIR}\{name}")) else {
+                eprintln!("{name} missing, test skipped");
+                continue;
+            };
+            let read = |address: u64, n: usize| offset(&file, address).map_or(&[][..], |o| &file[o..][..n]);
+            for (j, exe) in EXES.iter().enumerate() {
+                let r = fingerprint(exe, read);
+                if i == j {
+                    assert_eq!(r, Ok(()), "{} on {name}", exe.name);
+                } else {
+                    assert!(r.is_err(), "the {} table must not match {name}", exe.name);
+                }
+            }
+        }
+    }
 
     #[test]
     fn setting() {
@@ -110,18 +217,9 @@ mod tests {
     }
 
     #[test]
-    fn once_per_connection_and_only_with_mph() {
-        MPH.store(false, Ordering::Relaxed);
-        assert!(!ready(7, ""), "never without MPH");
-        note_vote_panel("if b_ishost == true and hostID ~= localID and (string.lower(text) == \".mph_ui_snap\")  then\n\t\tNetwork.RequestSnapshot()");
-        assert!(ready(7, ""));
-        assert!(!ready(7, "reload_all=off"));
-        mark(7);
-        assert!(!ready(7, ""), "once per connection");
-        assert!(ready(8, ""), "other players unaffected");
+    fn mark_is_taken_once() {
+        mark();
         assert_eq!(take(), Some(0));
         assert_eq!(take(), None, "taken once");
-        connected(7);
-        assert!(ready(7, ""), "possible again after a new connection");
     }
 }

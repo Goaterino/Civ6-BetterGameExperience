@@ -612,19 +612,16 @@
 			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ja_JP">
-			<Text>破損したネットワークメッセージをブロックしました。ゲームがフリーズするところでした。</Text>
+			<Text>{1} のゲームのフリーズを防ぎました。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="ja_JP">
-			<Text>{1} のゲームが同期ずれを起こしました ({2})。ホストから再読み込み中です。</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="ja_JP">
+			<Text>{1} のゲーム設定の消去を防ぎました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="ja_JP">
+			<Text>{1} の二重読み込みを防ぎました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ja_JP">
-			<Text>{1} のゲームが同期ずれを起こしました ({2})。全員のゲームを再び一致させるため、全員がホストのゲームを一度再読み込みします。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="ja_JP">
-			<Text>{1} は再び同期しました。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ja_JP">
-			<Text>{1} のゲームが同期ずれを起こしました ({2})。再読み込みなしで修復されました。</Text>
+			<Text>{1} のゲームにはホストと比べて {2} 個のオブジェクトが不足し、{3} 個が余分です。{1} の非同期を防ぐため、全員がホストのゲームを再読み込みします。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="ja_JP">
 			<Text>{1} のゲームは現在の Steam バージョンではありません。この PC では BGE のネットワーク修正が無効です。</Text>

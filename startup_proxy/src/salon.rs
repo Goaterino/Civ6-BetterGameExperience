@@ -317,6 +317,30 @@ unsafe extern "C-unwind" fn lua_garde(l: *mut std::ffi::c_void) -> i32 {
     1
 }
 
+/// `Civ6Proxy_GardeWipes()` → configuration wipes the network message guard refused since the
+/// last call (messages.rs), reset to 0.
+unsafe extern "C-unwind" fn lua_wipes(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, crate::messages::wipes_to_announce().min(i32::MAX as u32) as i32);
+    1
+}
+
+/// `Civ6Proxy_DoubleLoadRefused()` → second snapshots refused since the last call (snapshots.rs).
+unsafe extern "C-unwind" fn lua_double_load_refused(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, crate::snapshots::refused_to_announce().min(i32::MAX as u32) as i32);
+    1
+}
+
+/// `Civ6Proxy_LaunchGuarded()` → "1,3": host, players the launch guard marked at the last saved-game
+/// launch (snapshots.rs), once.
+unsafe extern "C-unwind" fn lua_launch_guarded(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let ids = crate::snapshots::take_marked().iter().map(i32::to_string).collect::<Vec<_>>().join(",");
+    push_str(h, l, &ids);
+    1
+}
+
 unsafe extern "C-unwind" fn lua_token(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
     push_str(h, l, &new_token());
@@ -345,6 +369,9 @@ const PARTIE_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
     (lua_garde, b"Civ6Proxy_GardeMessages\0"),
+    (lua_wipes, b"Civ6Proxy_GardeWipes\0"),
+    (lua_double_load_refused, b"Civ6Proxy_DoubleLoadRefused\0"),
+    (lua_launch_guarded, b"Civ6Proxy_LaunchGuarded\0"),
     (crate::relink::lua_pairs, b"Civ6Proxy_RelayedPairs\0"),
     (crate::relink::lua_start, b"Civ6Proxy_RelinkStart\0"),
     (crate::relink::lua_state, b"Civ6Proxy_RelinkState\0"),
@@ -353,7 +380,7 @@ const PARTIE_NATIVES: Natives = &[
     (crate::reload_all::lua_ready, b"Civ6Proxy_ReloadAllReady\0"),
     (crate::reload_all::lua_mark, b"Civ6Proxy_ReloadAllMark\0"),
     (crate::reload_all::lua_take, b"Civ6Proxy_ReloadAllTake\0"),
-    (crate::reload_all::lua_connected, b"Civ6Proxy_ReloadAllConnected\0"),
+    (crate::reload_all::lua_no_self_reload, b"Civ6Proxy_ReloadAllNoSelfReload\0"),
 ];
 const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_actif, b"Civ6Proxy_Actif\0")];
 

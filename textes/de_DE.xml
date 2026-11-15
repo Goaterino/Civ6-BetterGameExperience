@@ -612,19 +612,16 @@
 			<Text>{1}: Der Fehlerbericht konnte nicht gesendet werden und bleibt auf dem Computer gespeichert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="de_DE">
-			<Text>Beschädigte Netzwerknachricht blockiert: Sie hätte das Spiel eingefroren.</Text>
+			<Text>Einfrieren des Spiels für {1} verhindert.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="de_DE">
-			<Text>Das Spiel von {1} war nicht mehr synchron ({2}) und wird vom Host neu geladen.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="de_DE">
+			<Text>Löschen der Spieleinstellungen für {1} verhindert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="de_DE">
+			<Text>Doppeltes Laden für {1} verhindert.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="de_DE">
-			<Text>Das Spiel von {1} war nicht mehr synchron ({2}): Alle laden einmal das Spiel des Hosts neu, damit alle Spiele wieder übereinstimmen.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="de_DE">
-			<Text>{1} ist wieder synchron.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="de_DE">
-			<Text>Das Spiel von {1} war nicht mehr synchron ({2}) und wurde ohne Neuladen repariert.</Text>
+			<Text>Im Spiel von {1} fehlen {2} Objekte und es hat {3} zu viel im Vergleich zum Host: Alle laden das Spiel des Hosts neu, um die Desynchronisation von {1} zu verhindern.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="de_DE">
 			<Text>Das Spiel von {1} ist nicht die aktuelle Steam-Version: Die Netzwerk-Korrekturen von BGE sind auf diesem PC inaktiv.</Text>

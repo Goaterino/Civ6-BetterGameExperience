@@ -612,19 +612,16 @@
 			<Text>{1}: nie udało się wysłać zgłoszenia błędu, zostało zapisane na komputerze gracza.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pl_PL">
-			<Text>Zablokowano uszkodzoną wiadomość sieciową, która zamroziłaby grę.</Text>
+			<Text>Zapobieżono zawieszeniu gry u {1}.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="pl_PL">
-			<Text>Gra gracza {1} była niezsynchronizowana ({2}) i jest wczytywana ponownie od hosta.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="pl_PL">
+			<Text>Zapobieżono wyczyszczeniu ustawień gry u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="pl_PL">
+			<Text>Zapobieżono podwójnemu wczytaniu u {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pl_PL">
-			<Text>Gra gracza {1} była niezsynchronizowana ({2}): wszyscy wczytują raz grę hosta, aby wszystkie gry znów były zgodne.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="pl_PL">
-			<Text>{1} jest znowu zsynchronizowany.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="pl_PL">
-			<Text>Gra gracza {1} była niezsynchronizowana ({2}) i została naprawiona bez ponownego wczytywania.</Text>
+			<Text>W grze {1} brakuje {2} obiektów i ma {3} nadmiarowych w porównaniu z grą hosta: wszyscy wczytują ponownie grę hosta, aby zapobiec desynchronizacji {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="pl_PL">
 			<Text>Gra gracza {1} nie jest aktualną wersją ze Steam: poprawki sieciowe BGE są nieaktywne na tym komputerze.</Text>

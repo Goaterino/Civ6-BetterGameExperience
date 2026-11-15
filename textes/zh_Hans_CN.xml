@@ -612,19 +612,16 @@
 			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="zh_Hans_CN">
-			<Text>已拦截一条损坏的网络消息，否则游戏会卡死。</Text>
+			<Text>已为 {1} 防止游戏卡死。</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="zh_Hans_CN">
-			<Text>{1} 的游戏不同步（{2}），正在从主机重新加载。</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="zh_Hans_CN">
+			<Text>已为 {1} 防止游戏设置被清空。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="zh_Hans_CN">
+			<Text>已为 {1} 防止重复加载。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="zh_Hans_CN">
-			<Text>{1} 的游戏不同步（{2}）：所有人重新加载一次主机的游戏，使所有游戏重新一致。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="zh_Hans_CN">
-			<Text>{1} 已恢复同步。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="zh_Hans_CN">
-			<Text>{1} 的游戏不同步（{2}），已在不重新加载的情况下修复。</Text>
+			<Text>{1} 的游戏与主机相比缺少 {2} 个对象，多出 {3} 个：所有人重新加载主机的游戏，以防止 {1} 不同步。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="zh_Hans_CN">
 			<Text>{1} 的游戏不是当前的 Steam 版本：BGE 的网络修复在其电脑上未启用。</Text>

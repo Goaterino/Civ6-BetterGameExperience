@@ -612,19 +612,16 @@
 			<Text>{1}: 버그 보고서를 보내지 못해 해당 플레이어의 컴퓨터에 저장했습니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ko_KR">
-			<Text>손상된 네트워크 메시지를 차단했습니다. 게임이 멈출 뻔했습니다.</Text>
+			<Text>{1} 님의 게임 멈춤을 막았습니다.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="ko_KR">
-			<Text>{1}의 게임이 동기화되지 않아({2}) 호스트에서 다시 불러오는 중입니다.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="ko_KR">
+			<Text>{1} 님의 게임 설정 삭제를 막았습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="ko_KR">
+			<Text>{1} 님의 이중 로딩을 막았습니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ko_KR">
-			<Text>{1}의 게임이 동기화되지 않았습니다({2}). 모든 게임을 다시 일치시키기 위해 모두가 호스트의 게임을 한 번 다시 불러옵니다.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="ko_KR">
-			<Text>{1}이(가) 다시 동기화되었습니다.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ko_KR">
-			<Text>{1}의 게임이 동기화되지 않았으나({2}) 다시 불러오지 않고 복구되었습니다.</Text>
+			<Text>{1} 님의 게임에 호스트보다 오브젝트 {2}개가 없고 {3}개가 더 있습니다. {1} 님의 동기화 오류를 막기 위해 모두가 호스트의 게임을 다시 불러옵니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="ko_KR">
 			<Text>{1}의 게임이 현재 Steam 버전이 아닙니다. 해당 PC에서는 BGE의 네트워크 수정이 비활성화됩니다.</Text>

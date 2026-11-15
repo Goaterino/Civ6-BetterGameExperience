@@ -121,6 +121,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             rejoin::install();
             flush::install();
             sync_notes::install();
+            reload_all::install();
             #[cfg(feature = "diag")]
             zones::install();
         }

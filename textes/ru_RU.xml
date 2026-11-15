@@ -612,19 +612,16 @@
 			<Text>{1}: отчёт об ошибке не удалось отправить, он сохранён на компьютере игрока.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ru_RU">
-			<Text>Заблокировано повреждённое сетевое сообщение: из-за него игра зависла бы.</Text>
+			<Text>Зависание игры у {1} предотвращено.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="ru_RU">
-			<Text>Игра {1} рассинхронизировалась ({2}) и перезагружается с хоста.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="ru_RU">
+			<Text>Сброс настроек игры у {1} предотвращён.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="ru_RU">
+			<Text>Двойная загрузка у {1} предотвращена.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ru_RU">
-			<Text>Игра {1} рассинхронизировалась ({2}): все один раз перезагружают игру хоста, чтобы все игры снова совпадали.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="ru_RU">
-			<Text>{1} снова синхронизирован.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="ru_RU">
-			<Text>Игра {1} рассинхронизировалась ({2}) и была исправлена без перезагрузки.</Text>
+			<Text>В игре {1} не хватает {2} объектов и есть {3} лишних по сравнению с игрой хоста: все перезагружают игру хоста, чтобы предотвратить рассинхронизацию у {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="ru_RU">
 			<Text>Игра у {1} — не текущая версия Steam: сетевые исправления BGE на этом ПК неактивны.</Text>

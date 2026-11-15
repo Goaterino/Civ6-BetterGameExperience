@@ -116,38 +116,73 @@ if Civ6Proxy_PolActifs ~= nil then
 	Events.MultiplayerHostMigrated.Add(protege);
 end
 
--- Garde des messages réseau (startup_proxy/src/messages.rs) : quand elle a jeté un message abîmé
--- qui aurait gelé le jeu, le joueur le dit à tous dans le chat, en anglais (chaque machine équipée
--- l'affiche dans sa langue, ui_depart_chat.lua) : « <joueur>: BGE - Blocked a damaged network
--- message… ». Une correction faite avant l'arrivée en jeu (salon, chargement) est dite à la
--- première occasion. Au plus une ligne par minute : le reste est dans le journal. Sans chat (solo,
--- hotseat, PlayByCloud), le journal seulement.
-if Civ6Proxy_GardeMessages ~= nil then
-	local dernier = nil;
-	local function BGD_PartieGarde()
-		local n = Civ6Proxy_GardeMessages();
-		if n == nil or n <= 0 then
+-- Problems BGE prevented on this machine, said to everyone in English (each machine with BGE shows
+-- it in its language, ui_depart_chat.lua): a damaged network message that would have frozen the
+-- game, a wipe of the game settings (messages.rs), a second copy of the game after the load
+-- (snapshots.rs). The host also names the players still loading when its load screen closes: they
+-- would have received a second copy, which its launch guard stopped. Something prevented before
+-- the game (lobby, load) is said at the first occasion. At most one line of each kind per minute;
+-- the rest is in the log. Without chat (solo, hotseat, PlayByCloud), the log only.
+--   Civ6Proxy_GardeMessages(), Civ6Proxy_GardeWipes(), Civ6Proxy_DoubleLoadRefused() -> how many
+--   since the last call; Civ6Proxy_LaunchGuarded() -> "1,3" (host, once)
+do
+	local last = {};
+	local function Name(id)
+		local pc = PlayerConfigurations[id];
+		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
+	end
+	local function Prevented(kind, key, who)
+		BGD_PartieJournal(kind .. " prevented for " .. who);
+		local now = os.clock();
+		if last[kind] ~= nil and now - last[kind] < 60 then
 			return;
 		end
-		BGD_PartieJournal("garde : " .. tostring(n) .. " lecture(s) corrigée(s)");
-		local maintenant = os.clock();
-		if dernier ~= nil and maintenant - dernier < 60 then
-			return;
-		end
-		dernier = maintenant;
+		last[kind] = now;
 		if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud() then
 			return;
 		end
-		local texte = "[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_GARDE") .. "[ENDCOLOR]";
+		local texte = "[COLOR_GREEN]BGE - " .. BGD_TxtAnglais(key, who) .. "[ENDCOLOR]";
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
 		BGD_PartieJournal("message : " .. texte);
 	end
-	Events.GameCoreEventPublishComplete.Add(function()
-		local ok, err = pcall(BGD_PartieGarde);
-		if not ok then
-			BGD_PartieJournal("erreur : " .. tostring(err));
+	local KINDS = {
+		{ "freeze", Civ6Proxy_GardeMessages, "LOC_BGD_CHAT_GARDE" },
+		{ "settings wipe", Civ6Proxy_GardeWipes, "LOC_BGD_CHAT_GARDE_CONFIG" },
+		{ "double load", Civ6Proxy_DoubleLoadRefused, "LOC_BGD_CHAT_DOUBLE_LOAD" },
+	};
+	local function Local()
+		for _, k in ipairs(KINDS) do
+			local n = k[2] ~= nil and k[2]() or 0;
+			if n ~= nil and n > 0 then
+				Prevented(k[1], k[3], Name(Network.GetLocalPlayerID()));
+			end
 		end
-	end);
+	end
+	local function LaunchGuarded()
+		if Civ6Proxy_LaunchGuarded == nil or not Network.IsGameHost() then
+			return;
+		end
+		local names = {};
+		for id in string.gmatch(tostring(Civ6Proxy_LaunchGuarded() or ""), "%d+") do
+			id = tonumber(id);
+			if Network.IsPlayerHotJoining(id) or Network.IsPlayerResyncing(id) then
+				table.insert(names, Name(id));
+			end
+		end
+		if #names > 0 then
+			Prevented("double load", "LOC_BGD_CHAT_DOUBLE_LOAD", table.concat(names, ", "));
+		end
+	end
+	local function Safely(f)
+		return function()
+			local ok, err = pcall(f);
+			if not ok then
+				BGD_PartieJournal("erreur : " .. tostring(err));
+			end
+		end
+	end
+	Events.GameCoreEventPublishComplete.Add(Safely(Local));
+	Events.LoadScreenClose.Add(Safely(LaunchGuarded));
 end
 
 -- Links relayed through the host (startup_proxy/src/relink.rs): two players whose direct link
@@ -275,26 +310,27 @@ if Civ6Proxy_RelayedPairs ~= nil and Civ6Proxy_RelinkStart ~= nil and Civ6Proxy_
 	end);
 end
 
--- Desyncs everyone should know about (sync_notes.rs). The game's silent repairs stay silent; the
--- host says in the chat that a player's game is being reloaded after a desync (not a join, a rejoin
--- or a remap), that they are back, and when a large repair of major objects went without a reload.
---   Civ6Proxy_SyncNotes() -> "player|major archives|checks in a row|category, category" separated
---                            by ";", since the last call (host only)
--- The first such reload after a player's (re)connection reloads everyone instead (reload_all.rs):
--- the host loads its own game, then its fresh interface makes every client load it (MPH's
--- `.mph_ui_snap`), so that every machine runs the same loaded game.
---   Civ6Proxy_ReloadAllReady(player) -> 1 if everyone can be reloaded for that player
---   Civ6Proxy_ReloadAllMark(player), Civ6Proxy_ReloadAllTake() -> seconds since the mark or -1,
---   Civ6Proxy_ReloadAllConnected(player)
+-- Desyncs the host takes over (sync_notes.rs, reload_all.rs). At a turn-end sync check, a client
+-- whose game has objects the host's has not (or the other way round) would reload alone, and a
+-- game loaded alone drifts away from the running ones. While the host announces that it takes over
+-- (its BGD_RELOAD value), clients with BGE do not reload by themselves: they acknowledge the check
+-- and wait. At the turn start (ui_depart.lua's hold, BGD_ReloadAllStep), the host says it, tells
+-- the clients (`.bgd_reload`) and loads its own game; its fresh interface sends `.bgd_load` and
+-- every client loads that game, once. The turn start waits until everyone is back. A client that
+-- gets no `.bgd_load` reloads by itself after CLIENT_WAIT seconds.
+--   Civ6Proxy_SyncNotes() -> "player|major|checks in a row|missing|extra|categories" separated by
+--                            ";", since the last call (host only)
+--   Civ6Proxy_ReloadAllReady() -> 1 if this machine, as host, can take a reload over
+--   Civ6Proxy_ReloadAllMark(), Civ6Proxy_ReloadAllTake() -> seconds since the mark or -1
+--   Civ6Proxy_ReloadAllNoSelfReload(on) -> 1 if set (client)
 if Civ6Proxy_SyncNotes ~= nil then
-	local LARGE = 20;          -- major archives repaired at one turn end worth a line
-	local JOIN_GRACE = 120;    -- seconds after a connection during which a snapshot is a (re)join
-	local RELOAD_LIMIT = 300;  -- seconds after which a reload that never finished is forgotten
-	local RECENT = 30;         -- seconds a turn end's categories stay attached to a reload
-	local ALL_WAIT = 10;       -- seconds for the host's own load to start
+	local ALL_WAIT = 30;       -- seconds for the host's own load to start
 	local ALL_MAX_AGE = 600;   -- seconds after which the clients' step is no longer done
 	local ALL_HOLD = 120;      -- seconds the turn start waits for the clients' loads (depart.rs safety)
-	local S = { turnEnds = 0, joined = {}, reloading = {}, last = {}, allAsked = nil, allClients = nil };
+	local CLIENT_WAIT = 180;   -- client: seconds to wait for `.bgd_load` before reloading by itself
+	local RELOAD, LOAD = ".bgd_reload ", ".bgd_load ";
+	local KEY = "BGD_RELOAD";
+	local S = { pending = nil, asked = nil, allClients = nil, waiting = nil, noSelf = nil };
 
 	local function IsHost()
 		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
@@ -305,18 +341,8 @@ if Civ6Proxy_SyncNotes ~= nil then
 		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
 	end
 
-	local function Reloading(id)
-		local since = S.reloading[id];
-		return since ~= nil and os.clock() - since < RELOAD_LIMIT;
-	end
-
-	-- "<host>: BGE - …" to everyone, in English (each machine with BGE translates it on arrival).
-	local function Say(color, key, ...)
-		local text = color .. "BGE - " .. BGD_TxtAnglais(key, ...) .. "[ENDCOLOR]";
-		BGD_PartieJournal("message: " .. text);
-		if GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud() then
-			Network.SendChat(text, ChatTargetTypes.CHATTARGET_ALL, -1);
-		end
+	local function NetworkGame()
+		return GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud();
 	end
 
 	local function Safely(f)
@@ -328,112 +354,155 @@ if Civ6Proxy_SyncNotes ~= nil then
 		end
 	end
 
-	-- Reads the host hook's notes: remembers each player's categories, announces a large repair.
+	-- Host: announces whether it takes reloads over. Client: follows the host's announcement.
+	local function Announce()
+		if not NetworkGame() then
+			return;
+		end
+		if IsHost() then
+			local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
+			local ready = (Civ6Proxy_ReloadAllReady ~= nil and Civ6Proxy_ReloadAllReady() == 1) and 1 or 0;
+			if cfg ~= nil and cfg:GetValue(KEY) ~= ready then
+				cfg:SetValue(KEY, ready);
+				Network.BroadcastPlayerInfo();
+				BGD_PartieJournal("sync: the host " .. (ready == 1 and "takes reloads over" or "leaves reloads to the game"));
+			end
+			return;
+		end
+		if Civ6Proxy_ReloadAllNoSelfReload == nil then
+			return;
+		end
+		local host = PlayerConfigurations[Network.GetGameHostPlayerID()];
+		local v = host and host:GetValue(KEY);
+		local on = (v == 1 or v == true) and 1 or 0;
+		local set = Civ6Proxy_ReloadAllNoSelfReload(on) == 1;
+		if set and S.noSelf ~= on then
+			S.noSelf = on;
+			BGD_PartieJournal("sync: " .. (on == 1 and "a failed check waits for the host" or "a failed check reloads this game, as the game does"));
+		end
+	end
+
+	-- Host: the hook's notes. Objects on one side only: the host takes over at the turn start.
 	local function Drain()
 		local notes = Civ6Proxy_SyncNotes();
 		if notes == nil or notes == "" or not IsHost() then
 			return;
 		end
 		for note in string.gmatch(notes, "[^;]+") do
-			local p, n, streak, list = string.match(note, "^(%-?%d+)|(%d+)|(%d+)|(.*)$");
-			p, n, streak = tonumber(p), tonumber(n), tonumber(streak);
-			if p ~= nil and n ~= nil and streak ~= nil then
-				S.last[p] = { at = os.clock(), list = list };
-				BGD_PartieJournal("sync: player " .. p .. ": " .. n .. " major archive(s) repaired (" .. list .. "), " .. streak .. " in a row");
-				if n >= LARGE and streak == 1 and not Reloading(p) then
-					Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_REPAIRED", Name(p), list);
+			local p, n, streak, missing, extra, list = string.match(note, "^(%-?%d+)|(%d+)|(%d+)|(%d+)|(%d+)|(.*)$");
+			p, missing, extra = tonumber(p), tonumber(missing), tonumber(extra);
+			if p ~= nil and missing ~= nil and extra ~= nil then
+				BGD_PartieJournal("sync: player " .. p .. ": " .. n .. " major archive(s) repaired (" .. list .. "), " .. streak
+					.. " in a row; " .. missing .. " object(s) missing, " .. extra .. " extra");
+				local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
+				local takesOver = cfg ~= nil and cfg:GetValue(KEY) == 1;
+				if missing + extra > 0 and takesOver then
+					S.pending = S.pending or { players = {} };
+					S.pending.players[p] = { missing = missing, extra = extra };
 				end
 			end
 		end
 	end
 
-	Events.TurnEnd.Add(Safely(function()
-		S.turnEnds = S.turnEnds + 1;
-	end));
+	local function Send(text)
+		Network.SendChat(text, ChatTargetTypes.CHATTARGET_ALL, -1);
+	end
 
-	Events.MultiplayerPlayerConnected.Add(Safely(function(playerID)
-		if playerID ~= nil then
-			S.joined[playerID] = os.clock();
-			if Civ6Proxy_ReloadAllConnected ~= nil and IsHost() then
-				Civ6Proxy_ReloadAllConnected(playerID);
-			end
-		end
-	end));
-
-	-- A client asks for the host's whole game: the game could not repair it.
-	Events.MultiplayerSnapshotRequested.Add(Safely(function(playerID)
-		if not IsHost() or playerID == nil or playerID < 0 or playerID == Network.GetLocalPlayerID() or Reloading(playerID) then
-			return;
-		end
-		Drain();
-		local joined = S.joined[playerID];
-		if S.turnEnds == 0 or Network.IsPlayerHotJoining(playerID) or (joined ~= nil and os.clock() - joined < JOIN_GRACE) then
-			BGD_PartieJournal("sync: player " .. tostring(playerID) .. " asked for the host's game (join or remap, not announced)");
-			return;
-		end
-		S.reloading[playerID] = os.clock();
-		local last = S.last[playerID];
-		local list = (last ~= nil and os.clock() - last.at < RECENT and last.list ~= "") and last.list or "game state";
-		if Civ6Proxy_ReloadAllReady ~= nil and Civ6Proxy_ReloadAllReady(playerID) == 1 then
-			Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_RELOAD_ALL", Name(playerID), list);
-			BGD_PartieJournal("sync: player " .. playerID .. " out of sync (" .. list .. "): the host loads its own game, then every client loads it");
-			Civ6Proxy_ReloadAllMark(playerID);
-			S.allAsked = os.clock();
-			Network.RequestSnapshot();
-			return;
-		end
-		Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_RELOADING", Name(playerID), list);
-	end));
-
-	-- Reload of everyone: this interface asked for the host's own load (wait for it to start), or a
-	-- fresh one after that load makes every client load the same game.
 	local function Loading(me)
 		return (UI ~= nil and UI.IsResyncLoadInProgress ~= nil and UI.IsResyncLoadInProgress())
 			or Network.IsPlayerResyncing(me) or Network.IsPlayerHotJoining(me);
 	end
-	local function ReloadAllStep()
-		if Civ6Proxy_ReloadAllTake == nil or not IsHost() then
-			return;
+
+	-- Host: says why, tells the clients and loads its own game.
+	local function Start()
+		local p = S.pending;
+		S.pending = nil;
+		for id, c in pairs(p.players) do
+			local text = "[COLOR_Civ6Yellow]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_SYNC_RELOAD_ALL", Name(id), c.missing, c.extra) .. "[ENDCOLOR]";
+			BGD_PartieJournal("message: " .. text);
+			Send(text);
 		end
-		local me = Network.GetLocalPlayerID();
-		if S.allAsked ~= nil then
-			if not Loading(me) and os.clock() - S.allAsked > ALL_WAIT then
-				S.allAsked = nil;
-				Civ6Proxy_ReloadAllTake();
-				BGD_PartieJournal("sync: the host's own load did not start within " .. ALL_WAIT .. " s; that player reloads alone");
-			end
-			return;
-		end
-		if Loading(me) then
+		Civ6Proxy_ReloadAllMark();
+		S.asked = os.clock();
+		Send(RELOAD .. tostring(Game.GetCurrentGameTurn()));
+		BGD_PartieJournal("sync: the host loads its own game, then every client loads it");
+		Network.RequestSnapshot();
+	end
+
+	-- Host, fresh interface after its own load: every client loads the same game.
+	local function AfterLoad()
+		if not IsHost() or S.asked ~= nil or Civ6Proxy_ReloadAllTake == nil or Loading(Network.GetLocalPlayerID()) then
 			return;
 		end
 		local age = Civ6Proxy_ReloadAllTake();
 		if age == nil or age < 0 then
 			return;
 		end
-		if age <= ALL_MAX_AGE then
-			BGD_PartieJournal("sync: the host has loaded its own game; every client loads it now");
-			S.allClients = os.clock();
-			Network.SendChat(".mph_ui_snap", -2, -1);
-		else
+		if age > ALL_MAX_AGE then
 			BGD_PartieJournal("sync: reload of everyone older than " .. ALL_MAX_AGE .. " s ignored");
+			return;
 		end
+		BGD_PartieJournal("sync: the host has loaded its own game; every client loads it now");
+		S.allClients = os.clock();
+		Send(LOAD .. tostring(Game.GetCurrentGameTurn()));
 	end
 
-	-- For ui_depart.lua (simultaneous turn start): the clients are loading the host's game, so the
-	-- host does not start the turn without them for ALL_HOLD seconds; everyone starts together.
-	function BGD_ReloadAllHolding()
-		return S.allClients ~= nil and os.clock() - S.allClients < ALL_HOLD;
+	-- For ui_depart.lua, at every tick of the turn start: does it have to wait? Host: starts a
+	-- pending takeover; waits while its own load is asked for and while the clients load. Client:
+	-- waits for `.bgd_load` after `.bgd_reload`, and reloads by itself if it never comes.
+	-- Events may be held at the turn start: the notes and the after-load step are read here too.
+	function BGD_ReloadAllStep()
+		if IsHost() then
+			Drain();
+			AfterLoad();
+			if S.pending ~= nil and S.asked == nil then
+				Start();
+			end
+			-- The old interface still runs ALL_WAIT seconds after asking: the load never started.
+			if S.asked ~= nil and os.clock() - S.asked > ALL_WAIT then
+				-- The host's own load never started: the clients load its running game.
+				S.asked = nil;
+				Civ6Proxy_ReloadAllTake();
+				S.allClients = os.clock();
+				BGD_PartieJournal("sync: the host's own load did not start within " .. ALL_WAIT .. " s; the clients load its game");
+				Send(LOAD .. tostring(Game.GetCurrentGameTurn()));
+			end
+			return S.asked ~= nil or (S.allClients ~= nil and os.clock() - S.allClients < ALL_HOLD);
+		end
+		if S.waiting ~= nil and os.clock() - S.waiting > CLIENT_WAIT then
+			S.waiting = nil;
+			BGD_PartieJournal("sync: no game from the host after " .. CLIENT_WAIT .. " s; this game reloads by itself");
+			Network.RequestSnapshot();
+		end
+		return S.waiting ~= nil;
 	end
-	Events.LoadScreenClose.Add(Safely(ReloadAllStep));
 
-	Events.MultiplayerSnapshotProcessed.Add(Safely(function(playerID)
-		if IsHost() and playerID ~= nil and S.reloading[playerID] ~= nil then
-			S.reloading[playerID] = nil;
-			Say("[COLOR_GREEN]", "LOC_BGD_CHAT_SYNC_BACK", Name(playerID));
+	Events.MultiplayerChat.Add(Safely(function(fromPlayer, toPlayer, text)
+		if type(text) ~= "string" or IsHost() or fromPlayer ~= Network.GetGameHostPlayerID() then
+			return;
+		end
+		if string.sub(text, 1, #RELOAD) == RELOAD then
+			S.waiting = os.clock();
+			BGD_PartieJournal("sync: the host loads its own game; this game waits for it");
+		elseif string.sub(text, 1, #LOAD) == LOAD then
+			S.waiting = nil;
+			BGD_PartieJournal("sync: the host has loaded its game; this game loads it");
+			Network.RequestSnapshot();
 		end
 	end));
 
+	Events.PlayerInfoChanged.Add(Safely(Announce));
+	Events.MultiplayerHostMigrated.Add(Safely(Announce));
+	Events.LoadScreenClose.Add(Safely(Announce));
+	Events.LoadScreenClose.Add(Safely(AfterLoad));
+	-- A host migration clears the client switch: set it again before every check.
+	Events.TurnEnd.Add(Safely(Announce));
 	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
-	Events.GameCoreEventPublishComplete.Add(Safely(ReloadAllStep));
+	Events.GameCoreEventPublishComplete.Add(Safely(AfterLoad));
+	-- Without the simultaneous turn start (no hold), the turn start itself starts a pending takeover.
+	Events.TurnBegin.Add(Safely(function()
+		if IsHost() and S.pending ~= nil and S.asked == nil then
+			Start();
+		end
+	end));
 end

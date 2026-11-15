@@ -612,19 +612,16 @@
 			<Text>{1} : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="fr_FR">
-			<Text>Message réseau abîmé bloqué : il aurait gelé la partie.</Text>
+			<Text>Gel de la partie évité pour {1}.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="fr_FR">
-			<Text>La partie de {1} était désynchronisée ({2}) : elle est rechargée depuis l'hôte.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="fr_FR">
+			<Text>Effacement des réglages de la partie évité pour {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="fr_FR">
+			<Text>Double chargement évité pour {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="fr_FR">
-			<Text>La partie de {1} était désynchronisée ({2}) : tout le monde recharge une fois la partie de l'hôte, pour que toutes les parties correspondent de nouveau.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="fr_FR">
-			<Text>{1} est de nouveau synchronisé.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="fr_FR">
-			<Text>La partie de {1} était désynchronisée ({2}) : elle a été réparée sans rechargement.</Text>
+			<Text>Il manque {2} objets à la partie de {1} et elle en a {3} en trop par rapport à celle de l'hôte : tout le monde recharge la partie de l'hôte pour éviter la désynchronisation de {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="fr_FR">
 			<Text>Le jeu de {1} n'est pas la version Steam actuelle : les correctifs réseau de BGE sont inactifs sur son PC.</Text>

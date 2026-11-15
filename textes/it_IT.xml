@@ -612,19 +612,16 @@
 			<Text>{1}: non è stato possibile inviare la segnalazione, è stata salvata sul suo computer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="it_IT">
-			<Text>Messaggio di rete danneggiato bloccato: avrebbe congelato la partita.</Text>
+			<Text>Blocco della partita evitato per {1}.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="it_IT">
-			<Text>La partita di {1} era desincronizzata ({2}) e viene ricaricata dall'host.</Text>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="it_IT">
+			<Text>Cancellazione delle impostazioni della partita evitata per {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="it_IT">
+			<Text>Doppio caricamento evitato per {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="it_IT">
-			<Text>La partita di {1} era desincronizzata ({2}): tutti ricaricano una volta la partita dell'host, così tutte le partite tornano a coincidere.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="it_IT">
-			<Text>{1} è di nuovo sincronizzato.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_CHAT_SYNC_REPAIRED" Language="it_IT">
-			<Text>La partita di {1} era desincronizzata ({2}) ed è stata riparata senza ricaricare.</Text>
+			<Text>Alla partita di {1} mancano {2} oggetti e ne ha {3} in più rispetto a quella dell'host: tutti ricaricano la partita dell'host per evitare la desincronizzazione di {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="it_IT">
 			<Text>Il gioco di {1} non è la versione Steam attuale: le correzioni di rete di BGE sono inattive sul suo PC.</Text>

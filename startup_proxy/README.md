@@ -501,13 +501,13 @@ appliqué non plus, et compte comme une correction.
   puis une sur 100). Pour un message de configuration : `messages : NetPlayerInfo abîmé à la
   lecture, il ne sera pas appliqué`, puis `… abîmé non appliqué, la configuration est gardée` ; ou
   `messages : NetPlayerInfo : joueur <id> hors des <n> emplacements, non appliqué`.
-- Chat : en jeu, `partie.lua` interroge `Civ6Proxy_GardeMessages()` (les lectures corrigées depuis
-  le dernier appel) à chaque `GameCoreEventPublishComplete`. Après une correction, le joueur envoie
-  à tous `BGE - Blocked a damaged network message that would have frozen my game.`, en rouge
-  (`LOC_BGD_CHAT_GARDE`, traduit à l'arrivée par chaque machine équipée), qui s'affiche
-  `<joueur>: BGE - …`. Au plus une ligne par minute ; une correction faite au salon ou au chargement
-  est dite à l'arrivée en jeu. Sans chat (solo, hotseat, PlayByCloud), le journal seulement :
-  `partie : garde : n lecture(s) corrigée(s)`.
+- Chat: in game, `partie.lua` asks `Civ6Proxy_GardeMessages()` (impossible counts replaced) and
+  `Civ6Proxy_GardeWipes()` (configuration wipes refused) at each `GameCoreEventPublishComplete`, and
+  the player tells everyone, in green: `BGE - Game freeze prevented for <player>.` or `BGE - Game
+  settings wipe prevented for <player>.` (`LOC_BGD_CHAT_GARDE`, `LOC_BGD_CHAT_GARDE_CONFIG`,
+  translated on arrival). A refused `NetPlayerInfo` is logged only. At most one line of each kind
+  per minute; something prevented in the lobby or the load is said on arrival in game. Without chat
+  (solo, hotseat, PlayByCloud), the log only: `partie : freeze prevented for <player>`.
 - Avec l'interrupteur général `actif=off`, rien n'est posé, comme pour le reste du mod
   (`messages : garde non posée (actif=off)`). C'est un correctif de bug : en release, aucun
   réglage, la garde est toujours posée. Dans les builds de diagnostic (feature `diag`) seulement,

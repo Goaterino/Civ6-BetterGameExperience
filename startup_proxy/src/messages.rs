@@ -225,8 +225,10 @@ static RETOURS: [AtomicUsize; 7] = [
 static CONFIGURATION: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static CORRECTIONS: AtomicU32 = AtomicU32::new(0);
-/// Corrections pas encore annoncées dans le chat (`a_annoncer`).
+/// Impossible counts not yet said in the chat (`a_annoncer`): each would have frozen the game.
 static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
+/// Configuration wipes refused, not yet said in the chat (`wipes_to_announce`).
+static WIPES: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
 /// The exe is not one of the builds BGE knows: none of the network fixes is installed.
@@ -291,16 +293,26 @@ unsafe fn config_wipes(msg: *mut u8) -> bool {
     wipes_configuration(changed_keys, std::ptr::read_unaligned((map + MAP_FIRST) as *const usize), map + MAP_END)
 }
 
-/// Une correction de plus (journal, chat) ; le total.
+/// An impossible count replaced (log, chat: a freeze prevented); the total of corrections.
 fn compter() -> u32 {
     A_ANNONCER.fetch_add(1, Ordering::Relaxed);
+    compter_seul()
+}
+
+/// A correction logged only; the total.
+fn compter_seul() -> u32 {
     CORRECTIONS.fetch_add(1, Ordering::Relaxed) + 1
 }
 
-/// Les corrections faites depuis le dernier appel, remises à 0 : `Civ6Proxy_GardeMessages()`, que
-/// `partie.lua` interroge en jeu pour le dire dans le chat.
+/// Freezes prevented since the last call, reset to 0: `Civ6Proxy_GardeMessages()`, which
+/// `partie.lua` asks in game to say it in the chat.
 pub fn a_annoncer() -> u32 {
     A_ANNONCER.swap(0, Ordering::Relaxed)
+}
+
+/// Configuration wipes refused since the last call, reset to 0: `Civ6Proxy_GardeWipes()`.
+pub fn wipes_to_announce() -> u32 {
+    WIPES.swap(0, Ordering::Relaxed)
 }
 
 // `C-unwind` : si la lecture d'origine levait une exception C++, elle traverserait ces cadres au
@@ -418,7 +430,8 @@ unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
         return;
     }
     if i == 0 && config_wipes(msg) {
-        let total = compter();
+        WIPES.fetch_add(1, Ordering::Relaxed);
+        let total = compter_seul();
         log(&format!("messages: NetGameConfig replacing the whole configuration with nothing, not applied ({total} corrections)"));
         return;
     }
@@ -426,7 +439,7 @@ unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
         let id = std::ptr::read_unaligned(msg.add(0x38) as *const i32);
         if let Some(n) = emplacements() {
             if !joueur_valide(id, n) {
-                let total = compter();
+                let total = compter_seul();
                 log(&format!("messages : NetPlayerInfo : joueur {id} hors des {n} emplacements, non appliqué ({total} corrections)"));
                 return;
             }
@@ -592,6 +605,9 @@ mod tests {
         A_ANNONCER.store(3, Ordering::Relaxed);
         assert_eq!(a_annoncer(), 3);
         assert_eq!(a_annoncer(), 0, "une correction n'est annoncée qu'une fois");
+        WIPES.store(2, Ordering::Relaxed);
+        assert_eq!(wipes_to_announce(), 2);
+        assert_eq!(wipes_to_announce(), 0, "a wipe is said once");
     }
 
     #[test]
