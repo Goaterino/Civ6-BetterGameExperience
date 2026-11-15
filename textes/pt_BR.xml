@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="pt_BR">
 			<Text>O jogo de {1} estava fora de sincronia ({2}) e está sendo recarregado a partir do anfitrião.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pt_BR">
+			<Text>O jogo de {1} estava fora de sincronia ({2}): todos recarregam uma vez o jogo do anfitrião para que todos os jogos voltem a coincidir.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="pt_BR">
 			<Text>{1} está sincronizado novamente.</Text>
 		</Row>

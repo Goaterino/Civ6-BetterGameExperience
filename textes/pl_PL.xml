@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="pl_PL">
 			<Text>Gra gracza {1} była niezsynchronizowana ({2}) i jest wczytywana ponownie od hosta.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pl_PL">
+			<Text>Gra gracza {1} była niezsynchronizowana ({2}): wszyscy wczytują raz grę hosta, aby wszystkie gry znów były zgodne.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="pl_PL">
 			<Text>{1} jest znowu zsynchronizowany.</Text>
 		</Row>

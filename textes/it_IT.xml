@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="it_IT">
 			<Text>La partita di {1} era desincronizzata ({2}) e viene ricaricata dall'host.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="it_IT">
+			<Text>La partita di {1} era desincronizzata ({2}): tutti ricaricano una volta la partita dell'host, così tutte le partite tornano a coincidere.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="it_IT">
 			<Text>{1} è di nuovo sincronizzato.</Text>
 		</Row>

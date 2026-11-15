@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="ko_KR">
 			<Text>{1}의 게임이 동기화되지 않아({2}) 호스트에서 다시 불러오는 중입니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ko_KR">
+			<Text>{1}의 게임이 동기화되지 않았습니다({2}). 모든 게임을 다시 일치시키기 위해 모두가 호스트의 게임을 한 번 다시 불러옵니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="ko_KR">
 			<Text>{1}이(가) 다시 동기화되었습니다.</Text>
 		</Row>

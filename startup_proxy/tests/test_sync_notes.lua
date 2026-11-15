@@ -24,9 +24,10 @@ local function NewEvent()
 	return e;
 end
 
--- One machine: `host` or client, with the notes its hook would hand out.
-local function NewMachine(host)
-	local m = { chat = {}, notes = "", clock = 1000, hotJoining = {} };
+-- One machine: `host` or client, with the notes its hook would hand out. `all` = the DLL's state
+-- for a reload of everyone ({ used = {}, pending = age or nil }), absent = an older DLL.
+local function NewMachine(host, all)
+	local m = { chat = {}, notes = "", clock = 1000, hotJoining = {}, snapshots = 0, loading = false, all = all };
 	m.events = setmetatable({}, { __index = function(t, k) local e = NewEvent(); rawset(t, k, e); return e; end });
 	local env = setmetatable({
 		Events = m.events,
@@ -42,11 +43,18 @@ local function NewMachine(host)
 			GetGameHostPlayerID = function() return 0; end,
 			IsGameHost = function() return host; end,
 			IsPlayerHotJoining = function(id) return m.hotJoining[id] == true; end,
+			IsPlayerResyncing = function() return false; end,
 			SendChat = function(text) table.insert(m.chat, text); end,
+			RequestSnapshot = function() m.snapshots = m.snapshots + 1; end,
 		},
+		UI = { IsResyncLoadInProgress = function() return m.loading; end },
 		ChatTargetTypes = { CHATTARGET_ALL = -1, CHATTARGET_PLAYER = 3 },
 		Civ6Proxy_Journal = function() end,
 		Civ6Proxy_SyncNotes = function() local n = m.notes; m.notes = ""; return n; end,
+		Civ6Proxy_ReloadAllReady = all and function(p) return all.used[p] and 0 or 1; end,
+		Civ6Proxy_ReloadAllMark = all and function(p) all.used[p] = true; all.pending = 0; end,
+		Civ6Proxy_ReloadAllTake = all and function() local a = all.pending; all.pending = nil; return a or -1; end,
+		Civ6Proxy_ReloadAllConnected = all and function(p) all.used[p] = nil; end,
 	}, { __index = _G });
 	assert(load(PARTIE, "=partie.lua", "t", env))();
 	return m;
@@ -104,6 +112,59 @@ do
 	local h = NewMachine(true);
 	h.events.MultiplayerSnapshotRequested.Fire(3);
 	check(#h.chat == 0, "nothing before the first turn end");
+end
+
+do
+	-- Reload of everyone: the first desync reload after a connection, once.
+	local all = { used = {} };
+	local h = NewMachine(true, all);
+	h.events.TurnEnd.Fire();
+	h.notes = "4|3|1|units, contracts";
+	h.events.MultiplayerSnapshotRequested.Fire(4);
+	check(Last(h) == "[COLOR_Civ6Yellow]BGE - P4's game was out of sync (units, contracts): everyone reloads the host's game once, so that all games match again.[ENDCOLOR]", "reload all: " .. Last(h));
+	check(h.snapshots == 1, "the host asks for its own load");
+	check(all.pending == 0, "the clients' step is kept in the DLL");
+	-- This interface waits for its own load; nothing for the clients from it.
+	h.events.GameCoreEventPublishComplete.Fire();
+	check(Last(h):find(".mph_ui_snap", 1, true) == nil, "no client step before the host's load");
+	-- The host's fresh interface after its load: the clients load the same game.
+	local h2 = NewMachine(true, all);
+	h2.loading = true;
+	h2.events.GameCoreEventPublishComplete.Fire();
+	check(#h2.chat == 0, "nothing while the host is still loading");
+	h2.loading = false;
+	h2.events.LoadScreenClose.Fire();
+	check(Last(h2) == ".mph_ui_snap", "clients asked to load: " .. Last(h2));
+	check(all.pending == nil, "the clients' step is done once");
+	h2.events.GameCoreEventPublishComplete.Fire();
+	check(#h2.chat == 1, "not twice");
+	-- The clients' own requests that follow are not desyncs (first turn end not reached yet).
+	h2.events.MultiplayerSnapshotRequested.Fire(5);
+	check(#h2.chat == 1 and h2.snapshots == 0, "the clients' loads start nothing");
+	-- Later desync of the same player: the game's own reload of that player alone.
+	h2.events.TurnEnd.Fire();
+	h2.notes = "4|2|1|units";
+	h2.events.MultiplayerSnapshotRequested.Fire(4);
+	check(Last(h2) == "[COLOR_Civ6Yellow]BGE - P4's game was out of sync (units) and is being reloaded from the host.[ENDCOLOR]", "second time alone: " .. Last(h2));
+	check(h2.snapshots == 0, "no second reload of everyone");
+	-- After the player connects again, possible once more.
+	h2.events.MultiplayerSnapshotProcessed.Fire(4);
+	h2.events.MultiplayerPlayerConnected.Fire(4);
+	h2.clock = h2.clock + 200;
+	h2.events.MultiplayerSnapshotRequested.Fire(4);
+	check(h2.snapshots == 1, "again after a new connection");
+end
+
+do
+	-- The host's own load never starts: no client step, that player reloads alone.
+	local all = { used = {} };
+	local h = NewMachine(true, all);
+	h.events.TurnEnd.Fire();
+	h.events.MultiplayerSnapshotRequested.Fire(4);
+	h.clock = h.clock + 11;
+	h.events.GameCoreEventPublishComplete.Fire();
+	check(all.pending == nil, "request dropped after the wait");
+	check(Last(h):find(".mph_ui_snap", 1, true) == nil, "clients not asked");
 end
 
 if failures > 0 then

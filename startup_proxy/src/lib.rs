@@ -44,6 +44,7 @@ mod rejoin;
 mod flush;
 mod sync_notes;
 mod remap;
+mod reload_all;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]

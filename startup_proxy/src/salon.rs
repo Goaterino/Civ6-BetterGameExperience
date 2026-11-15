@@ -350,6 +350,10 @@ const PARTIE_NATIVES: Natives = &[
     (crate::relink::lua_state, b"Civ6Proxy_RelinkState\0"),
     (crate::relink::lua_forget, b"Civ6Proxy_RelayForgetPair\0"),
     (crate::sync_notes::lua_notes, b"Civ6Proxy_SyncNotes\0"),
+    (crate::reload_all::lua_ready, b"Civ6Proxy_ReloadAllReady\0"),
+    (crate::reload_all::lua_mark, b"Civ6Proxy_ReloadAllMark\0"),
+    (crate::reload_all::lua_take, b"Civ6Proxy_ReloadAllTake\0"),
+    (crate::reload_all::lua_connected, b"Civ6Proxy_ReloadAllConnected\0"),
 ];
 const OPTION_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_actif, b"Civ6Proxy_Actif\0")];
 

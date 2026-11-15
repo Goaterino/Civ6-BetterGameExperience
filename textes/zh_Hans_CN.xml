@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="zh_Hans_CN">
 			<Text>{1} 的游戏不同步（{2}），正在从主机重新加载。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="zh_Hans_CN">
+			<Text>{1} 的游戏不同步（{2}）：所有人重新加载一次主机的游戏，使所有游戏重新一致。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="zh_Hans_CN">
 			<Text>{1} 已恢复同步。</Text>
 		</Row>

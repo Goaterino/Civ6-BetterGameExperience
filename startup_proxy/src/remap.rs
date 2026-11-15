@@ -69,6 +69,9 @@ pub fn patch_vote_panel(src: &[u8]) -> Option<Vec<u8>> {
 
 /// Called by the Lua hook for VotePanel.lua: the text to compile, or `None` to compile the original.
 pub unsafe fn prepare(l: *mut std::ffi::c_void, src: &[u8]) -> Option<Vec<u8>> {
+    if let Ok(text) = std::str::from_utf8(src) {
+        crate::reload_all::note_vote_panel(text);
+    }
     let cfg = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
     if crate::salon::actif_off(&cfg) || !enabled(&cfg) {
         return None;

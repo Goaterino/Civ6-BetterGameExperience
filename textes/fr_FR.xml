@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="fr_FR">
 			<Text>La partie de {1} était désynchronisée ({2}) : elle est rechargée depuis l'hôte.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="fr_FR">
+			<Text>La partie de {1} était désynchronisée ({2}) : tout le monde recharge une fois la partie de l'hôte, pour que toutes les parties correspondent de nouveau.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="fr_FR">
 			<Text>{1} est de nouveau synchronisé.</Text>
 		</Row>

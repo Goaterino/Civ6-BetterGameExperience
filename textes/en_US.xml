@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="en_US">
 			<Text>{1}'s game was out of sync ({2}) and is being reloaded from the host.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="en_US">
+			<Text>{1}'s game was out of sync ({2}): everyone reloads the host's game once, so that all games match again.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="en_US">
 			<Text>{1} is back in sync.</Text>
 		</Row>

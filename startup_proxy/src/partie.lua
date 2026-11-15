@@ -280,12 +280,20 @@ end
 -- or a remap), that they are back, and when a large repair of major objects went without a reload.
 --   Civ6Proxy_SyncNotes() -> "player|major archives|checks in a row|category, category" separated
 --                            by ";", since the last call (host only)
+-- The first such reload after a player's (re)connection reloads everyone instead (reload_all.rs):
+-- the host loads its own game, then its fresh interface makes every client load it (MPH's
+-- `.mph_ui_snap`), so that every machine runs the same loaded game.
+--   Civ6Proxy_ReloadAllReady(player) -> 1 if everyone can be reloaded for that player
+--   Civ6Proxy_ReloadAllMark(player), Civ6Proxy_ReloadAllTake() -> seconds since the mark or -1,
+--   Civ6Proxy_ReloadAllConnected(player)
 if Civ6Proxy_SyncNotes ~= nil then
 	local LARGE = 20;          -- major archives repaired at one turn end worth a line
 	local JOIN_GRACE = 120;    -- seconds after a connection during which a snapshot is a (re)join
 	local RELOAD_LIMIT = 300;  -- seconds after which a reload that never finished is forgotten
 	local RECENT = 30;         -- seconds a turn end's categories stay attached to a reload
-	local S = { turnEnds = 0, joined = {}, reloading = {}, last = {} };
+	local ALL_WAIT = 10;       -- seconds for the host's own load to start
+	local ALL_MAX_AGE = 600;   -- seconds after which the clients' step is no longer done
+	local S = { turnEnds = 0, joined = {}, reloading = {}, last = {}, allAsked = nil };
 
 	local function IsHost()
 		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
@@ -345,6 +353,9 @@ if Civ6Proxy_SyncNotes ~= nil then
 	Events.MultiplayerPlayerConnected.Add(Safely(function(playerID)
 		if playerID ~= nil then
 			S.joined[playerID] = os.clock();
+			if Civ6Proxy_ReloadAllConnected ~= nil and IsHost() then
+				Civ6Proxy_ReloadAllConnected(playerID);
+			end
 		end
 	end));
 
@@ -362,8 +373,51 @@ if Civ6Proxy_SyncNotes ~= nil then
 		S.reloading[playerID] = os.clock();
 		local last = S.last[playerID];
 		local list = (last ~= nil and os.clock() - last.at < RECENT and last.list ~= "") and last.list or "game state";
+		if Civ6Proxy_ReloadAllReady ~= nil and Civ6Proxy_ReloadAllReady(playerID) == 1 then
+			Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_RELOAD_ALL", Name(playerID), list);
+			BGD_PartieJournal("sync: player " .. playerID .. " out of sync (" .. list .. "): the host loads its own game, then every client loads it");
+			Civ6Proxy_ReloadAllMark(playerID);
+			S.allAsked = os.clock();
+			Network.RequestSnapshot();
+			return;
+		end
 		Say("[COLOR_Civ6Yellow]", "LOC_BGD_CHAT_SYNC_RELOADING", Name(playerID), list);
 	end));
+
+	-- Reload of everyone: this interface asked for the host's own load (wait for it to start), or a
+	-- fresh one after that load makes every client load the same game.
+	local function Loading(me)
+		return (UI ~= nil and UI.IsResyncLoadInProgress ~= nil and UI.IsResyncLoadInProgress())
+			or Network.IsPlayerResyncing(me) or Network.IsPlayerHotJoining(me);
+	end
+	local function ReloadAllStep()
+		if Civ6Proxy_ReloadAllTake == nil or not IsHost() then
+			return;
+		end
+		local me = Network.GetLocalPlayerID();
+		if S.allAsked ~= nil then
+			if not Loading(me) and os.clock() - S.allAsked > ALL_WAIT then
+				S.allAsked = nil;
+				Civ6Proxy_ReloadAllTake();
+				BGD_PartieJournal("sync: the host's own load did not start within " .. ALL_WAIT .. " s; that player reloads alone");
+			end
+			return;
+		end
+		if Loading(me) then
+			return;
+		end
+		local age = Civ6Proxy_ReloadAllTake();
+		if age == nil or age < 0 then
+			return;
+		end
+		if age <= ALL_MAX_AGE then
+			BGD_PartieJournal("sync: the host has loaded its own game; every client loads it now");
+			Network.SendChat(".mph_ui_snap", -2, -1);
+		else
+			BGD_PartieJournal("sync: reload of everyone older than " .. ALL_MAX_AGE .. " s ignored");
+		end
+	end
+	Events.LoadScreenClose.Add(Safely(ReloadAllStep));
 
 	Events.MultiplayerSnapshotProcessed.Add(Safely(function(playerID)
 		if IsHost() and playerID ~= nil and S.reloading[playerID] ~= nil then
@@ -373,4 +427,5 @@ if Civ6Proxy_SyncNotes ~= nil then
 	end));
 
 	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
+	Events.GameCoreEventPublishComplete.Add(Safely(ReloadAllStep));
 end

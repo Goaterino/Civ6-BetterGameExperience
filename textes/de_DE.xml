@@ -617,6 +617,9 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOADING" Language="de_DE">
 			<Text>Das Spiel von {1} war nicht mehr synchron ({2}) und wird vom Host neu geladen.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="de_DE">
+			<Text>Das Spiel von {1} war nicht mehr synchron ({2}): Alle laden einmal das Spiel des Hosts neu, damit alle Spiele wieder übereinstimmen.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_SYNC_BACK" Language="de_DE">
 			<Text>{1} ist wieder synchron.</Text>
 		</Row>
