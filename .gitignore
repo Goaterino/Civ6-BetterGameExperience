@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 /proxy/target/
 /startup_proxy/target/
+/target/
 /rollover/captures/
 nuke/runs/
 netcode/runs/

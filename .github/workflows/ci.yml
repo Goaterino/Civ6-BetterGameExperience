@@ -46,6 +46,17 @@ jobs:
       - name: Tests
         run: cd updater && cargo test --release --locked
 
+      # Chargeur et proxy de GameCore macOS (analyses/macos/README.md, étape 2).
+      - name: Dylibs
+        run: |
+          (cd startup_proxy && cargo test --release --locked --no-default-features)
+          bash macos_dylibs.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BetterGameExperience-macOS-dylibs
+          path: target/macos/*.dylib
+
       - name: Bundle
         run: bash updater/macos/bundle.sh
 

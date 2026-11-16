@@ -143,11 +143,56 @@ Reste à lancer l'essai sur un Mac ordinaire, SIP actif (la commande ci-dessus, 
 les outils en ligne de commande de Xcode). La variante `strict` doit alors refuser l'injection, et
 la variante `jeu` tranche.
 
+## Résultats sur un Mac ordinaire (2026-11-16)
+
+MacBook Apple Silicon, macOS 26.6.2, **SIP actif**. Cette fois la variante `strict` refuse
+l'injection (« different Team IDs ») : le système applique les règles de signature d'un Mac de
+joueur, et la variante `jeu` tranche. Elle démarre avec les drapeaux `0x22011301` en arm64
+(`VALID HARD KILL ENFORCEMENT RUNTIME`) et `0x22010301` sous Rosetta (sans `ENFORCEMENT`).
+
+| Essai, variante `jeu` | arm64 | x86_64 (Rosetta) |
+|---|---|---|
+| injection par `DYLD_INSERT_LIBRARIES` | OK | OK |
+| `MAP_JIT` | OK | OK |
+| page RW passée RX | **processus tué** | OK |
+| accroche de l'import `dlopen`, appelée pour `GameCore_XP2.dll` | OK | OK |
+| exe : `mprotect` RW, ou RWX | refusé | refusé |
+| exe : `mach_vm_protect` avec `VM_PROT_COPY` | **processus tué** | OK |
+| exe : copie anonyme posée par `mach_vm_remap` | processus tué | écrit, sans effet |
+| exe : **copie `MAP_JIT` posée par `mach_vm_remap`** | **OK** | écrit, sans effet |
+| bundle : `mprotect` RW puis RX | processus tué | OK |
+| bundle : `mach_vm_protect` avec `VM_PROT_COPY` | processus tué | OK |
+| bundle : copie `MAP_JIT` posée par `mach_vm_remap` | **OK** | écrit, sans effet |
+| signature du processus après les patchs | valide | valide |
+| bout en bout, fonctions de l'exe et du bundle détournées | **oui** | **oui** |
+
+Conclusions, qui remplacent celles tirées de la CI :
+
+- **Le portage des détours est possible**, dans les deux architectures, signature du jeu intacte.
+- **arm64 : seule la copie `MAP_JIT` posée par `mach_vm_remap` passe.** On copie la page de code
+  dans une zone `MAP_JIT`, on y écrit le patch (`pthread_jit_write_protect_np`), puis on pose la
+  copie à l'adresse de la page d'origine. Toute page de code rendue inscriptible autrement tue le
+  processus, et une page RW passée RX aussi : les trampolines vont en `MAP_JIT`.
+- **x86_64 sous Rosetta : `mach_vm_protect` avec `VM_PROT_COPY`** (la copie posée par
+  `mach_vm_remap` y est écrite, mais Rosetta exécute toujours sa traduction de l'ancien code). Un Mac
+  Intel reste à mesurer ; la CI y donnait `mach_vm_protect`.
+- Le patch choisit donc sa méthode par architecture, et vérifie l'effet (relire l'octet ne suffit
+  pas sous Rosetta).
+
 ## Plan
 
-1. Refaire l'essai sur un Mac dont SIP est actif, et en tirer la méthode de détour.
-2. Chargeur : dylib injectée qui accroche `dlopen` et charge le proxy à la place de
-   `GameCore_XP2.dll`. `win.rs`, `patch.rs` et `exe.rs` passent derrière une couche par plateforme.
+1. ~~Refaire l'essai sur un Mac dont SIP est actif~~ : fait, voir plus haut.
+2. ~~Chargeur~~ : **fait** (2026-11-16). `libBGE_Chargeur.dylib` ([startup_proxy/src/macos.rs](../../startup_proxy/src/macos.rs))
+   accroche l'import `dlopen` de l'exe et ouvre `BGD_GameCore_XP2.dylib` ([proxy/src/macos.rs](../../proxy/src/macos.rs))
+   à la place de `GameCore_XP2.dll` ; le proxy charge l'original et relaie ses deux exports par un saut
+   (fonctions nues : registres et pile intacts). Repli sur l'original si le proxy manque ou échoue.
+   Lecture Mach-O commune dans [proxy/src/macho.rs](../../proxy/src/macho.rs), journal dans
+   `~/Library/Application Support/BetterGameExperience/RolloverProxy.log`. Sous Windows, chaque crate
+   garde sa racine dans `lib_windows.rs`, inchangée. Construction : `bash macos_dylibs.sh`
+   (universelles, signées ad hoc). Vérifié dans le vrai jeu (arm64, Civ6 Aspyr 1.4.6, partie
+   Gathering Storm lancée) : chargeur injecté, proxy chargé à la place de GameCore, partie jouable.
+   Aucun correctif encore : les étapes 3 et 4 posent les détours, avec la méthode de patch par
+   architecture mesurée plus haut.
 3. Interface : retrouver `luaL_loadbuffer` et la lecture XML dans l'exe macOS. Tous les correctifs
    Lua, l'onglet d'options et le salon suivent.
 4. Correctifs de GameCore : reporter les `Site` par architecture, les correctifs POL d'abord

@@ -31,3 +31,5 @@ pub const MAC_CHARGEUR: &str = "libBGE_Chargeur.dylib";
 pub const MAC_GAMECORE_PROXY: &str = "BGD_GameCore_XP2.dylib";
 /// Sous-dossier des dylibs dans le dossier de BetterGameExperience.
 pub const MAC_DOSSIER_DYLIBS: &str = "dylib";
+/// GameCore de Gathering Storm dans `Civ6.app/Contents/MacOS` : un bundle Mach-O, malgré l'extension.
+pub const MAC_GAMECORE: &str = "GameCore_XP2.dll";

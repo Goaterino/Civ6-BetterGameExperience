@@ -10,6 +10,11 @@
 //! de rustc, qui associe chaque nom à son relais.
 
 fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+    // Sous macOS, le crate est le chargeur injecté (src/macos.rs) : pas de winmm à relayer.
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
+        return;
+    }
     let liste = std::fs::read_to_string("src/winmm_exports.txt").unwrap();
     let noms: Vec<&str> = liste.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
     let out = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
