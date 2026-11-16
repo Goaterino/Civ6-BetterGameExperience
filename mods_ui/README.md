@@ -177,6 +177,12 @@ le mod fonctionne comme avant.
   aussi, puisque `governmentscreen_spec.lua` inclut la chaîne jusqu'à `GovernmentScreen`.
 - **Garde-fous** : chaque ancre doit être trouvée une fois exactement, sinon le fichier est laissé tel
   quel.
+- **Traces** : chaque chemin qui laisse une carte sans effet écrit une ligne dans `Lua.log`, une
+  seule fois par contexte (`BGD_PolTrace`, préfixe « BetterGameExperience : cartes de politique ») :
+  `BGD_Commun` non chargé, `BGD_ChargerRMA` absent, `EffectContainer` absent, erreur ou résultat
+  non textuel de `CalculateModifierEffect`. Un effet vide rendu sans erreur (carte sans rendement)
+  n'est pas tracé. Ajoutées après le rapport BGE-BFBBC3 (12 novembre 2026) : effets perdus après le
+  rechargement de la partie au tour 29, RMA jamais chargé dans l'écran du gouvernement, aucune trace.
 - **Mieux que le mod** : ne dépend plus de BRS, puisque le proxy apporte RMA lui-même, et corrigé (voir
   [RMA](#rma--les-effets-mal-calculés)).
 - **Test hors jeu** : patch du vrai fichier, `luac -p`, XML bien formé (comme `top_panel_du_jeu`).
