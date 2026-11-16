@@ -165,7 +165,7 @@
 			<Text>Cariche dei costruttori sulla loro bandiera</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="it_IT">
-			<Text>Basato su Better Builder Charges Tracking (wltk). La bandiera di un'unità con cariche (costruttore, ingegnere militare, legione…) le mostra al posto delle promozioni. Sostituisce la mod se è attiva.</Text>
+			<Text>Basato su Better Builder Charges Tracking (wltk). La bandiera di un'unità con cariche (costruttore, ingegnere militare…) le mostra al posto delle promozioni, tranne le unità da combattimento (terrestri, navali o aeree: legione, nau…), che mantengono le loro promozioni. Sostituisce la mod se è attiva.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="it_IT">
 			<Text>Turni rimanenti delle rotte commerciali</Text>

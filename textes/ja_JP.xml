@@ -165,7 +165,7 @@
 			<Text>労働者の残り回数を旗に表示</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="ja_JP">
-			<Text>Better Builder Charges Tracking (wltk) に基づきます。残り回数を持つユニット (労働者、工兵、レギオンなど) の旗に、昇進の代わりにそれを表示します。MOD が有効な場合はそれに置き換わります。</Text>
+			<Text>Better Builder Charges Tracking (wltk) に基づきます。残り回数を持つユニット (労働者、工兵など) の旗に、昇進の代わりにそれを表示します。戦闘ユニット (陸上・海上・航空: レギオン、ナウなど) は昇進の表示のままです。MOD が有効な場合はそれに置き換わります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="ja_JP">
 			<Text>交易路の残りターン</Text>

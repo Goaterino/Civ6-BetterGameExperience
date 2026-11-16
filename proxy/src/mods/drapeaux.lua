@@ -2,10 +2,11 @@
 -- BetterGameDLLs (src/mods/drapeaux.lua), ajouté par le proxy à la fin de UnitFlagManager.lua (celui
 -- du jeu ou celui de BSM), précédé de `local BGD_Charges, BGD_Routes = <bool>, <bool>;`.
 -- Le macaron des promotions du drapeau (Promotion_Flag / UnitNumPromotions) montre :
--- - ui_charges : les charges restantes d'une unité qui en a (bâtisseur, ingénieur militaire, légion
---   romaine, unités de mods), d'après Better Builder Charges Tracking (wltk). Corrigé : le macaron est
---   d'abord masqué comme dans le jeu (drapeaux recyclés), et toute unité dont le type a des charges
---   est couverte. S'il n'en reste plus, les promotions reviennent ;
+-- - ui_charges : les charges restantes d'une unité qui en a (bâtisseur, ingénieur militaire, unités
+--   de mods), d'après Better Builder Charges Tracking (wltk). Corrigé : le macaron est d'abord masqué
+--   comme dans le jeu (drapeaux recyclés), et toute unité dont le type a des charges est couverte,
+--   sauf les unités de combat, terrestres, navales ou aériennes (légion romaine, toa, nau…) : leur
+--   macaron reste celui des promotions. S'il n'en reste plus, les promotions reviennent ;
 -- - ui_routes : sur un négociant du joueur local en route, les tours avant la fin de sa route
 --   commerciale. La durée minimale et le départ viennent du proxy : Civ6Proxy_FinRoute(origine
 --   joueur, ville, destination joueur, ville, négociant joueur, unité) rend (fin, départ), lus dans
@@ -16,10 +17,23 @@
 -- ===========================================================================
 do
 	local BGD_UpdatePromotions_jeu = UnitFlag.UpdatePromotions;
+
+	-- Unités de combat : terrestres (corps à corps, reconnaissance, cavalerie, distance, siège…),
+	-- navales (corps à corps, distance, pillards…) et aériennes. Civils (bâtisseur, prospecteur…) et
+	-- soutien (ingénieur militaire) gardent leurs charges.
+	local BGD_FormationsCombat = {
+		FORMATION_CLASS_LAND_COMBAT = true,
+		FORMATION_CLASS_NAVAL = true,
+		FORMATION_CLASS_AIR = true,
+	};
+
 	local function BGD_Charges_De(unit)
 		if not BGD_Charges then return nil; end
 		local info = GameInfo.Units[unit:GetUnitType()];
 		if info == nil or info.BuildCharges == nil or info.BuildCharges <= 0 then return nil; end
+		-- Une unité de combat (légion, toa, nau…) garde ses promotions : le même macaron montrait
+		-- tantôt les charges, tantôt les promotions (nau et sa promotion gratuite).
+		if BGD_FormationsCombat[info.FormationClass] then return nil; end
 		local n = unit:GetBuildCharges();
 		if n == nil or n <= 0 then return nil; end
 		return n;

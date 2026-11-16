@@ -165,7 +165,7 @@
 			<Text>깃발에 건설자 건설력 표시</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="ko_KR">
-			<Text>Better Builder Charges Tracking(wltk) 기반. 건설력이 있는 유닛(건설자, 공병, 군단병 등)의 깃발에 진급 대신 건설력을 표시합니다. 모드가 켜져 있으면 모드를 대체합니다.</Text>
+			<Text>Better Builder Charges Tracking(wltk) 기반. 건설력이 있는 유닛(건설자, 공병 등)의 깃발에 진급 대신 건설력을 표시합니다. 전투 유닛(지상, 해상, 공중: 군단병, 나우 등)은 진급 표시를 유지합니다. 모드가 켜져 있으면 모드를 대체합니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="ko_KR">
 			<Text>교역로 남은 턴</Text>

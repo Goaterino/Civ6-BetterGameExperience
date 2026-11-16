@@ -165,7 +165,7 @@
 			<Text>Charges des bâtisseurs sur leur drapeau</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="fr_FR">
-			<Text>D'après Better Builder Charges Tracking (wltk). Le drapeau d'une unité qui a des charges (bâtisseur, ingénieur militaire, légion romaine…) les montre à la place des promotions. Remplace le mod s'il est actif.</Text>
+			<Text>D'après Better Builder Charges Tracking (wltk). Le drapeau d'une unité qui a des charges (bâtisseur, ingénieur militaire…) les montre à la place des promotions, sauf les unités de combat (terrestres, navales ou aériennes : légion romaine, nau…), qui gardent leurs promotions. Remplace le mod s'il est actif.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="fr_FR">
 			<Text>Tours restants des routes commerciales</Text>

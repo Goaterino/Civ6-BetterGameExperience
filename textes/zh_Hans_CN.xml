@@ -165,7 +165,7 @@
 			<Text>在旗帜上显示建造者次数</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="zh_Hans_CN">
-			<Text>基于 Better Builder Charges Tracking（wltk）。有可用次数的单位（建造者、军事工程师、罗马军团……）的旗帜上显示次数，代替晋升。如果该模组已启用，则取代它。</Text>
+			<Text>基于 Better Builder Charges Tracking（wltk）。有可用次数的单位（建造者、军事工程师……）的旗帜上显示次数，代替晋升；作战单位（陆地、海上、空中：罗马军团、纳乌战舰……）仍显示晋升。如果该模组已启用，则取代它。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="zh_Hans_CN">
 			<Text>贸易路线剩余回合</Text>

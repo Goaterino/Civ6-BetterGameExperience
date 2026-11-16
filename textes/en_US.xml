@@ -165,7 +165,7 @@
 			<Text>Builder charges on their flag</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="en_US">
-			<Text>Based on Better Builder Charges Tracking (wltk). The flag of a unit with charges (builder, military engineer, Roman legion…) shows them instead of promotions. Replaces the mod if it is active.</Text>
+			<Text>Based on Better Builder Charges Tracking (wltk). The flag of a unit with charges (builder, military engineer…) shows them instead of promotions, except combat units (land, naval or air: Roman legion, nau…), which keep their promotions. Replaces the mod if it is active.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="en_US">
 			<Text>Trade route turns remaining</Text>

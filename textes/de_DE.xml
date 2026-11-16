@@ -165,7 +165,7 @@
 			<Text>Ladungen der Handwerker auf ihrer Flagge</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="de_DE">
-			<Text>Nach Better Builder Charges Tracking (wltk). Die Flagge einer Einheit mit Ladungen (Handwerker, Militärpionier, Legion …) zeigt diese statt der Beförderungen. Ersetzt den Mod, wenn er aktiv ist.</Text>
+			<Text>Nach Better Builder Charges Tracking (wltk). Die Flagge einer Einheit mit Ladungen (Handwerker, Militärpionier …) zeigt diese statt der Beförderungen, außer bei Kampfeinheiten (zu Land, zur See oder in der Luft: Legion, Nau …): Sie behalten ihre Beförderungen. Ersetzt den Mod, wenn er aktiv ist.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="de_DE">
 			<Text>Verbleibende Runden der Handelswege</Text>

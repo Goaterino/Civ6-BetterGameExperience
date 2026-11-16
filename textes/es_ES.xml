@@ -165,7 +165,7 @@
 			<Text>Cargas de los constructores en su bandera</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="es_ES">
-			<Text>Basado en Better Builder Charges Tracking (wltk). La bandera de una unidad con cargas (constructor, ingeniero militar, legión…) las muestra en lugar de los ascensos. Sustituye al mod si está activo.</Text>
+			<Text>Basado en Better Builder Charges Tracking (wltk). La bandera de una unidad con cargas (constructor, ingeniero militar…) las muestra en lugar de los ascensos, salvo las unidades de combate (terrestres, navales o aéreas: legión, nao…), que conservan sus ascensos. Sustituye al mod si está activo.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="es_ES">
 			<Text>Turnos restantes de las rutas comerciales</Text>

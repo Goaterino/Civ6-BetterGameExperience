@@ -165,7 +165,7 @@
 			<Text>Ładunki budowniczych na ich fladze</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="pl_PL">
-			<Text>Na podstawie Better Builder Charges Tracking (wltk). Flaga jednostki z ładunkami (budowniczy, inżynier wojskowy, legion…) pokazuje je zamiast awansów. Zastępuje moda, jeśli jest aktywny.</Text>
+			<Text>Na podstawie Better Builder Charges Tracking (wltk). Flaga jednostki z ładunkami (budowniczy, inżynier wojskowy…) pokazuje je zamiast awansów, z wyjątkiem jednostek bojowych (lądowych, morskich i powietrznych: legion, nau…) – te zachowują awanse. Zastępuje moda, jeśli jest aktywny.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="pl_PL">
 			<Text>Pozostałe tury szlaków handlowych</Text>

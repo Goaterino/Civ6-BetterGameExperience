@@ -165,7 +165,7 @@
 			<Text>Cargas dos construtores na bandeira</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="pt_BR">
-			<Text>Baseado em Better Builder Charges Tracking (wltk). A bandeira de uma unidade com cargas (construtor, engenheiro militar, legião…) as mostra no lugar das promoções. Substitui o mod se ele estiver ativo.</Text>
+			<Text>Baseado em Better Builder Charges Tracking (wltk). A bandeira de uma unidade com cargas (construtor, engenheiro militar…) as mostra no lugar das promoções, exceto as unidades de combate (terrestres, navais ou aéreas: legião, nau…), que mantêm suas promoções. Substitui o mod se ele estiver ativo.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="pt_BR">
 			<Text>Turnos restantes das rotas comerciais</Text>

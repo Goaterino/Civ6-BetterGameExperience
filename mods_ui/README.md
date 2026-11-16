@@ -200,7 +200,11 @@ le mod fonctionne comme avant.
 - **Corrigé :**
   - le macaron est d'abord masqué, comme dans l'originale ;
   - toute unité dont le type a `BuildCharges > 0` est couverte, pas seulement deux types écrits en dur.
-    Pour la légion, les charges sont montrées tant qu'il en reste, puis les promotions.
+  - **Sauf les unités de combat** (`FormationClass` `LAND_COMBAT`, `NAVAL` ou `AIR` : corps à
+    corps, reconnaissance, cavalerie, distance, siège, navales…) : légion romaine, toa, nau…
+    gardent le macaron des promotions. La nau, avec ses charges et sa promotion gratuite, faisait
+    alterner les deux nombres sur le même macaron. Les civils (bâtisseur, prospecteur…) et le
+    soutien (ingénieur militaire, `FORMATION_CLASS_SUPPORT`) montrent toujours leurs charges.
 - **Unités étrangères** : leurs charges sont montrées, comme le mod.
 - **Couverture** : avec BBG et BBG Expanded, sept types ont des charges (bâtisseur, ingénieur militaire,
   légion romaine, toa maori, nau portugaise, jahazi, traîneau de Thulé).
