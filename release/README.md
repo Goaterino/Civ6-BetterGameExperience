@@ -12,6 +12,7 @@ jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui
 | `BetterGameExperience_V<version>.exe` | l'installeur ([updater/](../updater/README.md)), hors manifeste : c'est lui qui le lit |
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |
+| `manifest-macos.json`, `.sig` | macOS, plus tard : les dylibs `libBGE_Chargeur.dylib` et `BGD_GameCore_XP2.dylib` (`build --platform macos`), lues par le lanceur macOS ([updater/README.md](../updater/README.md#macos)) |
 
 Les scripts Lua et XML sont compilés dans les DLL (`include_str!`) : aucun autre fichier à installer.
 Les images et sons des signaux d'équipe (`ping_assets/`) sont embarqués dans `winmm.dll`

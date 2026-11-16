@@ -20,3 +20,14 @@ pub const DEMARRAGE: &str = "winmm.dll";
 /// Jusqu'à la v0.3.0 : chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
 /// L'installeur remet ces originaux en place.
 pub const ANCIENS: [(&str, &str); 2] = [("DLC/Expansion2/Binaries/Win64", GAMECORE), ("Base/Binaries/Win64Steam", "DatabaseDLL_FinalRelease.dll")];
+
+/// macOS (port en cours, voir analyses/macos/README.md). Rien n'est posé dans `Civ6.app`, dont la
+/// signature scelle le contenu : les dylibs vont dans le dossier de BetterGameExperience
+/// (`~/Library/Application Support/BetterGameExperience/dylib`), et le lanceur les injecte au
+/// lancement du jeu par `DYLD_INSERT_LIBRARIES`, que les droits du jeu autorisent.
+/// Chargeur injecté, l'équivalent de `winmm.dll` : il accroche le `dlopen` de GameCore.
+pub const MAC_CHARGEUR: &str = "libBGE_Chargeur.dylib";
+/// Proxy de GameCore, chargé par le chargeur à la place de `GameCore_XP2.dll`.
+pub const MAC_GAMECORE_PROXY: &str = "BGD_GameCore_XP2.dylib";
+/// Sous-dossier des dylibs dans le dossier de BetterGameExperience.
+pub const MAC_DOSSIER_DYLIBS: &str = "dylib";

@@ -7,6 +7,7 @@ téléchargé. La clé privée vit hors du dépôt et dans le secret GitHub BGD_
 
     python release/manifest.py keygen --out <chemin hors du dépôt>
     python release/manifest.py build --version 0.2.0 --out dist/manifest.json dist/
+    python release/manifest.py build --platform macos --version 0.2.0 --out dist/manifest-macos.json dist/
     python release/manifest.py sign dist/manifest.json          (clé dans $BGD_SIGNING_KEY)
     python release/manifest.py verify dist/manifest.json
 """
@@ -29,6 +30,14 @@ PUBLIC_KEY = Path(__file__).resolve().parent / "public_key.txt"
 FILES = {
     "BGD_GameCore_XP2.dll": "DLC/Expansion2/Binaries/Win64",
     "winmm.dll": "Base/Binaries/Win64Steam",
+}
+
+# macOS (manifest-macos.json) : les dylibs ne vont pas dans le jeu, mais dans le dossier de
+# BetterGameExperience (~/Library/Application Support/BetterGameExperience/dylib), voir
+# proxy/src/noms.rs. Un manifeste à part : les installeurs Windows refusent tout autre fichier.
+FILES_MACOS = {
+    "BGD_GameCore_XP2.dylib": "dylib",
+    "libBGE_Chargeur.dylib": "dylib",
 }
 
 
@@ -58,7 +67,7 @@ def build(args):
         sys.exit(f"Version invalide : {args.version} (attendu X.Y.Z)")
     dist = Path(args.dist)
     files = []
-    for name, dest in FILES.items():
+    for name, dest in (FILES_MACOS if args.platform == "macos" else FILES).items():
         data = (dist / name).read_bytes()
         files.append({"name": name, "dest": dest, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()})
     manifest = {
@@ -103,6 +112,7 @@ def main():
     p = sub.add_parser("build")
     p.add_argument("--version", required=True)
     p.add_argument("--out", required=True)
+    p.add_argument("--platform", choices=["windows", "macos"], default="windows")
     p.add_argument("dist")
     p.set_defaults(func=build)
     p = sub.add_parser("sign")

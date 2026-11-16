@@ -399,6 +399,146 @@ pub const LOOKING_FOR_THE_LATEST_VERSION: Texts = [
     "正在查找最新版本…",
 ];
 
+pub const MAC_CONFIGURE_STEAM: Texts = [
+    "Configure Steam\nAdds the BetterGameExperience launch option to Civilization VI. Steam restarts if it is open.",
+    "Configurer Steam\nAjoute l'option de lancement de BetterGameExperience à Civilization VI. Steam redémarre s'il est ouvert.",
+    "Steam einrichten\nFügt die Startoption von BetterGameExperience zu Civilization VI hinzu. Steam startet neu, falls es geöffnet ist.",
+    "Configurar Steam\nAñade la opción de lanzamiento de BetterGameExperience a Civilization VI. Steam se reinicia si está abierto.",
+    "Configura Steam\nAggiunge l'opzione di avvio di BetterGameExperience a Civilization VI. Steam si riavvia se è aperto.",
+    "Steam を設定\nCivilization VI に BetterGameExperience の起動オプションを追加します。Steam が開いている場合は再起動します。",
+    "Steam 설정\nCivilization VI에 BetterGameExperience 실행 옵션을 추가합니다. Steam이 열려 있으면 다시 시작합니다.",
+    "Skonfiguruj Steam\nDodaje opcję uruchamiania BetterGameExperience do Civilization VI. Steam uruchomi się ponownie, jeśli jest otwarty.",
+    "Configurar a Steam\nAdiciona a opção de inicialização do BetterGameExperience ao Civilization VI. A Steam reinicia se estiver aberta.",
+    "Настроить Steam\nДобавляет параметр запуска BetterGameExperience к Civilization VI. Если Steam открыт, он перезапустится.",
+    "配置 Steam\n为 Civilization VI 添加 BetterGameExperience 的启动选项。如果 Steam 已打开，它会重新启动。",
+];
+
+pub const MAC_CONFIGURING_STEAM: Texts = [
+    "Configuring Steam",
+    "Configuration de Steam",
+    "Steam wird eingerichtet",
+    "Configurando Steam",
+    "Configurazione di Steam",
+    "Steam を設定しています",
+    "Steam 설정 중",
+    "Konfigurowanie Steam",
+    "Configurando a Steam",
+    "Настройка Steam",
+    "正在配置 Steam",
+];
+
+pub const MAC_LAUNCH_OPTION_IN_PLACE: Texts = [
+    "\nSteam launch option: in place",
+    "\nOption de lancement Steam : en place",
+    "\nSteam-Startoption: eingerichtet",
+    "\nOpción de lanzamiento de Steam: configurada",
+    "\nOpzione di avvio di Steam: impostata",
+    "\nSteam の起動オプション：設定済み",
+    "\nSteam 실행 옵션: 설정됨",
+    "\nOpcja uruchamiania Steam: ustawiona",
+    "\nOpção de inicialização da Steam: configurada",
+    "\nПараметр запуска Steam: задан",
+    "\nSteam 启动选项：已设置",
+];
+
+pub const MAC_LAUNCH_OPTION_MISSING: Texts = [
+    "\n\nOn macOS, BetterGameExperience is only active when Steam starts the game through this launcher: Configure Steam adds its launch option to Civilization VI.",
+    "\n\nSous macOS, BetterGameExperience n'est actif que si Steam lance le jeu par ce lanceur : Configurer Steam ajoute son option de lancement à Civilization VI.",
+    "\n\nUnter macOS ist BetterGameExperience nur aktiv, wenn Steam das Spiel über diesen Launcher startet: Steam einrichten fügt seine Startoption zu Civilization VI hinzu.",
+    "\n\nEn macOS, BetterGameExperience solo está activo si Steam inicia el juego con este lanzador: Configurar Steam añade su opción de lanzamiento a Civilization VI.",
+    "\n\nSu macOS, BetterGameExperience è attivo solo se Steam avvia il gioco tramite questo launcher: Configura Steam aggiunge la sua opzione di avvio a Civilization VI.",
+    "\n\nmacOS では、Steam がこのランチャー経由でゲームを起動したときだけ BetterGameExperience が有効になります。「Steam を設定」で Civilization VI に起動オプションを追加します。",
+    "\n\nmacOS에서는 Steam이 이 런처를 통해 게임을 실행할 때만 BetterGameExperience가 작동합니다. Steam 설정을 누르면 Civilization VI에 실행 옵션이 추가됩니다.",
+    "\n\nW macOS BetterGameExperience działa tylko wtedy, gdy Steam uruchamia grę przez ten launcher: Skonfiguruj Steam dodaje jego opcję uruchamiania do Civilization VI.",
+    "\n\nNo macOS, o BetterGameExperience só fica ativo quando a Steam inicia o jogo por este iniciador: Configurar a Steam adiciona a opção de inicialização dele ao Civilization VI.",
+    "\n\nВ macOS BetterGameExperience работает, только если Steam запускает игру через этот лаунчер: «Настроить Steam» добавит его параметр запуска к Civilization VI.",
+    "\n\n在 macOS 上，只有当 Steam 通过此启动器启动游戏时，BetterGameExperience 才会生效：“配置 Steam”会为 Civilization VI 添加它的启动选项。",
+];
+
+pub const MAC_PASTE_IT_IN_STEAM_X: Texts = [
+    "In Steam, right-click Civilization VI > Properties > General, and paste it in Launch options:\n\n{1}\n\nThen start the game from Steam as usual.",
+    "Dans Steam, clic droit sur Civilization VI > Propriétés > Général, puis colle-la dans Options de lancement :\n\n{1}\n\nLance ensuite le jeu depuis Steam, comme d'habitude.",
+    "Klicke in Steam mit der rechten Maustaste auf Civilization VI > Eigenschaften > Allgemein und füge sie unter Startoptionen ein:\n\n{1}\n\nStarte das Spiel dann wie gewohnt über Steam.",
+    "En Steam, haz clic derecho en Civilization VI > Propiedades > General y pégala en Opciones de lanzamiento:\n\n{1}\n\nLuego inicia el juego desde Steam, como siempre.",
+    "In Steam, fai clic destro su Civilization VI > Proprietà > Generali e incollala in Opzioni di avvio:\n\n{1}\n\nPoi avvia il gioco da Steam, come al solito.",
+    "Steam で Civilization VI を右クリック > プロパティ > 一般 を開き、起動オプションに貼り付けてください：\n\n{1}\n\nその後、いつもどおり Steam からゲームを起動してください。",
+    "Steam에서 Civilization VI를 마우스 오른쪽 버튼으로 클릭 > 속성 > 일반으로 이동해 실행 옵션에 붙여 넣으세요:\n\n{1}\n\n그런 다음 평소처럼 Steam에서 게임을 실행하세요.",
+    "W Steam kliknij prawym przyciskiem Civilization VI > Właściwości > Ogólne i wklej ją w Opcjach uruchamiania:\n\n{1}\n\nNastępnie uruchom grę ze Steam jak zwykle.",
+    "Na Steam, clique com o botão direito em Civilization VI > Propriedades > Geral e cole-a em Opções de inicialização:\n\n{1}\n\nDepois, inicie o jogo pela Steam, como de costume.",
+    "В Steam щёлкните правой кнопкой по Civilization VI > Свойства > Общие и вставьте его в «Параметры запуска»:\n\n{1}\n\nЗатем запускайте игру из Steam как обычно.",
+    "在 Steam 中右键点击 Civilization VI > 属性 > 通用，然后粘贴到启动选项中：\n\n{1}\n\n之后像往常一样从 Steam 启动游戏。",
+];
+
+pub const MAC_RESTART_STEAM: Texts = [
+    "Restart Steam\nCloses Steam, adds the launch option, then reopens Steam.",
+    "Redémarrer Steam\nFerme Steam, ajoute l'option de lancement, puis rouvre Steam.",
+    "Steam neu starten\nSchließt Steam, fügt die Startoption hinzu und öffnet Steam wieder.",
+    "Reiniciar Steam\nCierra Steam, añade la opción de lanzamiento y vuelve a abrir Steam.",
+    "Riavvia Steam\nChiude Steam, aggiunge l'opzione di avvio, poi riapre Steam.",
+    "Steam を再起動\nSteam を終了し、起動オプションを追加してから、Steam を再び開きます。",
+    "Steam 다시 시작\nSteam을 종료하고 실행 옵션을 추가한 뒤 Steam을 다시 엽니다.",
+    "Uruchom ponownie Steam\nZamyka Steam, dodaje opcję uruchamiania, a potem ponownie otwiera Steam.",
+    "Reiniciar a Steam\nFecha a Steam, adiciona a opção de inicialização e abre a Steam de novo.",
+    "Перезапустить Steam\nЗакрывает Steam, добавляет параметр запуска и снова открывает Steam.",
+    "重新启动 Steam\n关闭 Steam，添加启动选项，然后重新打开 Steam。",
+];
+
+pub const MAC_STEAM_DID_NOT_CLOSE: Texts = [
+    "Steam did not close.",
+    "Steam ne s'est pas fermé.",
+    "Steam wurde nicht geschlossen.",
+    "Steam no se cerró.",
+    "Steam non si è chiuso.",
+    "Steam が終了しませんでした。",
+    "Steam이 종료되지 않았습니다.",
+    "Steam się nie zamknął.",
+    "A Steam não fechou.",
+    "Steam не закрылся.",
+    "Steam 没有关闭。",
+];
+
+pub const MAC_STEAM_MUST_RESTART: Texts = [
+    "Steam needs to restart",
+    "Steam doit redémarrer",
+    "Steam muss neu starten",
+    "Steam debe reiniciarse",
+    "Steam deve riavviarsi",
+    "Steam の再起動が必要です",
+    "Steam을 다시 시작해야 합니다",
+    "Steam musi się uruchomić ponownie",
+    "A Steam precisa reiniciar",
+    "Steam нужно перезапустить",
+    "Steam 需要重新启动",
+];
+
+pub const MAC_STEAM_NOT_CONFIGURED: Texts = [
+    "Steam could not be configured: launch option copied",
+    "Steam n'a pas pu être configuré : option de lancement copiée",
+    "Steam konnte nicht eingerichtet werden: Startoption kopiert",
+    "No se pudo configurar Steam: opción de lanzamiento copiada",
+    "Impossibile configurare Steam: opzione di avvio copiata",
+    "Steam を設定できませんでした。起動オプションをコピーしました",
+    "Steam을 설정하지 못했습니다. 실행 옵션을 복사했습니다",
+    "Nie udało się skonfigurować Steam: skopiowano opcję uruchamiania",
+    "Não foi possível configurar a Steam: opção de inicialização copiada",
+    "Не удалось настроить Steam: параметр запуска скопирован",
+    "无法配置 Steam：已复制启动选项",
+];
+
+pub const MAC_STEAM_RESTART_TEXT: Texts = [
+    "For Civilization VI to start with BetterGameExperience, the launcher adds its launch option in Steam. Steam only reads its settings when it starts: it will close, then reopen.",
+    "Pour que Civilization VI se lance avec BetterGameExperience, le lanceur ajoute son option de lancement dans Steam. Steam ne relit ses réglages qu'au démarrage : il va se fermer, puis se rouvrir.",
+    "Damit Civilization VI mit BetterGameExperience startet, fügt der Launcher seine Startoption in Steam hinzu. Steam liest seine Einstellungen nur beim Start: Es wird geschlossen und dann wieder geöffnet.",
+    "Para que Civilization VI se inicie con BetterGameExperience, el lanzador añade su opción de lanzamiento en Steam. Steam solo lee su configuración al iniciarse: se cerrará y luego se volverá a abrir.",
+    "Perché Civilization VI si avvii con BetterGameExperience, il launcher aggiunge la sua opzione di avvio in Steam. Steam legge le impostazioni solo all'avvio: si chiuderà e poi si riaprirà.",
+    "Civilization VI を BetterGameExperience 付きで起動するため、ランチャーが Steam に起動オプションを追加します。Steam は起動時にしか設定を読み込まないため、いったん終了してから再び開きます。",
+    "Civilization VI가 BetterGameExperience와 함께 실행되도록 런처가 Steam에 실행 옵션을 추가합니다. Steam은 시작할 때만 설정을 읽으므로 종료한 뒤 다시 열립니다.",
+    "Aby Civilization VI uruchamiało się z BetterGameExperience, launcher dodaje swoją opcję uruchamiania w Steam. Steam wczytuje ustawienia tylko przy starcie: zamknie się, a potem otworzy ponownie.",
+    "Para o Civilization VI iniciar com o BetterGameExperience, o iniciador adiciona a opção de inicialização dele na Steam. A Steam só lê as configurações ao iniciar: ela vai fechar e depois abrir de novo.",
+    "Чтобы Civilization VI запускалась с BetterGameExperience, лаунчер добавляет свой параметр запуска в Steam. Steam читает настройки только при запуске: он закроется, а затем откроется снова.",
+    "为了让 Civilization VI 随 BetterGameExperience 一起启动，启动器会在 Steam 中添加它的启动选项。Steam 只在启动时读取设置：它会先关闭，然后重新打开。",
+];
+
 pub const NOT_INSTALLED: Texts = [
     "not installed",
     "pas installé",

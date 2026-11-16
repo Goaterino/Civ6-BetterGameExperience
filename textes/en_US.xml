@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="en_US">
 			<Text>administrator rights denied</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="en_US">
+			<Text>\nSteam launch option: in place</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="en_US">
+			<Text>\n\nOn macOS, BetterGameExperience is only active when Steam starts the game through this launcher: Configure Steam adds its launch option to Civilization VI.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="en_US">
+			<Text>Configure Steam\nAdds the BetterGameExperience launch option to Civilization VI. Steam restarts if it is open.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="en_US">
+			<Text>Steam needs to restart</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="en_US">
+			<Text>For Civilization VI to start with BetterGameExperience, the launcher adds its launch option in Steam. Steam only reads its settings when it starts: it will close, then reopen.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="en_US">
+			<Text>Restart Steam\nCloses Steam, adds the launch option, then reopens Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="en_US">
+			<Text>Configuring Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="en_US">
+			<Text>Steam did not close.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="en_US">
+			<Text>Steam could not be configured: launch option copied</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="en_US">
+			<Text>In Steam, right-click Civilization VI &gt; Properties &gt; General, and paste it in Launch options:\n\n{1}\n\nThen start the game from Steam as usual.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="en_US">
 			<Text>Report a bug (BGE)</Text>
 		</Row>

@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="pl_PL">
 			<Text>odmowa uprawnień administratora</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="pl_PL">
+			<Text>\nOpcja uruchamiania Steam: ustawiona</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="pl_PL">
+			<Text>\n\nW macOS BetterGameExperience działa tylko wtedy, gdy Steam uruchamia grę przez ten launcher: Skonfiguruj Steam dodaje jego opcję uruchamiania do Civilization VI.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="pl_PL">
+			<Text>Skonfiguruj Steam\nDodaje opcję uruchamiania BetterGameExperience do Civilization VI. Steam uruchomi się ponownie, jeśli jest otwarty.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="pl_PL">
+			<Text>Steam musi się uruchomić ponownie</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="pl_PL">
+			<Text>Aby Civilization VI uruchamiało się z BetterGameExperience, launcher dodaje swoją opcję uruchamiania w Steam. Steam wczytuje ustawienia tylko przy starcie: zamknie się, a potem otworzy ponownie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="pl_PL">
+			<Text>Uruchom ponownie Steam\nZamyka Steam, dodaje opcję uruchamiania, a potem ponownie otwiera Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="pl_PL">
+			<Text>Konfigurowanie Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="pl_PL">
+			<Text>Steam się nie zamknął.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="pl_PL">
+			<Text>Nie udało się skonfigurować Steam: skopiowano opcję uruchamiania</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="pl_PL">
+			<Text>W Steam kliknij prawym przyciskiem Civilization VI &gt; Właściwości &gt; Ogólne i wklej ją w Opcjach uruchamiania:\n\n{1}\n\nNastępnie uruchom grę ze Steam jak zwykle.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="pl_PL">
 			<Text>Zgłoś błąd (BGE)</Text>
 		</Row>

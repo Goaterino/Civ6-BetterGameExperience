@@ -5,16 +5,20 @@
 //!
 //! Jusqu'à la v0.3.0, chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
 //! L'installation et la désinstallation remettent ces originaux en place.
+//!
+//! Sous macOS, rien n'est posé dans le jeu : `Civ6.app` est scellé par sa signature. Les deux dylibs
+//! vont dans `dylib/` du dossier de BetterGameExperience (`root`), sans droits d'administrateur, et
+//! le lanceur les injecte au lancement du jeu (main.rs, `launch`). Les fonctions de ce module
+//! prennent la racine de pose : le dossier du jeu sous Windows, celui de BetterGameExperience sous
+//! macOS.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::game;
 use crate::lang::f;
 use crate::textes as tx;
 use crate::noms;
 use crate::release::{self, Manifest};
-use crate::win;
 
 pub struct Target {
     pub name: &'static str,
@@ -23,10 +27,42 @@ pub struct Target {
     marker: &'static [u8],
 }
 
+#[cfg(windows)]
 pub const TARGETS: [Target; 2] = [
     Target { name: noms::GAMECORE_PROXY, dest: "DLC/Expansion2/Binaries/Win64", marker: b"RolloverProxyStatus" },
     Target { name: noms::DEMARRAGE, dest: "Base/Binaries/Win64Steam", marker: b"StartupProxyStatus" },
 ];
+
+/// macOS : les mêmes marques, les dylibs étant compilées depuis les mêmes crates.
+#[cfg(target_os = "macos")]
+pub const TARGETS: [Target; 2] = [
+    Target { name: noms::MAC_GAMECORE_PROXY, dest: noms::MAC_DOSSIER_DYLIBS, marker: b"RolloverProxyStatus" },
+    Target { name: noms::MAC_CHARGEUR, dest: noms::MAC_DOSSIER_DYLIBS, marker: b"StartupProxyStatus" },
+];
+
+/// Racine de pose : le dossier du jeu sous Windows.
+#[cfg(windows)]
+pub fn root(game: &Path) -> PathBuf {
+    game.to_path_buf()
+}
+
+/// Racine de pose : le dossier de BetterGameExperience sous macOS (le jeu n'est pas touché).
+#[cfg(target_os = "macos")]
+pub fn root(_game: &Path) -> PathBuf {
+    release::data_dir().unwrap_or_else(release::work_dir)
+}
+
+/// Chemin de la dylib `name` posée sous `root` (macOS : injection au lancement).
+#[cfg(target_os = "macos")]
+pub fn target_path(root: &Path, name: &str) -> Option<PathBuf> {
+    TARGETS.iter().find(|t| t.name == name).map(|t| t.path(root))
+}
+
+/// Anciennes installations (v0.3.0 et avant) : Windows seulement.
+#[cfg(windows)]
+const ANCIENS: [(&str, &str); 2] = noms::ANCIENS;
+#[cfg(target_os = "macos")]
+const ANCIENS: [(&str, &str); 0] = [];
 
 /// Images et sons des signaux d'équipe : posés au lancement du jeu par le proxy de démarrage
 /// (startup_proxy/src/medias.rs), qui les embarque, et non par l'installeur : un installeur déjà
@@ -93,7 +129,7 @@ impl Target {
 
 /// Ancienne installation : (original, `_orig`) de chaque fichier concerné.
 fn old_files(game: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + '_ {
-    noms::ANCIENS.iter().map(move |(dest, name)| {
+    ANCIENS.iter().map(move |(dest, name)| {
         let dll = game.join(dest).join(name);
         let orig = dll.with_file_name(name.replace(".dll", "_orig.dll"));
         (dll, orig)
@@ -116,7 +152,7 @@ fn is_old_proxy(dll: &Path) -> Result<bool, String> {
 pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
     let mut out: Vec<(&'static str, State)> =
         TARGETS.iter().map(|t| (t.name, t.state(game, m).unwrap_or(State::Foreign))).collect();
-    for ((_, name), (dll, _)) in noms::ANCIENS.iter().zip(old_files(game)) {
+    for ((_, name), (dll, _)) in ANCIENS.iter().zip(old_files(game)) {
         if is_old_proxy(&dll).unwrap_or(false) {
             out.push((name, State::Old));
         }
@@ -126,6 +162,12 @@ pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
 
 /// Installe la release téléchargée dans `work`, ou retire les proxys ; en administrateur si le
 /// dossier du jeu n'est pas modifiable (Program Files).
+#[cfg(target_os = "macos")]
+pub fn run(action: Action, root: &Path, work: &Path) -> Result<(), String> {
+    apply(action, root, work)
+}
+
+#[cfg(windows)]
 pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     if writable(game) {
         return apply(action, game, work);
@@ -137,17 +179,18 @@ pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     };
     let params = format!("--apply {arg} \"{}\" \"{}\"", work.display(), game.display());
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    match win::run_elevated(&exe, &params)? {
+    match crate::sys::run_elevated(&exe, &params)? {
         0 => Ok(()),
         code => Err(fs::read_to_string(work.join(ERROR_FILE)).unwrap_or(f(tx::FAILURE_CODE_X, &[&code]))),
     }
 }
 
-/// Point d'entrée du processus administrateur : son erreur va dans `work`. Ses arguments viennent
-/// du processus utilisateur : le dossier du jeu est revérifié avant toute écriture.
+/// Point d'entrée du processus administrateur (Windows) : son erreur va dans `work`. Ses arguments
+/// viennent du processus utilisateur : le dossier du jeu est revérifié avant toute écriture.
+#[cfg_attr(not(windows), allow(dead_code))]
 pub fn apply_elevated(action: &str, work: &Path, game: &Path) -> i32 {
     let action = if action == "uninstall" { Action::Uninstall } else { Action::Install };
-    let result = if game::is_game_dir(game) {
+    let result = if crate::game::is_game_dir(game) {
         apply(action, game, work)
     } else {
         Err(f(tx::X_IS_NOT_THE_CIVILIZATION_VI, &[&game.display()]))
@@ -173,6 +216,7 @@ fn apply(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     }
 }
 
+#[cfg(windows)]
 fn writable(game: &Path) -> bool {
     TARGETS.iter().all(|t| {
         let probe = game.join(t.dest).join(".bgd_test");
@@ -318,6 +362,12 @@ mod tests {
         fs::read(dir.join(path)).ok()
     }
 
+    /// Chemin de la cible `i` sous `dir`, relatif.
+    fn cible(i: usize) -> String {
+        format!("{}/{}", TARGETS[i].dest, TARGETS[i].name)
+    }
+
+    #[cfg(windows)]
     #[test]
     fn ancienne_installation_remise() {
         let dir = game(
@@ -339,6 +389,7 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
     }
 
+    #[cfg(windows)]
     #[test]
     fn ancien_proxy_sans_orig() {
         let dir = game("sans_orig", &[("Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease.dll", b"proxy StartupProxyStatus")]);
@@ -348,10 +399,10 @@ mod tests {
 
     #[test]
     fn winmm_d_un_autre_mod() {
-        let dir = game("autre", &[("Base/Binaries/Win64Steam/winmm.dll", b"chargeur ASI")]);
+        let dir = game("autre", &[(&cible(1), b"chargeur ASI")]);
         let st = status(&dir, None);
-        assert!(st.iter().any(|(n, s)| *n == noms::DEMARRAGE && *s == State::Foreign));
-        assert!(st.iter().any(|(n, s)| *n == noms::GAMECORE_PROXY && *s == State::Absent));
+        assert!(st.iter().any(|(n, s)| *n == TARGETS[1].name && *s == State::Foreign));
+        assert!(st.iter().any(|(n, s)| *n == TARGETS[0].name && *s == State::Absent));
         assert!(check_foreign(&dir).is_err());
         fs::remove_dir_all(&dir).unwrap();
     }
@@ -372,9 +423,10 @@ mod tests {
         // Le dossier de travail n'est pas relu : seuls les octets donnés sont écrits.
         let (m, data) = release_de([b"proxy RolloverProxyStatus", b"demarrage StartupProxyStatus"]);
         install(&dir, &m, &data).unwrap();
-        assert_eq!(read(&dir, "DLC/Expansion2/Binaries/Win64/BGD_GameCore_XP2.dll").unwrap(), data[0]);
-        assert_eq!(read(&dir, "Base/Binaries/Win64Steam/winmm.dll").unwrap(), data[1]);
-        assert!(read(&dir, "DLC/Expansion2/Binaries/Win64/BGD_GameCore_XP2.dll.new").is_none());
+        assert_eq!(read(&dir, &cible(0)).unwrap(), data[0]);
+        assert_eq!(read(&dir, &cible(1)).unwrap(), data[1]);
+        let restes: Vec<_> = fs::read_dir(dir.join(TARGETS[0].dest)).unwrap().flatten().filter(|e| e.file_name().to_string_lossy().contains(".bge-new-")).collect();
+        assert!(restes.is_empty(), "fichiers temporaires restés");
         assert!(status(&dir, Some(&m)).iter().all(|(_, s)| *s == State::UpToDate));
         // Une release qui ne pose pas exactement nos cibles est refusée.
         assert!(install(&dir, &m, &data[..1]).is_err());
@@ -421,7 +473,7 @@ mod tests {
     fn desinstallation() {
         let dir = game(
             "desinstallation",
-            &[("Base/Binaries/Win64Steam/winmm.dll", b"StartupProxyStatus"), ("DLC/Expansion2/Binaries/Win64/BGD_GameCore_XP2.dll", b"RolloverProxyStatus")],
+            &[(&cible(1), b"StartupProxyStatus"), (&cible(0), b"RolloverProxyStatus")],
         );
         uninstall(&dir).unwrap();
         assert!(status(&dir, None).iter().all(|(_, s)| *s == State::Absent));

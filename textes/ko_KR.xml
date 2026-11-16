@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ko_KR">
 			<Text>관리자 권한이 거부되었습니다</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="ko_KR">
+			<Text>\nSteam 실행 옵션: 설정됨</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="ko_KR">
+			<Text>\n\nmacOS에서는 Steam이 이 런처를 통해 게임을 실행할 때만 BetterGameExperience가 작동합니다. Steam 설정을 누르면 Civilization VI에 실행 옵션이 추가됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="ko_KR">
+			<Text>Steam 설정\nCivilization VI에 BetterGameExperience 실행 옵션을 추가합니다. Steam이 열려 있으면 다시 시작합니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="ko_KR">
+			<Text>Steam을 다시 시작해야 합니다</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="ko_KR">
+			<Text>Civilization VI가 BetterGameExperience와 함께 실행되도록 런처가 Steam에 실행 옵션을 추가합니다. Steam은 시작할 때만 설정을 읽으므로 종료한 뒤 다시 열립니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="ko_KR">
+			<Text>Steam 다시 시작\nSteam을 종료하고 실행 옵션을 추가한 뒤 Steam을 다시 엽니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="ko_KR">
+			<Text>Steam 설정 중</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="ko_KR">
+			<Text>Steam이 종료되지 않았습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="ko_KR">
+			<Text>Steam을 설정하지 못했습니다. 실행 옵션을 복사했습니다</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="ko_KR">
+			<Text>Steam에서 Civilization VI를 마우스 오른쪽 버튼으로 클릭 &gt; 속성 &gt; 일반으로 이동해 실행 옵션에 붙여 넣으세요:\n\n{1}\n\n그런 다음 평소처럼 Steam에서 게임을 실행하세요.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ko_KR">
 			<Text>버그 신고 (BGE)</Text>
 		</Row>

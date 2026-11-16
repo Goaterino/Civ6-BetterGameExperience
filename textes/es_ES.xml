@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="es_ES">
 			<Text>permisos de administrador denegados</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="es_ES">
+			<Text>\nOpción de lanzamiento de Steam: configurada</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="es_ES">
+			<Text>\n\nEn macOS, BetterGameExperience solo está activo si Steam inicia el juego con este lanzador: Configurar Steam añade su opción de lanzamiento a Civilization VI.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="es_ES">
+			<Text>Configurar Steam\nAñade la opción de lanzamiento de BetterGameExperience a Civilization VI. Steam se reinicia si está abierto.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="es_ES">
+			<Text>Steam debe reiniciarse</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="es_ES">
+			<Text>Para que Civilization VI se inicie con BetterGameExperience, el lanzador añade su opción de lanzamiento en Steam. Steam solo lee su configuración al iniciarse: se cerrará y luego se volverá a abrir.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="es_ES">
+			<Text>Reiniciar Steam\nCierra Steam, añade la opción de lanzamiento y vuelve a abrir Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="es_ES">
+			<Text>Configurando Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="es_ES">
+			<Text>Steam no se cerró.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="es_ES">
+			<Text>No se pudo configurar Steam: opción de lanzamiento copiada</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="es_ES">
+			<Text>En Steam, haz clic derecho en Civilization VI &gt; Propiedades &gt; General y pégala en Opciones de lanzamiento:\n\n{1}\n\nLuego inicia el juego desde Steam, como siempre.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="es_ES">
 			<Text>Informar de un error (BGE)</Text>
 		</Row>

@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="fr_FR">
 			<Text>droits d'administrateur refusés</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="fr_FR">
+			<Text>\nOption de lancement Steam : en place</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="fr_FR">
+			<Text>\n\nSous macOS, BetterGameExperience n'est actif que si Steam lance le jeu par ce lanceur : Configurer Steam ajoute son option de lancement à Civilization VI.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="fr_FR">
+			<Text>Configurer Steam\nAjoute l'option de lancement de BetterGameExperience à Civilization VI. Steam redémarre s'il est ouvert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="fr_FR">
+			<Text>Steam doit redémarrer</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="fr_FR">
+			<Text>Pour que Civilization VI se lance avec BetterGameExperience, le lanceur ajoute son option de lancement dans Steam. Steam ne relit ses réglages qu'au démarrage : il va se fermer, puis se rouvrir.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="fr_FR">
+			<Text>Redémarrer Steam\nFerme Steam, ajoute l'option de lancement, puis rouvre Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="fr_FR">
+			<Text>Configuration de Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="fr_FR">
+			<Text>Steam ne s'est pas fermé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="fr_FR">
+			<Text>Steam n'a pas pu être configuré : option de lancement copiée</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="fr_FR">
+			<Text>Dans Steam, clic droit sur Civilization VI &gt; Propriétés &gt; Général, puis colle-la dans Options de lancement :\n\n{1}\n\nLance ensuite le jeu depuis Steam, comme d'habitude.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="fr_FR">
 			<Text>Signaler un bug (BGE)</Text>
 		</Row>

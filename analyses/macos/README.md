@@ -154,6 +154,15 @@ la variante `jeu` tranche.
    (ils conditionnent le multijoueur entre Mac et Windows).
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.
+   **Le lanceur est fait** ([updater/README.md](../../updater/README.md#macos)) : il pose les deux
+   dylibs dans `~/Library/Application Support/BetterGameExperience/dylib`, sans toucher `Civ6.app`, et
+   lance le jeu avec `DYLD_INSERT_LIBRARIES` par l'option de lancement Steam. Le chargeur à écrire
+   (étape 2) s'appelle `libBGE_Chargeur.dylib`, trouve le proxy de GameCore dans `BGE_DYLIBS`, et doit
+   ne rien faire dans `Civ6_Exe`, le lanceur d'Aspyr, qui reçoit aussi la variable.
+
+Relevé sur un Mac M-series (macOS 26.6, build Steam 15296837, Civ6 Aspyr 1.4.6) : les dylibs du jeu
+sont dans `Civ6.app/Contents/MacOS`, pas dans `Frameworks` ; `SteamDefaultPlayExecutable` est
+`Contents/MacOS/Civ6_Exe_Child`.
 
 Reste à obtenir d'un joueur sous macOS : le tableau de l'essai lancé sur son Mac, la liste des
 fichiers du `.app` (`find "Civilization VI.app" -type f`), pour savoir où sont les dylibs livrées,

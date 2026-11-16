@@ -1,5 +1,5 @@
 # Tests à chaque push et pull request (SOMMAIRE.md, « Tests continus ») : les trois crates Rust sur
-# Windows, comme le workflow de release, puis les tests Lua, ceux du relais des rapports et les textes
+# Windows, comme le workflow de release, le lanceur macOS sur macOS, puis les tests Lua, ceux du relais des rapports et les textes
 # sur Linux. Sans secret ni écriture : les tests Lua qui ont besoin des fichiers du jeu sont sautés.
 name: ci
 
@@ -32,6 +32,27 @@ jobs:
           (cd proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
           (cd startup_proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
           (cd updater && cargo +stable-x86_64-pc-windows-msvc test --release --locked)
+
+  # Le lanceur macOS (updater/, même code que l'installeur Windows) : tests, puis le bundle .app
+  # universel, signé ad hoc, gardé comme artefact pour l'essayer sur un Mac.
+  updater-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Rust (arm64 et x86_64)
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Tests
+        run: cd updater && cargo test --release --locked
+
+      - name: Bundle
+        run: bash updater/macos/bundle.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BetterGameExperience-macOS
+          path: updater/target/macos/*.zip
 
   scripts:
     runs-on: ubuntu-latest

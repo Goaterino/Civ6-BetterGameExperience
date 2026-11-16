@@ -1,8 +1,8 @@
 //! Langues de l'installeur : celles de Better Balanced Game. Les textes sont dans `textes`, généré
 //! par `textes/gen_textes.py` depuis `textes/<langue>.xml` : un tableau `Texts` par texte, une entrée
 //! par langue de `LANGUAGES`, dans le même ordre. Le choix du joueur (liens en bas des fenêtres) est
-//! gardé dans `%LOCALAPPDATA%\BetterGameExperience\langue.txt` ; sans choix, la langue de Windows, sinon
-//! l'anglais.
+//! gardé dans `langue.txt`, dans le dossier de BetterGameExperience (`release::data_dir`) ; sans
+//! choix, la langue du système (Windows, ou la première langue préférée de macOS), sinon l'anglais.
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -13,6 +13,7 @@ pub struct Language {
     /// Nom de la langue, dans cette langue.
     pub label: &'static str,
     /// Langue principale Windows (`PRIMARYLANGID`).
+    #[cfg_attr(not(windows), allow(dead_code))]
     primary: u16,
 }
 
@@ -36,9 +37,30 @@ pub type Texts = [&'static str; LANGUAGES.len()];
 
 static CURRENT: AtomicUsize = AtomicUsize::new(DEFAULT);
 
+#[cfg(windows)]
 #[link(name = "kernel32")]
 extern "system" {
     fn GetUserDefaultUILanguage() -> u16;
+}
+
+/// Langue de l'interface de Windows.
+#[cfg(windows)]
+fn system_language() -> Option<usize> {
+    let primary = unsafe { GetUserDefaultUILanguage() } & 0x3FF;
+    LANGUAGES.iter().position(|l| l.primary == primary)
+}
+
+/// Première des langues préférées de macOS que l'installeur connaît (`fr-FR` → `fr`).
+#[cfg(target_os = "macos")]
+fn system_language() -> Option<usize> {
+    crate::sys::preferred_languages().iter().find_map(|tag| from_tag(tag))
+}
+
+/// Rang dans `LANGUAGES` d'une étiquette BCP 47 (`pt-BR`, `zh-Hans-CN`).
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn from_tag(tag: &str) -> Option<usize> {
+    let code = tag.split(['-', '_']).next()?.to_ascii_lowercase();
+    LANGUAGES.iter().position(|l| l.code == code)
 }
 
 fn choice_file() -> Option<PathBuf> {
@@ -49,10 +71,7 @@ pub fn init() {
     let saved = choice_file().and_then(|p| std::fs::read_to_string(p).ok());
     let index = match saved {
         Some(code) => LANGUAGES.iter().position(|l| l.code == code.trim()),
-        None => {
-            let primary = unsafe { GetUserDefaultUILanguage() } & 0x3FF;
-            LANGUAGES.iter().position(|l| l.primary == primary)
-        }
+        None => system_language(),
     };
     CURRENT.store(index.unwrap_or(DEFAULT), Ordering::Relaxed);
 }
@@ -112,6 +131,14 @@ mod tests {
         let codes: Vec<&str> = crate::textes::LANGUES.iter().map(|l| &l[..2]).collect();
         let ours: Vec<&str> = LANGUAGES.iter().map(|l| l.code).collect();
         assert_eq!(codes, ours);
+    }
+
+    #[test]
+    fn etiquettes_du_systeme() {
+        assert_eq!(from_tag("fr-FR"), Some(1));
+        assert_eq!(from_tag("pt-BR"), Some(8));
+        assert_eq!(from_tag("zh-Hans-CN"), Some(10));
+        assert_eq!(from_tag("nl-NL"), None);
     }
 
     #[test]

@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="it_IT">
 			<Text>diritti di amministratore negati</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="it_IT">
+			<Text>\nOpzione di avvio di Steam: impostata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="it_IT">
+			<Text>\n\nSu macOS, BetterGameExperience è attivo solo se Steam avvia il gioco tramite questo launcher: Configura Steam aggiunge la sua opzione di avvio a Civilization VI.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="it_IT">
+			<Text>Configura Steam\nAggiunge l'opzione di avvio di BetterGameExperience a Civilization VI. Steam si riavvia se è aperto.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="it_IT">
+			<Text>Steam deve riavviarsi</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="it_IT">
+			<Text>Perché Civilization VI si avvii con BetterGameExperience, il launcher aggiunge la sua opzione di avvio in Steam. Steam legge le impostazioni solo all'avvio: si chiuderà e poi si riaprirà.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="it_IT">
+			<Text>Riavvia Steam\nChiude Steam, aggiunge l'opzione di avvio, poi riapre Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="it_IT">
+			<Text>Configurazione di Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="it_IT">
+			<Text>Steam non si è chiuso.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="it_IT">
+			<Text>Impossibile configurare Steam: opzione di avvio copiata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="it_IT">
+			<Text>In Steam, fai clic destro su Civilization VI &gt; Proprietà &gt; Generali e incollala in Opzioni di avvio:\n\n{1}\n\nPoi avvia il gioco da Steam, come al solito.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="it_IT">
 			<Text>Segnala un bug (BGE)</Text>
 		</Row>

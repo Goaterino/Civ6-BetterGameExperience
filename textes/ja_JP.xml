@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ja_JP">
 			<Text>管理者権限が拒否されました</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="ja_JP">
+			<Text>\nSteam の起動オプション：設定済み</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="ja_JP">
+			<Text>\n\nmacOS では、Steam がこのランチャー経由でゲームを起動したときだけ BetterGameExperience が有効になります。「Steam を設定」で Civilization VI に起動オプションを追加します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="ja_JP">
+			<Text>Steam を設定\nCivilization VI に BetterGameExperience の起動オプションを追加します。Steam が開いている場合は再起動します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="ja_JP">
+			<Text>Steam の再起動が必要です</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="ja_JP">
+			<Text>Civilization VI を BetterGameExperience 付きで起動するため、ランチャーが Steam に起動オプションを追加します。Steam は起動時にしか設定を読み込まないため、いったん終了してから再び開きます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="ja_JP">
+			<Text>Steam を再起動\nSteam を終了し、起動オプションを追加してから、Steam を再び開きます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="ja_JP">
+			<Text>Steam を設定しています</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="ja_JP">
+			<Text>Steam が終了しませんでした。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="ja_JP">
+			<Text>Steam を設定できませんでした。起動オプションをコピーしました</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="ja_JP">
+			<Text>Steam で Civilization VI を右クリック &gt; プロパティ &gt; 一般 を開き、起動オプションに貼り付けてください：\n\n{1}\n\nその後、いつもどおり Steam からゲームを起動してください。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ja_JP">
 			<Text>バグを報告 (BGE)</Text>
 		</Row>

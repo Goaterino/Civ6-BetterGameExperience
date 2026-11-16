@@ -117,6 +117,67 @@ qu'une traduction peut placer dans un autre ordre.
   sinon l'anglais.
 - Les boutons standard de Windows (« Fermer », « OK ») suivent la langue de Windows, pas ce choix.
 
+## macOS
+
+Le même code compile en lanceur macOS, `BetterGameExperience.app` (universel arm64 et x86_64, comme
+le jeu). La partie propre à chaque système est derrière `#[cfg]` : [src/win.rs](src/win.rs) ou
+[src/mac.rs](src/mac.rs) (`sys`), [src/gui.rs](src/gui.rs) ou [src/gui_mac.rs](src/gui_mac.rs),
+[src/http.rs](src/http.rs) ou [src/http_mac.rs](src/http_mac.rs). Le reste (manifeste signé, canaux,
+langues, états, pose et retour en arrière) est commun.
+
+**État** : le lanceur est prêt, mais les dylibs qu'il pose (le chargeur et le proxy de GameCore pour
+macOS) ne sont pas encore écrites, voir [analyses/macos](../analyses/macos/README.md). Tant qu'aucune
+release n'a de `manifest-macos.json`, la fenêtre affiche « Dernière version inconnue » (HTTP 404).
+
+Différences avec Windows :
+
+- **Jeu** : le dossier Steam qui contient `Civ6.app/Contents/MacOS/GameCore_XP2.dll` (le GameCore du
+  port d'Aspyr, un bundle Mach-O malgré son extension), cherché dans les bibliothèques de
+  `~/Library/Application Support/Steam/steamapps/libraryfolders.vdf`. Jeu en cours : processus
+  `Civ6_Exe` (lanceur d'Aspyr) ou `Civ6_Exe_Child` (le jeu), lus par libproc.
+- **Rien n'est posé dans le jeu** : `Civ6.app` est scellé par sa signature. Les deux dylibs
+  (`libBGE_Chargeur.dylib`, `BGD_GameCore_XP2.dylib`, voir [proxy/src/noms.rs](../proxy/src/noms.rs))
+  vont dans `~/Library/Application Support/BetterGameExperience/dylib`, sans droits
+  d'administrateur. Même contrôle qu'à Windows : manifeste signé, SHA-256, marques
+  `StartupProxyStatus` et `RolloverProxyStatus`, pose par fichiers temporaires puis renommage.
+- **Manifeste** : `manifest-macos.json` et sa signature, à côté de `manifest.json` dans la release
+  (`release/manifest.py build --platform macos`). Les installeurs Windows déjà distribués refusent
+  tout manifeste qui liste autre chose que leurs deux DLL : macOS ne peut pas partager le leur.
+- **Option de lancement Steam, indispensable** : c'est elle qui charge BetterGameExperience.
+  ```
+  "~/Library/Application Support/BetterGameExperience/BetterGameExperience.app/Contents/MacOS/BetterGameExperience" %command%
+  ```
+  (chemin complet, sans `~`). Au lancement, le lanceur met à jour comme sous Windows, puis lance le
+  jeu avec `DYLD_INSERT_LIBRARIES` sur le chargeur, que les droits du jeu autorisent
+  (`allow-dyld-environment-variables`), et `BGE_DYLIBS` sur le dossier des dylibs. Si les deux dylibs
+  ne sont pas là (désinstallation), le jeu se lance tel quel. La fenêtre dit si l'option est posée
+  (lue dans `userdata/*/config/localconfig.vdf` de Steam, sans y écrire : Steam réécrit ce fichier en
+  quittant) et propose de la copier dans le presse-papiers.
+- **Emplacement fixe** : le bundle se copie dans
+  `~/Library/Application Support/BetterGameExperience/BetterGameExperience.app` (copie dans un
+  dossier temporaire, puis renommage), d'où l'option de lancement le désigne. Pas de nettoyage des
+  anciens téléchargements.
+- **Fenêtres** : `NSAlert` d'AppKit (crates objc2). Les liens de commande deviennent des boutons,
+  leurs descriptions passent sous le texte ; les détails sont affichés en petit ; la case
+  pré-release et un menu des langues sont dans la vue accessoire, et les changer ferme la fenêtre,
+  comme les liens du TaskDialog.
+- **HTTPS** : ureq avec le TLS du système (Security.framework, par native-tls), proxy des variables
+  `HTTPS_PROXY`/`ALL_PROXY`. Mêmes essais qu'à Windows.
+- **Langue** : sans choix, la première des langues préférées de macOS que l'installeur connaît.
+- **Dossier des choix** (`langue.txt`, `canal.txt`, `installe.txt`) :
+  `~/Library/Application Support/BetterGameExperience`, ou `BGE_DATA_DIR` s'il est défini (tests).
+
+Construire le bundle et son archive (`updater/target/macos/BetterGameExperience_V<version>_macOS.zip`),
+avec les cibles `aarch64-apple-darwin` et `x86_64-apple-darwin` et les outils en ligne de commande de
+Xcode :
+```bash
+BGD_RELEASE=0.12.0 bash updater/macos/bundle.sh
+```
+La signature est ad hoc, sans certificat Developer ID ni notarisation : au premier lancement d'une
+archive téléchargée, Gatekeeper le refuse, et il faut passer par clic droit > Ouvrir (ou Réglages
+Système > Confidentialité et sécurité > Ouvrir quand même). La CI ([ci.yml](../.github/workflows/ci.yml),
+job `updater-macos`) lance les tests et garde l'archive comme artefact.
+
 ## Tester sans GitHub
 
 `BGD_DIST` remplace GitHub par un dossier local qui contient une release signée (`manifest.json`,

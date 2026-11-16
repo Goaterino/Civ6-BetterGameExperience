@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="ru_RU">
 			<Text>отказано в правах администратора</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="ru_RU">
+			<Text>\nПараметр запуска Steam: задан</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="ru_RU">
+			<Text>\n\nВ macOS BetterGameExperience работает, только если Steam запускает игру через этот лаунчер: «Настроить Steam» добавит его параметр запуска к Civilization VI.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="ru_RU">
+			<Text>Настроить Steam\nДобавляет параметр запуска BetterGameExperience к Civilization VI. Если Steam открыт, он перезапустится.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="ru_RU">
+			<Text>Steam нужно перезапустить</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="ru_RU">
+			<Text>Чтобы Civilization VI запускалась с BetterGameExperience, лаунчер добавляет свой параметр запуска в Steam. Steam читает настройки только при запуске: он закроется, а затем откроется снова.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="ru_RU">
+			<Text>Перезапустить Steam\nЗакрывает Steam, добавляет параметр запуска и снова открывает Steam.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="ru_RU">
+			<Text>Настройка Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="ru_RU">
+			<Text>Steam не закрылся.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="ru_RU">
+			<Text>Не удалось настроить Steam: параметр запуска скопирован</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="ru_RU">
+			<Text>В Steam щёлкните правой кнопкой по Civilization VI &gt; Свойства &gt; Общие и вставьте его в «Параметры запуска»:\n\n{1}\n\nЗатем запускайте игру из Steam как обычно.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="ru_RU">
 			<Text>Сообщить об ошибке (BGE)</Text>
 		</Row>

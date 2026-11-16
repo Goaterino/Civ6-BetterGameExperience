@@ -36,9 +36,28 @@ pub fn work_dir() -> PathBuf {
     std::env::temp_dir().join("BetterGameExperience")
 }
 
+/// Manifeste de la release pour cette plateforme. Celui de Windows ne liste que les deux DLL (un
+/// installeur Windows déjà distribué refuse tout autre fichier) : macOS a le sien.
+#[cfg(windows)]
+pub const MANIFEST: &str = "manifest.json";
+#[cfg(target_os = "macos")]
+pub const MANIFEST: &str = "manifest-macos.json";
+
 /// Dossier des choix du joueur et de la copie de l'installeur : `%LOCALAPPDATA%\BetterGameExperience`.
+#[cfg(windows)]
 pub fn data_dir() -> Option<PathBuf> {
     Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameExperience"))
+}
+
+/// Sous macOS : `~/Library/Application Support/BetterGameExperience`, qui reçoit aussi les dylibs
+/// (`dylib/`) et la copie du lanceur (`BetterGameExperience.app`). `BGE_DATA_DIR` le remplace
+/// (tests).
+#[cfg(target_os = "macos")]
+pub fn data_dir() -> Option<PathBuf> {
+    if let Some(dir) = std::env::var_os("BGE_DATA_DIR").filter(|d| !d.is_empty()) {
+        return Some(PathBuf::from(dir));
+    }
+    Some(crate::sys::home()?.join("Library/Application Support/BetterGameExperience"))
 }
 
 /// Jusqu'à la v0.5.0 le projet s'appelait BetterGameDLLs : au premier lancement, les choix gardés
@@ -107,8 +126,8 @@ pub fn fetch_manifest(work: &Path) -> Result<Manifest, String> {
     } else {
         format!("{RELEASES}/latest/download")
     };
-    for name in ["manifest.json", "manifest.json.sig"] {
-        download(&format!("{base}/{name}"), &work.join(name))?;
+    for name in [MANIFEST.to_string(), format!("{MANIFEST}.sig")] {
+        download(&format!("{base}/{name}"), &work.join(&name))?;
     }
     verify_manifest(work)
 }
@@ -179,8 +198,8 @@ fn verify_manifest(work: &Path) -> Result<Manifest, String> {
     let b64 = base64::engine::general_purpose::STANDARD;
     let key: [u8; 32] = b64.decode(PUBLIC_KEY.trim()).unwrap().try_into().unwrap();
     let key = VerifyingKey::from_bytes(&key).unwrap();
-    let data = fs::read(work.join("manifest.json")).map_err(|e| format!("manifest.json : {e}"))?;
-    let sig = fs::read_to_string(work.join("manifest.json.sig")).map_err(|e| format!("manifest.json.sig : {e}"))?;
+    let data = fs::read(work.join(MANIFEST)).map_err(|e| format!("{MANIFEST} : {e}"))?;
+    let sig = fs::read_to_string(work.join(format!("{MANIFEST}.sig"))).map_err(|e| format!("{MANIFEST}.sig : {e}"))?;
     let sig = b64.decode(sig.trim()).ok().and_then(|s| <[u8; 64]>::try_from(s).ok());
     let sig = sig.ok_or(t(tx::UNREADABLE_MANIFEST_SIGNATURE))?;
     key.verify_strict(&data, &Signature::from_bytes(&sig)).map_err(|_| t(tx::INVALID_MANIFEST_SIGNATURE))?;
@@ -270,7 +289,7 @@ mod network {
     #[ignore]
     fn deux_canaux_sur_github() {
         let dir = std::env::temp_dir().join("bgd_test_canaux");
-        std::env::set_var("LOCALAPPDATA", &dir);
+        std::env::set_var(if cfg!(windows) { "LOCALAPPDATA" } else { "BGE_DATA_DIR" }, &dir);
         for on in [false, true] {
             set_prerelease(on);
             assert_eq!(prerelease(), on);

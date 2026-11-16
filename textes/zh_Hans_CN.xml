@@ -566,6 +566,36 @@
 		<Row Tag="LOC_BGD_INST_ADMINISTRATOR_RIGHTS_DENIED" Language="zh_Hans_CN">
 			<Text>管理员权限被拒绝</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_IN_PLACE" Language="zh_Hans_CN">
+			<Text>\nSteam 启动选项：已设置</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_LAUNCH_OPTION_MISSING" Language="zh_Hans_CN">
+			<Text>\n\n在 macOS 上，只有当 Steam 通过此启动器启动游戏时，BetterGameExperience 才会生效：“配置 Steam”会为 Civilization VI 添加它的启动选项。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURE_STEAM" Language="zh_Hans_CN">
+			<Text>配置 Steam\n为 Civilization VI 添加 BetterGameExperience 的启动选项。如果 Steam 已打开，它会重新启动。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_MUST_RESTART" Language="zh_Hans_CN">
+			<Text>Steam 需要重新启动</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_RESTART_TEXT" Language="zh_Hans_CN">
+			<Text>为了让 Civilization VI 随 BetterGameExperience 一起启动，启动器会在 Steam 中添加它的启动选项。Steam 只在启动时读取设置：它会先关闭，然后重新打开。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_RESTART_STEAM" Language="zh_Hans_CN">
+			<Text>重新启动 Steam\n关闭 Steam，添加启动选项，然后重新打开 Steam。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_CONFIGURING_STEAM" Language="zh_Hans_CN">
+			<Text>正在配置 Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_DID_NOT_CLOSE" Language="zh_Hans_CN">
+			<Text>Steam 没有关闭。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_STEAM_NOT_CONFIGURED" Language="zh_Hans_CN">
+			<Text>无法配置 Steam：已复制启动选项</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_MAC_PASTE_IT_IN_STEAM_X" Language="zh_Hans_CN">
+			<Text>在 Steam 中右键点击 Civilization VI &gt; 属性 &gt; 通用，然后粘贴到启动选项中：\n\n{1}\n\n之后像往常一样从 Steam 启动游戏。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_RAPPORT_BOUTON" Language="zh_Hans_CN">
 			<Text>报告错误 (BGE)</Text>
 		</Row>
