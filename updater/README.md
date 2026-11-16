@@ -150,9 +150,16 @@ Différences avec Windows :
   (chemin complet, sans `~`). Au lancement, le lanceur met à jour comme sous Windows, puis lance le
   jeu avec `DYLD_INSERT_LIBRARIES` sur le chargeur, que les droits du jeu autorisent
   (`allow-dyld-environment-variables`), et `BGE_DYLIBS` sur le dossier des dylibs. Si les deux dylibs
-  ne sont pas là (désinstallation), le jeu se lance tel quel. La fenêtre dit si l'option est posée
-  (lue dans `userdata/*/config/localconfig.vdf` de Steam, sans y écrire : Steam réécrit ce fichier en
-  quittant) et propose de la copier dans le presse-papiers.
+  ne sont pas là (désinstallation), le jeu se lance tel quel.
+- **Steam configuré par le lanceur** : après l'installation, il écrit cette option pour Civilization VI
+  (`apps > 289070 > LaunchOptions`) dans `userdata/*/config/localconfig.vdf` de chaque compte Steam
+  du Mac, en gardant les options du joueur (le lanceur se place devant `%command%`) et en remplaçant
+  un ancien chemin du lanceur. Steam lit ce fichier au démarrage et le réécrit en quittant : s'il est
+  ouvert, la fenêtre propose **Redémarrer Steam** (`steam://exit`, écriture une fois Steam fermé, puis
+  réouverture). L'ancien fichier reste à côté (`localconfig.vdf.bge`), le nouveau le remplace d'un
+  coup. La désinstallation retire l'option si Steam est fermé (restée, elle ne gêne pas : le jeu se
+  lance alors sans BetterGameExperience). En cas d'échec, l'option est copiée dans le presse-papiers
+  avec la marche à suivre pour la coller dans Steam.
 - **Emplacement fixe** : le bundle se copie dans
   `~/Library/Application Support/BetterGameExperience/BetterGameExperience.app` (copie dans un
   dossier temporaire, puis renommage), d'où l'option de lancement le désigne. Pas de nettoyage des
@@ -177,6 +184,12 @@ La signature est ad hoc, sans certificat Developer ID ni notarisation : au premi
 archive téléchargée, Gatekeeper le refuse, et il faut passer par clic droit > Ouvrir (ou Réglages
 Système > Confidentialité et sécurité > Ouvrir quand même). La CI ([ci.yml](../.github/workflows/ci.yml),
 job `updater-macos`) lance les tests et garde l'archive comme artefact.
+
+**Installeur de test** : sans clé des releases ni release Mac publiée, l'artefact
+`BetterGameExperience-macOS-test` de la CI contient un installeur compilé avec la clé de test du dépôt,
+une fausse release signée avec elle (dylibs factices) et `essai.sh`, qui fait une installation de zéro
+sur un faux Steam et vérifie fichiers, configuration de Steam et injection. Voir
+[macos/test/README.md](macos/test/README.md).
 
 ## Tester sans GitHub
 

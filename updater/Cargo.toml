@@ -27,6 +27,11 @@ objc2-app-kit = "0.3"
 native-tls = "0.2"
 ureq = { version = "2", default-features = false, features = ["native-tls"] }
 
+[features]
+# Installeur de test (updater/macos/test) : fait confiance à la clé de test du dépôt, et non à celle
+# des releases. Jamais dans le workflow de release.
+cle-de-test = []
+
 [profile.release]
 opt-level = "s"
 strip = true

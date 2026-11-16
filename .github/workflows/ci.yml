@@ -54,6 +54,25 @@ jobs:
           name: BetterGameExperience-macOS
           path: updater/target/macos/*.zip
 
+      # Installeur de test (clé de test du dépôt) et fausse release : updater/macos/test/README.md.
+      - name: Installeur de test
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+          BGE_TEST=1 bash updater/macos/bundle.sh
+          PYTHON="$RUNNER_TEMP/venv/bin/python" bash updater/macos/test/fausse_release.sh
+          cp updater/macos/test/README.md updater/target/macos-test/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BetterGameExperience-macOS-test
+          path: |
+            updater/target/macos-test/*.zip
+            updater/target/macos-test/release/
+            updater/target/macos-test/faux_jeu/
+            updater/target/macos-test/essai.sh
+            updater/target/macos-test/README.md
+
   scripts:
     runs-on: ubuntu-latest
     steps:

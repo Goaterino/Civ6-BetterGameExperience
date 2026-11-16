@@ -10,6 +10,7 @@ téléchargé. La clé privée vit hors du dépôt et dans le secret GitHub BGD_
     python release/manifest.py build --platform macos --version 0.2.0 --out dist/manifest-macos.json dist/
     python release/manifest.py sign dist/manifest.json          (clé dans $BGD_SIGNING_KEY)
     python release/manifest.py verify dist/manifest.json
+    python release/manifest.py sign --public-key updater/macos/test/public_key.txt …   (clé de test)
 """
 
 import argparse
@@ -21,6 +22,7 @@ import re
 import sys
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,6 +43,13 @@ FILES_MACOS = {
 }
 
 
+def raw(key):
+    """Octets bruts d'une clé ed25519 (sans `private_bytes_raw`, absent avant cryptography 40)."""
+    if isinstance(key, Ed25519PrivateKey):
+        return key.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
+    return key.public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+
+
 def lobby_version():
     """Version annoncée dans le salon multijoueur (proxy/src/version.rs)."""
     src = (ROOT / "proxy/src/version.rs").read_text(encoding="utf-8")
@@ -54,10 +63,10 @@ def keygen(args):
     if ROOT in out.resolve().parents:
         sys.exit("La clé privée ne doit pas être dans le dépôt.")
     key = Ed25519PrivateKey.generate()
-    seed = key.private_bytes_raw()
+    seed = raw(key)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(base64.b64encode(seed).decode() + "\n")
-    pub = key.public_key().public_bytes_raw()
+    pub = raw(key.public_key())
     PUBLIC_KEY.write_text(base64.b64encode(pub).decode() + "\n")
     print(f"Clé privée : {out}\nClé publique : {PUBLIC_KEY}")
 
@@ -76,7 +85,7 @@ def build(args):
         "commit": os.environ.get("GITHUB_SHA", ""),
         "files": files,
     }
-    Path(args.out).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+    Path(args.out).write_bytes((json.dumps(manifest, indent=2) + "\n").encode("utf-8"))
     print(Path(args.out).read_text(encoding="utf-8"))
 
 
@@ -85,15 +94,16 @@ def sign(args):
     if not seed:
         sys.exit("BGD_SIGNING_KEY absente.")
     key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(seed.strip()))
-    if key.public_key().public_bytes_raw() != base64.b64decode(PUBLIC_KEY.read_text().strip()):
-        sys.exit(f"BGD_SIGNING_KEY ne correspond pas à {PUBLIC_KEY}.")
+    public_key = Path(args.public_key)
+    if raw(key.public_key()) != base64.b64decode(public_key.read_text().strip()):
+        sys.exit(f"BGD_SIGNING_KEY ne correspond pas à {public_key}.")
     data = Path(args.manifest).read_bytes()
     Path(args.manifest + ".sig").write_text(base64.b64encode(key.sign(data)).decode() + "\n")
     print(f"Signé : {args.manifest}.sig")
 
 
 def verify(args):
-    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(PUBLIC_KEY.read_text().strip()))
+    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(Path(args.public_key).read_text().strip()))
     manifest = Path(args.manifest)
     data = manifest.read_bytes()
     pub.verify(base64.b64decode(Path(args.manifest + ".sig").read_text().strip()), data)
@@ -116,9 +126,11 @@ def main():
     p.add_argument("dist")
     p.set_defaults(func=build)
     p = sub.add_parser("sign")
+    p.add_argument("--public-key", default=PUBLIC_KEY, help="clé publique attendue (par défaut celle des releases)")
     p.add_argument("manifest")
     p.set_defaults(func=sign)
     p = sub.add_parser("verify")
+    p.add_argument("--public-key", default=PUBLIC_KEY, help="clé publique attendue (par défaut celle des releases)")
     p.add_argument("manifest")
     p.set_defaults(func=verify)
     args = parser.parse_args()

@@ -16,7 +16,12 @@ const RELEASES: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/r
 /// Liste des releases publiées (les brouillons n'y sont pas sans jeton), pour le canal pré-release :
 /// `releases/latest` ne désigne jamais une pré-release.
 const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6-BetterGameExperience/releases?per_page=30";
+#[cfg(not(feature = "cle-de-test"))]
 const PUBLIC_KEY: &str = include_str!("../../release/public_key.txt");
+/// Installeur de test : la clé de test, dont la clé privée est publique dans le dépôt
+/// (updater/macos/test). Un installeur ainsi compilé ne doit jamais être distribué.
+#[cfg(feature = "cle-de-test")]
+const PUBLIC_KEY: &str = include_str!("../macos/test/public_key.txt");
 
 #[derive(Deserialize)]
 pub struct Manifest {

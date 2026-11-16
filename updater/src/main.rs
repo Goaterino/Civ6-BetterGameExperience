@@ -191,6 +191,10 @@ fn ask_action(game: &Path, manifest: &Result<release::Manifest, String>) -> Choi
     // Reconstruite à chaque changement de langue.
     loop {
         let mut content = f(tx::GAME_X, &[&game.display()]);
+        // Installeur de test (updater/macos/test) : visible au premier coup d'œil, non traduit.
+        if cfg!(feature = "cle-de-test") {
+            content.insert_str(0, "INSTALLEUR DE TEST (clé de test) : ne pas distribuer.\n\n");
+        }
         if prerelease {
             content += t(tx::CHANNEL_PRE_RELEASE_TEST_VERSIONS_AHEAD);
         }
