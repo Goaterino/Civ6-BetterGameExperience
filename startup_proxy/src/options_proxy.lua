@@ -45,7 +45,7 @@ local PROXY_CACHE = {
 	{ "verify", "LOC_BGD_OPT_CHOIX_VERIFICATION" },
 };
 
--- Une entrée par réglage lu par le proxy de GameCore (read_config, proxy/src/lib.rs) ou par celui-ci
+-- Une entrée par réglage lu par le proxy de GameCore (read_config, proxy/src/lib_windows.rs) ou par celui-ci
 -- (verif_maj, src/maj.rs) : un test (cargo test, startup_proxy) vérifie que les listes concordent.
 -- `defaut` est la valeur que prend le proxy quand la clé manque au fichier. `libre` : jamais grisé
 -- par l'interrupteur général, qui ne concerne que le proxy de GameCore. `demarrage` : lu par le

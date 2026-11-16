@@ -174,7 +174,7 @@ dans les builds locaux : la release est compilée sans la feature `diag`
 - **Le journal.** `zones : détour posé en exe+0x…`, puis `zones : écriture dans …`.
 
 **Toute nouvelle fonctionnalité des proxys doit avoir son réglage dans cet onglet.** Le test
-`cles_communes_avec_le_proxy` échoue si une clé lue par `read_config` (proxy/src/lib.rs) manque à
+`cles_communes_avec_le_proxy` échoue si une clé lue par `read_config` (proxy/src/lib_windows.rs) manque à
 `PROXY_REGLAGES` dans `options_proxy.lua`, ou l'inverse. Le libellé, l'aide et les choix se
 donnent en français et en anglais.
 

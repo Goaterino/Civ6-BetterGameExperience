@@ -670,12 +670,12 @@ mod tests {
         assert!(reset_config(old, "a b").is_err());
     }
 
-    /// Chaque clé de l'onglet est lue par le proxy de GameCore (`read_config`, dans proxy/src/lib.rs),
+    /// Chaque clé de l'onglet est lue par le proxy de GameCore (`read_config`, dans proxy/src/lib_windows.rs),
     /// et chaque réglage qu'il lit figure dans l'onglet.
     #[test]
     fn cles_communes_avec_le_proxy() {
         // Clés lues par le proxy de GameCore, et par celui-ci (verif_maj).
-        let mut lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib.rs")).unwrap();
+        let mut lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib_windows.rs")).unwrap();
         lib += include_str!("maj.rs");
         lib += include_str!("zones.rs");
         lib += include_str!("messages.rs");

@@ -14,7 +14,7 @@
 //! `BGD_SalonMinuteur` (environ 0,5 s) rythme l'annonce d'arrivée et le délai des réponses.
 //!
 //! **Les correctifs POL** (« proxy-only lobbies ») changent la simulation : le proxy de GameCore ne
-//! les applique que si `BgdPolActifs` (export de ce proxy, voir lib.rs) rend 1. Cet état est tenu
+//! les applique que si `BgdPolActifs` (export de ce proxy, voir lib_windows.rs) rend 1. Cet état est tenu
 //! par l'interface :
 //! - dans le salon, `salon.lua` le met à 0 à chaque ouverture, puis au verdict de l'hôte ;
 //! - au chargement d'une partie locale (solo, hotseat), `chargement.lua`, ajouté à la fin de
@@ -62,7 +62,7 @@ pub fn pol_actifs() -> bool {
     POL.load(Ordering::Relaxed)
 }
 
-/// Bits de `RolloverProxyStatus`, l'export d'état du proxy de GameCore (proxy/src/lib.rs).
+/// Bits de `RolloverProxyStatus`, l'export d'état du proxy de GameCore (proxy/src/lib_windows.rs).
 const ST_ORIGINAL: u32 = 2;
 const ST_POL: u32 = 16;
 
@@ -437,7 +437,7 @@ mod tests {
         assert!(r.contains(&format!("winmm.dll {VERSION}")) && r.contains("BGD_GameCore_XP2.dll 0.0.1"), "{r}");
         let r = raison_version(None).unwrap();
         assert!(r.contains(&format!("winmm.dll {VERSION}")) && r.contains("sans version"), "{r}");
-        // La marque dans le fichier, telle que la grave proxy/src/lib.rs.
+        // La marque dans le fichier, telle que la grave proxy/src/lib_windows.rs.
         let mut dll = b"MZ\0\0BgdVersion\0BgdVersion=\x01\0".to_vec();
         dll.extend_from_slice(format!("xx{MARQUE}0.9.1-rc.2\0yy").as_bytes());
         assert_eq!(version_marquee(&dll).as_deref(), Some("0.9.1-rc.2"));
