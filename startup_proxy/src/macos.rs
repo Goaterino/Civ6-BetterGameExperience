@@ -31,7 +31,14 @@ mod version;
 #[allow(dead_code)]
 pub(crate) mod macho;
 #[path = "../../proxy/src/journal_mac.rs"]
-mod journal;
+pub(crate) mod journal;
+#[path = "../../proxy/src/patch_mac.rs"]
+#[allow(dead_code)]
+pub(crate) mod patch;
+#[path = "macos_lua.rs"]
+mod lua;
+#[path = "macos_xml.rs"]
+mod xml;
 
 use journal::log;
 
@@ -166,6 +173,15 @@ unsafe fn installer() {
             log(&format!("chargeur : accroche de dlopen posée ({n} pointeur{})", if n > 1 { "s" } else { "" }));
         }
         Err(e) => log(&format!("chargeur : accroche de dlopen impossible : {e}")),
+    }
+    if let Err(e) = lua::installer(mh, slide) {
+        log(&format!("lua : accroche impossible : {e}"));
+    }
+    if let Err(e) = xml::installer(mh, slide) {
+        log(&format!("xml : accroche impossible : {e}"));
+    }
+    if std::env::var_os("BGE_DIAG_FICHIERS").is_some() {
+        lua::diag_fichiers(mh, slide);
     }
 }
 

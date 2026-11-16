@@ -195,6 +195,27 @@ Conclusions, qui remplacent celles tirées de la CI :
    architecture mesurée plus haut.
 3. Interface : retrouver `luaL_loadbuffer` et la lecture XML dans l'exe macOS. Tous les correctifs
    Lua, l'onglet d'options et le salon suivent.
+   **Accroches posées et vérifiées dans le jeu (arm64, 2026-11-16)** :
+   - **`luaL_loadbuffer`** ([startup_proxy/src/macos_lua.rs](../../startup_proxy/src/macos_lua.rs)) :
+     HavokScript est lié dans l'exe. Retrouvée depuis la chaîne `=(load)` (`luaB_load`), qui appelle
+     `hks_load(L, réglages, lecteur, données, nom)` ; parmi ses cinq appelants, `hksL_loadbuffer(L,
+     réglages, buff, taille, nom)` (lecteur `getS`), dont l'enveloppe à quatre arguments, appelée par
+     le seul chargeur de scripts du moteur (`LuaSystem`), est `luaL_loadbuffer`. arm64 0x100985898,
+     x86_64 0x100a1ed80, trouvées par signature. Le début est remplacé par un saut, l'accroche appelle
+     `hksL_loadbuffer` elle-même. Dans le jeu : les 225 scripts de l'interface y passent
+     (`C:\Emu\AppAssets\Base\Assets\UI\Options.lua` : le portage d'Aspyr émule les chemins Windows).
+   - **Lecture XML** ([startup_proxy/src/macos_xml.rs](../../startup_proxy/src/macos_xml.rs)) : pas de
+     `fopen` (le jeu ouvre par descripteur, puis `fdopen`). Retrouvée par une pile d'appels prise à
+     l'ouverture d'`Options.xml` (accroches de diagnostic sur `read`, `mmap`, `fdopen`, variable
+     `BGE_DIAG_FICHIERS`) : `load_file(doc, chemin wchar_t, options)` en 0x1005c57b8 lit le fichier dans
+     le tampon du document (`doc + 8`) puis appelle `parse(doc, texte, options)` en 0x1005c5920. Les
+     deux sont accrochées par trampoline (prologue de quatre instructions de pile) ; le texte est
+     remplacé dans le tampon du document par `Platform::MemoryBuffer::GrowToFit`, exportée. Vérifié :
+     `Options.xml` remplacé, analysé, écran d'options intact. x86_64 : signatures à relever.
+   - L'exe garde les noms de ses exports (`Platform::OpenFile`, `MemoryBuffer::GrowToFit`…) :
+     `objdump` les affiche dans le code désassemblé, une aide pour l'étape 4.
+   - Reste : l'onglet BetterGameExperience (fonctions natives du bloc Lua, fichier de réglages), puis
+     les blocs Lua des correctifs d'interface et du salon.
 4. Correctifs de GameCore : reporter les `Site` par architecture, les correctifs POL d'abord
    (ils conditionnent le multijoueur entre Mac et Windows).
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),

@@ -215,3 +215,21 @@ pub unsafe fn hook_import(mh: *const MachHeader64, slide: isize, name: &str, hoo
     }
     Ok(n)
 }
+
+/// Section `__TEXT,__text` de l'image, en mémoire : (début, taille).
+pub unsafe fn text_section(mh: *const MachHeader64, slide: isize) -> Option<(usize, usize)> {
+    for lc in commands(mh) {
+        if (*lc).cmd != LC_SEGMENT_64 {
+            continue;
+        }
+        let seg = &*(lc as *const SegmentCommand64);
+        if nom16(&seg.segname) != b"__TEXT" {
+            continue;
+        }
+        let sects = std::slice::from_raw_parts((seg as *const SegmentCommand64).add(1) as *const Section64, seg.nsects as usize);
+        if let Some(s) = sects.iter().find(|s| nom16(&s.sectname) == b"__text") {
+            return Some(((slide as u64).wrapping_add(s.addr) as usize, s.size as usize));
+        }
+    }
+    None
+}
