@@ -9,7 +9,7 @@
 //! ensuite.
 //!
 //! Une fois l'original chargé, les correctifs portés sont posés dans son code (étape 4 de
-//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, `ports_mac`, `production_mac` et `empilement_mac`, correctifs POL. Les autres restent à
+//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, `ports_mac`, `production_mac`, `empilement_mac` et `spectateurs_mac`, correctifs POL. Les autres restent à
 //! porter : le bit `ST_POL`, qui permettrait au salon d'annoncer la machine, n'est pas encore levé.
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
@@ -44,6 +44,10 @@ mod production_calcul;
 mod empilement;
 #[path = "empilement_regle.rs"]
 mod empilement_regle;
+#[path = "spectateurs_mac.rs"]
+mod spectateurs;
+#[path = "spectateurs_calcul.rs"]
+mod spectateurs_calcul;
 
 use journal::log;
 
@@ -79,6 +83,13 @@ static MARQUE_VERSION: [u8; LONGUEUR_MARQUE] = {
     }
     out
 };
+
+/// Lu par le chargeur pour `Civ6RolloverProxy_Pol()`, que les scripts du congrès consultent :
+/// 1 si les détours des spectateurs sont posés et les correctifs POL actifs.
+#[no_mangle]
+pub extern "C" fn BgdSpectateursPol() -> u32 {
+    spectateurs::lua_actif() as u32
+}
 
 #[no_mangle]
 pub extern "C" fn BgdVersion() -> *const u8 {
@@ -151,11 +162,12 @@ unsafe fn poser_correctifs() {
     };
     // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
     // annoncerait des règles qu'elle n'applique pas.
-    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 4] = [
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 5] = [
         ("fin de tour", fin_tour::installer),
         ("ports", ports::installer),
         ("production", production::installer),
         ("empilement", empilement::installer),
+        ("spectateurs", spectateurs::installer),
     ];
     let mut tous = true;
     for (nom, installer) in correctifs {

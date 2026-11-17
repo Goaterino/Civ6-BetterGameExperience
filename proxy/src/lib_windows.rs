@@ -5,6 +5,7 @@ mod carte;
 mod citoyens;
 mod coalesce;
 mod congres;
+mod congres_texte;
 mod debordement;
 mod depart;
 mod empilement;
@@ -24,6 +25,7 @@ mod production_modifiers;
 mod rendements;
 mod rendements_empire;
 mod spectateurs;
+mod spectateurs_calcul;
 mod tours;
 mod ui;
 #[allow(dead_code)] // RELEASE ne sert qu'au proxy de démarrage.

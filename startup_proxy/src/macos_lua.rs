@@ -74,6 +74,13 @@ unsafe extern "C" fn loadbuffer(l: *mut c_void, buff: *const c_char, size: usize
         super::pol::SCRIPT_CHARGEMENT => (super::pol::chargement_lua(l, source), "chargement : correctifs POL des parties locales ajoutés"),
         super::salon::SCRIPT => (super::salon::staging_lua(l, source), "salon : annonce de version ajoutée"),
         super::salon::SCRIPT_PARTIE => (super::salon::partie_lua(l, source), "partie : relais du verdict ajouté"),
+        super::salon::SCRIPT_CONGRES => match super::salon::congres_lua(l, source) {
+            Ok(t) => (t, "spectateurs : cibles du congrès sans les spectateurs"),
+            Err(e) => {
+                log(&format!("spectateurs : {chunk} laissé tel quel : {e}"));
+                return hks(l, reglages, buff, size, name);
+            }
+        },
         _ => return hks(l, reglages, buff, size, name),
     };
     let r = hks(l, reglages, texte.as_ptr() as *const c_char, texte.len(), name);

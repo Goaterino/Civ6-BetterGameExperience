@@ -53,6 +53,8 @@ mod salon;
 mod salon_texte;
 #[path = "xml_texte.rs"]
 mod xml_texte;
+#[path = "../../proxy/src/congres_texte.rs"]
+mod congres_texte;
 
 use journal::log;
 

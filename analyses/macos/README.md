@@ -255,24 +255,17 @@ Conclusions, qui remplacent celles tirées de la CI :
      règle commune avec Windows ([empilement_regle.rs](../../proxy/src/empilement_regle.rs)).
      Offsets de l'unité : ceux de Windows plus 8. Posé dans le jeu (2026-11-17) ; un combat avec
      unités empilées reste à observer.
-   - **Spectateurs** (en cours, rien de posé) : relevé dans GameCore arm64 (Civ6 Aspyr 1.4.6) :
-     - tourisme : touristes pris `0x8e8c78(culture, P)`, demande `0x8e96e4(culture, P)` (prologues :
-       quatre et cinq `stp`, sans adresse relative) ; `GlobalParameters` en `[0x1390220]`,
-       `+0x6d0` culture par citoyen, `+0x6e0` tourisme par touriste (comme Windows) ;
-     - PlayerManager rendu par `0x9eba84()` : majeurs vivants `+0xb50`, ayant vécu `+0x10d0`
-       (comme Windows) ; joueur : ID `+0xe0`, diplomatie `+0x6e8`, culture `+0x6f8` ; culture :
-       joueur `+0x98`, tourisme vers `+0x498`, culture cumulée `+0x5a0` ; a rencontré
-       `0x91fb20(diplomatie, id)` ;
-     - spectateur : configuration du joueur `0x383328([0x1390240], id)`, hachage du leader
-       `0x38a0cc(configuration)` (la méthode Lua `GetLeaderTypeID` l'appelle) ;
-     - restent à relever : le vote (`1803c0ba0`), le vote sur une proposition (`1803c0d40`) et le
-       dépouillement (`1803c5f50`) ; ancre probable, la chaîne d'assertion « Trying to apply too
-       many votes in World Congress » ; puis la liste des ID des majeurs vivants (`+0xfa0` sous
-       Windows) et les offsets de la résolution (choix `+4`, voix `+0x104`).
-     - Le correctif touche aussi du Lua de gameplay (`WorldCongress.lua`, exécuté partout :
-       `ui_congres_cibles.lua`, et `Civ6RolloverProxy_Pol()`) : à porter avec, sinon le Mac se
-       désynchroniserait d'un PC.
-   - Restent : citoyens, spectateurs (suite), congrès,
+   - **Spectateurs** ([proxy/src/spectateurs_mac.rs](../../proxy/src/spectateurs_mac.rs)) : porté
+     (arm64). Tourisme `0x8e8c78`/`0x8e96e4`, votes `0xc1de04`/`0xc1eb30` (retrouvés par l'exécution
+     des opérations `WORLD_CONGRESS_*_VOTE`), dépouillement `0xc28d78` ; spectateur par
+     `0x383328([0x1390240], id)` puis `0x38a0cc` (ce qu'appelle `GetLeaderTypeID`). Offsets du
+     joueur et de la culture : ceux de Windows plus 8. Formule commune
+     ([spectateurs_calcul.rs](../../proxy/src/spectateurs_calcul.rs)) ; `WorldCongress.lua` corrigé
+     par le chargeur avec le texte commun ([congres_texte.rs](../../proxy/src/congres_texte.rs)),
+     `Civ6RolloverProxy_Pol()` lisant l'export `BgdSpectateursPol` du proxy. Vérifié dans le jeu
+     (2026-11-17, BSM, 2 spectateurs) : tourisme divisé par 8 au lieu de 10, votes du spectateur
+     refusés, dépouillement sans sa voix d'office.
+   - Restent : citoyens, congrès,
      départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.
