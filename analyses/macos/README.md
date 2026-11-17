@@ -245,7 +245,12 @@ Conclusions, qui remplacent celles tirées de la CI :
      les correctifs portés sont posés.
    - **Ports** ([proxy/src/ports_mac.rs](../../proxy/src/ports_mac.rs)) : porté (arm64), vérifié
      dans le jeu (2026-11-17) : Sinbad repart d'un port et d'un autre district.
-   - Restent : citoyens, spectateurs, congrès, modificateurs de production, empilement,
+   - **Modificateurs de production** ([proxy/src/production_mac.rs](../../proxy/src/production_mac.rs)) :
+     porté (arm64) par la vtable de `AdjustUnitProduction`. Le suivi de FAutoArchive y est en
+     ligne : l'accroche appelle l'originale puis ajoute l'écart. Conversion commune avec Windows
+     ([production_calcul.rs](../../proxy/src/production_calcul.rs)). Vérifié dans le jeu
+     (2026-11-17) : Ilkum retiré, -30 % corrigé de +1/256.
+   - Restent : citoyens, spectateurs, congrès, empilement,
      départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.

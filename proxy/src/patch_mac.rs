@@ -255,6 +255,19 @@ pub fn cible_branche(at: usize, mot: u32) -> Option<usize> {
 /// (ils ne doivent contenir aucune instruction relative à leur adresse), puis un saut vers la
 /// suite, forment le trampoline rendu : l'appeler, c'est appeler la fonction d'origine.
 pub unsafe fn hook_with_trampoline(at: usize, prologue: usize, hook: usize) -> Result<(usize, &'static str), String> {
+    let slot = std::sync::atomic::AtomicUsize::new(0);
+    let m = hook_with_trampoline_publie(at, prologue, hook, &slot)?;
+    Ok((slot.load(std::sync::atomic::Ordering::Relaxed), m))
+}
+
+/// Comme `hook_with_trampoline`, mais le trampoline est rangé dans `slot` avant que le saut ne soit
+/// écrit : une accroche appelée aussitôt le trouve. Rend la méthode d'écriture.
+pub unsafe fn hook_with_trampoline_publie(
+    at: usize,
+    prologue: usize,
+    hook: usize,
+    slot: &std::sync::atomic::AtomicUsize,
+) -> Result<&'static str, String> {
     let saut = jump(hook);
     if prologue < saut.len() {
         return Err(format!("prologue de {prologue} octets, le saut en demande {}", saut.len()));
@@ -262,6 +275,6 @@ pub unsafe fn hook_with_trampoline(at: usize, prologue: usize, hook: usize) -> R
     let mut tramp = std::slice::from_raw_parts(at as *const u8, prologue).to_vec();
     tramp.extend(jump(at + prologue));
     let tramp = executable(&tramp)?;
-    let methode = write_code(at, &saut)?;
-    Ok((tramp, methode))
+    slot.store(tramp, std::sync::atomic::Ordering::Release);
+    write_code(at, &saut)
 }
