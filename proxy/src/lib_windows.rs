@@ -8,6 +8,7 @@ mod congres;
 mod debordement;
 mod depart;
 mod empilement;
+mod empilement_regle;
 mod exe;
 mod fin_tour;
 mod forward;

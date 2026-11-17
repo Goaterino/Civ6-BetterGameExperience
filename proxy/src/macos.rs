@@ -9,7 +9,7 @@
 //! ensuite.
 //!
 //! Une fois l'original chargé, les correctifs portés sont posés dans son code (étape 4 de
-//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, `ports_mac` et `production_mac`, correctifs POL. Les autres restent à
+//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, `ports_mac`, `production_mac` et `empilement_mac`, correctifs POL. Les autres restent à
 //! porter : le bit `ST_POL`, qui permettrait au salon d'annoncer la machine, n'est pas encore levé.
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
@@ -40,6 +40,10 @@ mod ports;
 mod production;
 #[path = "production_calcul.rs"]
 mod production_calcul;
+#[path = "empilement_mac.rs"]
+mod empilement;
+#[path = "empilement_regle.rs"]
+mod empilement_regle;
 
 use journal::log;
 
@@ -147,8 +151,12 @@ unsafe fn poser_correctifs() {
     };
     // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
     // annoncerait des règles qu'elle n'applique pas.
-    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 3] =
-        [("fin de tour", fin_tour::installer), ("ports", ports::installer), ("production", production::installer)];
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 4] = [
+        ("fin de tour", fin_tour::installer),
+        ("ports", ports::installer),
+        ("production", production::installer),
+        ("empilement", empilement::installer),
+    ];
     let mut tous = true;
     for (nom, installer) in correctifs {
         match installer(base) {

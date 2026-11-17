@@ -250,7 +250,12 @@ Conclusions, qui remplacent celles tirées de la CI :
      ligne : l'accroche appelle l'originale puis ajoute l'écart. Conversion commune avec Windows
      ([production_calcul.rs](../../proxy/src/production_calcul.rs)). Vérifié dans le jeu
      (2026-11-17) : Ilkum retiré, -30 % corrigé de +1/256.
-   - Restent : citoyens, spectateurs, congrès, empilement,
+   - **Empilement** ([proxy/src/empilement_mac.rs](../../proxy/src/empilement_mac.rs)) : porté
+     (arm64), compteurs retrouvés par les `GlobalParameters` qu'ils lisent (`+0x1b0`, `+0x234`),
+     règle commune avec Windows ([empilement_regle.rs](../../proxy/src/empilement_regle.rs)).
+     Offsets de l'unité : ceux de Windows plus 8. Posé dans le jeu (2026-11-17) ; un combat avec
+     unités empilées reste à observer.
+   - Restent : citoyens, spectateurs, congrès,
      départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.
