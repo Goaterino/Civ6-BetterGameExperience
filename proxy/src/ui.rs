@@ -68,6 +68,7 @@ const VOTE_BLOCK: &str = include_str!("ui_congres_vote.lua");
 const ATTENTE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres_attente.lua"));
 const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
 const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
+const PAUSE_BLOCK: &str = include_str!("ui_pause.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
 /// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
@@ -1001,6 +1002,26 @@ pub fn patch_congres_intro(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// PausePanel.lua (du jeu ou de Multiplayer Helper) suivi de `ui_pause.lua` : la fenêtre « Partie
+/// en pause » n'est plus remise dans la file des popups tant qu'elle y est, ce qui l'empilait
+/// pendant les chargements en multijoueur. Correctif de bug, sans réglage.
+pub fn patch_pause(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_pause.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    for pat in ["function OpenPausePanel(", "function ClosePausePanel(", "OpenPausePanel()"] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"
+");
+    out.extend_from_slice(PAUSE_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// WorldCongress.lua (script de gameplay) précédé de `ui_congres_cibles.lua` : les cibles
 /// « joueur » des résolutions tirées de `BGD_MajorsCibles()`, sans les spectateurs, et la liste des
 /// luxes recalculée à chaque session (`BGD_LuxesARecalculer()`).
@@ -1145,6 +1166,18 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         return match patch_congres_intro(src) {
             Ok(text) => {
                 what.push("intro du congrès une seule fois par tour et par session".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if is_file(chunk, "PausePanel.lua") {
+        return match patch_pause(src) {
+            Ok(text) => {
+                what.push("fenêtre de pause mise en file une seule fois".into());
                 Some(text)
             }
             Err(e) => {
@@ -1932,6 +1965,20 @@ mod tests {
         assert!(new.starts_with(&src) && new.ends_with(INTRO_BLOCK.as_bytes()));
         assert!(patch_congres_intro(&new).is_err(), "pas deux fois");
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Additions\WorldCongressIntro.lua", "WorldCongressIntro.lua"));
+    }
+
+    #[test]
+    fn pause_mise_en_file_une_fois() {
+        for f in [
+            "C:/Program Files (x86)/Steam/steamapps/common/Sid Meier's Civilization VI/Base/Assets/UI/Panels/PausePanel.lua",
+            "C:/Program Files (x86)/Steam/steamapps/workshop/content/289070/3307282026/ui/Replacements/pausepanel.lua",
+        ] {
+            let Ok(src) = std::fs::read(f) else { continue };
+            let new = patch_pause(&src).unwrap();
+            assert!(new.starts_with(&src) && new.ends_with(PAUSE_BLOCK.as_bytes()));
+            assert!(patch_pause(&new).is_err(), "pas deux fois");
+        }
+        assert!(patch_pause(b"function Autre() end").is_err());
     }
 
     #[test]
