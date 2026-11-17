@@ -33,6 +33,12 @@ Outils pour mesurer où part le temps entre la fin d'un tour et la reprise de la
 .venv/Scripts/python.exe -I rollover/analyze.py rollover/captures/<dossier>
 ```
 
+**Chargement d'une partie** (salon, reprise, remap) : `capture.ps1 -Chargement`, puis
+`analyze.py --chargement`, qui ajoute la ventilation par phases de `chargement.py` (utilisable seul,
+sur les journaux sans trace) et analyse la trace chargement par chargement. Protocole, constats et
+analyse des piles ([piles.py](../analyses/chargement/piles.py)) :
+[analyses/chargement](../analyses/chargement/README.md).
+
 Les captures (`captures/`) ne sont pas versionnées.
 
 ## Premier constat : tour 78 → 79 (capture du 2026-10-27)

@@ -61,6 +61,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   de draft par des liens `civ6bge://` ([hook_externe](analyses/lobby/hook_externe.md), conception),
   et la sonde Steam qui doit en fournir le lien du salon ([sonde_steam](analyses/lobby/sonde_steam.md),
   conception) ;
+- [chargement](analyses/chargement/README.md) : temps de chargement d'une partie (salon, reprise,
+  remap de MPH), ventilé par phases et par piles CPU (capture du 2026-11-16) : reconstruction de la
+  base, test d'existence des assets, génération de carte, terrain 3D ; leviers classés, aucun essayé ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district

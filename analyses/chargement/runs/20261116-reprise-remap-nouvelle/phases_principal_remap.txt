@@ -1,0 +1,100 @@
+
+=== chargement 2, threads [25156]
+--- avant (6 s, 4454 ms de CPU)
+    propre : havokscript_finalrelease 2192, civilizationvi_dx12 776, ntdll 672, noyau 617, nvwgf2umx 130, d3d12core 22, vcruntime140 12
+    inclusif civilizationvi_dx12 :
+         3805  +79e34
+         3805  +ea3607
+         3805  +700d23
+         3805  +70109d
+         3789  +6fffc9
+         3474  +768ba
+         2791  +775df
+         2077  +164e81
+         2077  +80403
+         2076  +1671c8
+    inclusif havokscript_finalrelease :
+         1991  +31afa
+         1991  +5618f
+         1643  +3c2ba
+         1639  +3c103
+         1526  +3c091
+         1423  +36841
+         1423  +3bc4e
+         1418  +3bb15
+         1412  +3afa7
+         1399  +3af00
+    inclusif steam_api64 :
+          646  +982a
+          645  +9f4f
+          638  +6587
+    inclusif steamclient64 :
+          636  +8c1fd6
+          636  +915fe5
+          630  +916138
+    système appelé depuis :
+          566  ntdll <- steamclient64+916138
+           64  noyau <- steamclient64+916138
+           34  noyau <- civilizationvi_dx12+e4d3c3
+           27  ntdll <- civilizationvi_dx12+e4d3c3
+           15  noyau <- civilizationvi_dx12+e51003
+           15  ntdll <- civilizationvi_dx12+99894f
+--- CONFIGURE_CONTENT (7 s, 2670 ms de CPU)
+    propre : ntdll 941, noyau 824, havokscript_finalrelease 627, civilizationvi_dx12 109, nvwgf2umx 80, ucrtbase 17, d3d12core 17
+    inclusif civilizationvi_dx12 :
+         1915  +700d23
+         1915  +79e34
+         1915  +ea3607
+         1915  +70109d
+         1914  +6fffc9
+         1393  +768ba
+          648  +775df
+          626  +1671c8
+          626  +164e81
+          626  +80403
+    inclusif steam_api64 :
+          936  +982a
+          934  +9f4f
+          931  +6587
+    inclusif steamclient64 :
+          929  +8c1fd6
+          929  +915fe5
+          923  +916138
+    inclusif havokscript_finalrelease :
+          531  +31afa
+          531  +5618f
+          505  +3c103
+          505  +3c2ba
+          453  +3c091
+          406  +36841
+          406  +3bc4e
+          406  +3bb15
+          402  +3afa7
+          399  +3af00
+    inclusif gamecore_xp2_finalrelease :
+          269  `180046a10` Context_Instance.cpp « AutoVariable::GetSyncManager()->GetNumRegisteredAutoArchives »
+          171  `1805fe1c0` ? Serialization_Helpers.cpp « i < (size_t)m_nCurrSize »
+           79  `18063e160` Game_Instance.cpp « Uninitialize() should not be called twice or when Initialize »
+    inclusif gameoverlayrenderer64 :
+           67  +9c24f
+    inclusif dxgi :
+           65  +863a
+           65  +8ebe
+           59  +3f0a
+           59  +5c1b
+           59  +be7e
+    inclusif d3d12core :
+           58  +3f8cc
+           52  +3fbfc
+    inclusif nvwgf2umx :
+           51  +7a13b7
+           51  +81412d
+           51  +827659
+           51  +7f4d4c
+    système appelé depuis :
+          841  ntdll <- steamclient64+916138
+           82  noyau <- steamclient64+916138
+           19  ntdll <- steamclient64+916a36
+           17  ntdll <- civilizationvi_dx12+966048
+           10  noyau <- win32u+5f64
+            9  noyau <- win32u+4e04

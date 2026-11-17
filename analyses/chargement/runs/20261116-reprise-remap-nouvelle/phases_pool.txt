@@ -1,0 +1,203 @@
+
+=== chargement 1, threads [8444, 8748, 14936, 29552, 30380]
+--- GAMECORE_UNSERIALIZE_GAMESTATE (6 s, 20368 ms de CPU)
+    propre : noyau 10812, civilizationvi_dx12 5667, ntdll 2393, gamecore_xp2_finalrelease 640, databasedll_finalrelease 383, kernelbase 136, vcruntime140 121
+    inclusif civilizationvi_dx12 :
+        16111  +e5278d
+        16107  +e52548
+        16105  +e518ca
+        16041  +e4d7ab
+        15948  +e50282
+        15947  +994054
+         8766  +9938f3
+         5765  +839a8
+         4703  +a52ea8
+         4211  +e4d3c3
+    inclusif gamecore_xp2_finalrelease :
+         1837  `1800463b0` Context_Instance.cpp « iVersion <= CurrentVersion »
+         1837  `1805906e0` ? Export_Game.cpp
+         1822  `180751b60` Target_Game_Instance_Serialization.cpp « Failed to initialize player victory requirements. @assign ss »
+          572  `18063d1f0` Game_Instance.cpp
+          471  `180305f80` Player_Manager.cpp « iVersion <= CurrentVersion »
+          467  `1803037b0` Player_Instance_Serialization.cpp « !"i >= 0 && i < (int) m_data.size()" »
+          429  `18049c7c0` GlobalAi.cpp « i < (size_t)m_nCurrSize »
+          425  `1805237a0` UnitProduction.cpp
+          425  `1805253e0` UnitProduction.cpp « !"m_aiTypes == nullptr && m_aiTypesMem == nullptr" »
+          387  `1809389e0` GameEffects_Serialization.cpp « Instance Id's do not match, this will cause further deserial »
+    inclusif databasedll_finalrelease :
+          422  +4e32
+          420  +523d
+          420  +8c710
+          128  +96404
+          116  +23b2
+          115  +161b7
+          115  +1671
+          114  +7d447
+          110  +84899
+          101  +80cae
+    inclusif bgd_gamecore_xp2 :
+          312  +274d0
+    inclusif havokscript_finalrelease :
+          191  +534fb
+          190  +333da
+          170  +5cc72
+          146  +5ccf9
+          132  +688f2
+           54  +2e93d
+           54  +14a76
+           54  +535b0
+           53  +39e92
+    inclusif winmm :
+          159  +33d22
+          149  +35878
+           53  +100e2
+    système appelé depuis :
+         3444  noyau <- civilizationvi_dx12+996aea
+         2432  noyau <- civilizationvi_dx12+e4d3c3
+         1669  ntdll <- civilizationvi_dx12+e4d3c3
+          292  ntdll <- civilizationvi_dx12+996aea
+          280  noyau <- civilizationvi_dx12+995cf5
+          101  noyau <- civilizationvi_dx12+99619f
+--- WAIT_FOR_PLAYERS (10 s, 31689 ms de CPU)
+    propre : civilizationvi_dx12 28357, noyau 1771, ucrtbase 1020, vcruntime140 305, ntdll 138, nvwgf2umx 52, d3d12core 24
+    inclusif civilizationvi_dx12 :
+        30713  +e5278d
+        30703  +e52548
+        30690  +e518ca
+        30468  +e4d7ab
+        30150  +e50282
+        30141  +994054
+        21876  +c61ed7
+        21876  +c45ef7
+        20166  +994220
+        20130  +e4d240
+    inclusif d3d12core :
+          163  +61fed
+          162  +83a40
+          161  +83e17
+          148  +35a7
+          136  +37e2
+          136  +3760
+          134  +c9f8
+          134  +10bb6
+          133  +8a490
+          133  +caf4
+    inclusif d3d12 :
+          148  +1707
+    inclusif nvwgf2umx :
+          140  +13c24b
+          137  +17423b
+          132  +13c7b5
+          132  +709e46
+          123  +213194
+          113  +18714b
+          110  +1f09f6
+          108  +18293a
+    inclusif win32u :
+          108  +4bc4
+    système appelé depuis :
+          524  ucrtbase <- civilizationvi_dx12+c3eb65
+          411  ucrtbase <- civilizationvi_dx12+c3e08c
+          244  vcruntime140 <- civilizationvi_dx12+99089e
+          233  noyau <- civilizationvi_dx12+996c36
+          183  noyau <- civilizationvi_dx12+99089e
+          108  noyau <- win32u+4bc4
+
+=== chargement 2, threads [8444, 8748, 14936, 29552, 30380]
+--- GAMECORE_NEW_GAME (8 s, 9710 ms de CPU)
+    propre : havokscript_finalrelease 2989, gamecore_xp2_finalrelease 2855, noyau 1742, ntdll 885, civilizationvi_dx12 565, databasedll_finalrelease 368, ucrtbase 160
+    inclusif civilizationvi_dx12 :
+         8580  +e5278d
+         8559  +e52548
+         8535  +e518ca
+         8123  +e4d7ab
+         7977  +e50282
+         7973  +994054
+         7968  +9938f3
+         7968  +839a8
+         7867  +87d99
+         7852  +8429b
+    inclusif gamecore_xp2_finalrelease :
+         7852  `180045f80` Context_Instance.cpp « m_pkGame != nullptr »
+         7852  `180227d90` Game_Initializer.cpp « Too many Values passed to TagData. »
+         6927  `1805cdd50` Map_Generator.cpp
+         6852  `1805ce020` ? Region_Builder.cpp
+         2885  `1805d16c0` Region_Builder.cpp « LoopPlot is not assigned a valid value »
+         2885  `1800223e0` ? Lua_Utility.cpp lua:AnalyzeChokepoints
+         2867  `1805c4570` MapAnalysis.cpp
+         2335  `1805cbc60` MapAnalysis.cpp
+         2285  `1805cb9c0` MapAnalysis.cpp
+         2284  `1805c3570` ? MapAnalysis.cpp
+    inclusif havokscript_finalrelease :
+         6979  +534fb
+         6979  +333da
+         6977  +5cc72
+         6956  +5ccf9
+         3686  +688f2
+          590  +69a74
+          583  +15104
+          533  +1c91b
+          484  +37ae6
+          454  +68376
+    inclusif databasedll_finalrelease :
+          428  +4e32
+          425  +523d
+          425  +8c710
+          137  +96404
+          114  +7d447
+          114  +161b7
+          114  +23b2
+          114  +1671
+          110  +84899
+           97  +80cae
+    système appelé depuis :
+          404  noyau <- civilizationvi_dx12+996e86
+          349  ntdll <- civilizationvi_dx12+9802f1
+          138  ntdll <- civilizationvi_dx12+9802cd
+          112  noyau <- civilizationvi_dx12+e51003
+           77  ntdll <- civilizationvi_dx12+98029c
+           64  ucrtbase <- civilizationvi_dx12+991a08
+--- WAIT_FOR_PLAYERS (9 s, 27966 ms de CPU)
+    propre : civilizationvi_dx12 25800, noyau 1081, ucrtbase 883, ntdll 79, vcruntime140 46, nvwgf2umx 33, d3d12core 17
+    inclusif civilizationvi_dx12 :
+        27255  +e5278d
+        27250  +e52548
+        27233  +e518ca
+        27025  +e4d7ab
+        26768  +e50282
+        26767  +994054
+        20218  +c45ef7
+        20217  +c61ed7
+        18376  +994220
+        18356  +e4d240
+    inclusif d3d12core :
+          125  +61fed
+          122  +83e17
+          120  +83a40
+          109  +35a7
+          105  +37e2
+          105  +10bb6
+          105  +3760
+          104  +c9f8
+          104  +8a490
+          104  +12573
+    inclusif nvwgf2umx :
+          114  +17423b
+          114  +13c24b
+          103  +13c7b5
+          103  +709e46
+           95  +213194
+           90  +18714b
+           89  +1f09f6
+           89  +18293a
+    inclusif d3d12 :
+          109  +1707
+    inclusif win32u :
+           86  +4bc4
+    système appelé depuis :
+          468  ucrtbase <- civilizationvi_dx12+c3eb65
+          300  ucrtbase <- civilizationvi_dx12+c3e08c
+          100  noyau <- civilizationvi_dx12+996c36
+           85  noyau <- win32u+4bc4
+           74  noyau <- civilizationvi_dx12+e51003
+           42  ucrtbase <- civilizationvi_dx12+c3edb7
