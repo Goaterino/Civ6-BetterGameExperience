@@ -14,7 +14,8 @@
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`), `ui_debordement=on|off` (on, voir
 //! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_avancement` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
-//! par défaut, voir `mods_ui`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
+//! par défaut, voir `mods_ui`), `journal_chokepoints=on|off` (off, voir `journal_chokepoints`),
+//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
 //! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
@@ -27,12 +28,14 @@ mod citoyens;
 mod coalesce;
 mod congres;
 mod debordement;
+mod delaunay;
 mod depart;
 mod empilement;
 mod exe;
 mod fin_tour;
 mod forward;
 mod improvements;
+mod journal_chokepoints;
 mod mods_ui;
 mod noms;
 mod patch;
@@ -253,6 +256,16 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_rapports=") {
             mods_ui::set_rapports(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("journal_chokepoints=") {
+            journal_chokepoints::set_journal(v.trim() == "on");
+        }
+        if let Some(v) = line.trim().strip_prefix("delaunay_rapide=") {
+            delaunay::set_mode(match v.trim() {
+                "off" => delaunay::Mode::Off,
+                "verifier" => delaunay::Mode::Verifier,
+                _ => delaunay::Mode::On,
+            });
+        }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");
         }
@@ -288,6 +301,8 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             avancement::on_proxy_unload();
             wmd::on_proxy_unload();
             ui::on_proxy_unload();
+            journal_chokepoints::on_proxy_unload();
+            delaunay::on_proxy_unload();
         }
         _ => {}
     }

@@ -683,6 +683,12 @@ mod tests {
         lib += include_str!("maj.rs");
         lib += include_str!("zones.rs");
         lib += include_str!("messages.rs");
+        lib += include_str!("assets.rs");
+        lib += include_str!("ramasse_miettes.rs");
+        lib += include_str!("bdd.rs");
+        lib += include_str!("vsync.rs");
+        lib += include_str!("pool.rs");
+        lib += include_str!("remap_leger.rs");
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();
         let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
         assert!(read.len() >= 12, "{read:?}");

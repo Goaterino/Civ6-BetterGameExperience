@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="es_ES">
 			<Text>Memoriza el rendimiento de las casillas durante los cálculos paralelos de la IA, mientras el mapa no puede cambiar.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="es_ES">
+			<Text>Carga de recursos más rápida</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="es_ES">
+			<Text>Al cargar una partida, el juego comprueba para cada archivo gráfico si existe en cada carpeta de recursos (unas 55). Estas comprobaciones se responden con un listado de cada carpeta, leído una vez por carga. Ahorra varios segundos al cargar desde el menú principal. Solo local, sin efecto en la partida. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="es_ES">
+			<Text>Una sola limpieza de Lua al cerrar la interfaz</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="es_ES">
+			<Text>Cuando el juego cierra su interfaz (salir de una partida, remap de Multiplayer Helper), ejecuta una recolección de basura de Lua completa por cada función de script liberada. En su lugar se ejecuta una sola al final. Ahorra unos 2 s antes de un remap. Solo interfaz, sin efecto en la partida. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="es_ES">
+			<Text>Conservar la base de datos de juego entre cargas</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="es_ES">
+			<Text>Cuando la siguiente partida usa exactamente los mismos mods, la base de datos de juego creada para la anterior se conserva en lugar de reconstruirse (unos 1,5 s por carga). GameCore se sigue recargando en cada partida. El contenido es el mismo que tras una reconstrucción: sin desincronización. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="es_ES">
+			<Text>Conservar los textos de juego de los mods entre cargas</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="es_ES">
+			<Text>Los textos de juego de los mods se registran en la primera carga y luego se reescriben desde la memoria en las siguientes cuando los mods son los mismos, en lugar de volver a leerse de sus archivos (unos 1,5 s por carga). Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="es_ES">
+			<Text>Sin VSync en las pantallas de carga</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="es_ES">
+			<Text>Con la VSync activada, el juego espera cada refresco de la pantalla, lo que también ralentiza la creación del terreno 3D durante una carga. Se desactiva solo durante las pantallas de carga y en la partida sigue como esté configurada (unos 2 s por carga). Sin efecto si la VSync está desactivada. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="es_ES">
+			<Text>Primera carga del remap del anfitrión sin terreno</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="es_ES">
+			<Text>En el remap de Multiplayer Helper, el anfitrión carga la nueva partida y la vuelve a cargar enseguida desde su propio guardado. La primera carga omite el terreno 3D, que se descartaría (unos 10 s). La partida, la interfaz y los clientes no cambian. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="es_ES">
+			<Text>Hilos de tareas inactivos: cesiones antes de dormir</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="es_ES">
+			<Text>Un hilo de tareas sin trabajo cede su procesador 100 veces antes de dormirse, cientos de veces por segundo durante el paso de turno. Menos cesiones: menos procesador perdido esperando, el mismo trabajo hecho. Desactivado = 100, como el juego. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="es_ES">
+			<Text>Hilos de tareas inactivos: intentos antes de la primera cesión</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="es_ES">
+			<Text>Un hilo de tareas sin trabajo reintenta 2 × (hilos + 1) veces, esperando activamente, antes de ceder su procesador. Un valor fijo más pequeño acorta esta espera activa, sobre todo con muchos hilos. Desactivado = como el juego. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="es_ES">
+			<Text>Dormir mientras se espera a los hilos de tareas</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="es_ES">
+			<Text>El hilo que espera el final de un lote de tareas gira en el procesador hasta que el último hilo de tareas termina, cerca de 1 s de procesador por carga. En su lugar duerme tras una breve espera y se despierta cuando un hilo de tareas termina. Se aplica en el próximo inicio del juego.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="es_ES">
+			<Text>Escribir el registro de cuellos de botella de la IA</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="es_ES">
+			<Text>Al generar un mapa, el juego escribe todo su grafo de cuellos de botella en AI_ChokePoint.csv (unos 12 MB, 0,35 s). Desactivado: el archivo no se escribe. Sin efecto en el mapa ni en la partida.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="es_ES">
+			<Text>Análisis rápido de cuellos de botella</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="es_ES">
+			<Text>Generación del mapa: la triangulación que sirve para encontrar los cuellos de botella se calcula con un equivalente más rápido, con exactamente el mismo resultado (unos 2 s por mapa generado). Verificación: calcula ambos, conserva el resultado del juego y registra cualquier diferencia.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="es_ES">
 			<Text>Animación acelerada de los ataques nucleares</Text>
 		</Row>

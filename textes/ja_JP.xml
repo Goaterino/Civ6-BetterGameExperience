@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="ja_JP">
 			<Text>マップが変化しない AI の並列計算の間、タイルの産出量を記憶します。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="ja_JP">
+			<Text>アセット読み込みの高速化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="ja_JP">
+			<Text>ゲームの読み込み時、ゲームは各グラフィックファイルがすべてのアセットフォルダー（約55）に存在するかを確認します。この確認を、読み込みごとに1回読み取る各フォルダーの一覧から答えます。メインメニューからの読み込みで数秒短縮されます。ローカルのみで、ゲームには影響しません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="ja_JP">
+			<Text>UI終了時のLuaクリーンアップを1回に</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="ja_JP">
+			<Text>ゲームがUIを閉じるとき（ゲームの終了、Multiplayer Helperのリマップ）、解放されるスクリプト関数ごとにLuaの完全なガベージコレクションを実行します。代わりに最後に1回だけ実行します。リマップ前に約2秒短縮されます。UIのみで、ゲームには影響しません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="ja_JP">
+			<Text>ゲームプレイデータベースを読み込み間で保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="ja_JP">
+			<Text>次のゲームがまったく同じMODを使う場合、前のゲーム用に構築したゲームプレイデータベースを再構築せずに保持します（読み込みごとに約1.5秒）。GameCoreはゲームごとに引き続き再読み込みされます。内容は再構築後と同じで、非同期は起きません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="ja_JP">
+			<Text>MODのゲーム内テキストを読み込み間で保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="ja_JP">
+			<Text>MODのゲーム内テキストを最初の読み込みで記録し、MODが同じなら以降の読み込みではファイルから読み直さずにメモリから書き戻します（読み込みごとに約1.5秒）。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="ja_JP">
+			<Text>ロード画面で垂直同期を無効化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="ja_JP">
+			<Text>垂直同期が有効な場合、ゲームは画面の更新ごとに待機し、ロード中の3D地形の作成も遅くなります。ロード画面の間だけ解除され、ゲーム中は設定どおりのままです（ロード1回あたり約2秒）。垂直同期が無効なら影響はありません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="ja_JP">
+			<Text>リマップ時のホストの初回ロードで地形を省略</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="ja_JP">
+			<Text>Multiplayer Helperのリマップでは、ホストが新しいゲームをロードし、すぐに自分のセーブから再ロードします。最初のロードでは、破棄されるだけの3D地形の作成を省きます（約10秒）。ゲーム、UI、クライアントは変わりません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="ja_JP">
+			<Text>待機中のジョブスレッド：スリープ前の譲渡回数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="ja_JP">
+			<Text>仕事のないジョブスレッドは、スリープする前にプロセッサを100回譲ります。ターン終了処理中は毎秒数百回起こります。回数を減らすと、待機で無駄になるプロセッサ時間が減り、処理内容は同じです。無効 = ゲームと同じ100。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="ja_JP">
+			<Text>待機中のジョブスレッド：最初の譲渡までの試行回数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="ja_JP">
+			<Text>仕事のないジョブスレッドは、プロセッサを譲る前にその場で待ちながら 2 × (スレッド数 + 1) 回再試行します。小さい固定値にすると、特にスレッドが多いときにこのビジーウェイトが短くなります。無効 = ゲームと同じ。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="ja_JP">
+			<Text>ジョブスレッドの完了待ちでスリープ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="ja_JP">
+			<Text>ジョブのまとまりの完了を待つスレッドは、最後のジョブスレッドが抜けるまでプロセッサ上で回り続け、ロード1回あたり約1秒のプロセッサ時間を使います。代わりに短い待機の後スリープし、ジョブスレッドが抜けると起こされます。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="ja_JP">
+			<Text>AIの隘路ログを書き込む</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="ja_JP">
+			<Text>マップ生成時、ゲームは隘路グラフ全体を AI_ChokePoint.csv に書き込みます（約12 MB、0.35秒）。オフ：ファイルを書き込みません。マップやゲームには影響しません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="ja_JP">
+			<Text>隘路分析の高速化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="ja_JP">
+			<Text>マップ生成：隘路を見つけるための三角形分割を、まったく同じ結果になる高速な同等処理で計算します（生成マップごとに約2秒）。検証：両方を計算し、ゲームの結果を使い、違いがあれば記録します。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="ja_JP">
 			<Text>核攻撃アニメーションの高速化</Text>
 		</Row>

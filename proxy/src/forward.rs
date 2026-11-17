@@ -71,6 +71,8 @@ pub(crate) fn real_module() -> usize {
         crate::empilement::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
         crate::carte::on_gamecore_loaded();
+        crate::journal_chokepoints::on_gamecore_loaded(h);
+        crate::delaunay::on_gamecore_loaded(h);
         h
     })
 }

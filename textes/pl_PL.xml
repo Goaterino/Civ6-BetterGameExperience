@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="pl_PL">
 			<Text>Zapamiętuje plony pól podczas równoległych obliczeń SI, gdy mapa nie może się zmienić.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="pl_PL">
+			<Text>Szybsze wczytywanie zasobów</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="pl_PL">
+			<Text>Podczas wczytywania gry gra sprawdza dla każdego pliku graficznego, czy istnieje w każdym folderze zasobów (około 55). Te sprawdzenia są obsługiwane z listy plików każdego folderu, odczytywanej raz na wczytanie. Oszczędza kilka sekund przy wczytywaniu z menu głównego. Tylko lokalnie, bez wpływu na grę. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="pl_PL">
+			<Text>Jedno czyszczenie Lua przy zamykaniu interfejsu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="pl_PL">
+			<Text>Gdy gra zamyka swój interfejs (wyjście z gry, remap Multiplayer Helper), wykonuje pełne odśmiecanie Lua dla każdej zwalnianej funkcji skryptu. Zamiast tego na końcu wykonywane jest jedno. Oszczędza około 2 s przed remapem. Tylko interfejs, bez wpływu na grę. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="pl_PL">
+			<Text>Zachowaj bazę danych rozgrywki między wczytaniami</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="pl_PL">
+			<Text>Gdy następna gra używa dokładnie tych samych modów, baza danych rozgrywki zbudowana dla poprzedniej jest zachowywana zamiast budowania od nowa (około 1,5 s na wczytanie). GameCore jest nadal przeładowywany przy każdej grze. Zawartość jest taka sama jak po przebudowie: bez desynchronizacji. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="pl_PL">
+			<Text>Zachowaj teksty modów w grze między wczytaniami</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="pl_PL">
+			<Text>Teksty modów w grze są zapisywane przy pierwszym wczytaniu, a przy kolejnych, gdy mody są te same, odtwarzane z pamięci zamiast ponownego odczytu z ich plików (około 1,5 s na wczytanie). Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="pl_PL">
+			<Text>Bez VSync na ekranach wczytywania</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="pl_PL">
+			<Text>Gdy VSync jest włączony, gra czeka na każde odświeżenie ekranu, co spowalnia też tworzenie terenu 3D podczas wczytywania. Jest wyłączany tylko na ekranach wczytywania, a w grze pozostaje zgodnie z ustawieniem (około 2 s na wczytanie). Bez efektu, gdy VSync jest wyłączony. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="pl_PL">
+			<Text>Pierwsze wczytanie remapu hosta bez terenu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="pl_PL">
+			<Text>Przy remapie Multiplayer Helper host wczytuje nową grę, a potem od razu wczytuje ją ponownie z własnego zapisu. Pierwsze wczytanie pomija teren 3D, który i tak zostałby odrzucony (około 10 s). Gra, interfejs i klienci się nie zmieniają. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="pl_PL">
+			<Text>Bezczynne wątki zadań: oddania przed uśpieniem</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="pl_PL">
+			<Text>Wątek zadań bez pracy oddaje procesor 100 razy, zanim zaśnie, setki razy na sekundę podczas zmiany tury. Mniej oddań: mniej czasu procesora traconego na czekanie, ta sama praca. Wyłączone = 100, jak w grze. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="pl_PL">
+			<Text>Bezczynne wątki zadań: próby przed pierwszym oddaniem</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="pl_PL">
+			<Text>Wątek zadań bez pracy ponawia próbę 2 × (wątki + 1) razy, czekając aktywnie, zanim odda procesor. Mniejsza stała wartość skraca to aktywne czekanie, zwłaszcza przy wielu wątkach. Wyłączone = jak w grze. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="pl_PL">
+			<Text>Uśpienie podczas czekania na wątki zadań</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="pl_PL">
+			<Text>Wątek czekający na koniec partii zadań kręci się na procesorze, aż ostatni wątek zadań skończy, około 1 s procesora na wczytanie. Zamiast tego po krótkim czekaniu zasypia i jest budzony, gdy wątek zadań kończy. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="pl_PL">
+			<Text>Zapisuj dziennik przewężeń SI</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="pl_PL">
+			<Text>Podczas generowania mapy gra zapisuje cały graf przewężeń do AI_ChokePoint.csv (około 12 MB, 0,35 s). Wyłączone: plik nie jest zapisywany. Bez wpływu na mapę i grę.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="pl_PL">
+			<Text>Szybka analiza przewężeń</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="pl_PL">
+			<Text>Generowanie mapy: triangulacja służąca do znajdowania przewężeń jest liczona szybszym odpowiednikiem o dokładnie tym samym wyniku (około 2 s na wygenerowaną mapę). Weryfikacja: liczy oba, zachowuje wynik gry i zapisuje każdą różnicę.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="pl_PL">
 			<Text>Przyspieszona animacja ataków jądrowych</Text>
 		</Row>

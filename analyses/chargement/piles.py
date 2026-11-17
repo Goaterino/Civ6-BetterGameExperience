@@ -18,6 +18,9 @@ Les autres commandes lisent cet extrait.
         en secondes depuis le début du chargement
     python -I analyses/chargement/piles.py appelants <capture> <offset exe>
         chaînes d'appel au-dessus d'un offset de l'exe, par chargement et par thread
+    python -I analyses/chargement/piles.py rythme    <capture>
+        par phase : images du thread principal, temps de présentation, étapes de
+        WorldView_PostLoadUpdate et CPU du jeu hors réseau Steam (attente de la VSync ou calcul)
 
 <threads> : identifiants séparés par des virgules. <chargements> : numéros (1, 2…), séparés par des
 virgules. <phases> : noms de LoadGameViewState.log (CONFIGURE_CONTENT…), ou « avant » pour les 6 s qui
@@ -261,6 +264,44 @@ def appelants(cap, cible):
         print(f"{n:6d}  {' < '.join(c)}")
 
 
+def rythme(cap):
+    """Par phase : images du thread principal, temps passé dans la présentation, étapes de
+    WorldView_PostLoadUpdate, et CPU du jeu hors thread réseau de Steam (en cœurs occupés). Une phase
+    qui compte beaucoup d'images à faible CPU attend le rythme des images (VSync), pas un calcul."""
+    import zones as zr
+    x = Extrait(cap)
+    z = zr.read(next(cap.glob("zones-*.bin")))
+    f = x.freq
+    ids = {n: i for i, n in z.names.items()}
+    frame, present, postload = (ids.get(n) for n in ("Civ6App_UpdateFrame", "Graphics_SubmissionIncFrame",
+                                                     "WorldView_PostLoadUpdate"))
+    par_t = collections.Counter(t for t, n, s, e in z.zones if n == frame)
+    principal = par_t.most_common(1)[0][0] if par_t else None
+    # Thread réseau de Steam : un cinquième au moins de ses piles passent par steamclient64 (les autres,
+    # dans le noyau, sont souvent sans pile).
+    steam, tous = collections.Counter(), collections.Counter()
+    for q, tid, ip in x.samples:
+        tous[tid] += 1
+        if any(x.mod(a)[0] == "steamclient64.dll" for a in x.stacks.get((q, tid), ())):
+            steam[tid] += 1
+    reseau = {t for t, n in tous.items() if steam[t] * 5 >= n and par_t[t] == 0}
+    qs = sorted((q, tid) for q, tid, ip in x.samples if tid not in reseau)
+    cles = [q for q, _ in qs]
+    print(f"thread principal {principal}, threads réseau exclus du CPU : {sorted(reseau)}")
+    for b in x.blocs:
+        print(f"\n=== chargement {b['rang'] + 1}, {b['debut']:%H:%M:%S}")
+        print(f"   {'phase':32} {'durée':>6} {'images':>7} {'img/s':>6} {'présent.':>9} {'postload':>9} {'CPU':>6}")
+        for nom, a, c in phases_de(b):
+            lo, hi = x.qpc(a), x.qpc(c)
+            img = sum(1 for t, n, s, e in z.zones if t == principal and n == frame and lo <= s < hi)
+            pres = sum(min(e, hi) - max(s, lo) for t, n, s, e in z.zones
+                       if t == principal and n == present and e > lo and s < hi) / f
+            pl = sum(1 for t, n, s, e in z.zones if n == postload and lo <= s < hi)
+            d = (c - a).total_seconds()
+            cpu = (bisect.bisect_left(cles, hi) - bisect.bisect_left(cles, lo)) / 1000 / d
+            print(f"   {nom:32} {d:5.1f}s {img:7d} {img / d:6.0f} {pres:8.2f}s {pl:9d} {cpu:6.2f}")
+
+
 def ints(s):
     return {int(v) for v in s.split(",")} if s else None
 
@@ -284,6 +325,8 @@ def main(argv):
         chaine(cap, int(argv[2]), float(argv[3]), float(argv[4]), ints(argv[5]))
     elif cmd == "appelants":
         appelants(cap, int(argv[2], 16))
+    elif cmd == "rythme":
+        rythme(cap)
     else:
         print(__doc__)
         return 2

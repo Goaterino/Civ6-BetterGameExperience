@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="it_IT">
 			<Text>Memorizza la resa delle caselle durante i calcoli paralleli dell'IA, mentre la mappa non può cambiare.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="it_IT">
+			<Text>Caricamento delle risorse più rapido</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="it_IT">
+			<Text>Al caricamento di una partita, il gioco verifica per ogni file grafico se esiste in ciascuna cartella di risorse (circa 55). Queste verifiche vengono risolte da un elenco di ogni cartella, letto una volta per caricamento. Fa risparmiare diversi secondi al caricamento dal menu principale. Solo locale, nessun effetto sulla partita. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="it_IT">
+			<Text>Una sola pulizia Lua alla chiusura dell'interfaccia</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="it_IT">
+			<Text>Quando il gioco chiude la sua interfaccia (uscita da una partita, remap di Multiplayer Helper), esegue una garbage collection Lua completa per ogni funzione di script rilasciata. Ne viene eseguita una sola alla fine. Fa risparmiare circa 2 s prima di un remap. Solo interfaccia, nessun effetto sulla partita. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="it_IT">
+			<Text>Mantieni il database di gioco tra un caricamento e l'altro</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="it_IT">
+			<Text>Quando la partita successiva usa esattamente gli stessi mod, il database di gioco creato per la precedente viene mantenuto invece di essere ricostruito (circa 1,5 s per caricamento). GameCore viene comunque ricaricato a ogni partita. Il contenuto è lo stesso di una ricostruzione: nessuna desincronizzazione. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="it_IT">
+			<Text>Mantieni i testi di gioco dei mod tra un caricamento e l'altro</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="it_IT">
+			<Text>I testi di gioco dei mod vengono registrati al primo caricamento, poi riscritti dalla memoria in quelli successivi quando i mod sono gli stessi, invece di essere riletti dai loro file (circa 1,5 s per caricamento). Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="it_IT">
+			<Text>Niente VSync nelle schermate di caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="it_IT">
+			<Text>Con la VSync attiva, il gioco attende ogni aggiornamento dello schermo, il che rallenta anche la creazione del terreno 3D durante un caricamento. Viene sospesa solo durante le schermate di caricamento e in partita resta come impostata (circa 2 s per caricamento). Nessun effetto se la VSync è disattivata. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="it_IT">
+			<Text>Primo caricamento del remap dell'host senza terreno</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="it_IT">
+			<Text>Al remap di Multiplayer Helper, l'host carica la nuova partita e poi la ricarica subito dal proprio salvataggio. Il primo caricamento salta il terreno 3D, che verrebbe scartato (circa 10 s). Partita, interfaccia e client non cambiano. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="it_IT">
+			<Text>Thread di lavoro inattivi: cessioni prima del sonno</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="it_IT">
+			<Text>Un thread di lavoro senza compiti cede il processore 100 volte prima di addormentarsi, centinaia di volte al secondo durante il passaggio di turno. Meno cessioni: meno processore sprecato in attesa, lo stesso lavoro svolto. Disattivato = 100, come il gioco. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="it_IT">
+			<Text>Thread di lavoro inattivi: tentativi prima della prima cessione</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="it_IT">
+			<Text>Un thread di lavoro senza compiti riprova 2 × (thread + 1) volte, in attesa attiva, prima di cedere il processore. Un valore fisso più piccolo accorcia questa attesa attiva, soprattutto con molti thread. Disattivato = come il gioco. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="it_IT">
+			<Text>Dormire in attesa dei thread di lavoro</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="it_IT">
+			<Text>Il thread che attende la fine di un gruppo di compiti gira sul processore finché l'ultimo thread di lavoro non esce, circa 1 s di processore per caricamento. Al suo posto dorme dopo una breve attesa e viene svegliato quando un thread di lavoro esce. Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="it_IT">
+			<Text>Scrivi il registro dei colli di bottiglia dell'IA</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="it_IT">
+			<Text>Alla generazione di una mappa, il gioco scrive l'intero grafo dei colli di bottiglia in AI_ChokePoint.csv (circa 12 MB, 0,35 s). Disattivato: il file non viene scritto. Nessun effetto sulla mappa o sulla partita.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="it_IT">
+			<Text>Analisi rapida dei colli di bottiglia</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="it_IT">
+			<Text>Generazione della mappa: la triangolazione usata per trovare i colli di bottiglia viene calcolata da un equivalente più rapido, con esattamente lo stesso risultato (circa 2 s per mappa generata). Verifica: calcola entrambi, mantiene il risultato del gioco e registra ogni differenza.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="it_IT">
 			<Text>Animazione accelerata degli attacchi nucleari</Text>
 		</Row>

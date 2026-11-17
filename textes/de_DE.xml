@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="de_DE">
 			<Text>Merkt sich die Erträge der Felder während der parallelen Berechnungen der KI, in denen sich die Karte nicht ändern kann.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="de_DE">
+			<Text>Schnelleres Laden der Grafikdateien</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="de_DE">
+			<Text>Beim Laden einer Partie prüft das Spiel für jede Grafikdatei, ob sie in jedem Asset-Ordner (etwa 55) existiert. Diese Prüfungen werden aus einer Auflistung jedes Ordners beantwortet, die einmal pro Ladevorgang gelesen wird. Spart beim Laden aus dem Hauptmenü mehrere Sekunden. Nur lokal, ohne Auswirkung auf die Partie. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="de_DE">
+			<Text>Eine Lua-Bereinigung beim Schließen der Oberfläche</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="de_DE">
+			<Text>Wenn das Spiel seine Oberfläche schließt (Verlassen einer Partie, Remap von Multiplayer Helper), führt es für jede freigegebene Skriptfunktion eine vollständige Lua-Speicherbereinigung aus. Stattdessen wird am Ende eine einzige ausgeführt. Spart etwa 2 s vor einem Remap. Nur Oberfläche, ohne Auswirkung auf die Partie. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="de_DE">
+			<Text>Gameplay-Datenbank zwischen Ladevorgängen behalten</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="de_DE">
+			<Text>Wenn die nächste Partie genau dieselben Mods verwendet, wird die für die vorherige erstellte Gameplay-Datenbank behalten, statt neu erstellt zu werden (etwa 1,5 s pro Ladevorgang). GameCore wird weiterhin für jede Partie neu geladen. Der Inhalt ist derselbe wie nach einem Neuaufbau: keine Desynchronisation. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="de_DE">
+			<Text>Spieltexte der Mods zwischen Ladevorgängen behalten</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="de_DE">
+			<Text>Die Spieltexte der Mods werden beim ersten Laden erfasst und bei den nächsten Ladevorgängen mit denselben Mods aus dem Speicher zurückgeschrieben, statt erneut aus ihren Dateien gelesen zu werden (etwa 1,5 s pro Ladevorgang). Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="de_DE">
+			<Text>Keine VSync auf Ladebildschirmen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="de_DE">
+			<Text>Bei aktivierter VSync wartet das Spiel auf jede Bildschirmaktualisierung, was beim Laden auch den Aufbau des 3D-Geländes verlangsamt. Sie wird nur auf Ladebildschirmen aufgehoben und bleibt im Spiel wie eingestellt (etwa 2 s pro Ladevorgang). Ohne Wirkung, wenn VSync deaktiviert ist. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="de_DE">
+			<Text>Erster Remap-Ladevorgang des Hosts ohne Gelände</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="de_DE">
+			<Text>Beim Remap von Multiplayer Helper lädt der Host die neue Partie und lädt sie sofort aus seinem eigenen Spielstand neu. Der erste Ladevorgang überspringt das 3D-Gelände, das verworfen würde (etwa 10 s). Partie, Oberfläche und Clients bleiben unverändert. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="de_DE">
+			<Text>Untätige Job-Threads: Abgaben vor dem Schlafen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="de_DE">
+			<Text>Ein Job-Thread ohne Arbeit gibt seinen Prozessor 100-mal ab, bevor er schläft, hunderte Male pro Sekunde während des Rundenwechsels. Weniger Abgaben: weniger Prozessorzeit mit Warten verschwendet, dieselbe Arbeit. Deaktiviert = 100, wie im Spiel. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="de_DE">
+			<Text>Untätige Job-Threads: Versuche vor der ersten Abgabe</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="de_DE">
+			<Text>Ein Job-Thread ohne Arbeit versucht es 2 × (Threads + 1) Mal und wartet dabei aktiv, bevor er seinen Prozessor abgibt. Ein kleinerer fester Wert verkürzt dieses aktive Warten, besonders bei vielen Threads. Deaktiviert = wie im Spiel. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="de_DE">
+			<Text>Beim Warten auf Job-Threads schlafen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="de_DE">
+			<Text>Der Thread, der auf das Ende eines Job-Stapels wartet, kreist auf dem Prozessor, bis der letzte Job-Thread fertig ist, etwa 1 s Prozessorzeit pro Ladevorgang. Stattdessen schläft er nach kurzem Warten und wird geweckt, wenn ein Job-Thread fertig ist. Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="de_DE">
+			<Text>KI-Engpassprotokoll schreiben</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="de_DE">
+			<Text>Beim Erzeugen einer Karte schreibt das Spiel seinen gesamten Engpassgraphen in AI_ChokePoint.csv (etwa 12 MB, 0,35 s). Aus: Die Datei wird nicht geschrieben. Ohne Auswirkung auf die Karte oder die Partie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="de_DE">
+			<Text>Schnelle Engpassanalyse</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="de_DE">
+			<Text>Kartenerzeugung: Die Triangulation zum Finden der Engpässe wird von einem schnelleren Äquivalent mit exakt demselben Ergebnis berechnet (etwa 2 s pro erzeugter Karte). Überprüfung: berechnet beides, behält das Ergebnis des Spiels und protokolliert jeden Unterschied.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="de_DE">
 			<Text>Beschleunigte Animation von Atomschlägen</Text>
 		</Row>

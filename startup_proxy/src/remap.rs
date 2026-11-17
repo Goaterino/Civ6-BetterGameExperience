@@ -15,12 +15,18 @@ const SEND: &str = r#"Network.SendChat(".mph_ui_snap",-2,-1)"#;
 /// Only in MPH's remap code.
 const MARK: &str = "GAME_HOST_IS_JUST_RELOADING";
 const CALL: &str = "BGD_RemapSnap()";
+/// MPH's restarts (`OnLocalHostRestart` and `.mph_ui_remap_execute`): armed first, so that the
+/// host's first load may skip the terrain (remap_leger.rs).
+const RESTART: &str = "Network.RestartGame()";
+const RESTART_ARMED: &str = "BGD_RemapLeger(); Network.RestartGame()";
 const BLOCK: &str = include_str!("remap.lua");
 
 const NATIVES: Natives = &[
     (crate::salon::lua_log, b"Civ6Proxy_Journal\0"),
     (lua_mark, b"Civ6Proxy_RemapMark\0"),
     (lua_take, b"Civ6Proxy_RemapTake\0"),
+    (crate::remap_leger::lua_armer, b"Civ6Proxy_RemapLeger\0"),
+    (crate::remap_leger::lua_actif, b"Civ6Proxy_RemapLegerActif\0"),
 ];
 
 /// When the host asked for its own load. Kept in this DLL, which stays loaded across that load
@@ -50,7 +56,7 @@ unsafe extern "C-unwind" fn lua_take(l: *mut std::ffi::c_void) -> i32 {
 }
 
 /// The `remap_host_load` setting (last occurrence wins; `on` by default).
-fn enabled(cfg: &str) -> bool {
+pub fn enabled(cfg: &str) -> bool {
     cfg.lines().filter_map(|l| l.trim().strip_prefix("remap_host_load=")).last().map(str::trim) != Some("off")
 }
 
@@ -61,7 +67,7 @@ pub fn patch_vote_panel(src: &[u8]) -> Option<Vec<u8>> {
     if !text.contains(MARK) || text.matches(SEND).count() != 1 || text.contains(CALL) {
         return None;
     }
-    let mut out = text.replacen(SEND, CALL, 1);
+    let mut out = text.replacen(SEND, CALL, 1).replace(RESTART, RESTART_ARMED);
     out.push_str("\r\n");
     out.push_str(BLOCK);
     Some(out.into_bytes())
@@ -119,6 +125,9 @@ mod tests {
             let name = std::str::from_utf8(&name[..name.len() - 1]).unwrap();
             assert!(BLOCK.contains(name), "{name} used by the block");
         }
+        assert!(!mph.replace(RESTART_ARMED, "").contains(RESTART), "every restart armed");
+        assert!(mph.matches(RESTART_ARMED).count() >= 2, "OnLocalHostRestart and .mph_ui_remap_execute");
+        assert!(BLOCK.contains("function BGD_RemapLeger()"));
         assert_eq!(patch_vote_panel(new.as_bytes()), None, "never patched twice");
     }
 

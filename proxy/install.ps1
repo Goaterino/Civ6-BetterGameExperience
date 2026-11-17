@@ -99,6 +99,38 @@ param(
     # Garde des messages réseau (diagnostic, lu par le proxy de démarrage ; la release l'a toujours).
     [ValidateSet("on", "off", "test")]
     [string]$GardeMessages = "on",
+    # Chargement des parties (analyses/chargement/README.md). Lus par le proxy de démarrage :
+    # existence des fichiers SHARED_DATA servie par un listage des dossiers, un seul ramasse-miettes
+    # Lua par fermeture de l'interface, base de gameplay et textes des mods gardés d'un chargement
+    # à l'autre quand les mods sont les mêmes.
+    [ValidateSet("on", "off")]
+    [string]$CacheAssets = "on",
+    [ValidateSet("on", "off")]
+    [string]$GcEnLot = "on",
+    [ValidateSet("on", "off")]
+    [string]$BddGardee = "on",
+    [ValidateSet("on", "off")]
+    [string]$TextesGardes = "on",
+    # Lu par le proxy de démarrage : VSync levée pendant l'écran de chargement si le jeu la demande
+    # (voir startup_proxy/src/vsync.rs).
+    [ValidateSet("on", "off")]
+    [string]$VsyncChargement = "on",
+    # Lus par le proxy de démarrage : premier chargement de l'hôte au remap sans terrain, pool de
+    # tâches (voir startup_proxy/src/remap_leger.rs et startup_proxy/src/pool.rs).
+    [ValidateSet("on", "off")]
+    [string]$RemapLeger = "on",
+    [ValidateSet("100", "16", "8", "4")]
+    [string]$PoolCessions = "16",
+    [ValidateSet("0", "8", "4", "2")]
+    [string]$PoolPauses = "0",
+    [ValidateSet("on", "off")]
+    [string]$PoolAttenteFin = "on",
+    # Lus par ce proxy : journal AI_ChokePoint.csv à la génération de la carte, triangulation
+    # rapide de l'analyse des goulets (voir src/journal_chokepoints.rs et src/delaunay.rs).
+    [ValidateSet("on", "off")]
+    [string]$JournalChokepoints = "off",
+    [ValidateSet("on", "off", "verifier")]
+    [string]$DelaunayRapide = "on",
     [switch]$Uninstall,
     [string]$GameDir = "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI"
 )
@@ -146,6 +178,6 @@ if ($Uninstall) {
 $built = Join-Path $PSScriptRoot "target\release\BGD_GameCore_XP2.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
 Copy-Item $built $proxy -Force
-Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_banniere_annuler=$UiBanniereAnnuler", "ui_reduction_quartiers=$UiReductionQuartiers", "ui_debordement=$UiDebordement", "ui_avancement=$UiAvancement", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones", "garde_messages=$GardeMessages"
-Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_banniere_annuler $UiBanniereAnnuler, ui_reduction_quartiers $UiReductionQuartiers, ui_debordement $UiDebordement, ui_avancement $UiAvancement, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones, garde_messages $GardeMessages) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
+Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_banniere_annuler=$UiBanniereAnnuler", "ui_reduction_quartiers=$UiReductionQuartiers", "ui_debordement=$UiDebordement", "ui_avancement=$UiAvancement", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones", "garde_messages=$GardeMessages", "cache_assets=$CacheAssets", "gc_en_lot=$GcEnLot", "bdd_gardee=$BddGardee", "textes_gardes=$TextesGardes", "vsync_chargement=$VsyncChargement", "remap_leger=$RemapLeger", "pool_cessions=$PoolCessions", "pool_pauses=$PoolPauses", "pool_attente_fin=$PoolAttenteFin", "journal_chokepoints=$JournalChokepoints", "delaunay_rapide=$DelaunayRapide"
+Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_banniere_annuler $UiBanniereAnnuler, ui_reduction_quartiers $UiReductionQuartiers, ui_debordement $UiDebordement, ui_avancement $UiAvancement, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones, garde_messages $GardeMessages, cache_assets $CacheAssets, gc_en_lot $GcEnLot, bdd_gardee $BddGardee, textes_gardes $TextesGardes, vsync_chargement $VsyncChargement, remap_leger $RemapLeger, pool_cessions $PoolCessions, pool_pauses $PoolPauses, pool_attente_fin $PoolAttenteFin, journal_chokepoints $JournalChokepoints, delaunay_rapide $DelaunayRapide) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

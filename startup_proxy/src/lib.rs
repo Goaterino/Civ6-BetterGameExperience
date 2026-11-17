@@ -45,6 +45,14 @@ mod flush;
 mod sync_notes;
 mod remap;
 mod reload_all;
+mod motifs;
+mod assets;
+mod ramasse_miettes;
+mod bdd;
+mod localisation;
+mod vsync;
+mod pool;
+mod remap_leger;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]
@@ -121,6 +129,13 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             rejoin::install();
             flush::install();
             sync_notes::install();
+            let exe_base = win::GetModuleHandleW(std::ptr::null()) as usize;
+            assets::install(exe_base);
+            ramasse_miettes::install(exe_base);
+            bdd::install(exe_base);
+            vsync::install(exe_base);
+            pool::install(exe_base);
+            remap_leger::install(exe_base);
             #[cfg(feature = "diag")]
             zones::install();
         }

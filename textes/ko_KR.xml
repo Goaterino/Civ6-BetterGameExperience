@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="ko_KR">
 			<Text>지도가 바뀔 수 없는 AI의 병렬 계산 동안 타일 산출량을 기억합니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="ko_KR">
+			<Text>에셋 로딩 가속</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="ko_KR">
+			<Text>게임을 불러올 때 게임은 각 그래픽 파일이 모든 에셋 폴더(약 55개)에 있는지 확인합니다. 이 확인을 불러올 때마다 한 번 읽는 각 폴더의 목록으로 처리합니다. 메인 메뉴에서 불러올 때 몇 초를 줄여 줍니다. 로컬 전용이며 게임에는 영향이 없습니다. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="ko_KR">
+			<Text>인터페이스 종료 시 Lua 정리 한 번만</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="ko_KR">
+			<Text>게임이 인터페이스를 닫을 때(게임 나가기, Multiplayer Helper 리맵) 해제되는 스크립트 함수마다 Lua 전체 가비지 컬렉션을 실행합니다. 대신 마지막에 한 번만 실행합니다. 리맵 전에 약 2초를 줄여 줍니다. 인터페이스 전용이며 게임에는 영향이 없습니다. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="ko_KR">
+			<Text>불러오기 사이에 게임플레이 데이터베이스 유지</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="ko_KR">
+			<Text>다음 게임이 정확히 같은 모드를 사용하면 이전 게임용으로 만든 게임플레이 데이터베이스를 다시 만들지 않고 유지합니다(불러오기마다 약 1.5초). GameCore는 여전히 게임마다 다시 불러옵니다. 내용은 재구축 후와 같으므로 동기화 오류가 없습니다. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="ko_KR">
+			<Text>불러오기 사이에 모드의 게임 내 텍스트 유지</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="ko_KR">
+			<Text>모드의 게임 내 텍스트를 처음 불러올 때 기록하고, 모드가 같으면 이후 불러오기에서는 파일에서 다시 읽지 않고 메모리에서 다시 씁니다(불러오기마다 약 1.5초). 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="ko_KR">
+			<Text>로딩 화면에서 수직 동기화 해제</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="ko_KR">
+			<Text>수직 동기화가 켜져 있으면 게임이 화면 갱신마다 기다리며, 이 때문에 로딩 중 3D 지형 생성도 느려집니다. 로딩 화면에서만 해제되고 게임 중에는 설정대로 유지됩니다(로딩당 약 2초). 수직 동기화가 꺼져 있으면 영향이 없습니다. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="ko_KR">
+			<Text>리맵 시 호스트의 첫 로딩에서 지형 생략</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="ko_KR">
+			<Text>Multiplayer Helper 리맵에서 호스트는 새 게임을 로드한 뒤 곧바로 자신의 저장에서 다시 로드합니다. 첫 로딩은 버려질 3D 지형을 건너뜁니다(약 10초). 게임, 인터페이스, 클라이언트는 그대로입니다. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="ko_KR">
+			<Text>유휴 작업 스레드: 대기 전 양보 횟수</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="ko_KR">
+			<Text>할 일이 없는 작업 스레드는 잠들기 전에 프로세서를 100번 양보하며, 턴 넘김 중에는 초당 수백 번 반복됩니다. 양보를 줄이면 대기로 낭비되는 프로세서 시간이 줄고 처리하는 일은 같습니다. 끔 = 게임과 같은 100. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="ko_KR">
+			<Text>유휴 작업 스레드: 첫 양보 전 시도 횟수</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="ko_KR">
+			<Text>할 일이 없는 작업 스레드는 프로세서를 양보하기 전에 제자리에서 기다리며 2 × (스레드 수 + 1)번 다시 시도합니다. 더 작은 고정값을 쓰면 특히 스레드가 많을 때 이 바쁜 대기가 짧아집니다. 끔 = 게임과 같음. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="ko_KR">
+			<Text>작업 스레드를 기다리는 동안 대기</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="ko_KR">
+			<Text>작업 묶음이 끝나기를 기다리는 스레드는 마지막 작업 스레드가 빠질 때까지 프로세서에서 계속 돌며, 로딩당 약 1초의 프로세서 시간을 씁니다. 대신 짧게 기다린 뒤 잠들고, 작업 스레드가 빠지면 깨어납니다. 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="ko_KR">
+			<Text>AI 병목 지점 로그 쓰기</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="ko_KR">
+			<Text>지도를 생성할 때 게임은 병목 지점 그래프 전체를 AI_ChokePoint.csv에 씁니다(약 12MB, 0.35초). 끔: 파일을 쓰지 않습니다. 지도나 게임에는 영향이 없습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="ko_KR">
+			<Text>빠른 병목 지점 분석</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="ko_KR">
+			<Text>지도 생성: 병목 지점을 찾는 데 쓰는 삼각분할을 결과가 완전히 같은 더 빠른 방식으로 계산합니다(생성된 지도마다 약 2초). 검증: 둘 다 계산하고 게임의 결과를 유지하며 차이가 있으면 기록합니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="ko_KR">
 			<Text>핵 공격 애니메이션 가속</Text>
 		</Row>

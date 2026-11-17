@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="zh_Hans_CN">
 			<Text>在 AI 并行计算期间（地图不会变化）记住单元格的产出。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="zh_Hans_CN">
+			<Text>加快素材加载</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="zh_Hans_CN">
+			<Text>加载游戏时，游戏会检查每个图形文件是否存在于每个素材文件夹（约 55 个）中。这些检查改由每个文件夹的文件列表回答，每次加载只读取一次。从主菜单加载时可节省数秒。仅限本地，不影响游戏。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="zh_Hans_CN">
+			<Text>关闭界面时只清理一次 Lua</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="zh_Hans_CN">
+			<Text>游戏关闭界面时（退出游戏、Multiplayer Helper 重新生成地图），会为每个释放的脚本函数执行一次完整的 Lua 垃圾回收。改为在最后只执行一次。重新生成地图前可节省约 2 秒。仅限界面，不影响游戏。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="zh_Hans_CN">
+			<Text>在两次加载之间保留游戏数据库</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="zh_Hans_CN">
+			<Text>当下一局使用完全相同的模组时，保留为上一局构建的游戏数据库，而不是重新构建（每次加载约 1.5 秒）。每局仍会重新加载 GameCore。内容与重新构建后相同：不会不同步。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="zh_Hans_CN">
+			<Text>在两次加载之间保留模组的游戏内文本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="zh_Hans_CN">
+			<Text>首次加载时记录模组的游戏内文本，之后模组相同时直接从内存写回，而不是重新从文件读取（每次加载约 1.5 秒）。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>加载画面不使用垂直同步</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>开启垂直同步时，游戏会等待每次屏幕刷新，这也会拖慢加载时 3D 地形的创建。仅在加载画面期间解除，游戏中仍按设置保持（每次加载约 2 秒）。关闭垂直同步时无影响。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="zh_Hans_CN">
+			<Text>重新生成地图时主机首次加载跳过地形</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="zh_Hans_CN">
+			<Text>使用 Multiplayer Helper 重新生成地图时，主机先加载新游戏，随后立即从自己的存档重新加载。首次加载跳过本会被丢弃的 3D 地形（约 10 秒）。游戏、界面和客户端均不变。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="zh_Hans_CN">
+			<Text>空闲任务线程：休眠前的让出次数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="zh_Hans_CN">
+			<Text>没有任务的任务线程在休眠前会让出处理器 100 次，回合结算时每秒发生数百次。减少让出次数：等待浪费的处理器时间更少，完成的工作不变。关闭 = 100，与游戏相同。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="zh_Hans_CN">
+			<Text>空闲任务线程：首次让出前的尝试次数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="zh_Hans_CN">
+			<Text>没有任务的任务线程在让出处理器之前，会原地等待并重试 2 × (线程数 + 1) 次。较小的固定值可缩短这种忙等待，线程多时尤其明显。关闭 = 与游戏相同。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="zh_Hans_CN">
+			<Text>等待任务线程时休眠</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="zh_Hans_CN">
+			<Text>等待一批任务结束的线程会在处理器上空转，直到最后一个任务线程退出，每次加载约耗费 1 秒处理器时间。改为短暂等待后休眠，并在任务线程退出时被唤醒。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="zh_Hans_CN">
+			<Text>写入 AI 咽喉要道日志</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="zh_Hans_CN">
+			<Text>生成地图时，游戏会把整个咽喉要道图写入 AI_ChokePoint.csv（约 12 MB，0.35 秒）。关闭：不写入该文件。不影响地图和游戏。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="zh_Hans_CN">
+			<Text>快速咽喉要道分析</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="zh_Hans_CN">
+			<Text>地图生成：用于寻找咽喉要道的三角剖分改用更快的等效算法计算，结果完全相同（每张生成的地图约 2 秒）。验证：两者都计算，保留游戏的结果并记录任何差异。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="zh_Hans_CN">
 			<Text>加速核打击动画</Text>
 		</Row>

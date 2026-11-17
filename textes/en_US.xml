@@ -89,6 +89,72 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="en_US">
 			<Text>Remembers tile yields during the AI's parallel computations, while the map cannot change.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="en_US">
+			<Text>Faster asset loading</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="en_US">
+			<Text>When a game loads, the game checks for each art file whether it exists in every asset folder (about 55). These checks are answered from a listing of each folder, read once per load. Saves several seconds when loading from the main menu. Local only, no effect on the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="en_US">
+			<Text>One Lua cleanup when closing the interface</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="en_US">
+			<Text>When the game closes its interface (leaving a game, Multiplayer Helper remap), it runs a full Lua garbage collection for every released script function. A single one is run at the end instead. Saves about 2 s before a remap. Interface only, no effect on the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="en_US">
+			<Text>Keep the gameplay database between loads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="en_US">
+			<Text>When the next game uses exactly the same mods, the gameplay database built for the previous one is kept instead of being rebuilt (about 1.5 s per load). GameCore is still reloaded for every game. The content is the same as after a rebuild: no desync. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="en_US">
+			<Text>Keep the mods' in-game texts between loads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="en_US">
+			<Text>The in-game texts of the mods are recorded at the first load, then written back from memory at the next ones when the mods are the same, instead of being read again from their files (about 1.5 s per load). Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="en_US">
+			<Text>No VSync on loading screens</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="en_US">
+			<Text>When VSync is on, the game waits for each screen refresh, and this also slows down the creation of the 3D terrain during a load. It is lifted during loading screens only, and stays as set in game (about 2 s per load). No effect when VSync is off. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="en_US">
+			<Text>Host's first remap load without terrain</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="en_US">
+			<Text>At a Multiplayer Helper remap, the host loads the new game, then reloads it at once from its own save. The first load skips the 3D terrain, which would be thrown away (about 10 s). The game, the interface and the clients are unchanged. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="en_US">
+			<Text>Idle job threads: yields before sleeping</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="en_US">
+			<Text>A job thread without work yields its processor 100 times before going to sleep, hundreds of times per second during the end of turn. Fewer yields: less processor time wasted waiting, the same work done. Disabled = 100, as in the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="en_US">
+			<Text>Idle job threads: tries before the first yield</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="en_US">
+			<Text>A job thread without work retries 2 × (threads + 1) times, spinning in place, before yielding its processor. A smaller fixed value shortens this busy wait, especially with many threads. Disabled = as in the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="en_US">
+			<Text>Sleep while waiting for the job threads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="en_US">
+			<Text>The thread that waits for a batch of jobs to end spins on the processor until the last job thread leaves, about 1 s of processor per load. It sleeps instead after a short wait, and is woken when a job thread leaves. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="en_US">
+			<Text>Write the AI choke point log</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="en_US">
+			<Text>When a map is generated, the game writes its whole choke point graph to AI_ChokePoint.csv (about 12 MB, 0.35 s). Off: the file is not written. No effect on the map or the game.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="en_US">
+			<Text>Fast choke point analysis</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="en_US">
+			<Text>Map generation: the triangulation used to find choke points is computed by a faster equivalent, with exactly the same result (about 2 s per generated map). Verification: computes both, keeps the game's result and logs any difference.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="en_US">
 			<Text>Nuclear strike animation speed-up</Text>
 		</Row>
