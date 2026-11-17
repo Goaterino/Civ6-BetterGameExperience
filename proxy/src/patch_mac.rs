@@ -230,6 +230,17 @@ pub fn branche(depuis: usize, vers: usize) -> Option<[u8; 4]> {
         .then(|| (0x1400_0000u32 | ((ecart >> 2) as u32 & 0x03ff_ffff)).to_le_bytes())
 }
 
+/// Relais arm64 : les instructions `avant` (sans adresse relative), puis un saut absolu vers
+/// `cible` par `x16` (`ldr x16, #8` ; `br x16` ; l'adresse).
+#[allow(dead_code)]
+pub fn relais(avant: &[u32], cible: usize) -> Vec<u8> {
+    let mut v: Vec<u8> = avant.iter().flat_map(|m| m.to_le_bytes()).collect();
+    v.extend_from_slice(&0x5800_0050u32.to_le_bytes());
+    v.extend_from_slice(&0xd61f_0200u32.to_le_bytes());
+    v.extend_from_slice(&(cible as u64).to_le_bytes());
+    v
+}
+
 /// Cible d'un `b` ou `bl` arm64, ou None si ce n'en est pas un.
 #[allow(dead_code)]
 pub fn cible_branche(at: usize, mot: u32) -> Option<usize> {

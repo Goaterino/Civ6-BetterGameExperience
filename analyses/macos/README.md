@@ -243,7 +243,9 @@ Conclusions, qui remplacent celles tirées de la CI :
      posé dans le jeu. État lu par l'export `BgdPolActifs` du chargeur
      ([proxy/src/pol_mac.rs](../../proxy/src/pol_mac.rs)) ; bit `ST_POL` (16) du proxy levé quand
      les correctifs portés sont posés.
-   - Restent : citoyens, spectateurs, congrès, ports, modificateurs de production, empilement,
+   - **Ports** ([proxy/src/ports_mac.rs](../../proxy/src/ports_mac.rs)) : porté (arm64), vérifié
+     dans le jeu (2026-11-17) : Sinbad repart d'un port et d'un autre district.
+   - Restent : citoyens, spectateurs, congrès, modificateurs de production, empilement,
      départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.

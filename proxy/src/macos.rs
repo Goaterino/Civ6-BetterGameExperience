@@ -9,7 +9,7 @@
 //! ensuite.
 //!
 //! Une fois l'original chargé, les correctifs portés sont posés dans son code (étape 4 de
-//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, correctif POL. Les autres restent à
+//! analyses/macos/README.md) : pour l'instant `fin_tour_mac` et `ports_mac`, correctifs POL. Les autres restent à
 //! porter : le bit `ST_POL`, qui permettrait au salon d'annoncer la machine, n'est pas encore levé.
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
@@ -34,6 +34,8 @@ mod patch;
 mod pol;
 #[path = "fin_tour_mac.rs"]
 mod fin_tour;
+#[path = "ports_mac.rs"]
+mod ports;
 
 use journal::log;
 
@@ -139,14 +141,25 @@ unsafe fn poser_correctifs() {
         log("correctifs : adresse de l'original introuvable, aucun posé");
         return;
     };
-    match fin_tour::installer(base) {
-        Ok(m) => {
-            log(&format!("fin de tour : {m}"));
-            STATUS.fetch_or(ST_POL, Ordering::Relaxed);
+    // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
+    // annoncerait des règles qu'elle n'applique pas.
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 2] =
+        [("fin de tour", fin_tour::installer), ("ports", ports::installer)];
+    let mut tous = true;
+    for (nom, installer) in correctifs {
+        match installer(base) {
+            Ok(m) => log(&format!("{nom} : {m}")),
+            Err(e) => {
+                log(&format!("{nom} : {e}"));
+                tous = false;
+            }
         }
-        Err(e) => log(&format!("fin de tour : {e}")),
+    }
+    if tous {
+        STATUS.fetch_or(ST_POL, Ordering::Relaxed);
     }
 }
+
 const RTLD_NOW: c_int = 0x2;
 const RTLD_LOCAL: c_int = 0x4;
 

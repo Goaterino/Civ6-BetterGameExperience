@@ -86,13 +86,9 @@ unsafe fn site_attendu(a: &Appel) -> bool {
         && mot(at - a.jeu) & 0x8000_0000 != 0
 }
 
-/// Relais `quel` : `mov w1, #quel`, `ldr x16, #8`, `br x16`, puis l'adresse de l'accroche.
+/// Relais `quel` : `mov w1, #quel`, puis saut absolu vers l'accroche.
 fn relais(quel: u32) -> Vec<u8> {
-    let mut v = Vec::with_capacity(RELAIS);
-    v.extend_from_slice(&(0x5280_0001u32 | (quel << 5)).to_le_bytes());
-    v.extend_from_slice(&0x5800_0050u32.to_le_bytes());
-    v.extend_from_slice(&0xd61f_0200u32.to_le_bytes());
-    v.extend_from_slice(&(etape_apres_diplomatie as *const () as usize as u64).to_le_bytes());
+    let mut v = patch::relais(&[0x5280_0001 | (quel << 5)], etape_apres_diplomatie as *const () as usize);
     v.resize(RELAIS, 0);
     v
 }

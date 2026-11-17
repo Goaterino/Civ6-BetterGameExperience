@@ -81,3 +81,9 @@ visible, et `CanStartOperation` l'active.
   `INSERT INTO TypeProperties (Type, Name, Value) VALUES ('UNIT_GREAT_ADMIRAL', 'CAN_TELEPORT_TO_CITY', 'true');`
   (données de mod, chargées par tous les joueurs).
 - Le rôle de `unité+0x9d8`/`+0x9dc` dans le droit à l'opération.
+
+## macOS
+
+Porté dans [proxy/src/ports_mac.rs](../../proxy/src/ports_mac.rs) (GameCore arm64, Civ6 Aspyr 1.4.6) :
+même vtable décalée d'une entrée (`CanStart` en `0xbe663c`), appel du test du centre-ville
+(`0xa8c674`) en `0xbe66d8`, unité dans `x20`, propriétaire en `unité+0x130`, domaine en `unité+0x2a8`.
