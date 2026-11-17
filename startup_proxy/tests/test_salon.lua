@@ -388,6 +388,181 @@ do
 	check(#l.chat == 1, "pas de message pour une reconnexion équipée");
 end
 
+-- 13a. Host migration in game: the new host, a client at launch, takes the verdict over; players
+-- who join afterwards, the old host among them, conclude like everyone else.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } });
+	l.open();
+	l.countdown();
+	Lancer(l);
+	local bob = l.machines[1];
+	check(bob.values[1].BGD_VERDICT == nil, "a client has no verdict of its own");
+	bob.env.Civ6Proxy_PolActifs = function() return bob.pol and 1 or 0; end
+	assert(load(PARTIE, "=partie.lua", "t", bob.env))();
+	l.host = 1;
+	for _, m in pairs(l.machines) do m.events.MultiplayerHostMigrated.Fire(1); end
+	local jh = bob.values[1].BGD_VERSION:match("@(.-)#");
+	local pris = bob.values[1].BGD_VERDICT;
+	check(pris ~= nil and pris:find("^0%.1%.0@" .. jh .. ":1:") ~= nil, "new host: verdict taken over (" .. tostring(pris) .. ")");
+	check(bob.log:find("verdict taken over as the new host", 1, true) ~= nil, "taking over logged");
+	check(bob.pol == true, "new host: state unchanged");
+	for id = 0, 2, 2 do
+		local m = l.machines[id];
+		m.cache = false;
+		m.luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+		check(m.pol == true, "player " .. id .. " joining after the migration: on");
+		local perso = m.values[id].BGD_VERSION:match("#(.*)$");
+		check(bob.values[1].BGD_VERDICT:find(perso, 1, true) ~= nil, "player " .. id .. ": token relayed by the new host");
+	end
+	local avant = bob.values[1].BGD_VERDICT;
+	bob.events.PlayerInfoChanged.Fire(2);
+	check(bob.values[1].BGD_VERDICT == avant, "taken over once");
+	-- A game launched with POL off: the verdict taken over says off, nobody is turned on.
+	local o = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Léo", proxy = false } });
+	o.open();
+	o.countdown();
+	Lancer(o);
+	local b = o.machines[1];
+	b.env.Civ6Proxy_PolActifs = function() return b.pol and 1 or 0; end
+	assert(load(PARTIE, "=partie.lua", "t", b.env))();
+	o.host = 1;
+	b.events.MultiplayerHostMigrated.Fire(1);
+	check(tostring(b.values[1].BGD_VERDICT):find(":0:", 1, true) ~= nil and b.pol ~= true, "POL off at launch: taken over as off");
+end
+
+-- 13b. The host's final verdict reaches a client after its lobby was hidden for the launch (too late
+-- for PlayerInfoChanged): at load, the launch data decides, the same as everyone else.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } });
+	l.open();
+	local z = l.machines[2];
+	local final = z.values[0].BGD_VERDICT;
+	local perso = z.values[2].BGD_VERSION:match("#(.*)$");
+	local i, j = final:find(perso, 1, true);
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	z.events.PlayerInfoChanged.Fire(0);
+	l.countdown();
+	check(Pol(l, 2) == "désactivés", "stale verdict at the countdown: Zoé off (" .. Pol(l, 2) .. ")");
+	z.cache = true;
+	z.values[0].BGD_VERDICT = final;
+	local said = #l.tout;
+	z.events.PlayerInfoChanged.Fire(0);
+	check(z.pol == true, "verdict that arrives while the lobby is hidden for the launch: on");
+	check(#l.tout == said, "hidden lobby: nothing said");
+	-- A verdict off, or without our token, never turns a hidden lobby off or on.
+	z.values[0].BGD_VERDICT = final:gsub(":1:", ":0:");
+	z.events.PlayerInfoChanged.Fire(0);
+	check(z.pol == true, "hidden lobby: never turned off");
+	-- The same verdict arriving during the load instead (queued): decided at the load screen.
+	z.pol = false;
+	z.values[0].BGD_VERDICT = final;
+	-- The load screen of each machine, with that machine's copy of the player configurations.
+	local function Charger(m, reseau, fermeture)
+		local ev = NewEvent();
+		local env = setmetatable({
+			Events = { LoadScreenContentReady = ev, LoadScreenClose = fermeture or NewEvent() },
+			GameConfiguration = {
+				IsNetworkMultiplayer = function() return reseau ~= false; end,
+				IsHotseat = function() return false; end,
+				IsPlayByCloud = function() return false; end,
+			},
+			Network = { GetLocalPlayerID = function() return m.id; end, GetGameHostPlayerID = function() return l.host; end },
+			PlayerConfigurations = setmetatable({}, { __index = function(_, pid)
+				local v = m.values[pid];
+				return v and { GetValue = function(_, k) return v[k]; end };
+			end }),
+			Civ6Proxy_FixerPol = function(a) m.pol = (a == 1); end,
+			Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end,
+		}, { __index = _G });
+		assert(load(CHARGEMENT, "=chargement.lua", "t", env))();
+		ev.Fire();
+	end
+	for _, m in pairs(l.machines) do Charger(m); end
+	check(z.pol == true and l.machines[0].pol == true and l.machines[1].pol == true, "at load: on, like everyone else");
+	check(z.log:find("load: POL fixes on (launch data)", 1, true) ~= nil, "decision at load logged");
+	-- A verdict that does not name this machine, or is off, turns nothing on.
+	z.pol = false;
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	Charger(z);
+	check(z.pol == false, "at load, verdict without our token: stays off");
+	z.values[0].BGD_VERDICT = final:gsub(":1:", ":0:");
+	Charger(z);
+	check(z.pol == false, "at load, verdict off: stays off");
+	-- The verdict arrives between the end of the load and the closing of the load screen.
+	local fermeture = NewEvent();
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	Charger(z, true, fermeture);
+	check(z.pol == false, "verdict not there yet when the game is loaded: off");
+	z.values[0].BGD_VERDICT = final;
+	fermeture.Fire();
+	check(z.pol == true, "verdict there when the load screen closes: on");
+end
+
+-- 13c. With the lobby's timer: a line that may be one message early waits a few ticks, and is not
+-- said when the verdict arrives meanwhile; a host without BGE is still reported.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } }, { controles = true });
+	l.open();
+	l.tic();
+	local z = l.machines[2];
+	local final = z.values[0].BGD_VERDICT;
+	local perso = z.values[2].BGD_VERSION:match("#(.*)$");
+	local i, j = final:find(perso, 1, true);
+	z.values[0].BGD_VERDICT = final:sub(1, i - 1) .. "autre" .. final:sub(j + 1);
+	z.events.PlayerInfoChanged.Fire(0);
+	l.countdown();
+	check(#l.chat == 1 and l.chat[1].from == 0, "late verdict: only the host's line at the countdown");
+	z.values[0].BGD_VERDICT = final;
+	z.events.PlayerInfoChanged.Fire(0);
+	l.tic(6);
+	check(#l.chat == 1, "late verdict arrived: no false line from the client");
+	check(Pol(l, 2):find("actifs") ~= nil and z.pol == true, "late verdict arrived: Zoé on");
+
+	local s = NewLobby({ { nom = "Hôte", proxy = false }, { nom = "Bob" } }, { controles = true });
+	s.open();
+	s.tic();
+	s.countdown();
+	check(#s.chat == 0, "host without BGE: not said at once");
+	s.tic(4);
+	check(#s.chat == 1 and s.chat[1].text:find("The host does not have BetterGameExperience", 1, true) ~= nil, "host without BGE: said after the delay");
+	s.tic(4);
+	check(#s.chat == 1, "host without BGE: said once");
+
+	-- The host misses a player: said after the delay, or at the launch if it comes first.
+	local h = NewLobby({ { nom = "Hôte" }, { nom = "Bob", proxy = false } }, { controles = true, avant = function(env)
+		env.Network.LaunchGame = function() end
+	end });
+	h.open();
+	h.tic();
+	h.countdown();
+	check(#h.chat == 0, "host, player without BGE: not said at once");
+	h.machines[0].env.Network.LaunchGame();
+	check(#h.chat == 1 and h.chat[1].text:find("Without BetterGameExperience: Bob", 1, true) ~= nil, "host: said at the launch at the latest");
+	h.tic(6);
+	check(#h.chat == 1, "host: said once");
+
+	-- Joining a game in progress: the client says nothing about the host.
+	local g = NewLobby({ { nom = "Hôte", proxy = false }, { nom = "Bob" } });
+	g.machines[1].env.Network.IsPlayerHotJoining = function() return true; end
+	g.open();
+	g.countdown();
+	check(#g.chat == 0, "game in progress: no line about the host");
+	check(g.machines[1].pol ~= true, "game in progress: off until the host's verdict names this machine");
+end
+
+-- 13d. A game exe BGE does not know: said to everyone on arrival, after the announcement.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { lang = "en_US", avant = function(env)
+		env.Civ6Proxy_ExeInconnu = function() return env.Network.GetLocalPlayerID() == 1 and 1 or 0; end
+	end });
+	l.open();
+	local n, text = 0, "";
+	for _, c in ipairs(l.chat) do
+		if c.text:find("not the current Steam version", 1, true) then n = n + 1; text = c.text; end
+	end
+	check(n == 1 and text == "[COLOR_RED]BGE - Bob's copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.[ENDCOLOR]", "unknown exe said once, by that player: " .. text);
+end
+
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une
 -- fois, quand il est prêt.
 do
@@ -440,7 +615,7 @@ do
 		local etat = false;
 		local ev = NewEvent();
 		local env = setmetatable({
-			Events = { LoadScreenContentReady = ev },
+			Events = { LoadScreenContentReady = ev, LoadScreenClose = NewEvent() },
 			GameConfiguration = {
 				IsNetworkMultiplayer = function() return cas.reseau; end,
 				IsHotseat = function() return false; end,
@@ -534,7 +709,8 @@ do
 	l.host = 1;
 	for _, m in pairs(l.machines) do m.events.MultiplayerHostMigrated.Fire(1); end
 	check(#l.annonces == 2, "pas de nouvelle annonce à une migration");
-	l.open();
+	-- A lobby entered again goes through JoiningRoom.lua, the host's too.
+	for _, m in pairs(l.machines) do m.luaEvents.JoiningRoom_ShowStagingRoom.Fire(); end
 	check(#l.annonces == 4, "nouvelle ouverture : nouvelles annonces");
 	local h = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { hotseat = true });
 	h.open();
@@ -571,6 +747,37 @@ do
 	session = 8;
 	l.open();
 	check(#l.annonces == 4, "nouvelle session : nouvelles annonces (" .. #l.annonces .. ")");
+end
+
+-- 20c. Back from the lobby's Game Setup tab (HostGame_ShowStagingRoom): same lobby, so tokens and
+-- POL are kept and a launch right after finds everyone on; a new lobby or session still draws new
+-- tokens.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } });
+	local session = 3;
+	for _, m in pairs(l.machines) do m.env.Network.GetSessionID = function() return session; end end
+	l.open();
+	local hote, bob = l.machines[0], l.machines[1];
+	local tokenHote, tokenBob = hote.values[0].BGD_VERSION, bob.values[1].BGD_VERSION;
+	check(Pol(l, 1) == "actifs", "lobby open: Bob on");
+	bob.luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(bob.values[1].BGD_VERSION == tokenBob, "client back from Game Setup: token kept (" .. tostring(bob.values[1].BGD_VERSION) .. ")");
+	check(bob.pol == true, "client back from Game Setup: still on");
+	check((bob.log or ""):find("back from Game Setup, tokens kept", 1, true) ~= nil, "client: logged");
+	hote.luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(hote.values[0].BGD_VERSION == tokenHote, "host back from Game Setup: token kept");
+	check(l.actif() == "1" and l.verdict():find(tokenBob:match("#(.*)$"), 1, true) ~= nil, "verdict still lists Bob (" .. tostring(l.verdict()) .. ")");
+	l.countdown();
+	check(Pol(l, 0) == "actifs" and Pol(l, 1) == "actifs", "launch right after: everyone on (" .. Pol(l, 0) .. ", " .. Pol(l, 1) .. ")");
+	bob.luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+	check(bob.values[1].BGD_VERSION ~= tokenBob, "new lobby: new token");
+	local tokenHote2 = hote.values[0].BGD_VERSION;
+	session = 4;
+	hote.luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(hote.values[0].BGD_VERSION ~= tokenHote2, "other session: opened as new");
+	local f = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } });
+	f.machines[0].luaEvents.HostGame_ShowStagingRoom.Fire();
+	check(f.machines[0].values[0].BGD_VERSION ~= nil, "lobby not open yet: opened as usual");
 end
 
 -- 21. Bouton BGE Check : visible chez l'hôte actif seulement, et hors draft de MPH.

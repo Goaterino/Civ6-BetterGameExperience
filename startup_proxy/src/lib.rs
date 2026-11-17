@@ -40,6 +40,11 @@ mod relink;
 mod pings;
 mod snapshots;
 mod medias;
+mod rejoin;
+mod flush;
+mod sync_notes;
+mod remap;
+mod reload_all;
 #[cfg(feature = "diag")]
 mod zones;
 #[path = "../../proxy/src/version.rs"]
@@ -113,6 +118,9 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             relink::install();
             pings::install();
             snapshots::install();
+            rejoin::install();
+            flush::install();
+            sync_notes::install();
             #[cfg(feature = "diag")]
             zones::install();
         }

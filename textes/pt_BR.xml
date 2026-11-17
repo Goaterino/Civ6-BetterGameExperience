@@ -374,6 +374,12 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="pt_BR">
 			<Text>turno iniciado sem {1} (não estavam prontos após {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pt_BR">
+			<Text>{1} não sinalizou que estava pronto por dois turnos seguidos: o início do turno não espera mais.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="pt_BR">
+			<Text>nenhum sinal de início do anfitrião após {1} s: seu turno começa agora.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pt_BR">
 			<Text>fim do turno: o cronômetro do anfitrião acabou.</Text>
 		</Row>
@@ -606,7 +612,19 @@
 			<Text>{1}: não foi possível enviar o relatório de bug, ele foi guardado no computador do jogador.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pt_BR">
-			<Text>Mensagem de rede danificada bloqueada: ela teria congelado a partida.</Text>
+			<Text>Congelamento da partida evitado para {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="pt_BR">
+			<Text>Apagamento das configurações da partida evitado para {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="pt_BR">
+			<Text>Carregamento duplo evitado para {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pt_BR">
+			<Text>Faltam {2} objetos na partida de {1} e ela tem {3} a mais em relação à do anfitrião: todos recarregam a partida do anfitrião para evitar a dessincronização de {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="pt_BR">
+			<Text>O jogo de {1} não é a versão atual da Steam: as correções de rede do BGE estão inativas no PC dele.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pt_BR">
 			<Text>{1} e {2} estão conectados pelo anfitrião (0 ms). Tentando conectá-los diretamente durante a troca de turno.</Text>

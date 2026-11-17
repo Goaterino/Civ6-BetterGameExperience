@@ -374,6 +374,12 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="pl_PL">
 			<Text>rozpoczęto bez: {1} (niegotowi po {2} s).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pl_PL">
+			<Text>{1} dwie tury z rzędu nie zgłosił gotowości: początek tury już na niego nie czeka.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="pl_PL">
+			<Text>brak sygnału startu od hosta po {1} s: twoja tura zaczyna się teraz.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pl_PL">
 			<Text>koniec tury: zegar hosta dobiegł końca.</Text>
 		</Row>
@@ -606,7 +612,19 @@
 			<Text>{1}: nie udało się wysłać zgłoszenia błędu, zostało zapisane na komputerze gracza.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pl_PL">
-			<Text>Zablokowano uszkodzoną wiadomość sieciową, która zamroziłaby grę.</Text>
+			<Text>Zapobieżono zawieszeniu gry u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="pl_PL">
+			<Text>Zapobieżono wyczyszczeniu ustawień gry u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="pl_PL">
+			<Text>Zapobieżono podwójnemu wczytaniu u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pl_PL">
+			<Text>W grze {1} brakuje {2} obiektów i ma {3} nadmiarowych w porównaniu z grą hosta: wszyscy wczytują ponownie grę hosta, aby zapobiec desynchronizacji {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="pl_PL">
+			<Text>Gra gracza {1} nie jest aktualną wersją ze Steam: poprawki sieciowe BGE są nieaktywne na tym komputerze.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pl_PL">
 			<Text>{1} i {2} są połączeni przez hosta (0 ms). Próba bezpośredniego połączenia podczas zmiany tury.</Text>

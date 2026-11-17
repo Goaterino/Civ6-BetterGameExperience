@@ -33,6 +33,12 @@
 //! l'identifiant du joueur (seulement -1) : un identifiant hors des emplacements n'est pas appliqué
 //! non plus (voir `MESSAGES`).
 //!
+//! A failed read leaves its destination untouched, so at the seven sites the destination is set
+//! before the read: no leftover count. A message whose root map count cannot be read is damaged. A
+//! `NetGameConfig` with no changed key and an empty map would replace the whole game configuration
+//! with nothing (every player's civ, leader and level): it is never applied. Such messages come from
+//! the game's queue flush after a load, when a chunked snapshot is still arriving.
+//!
 //! Names: Ghidra project `civ6-netcode`, bookmarks "Gel 2026-11-09" (DX12 addresses above). The
 //! same rules, installed by an external hook during development, ran over two whole ten-player
 //! games (162 turns, 108,000 messages received) without a false alarm.
@@ -93,6 +99,10 @@ const SITES: [(&str, Regle); 7] = [
 ];
 /// The read where test mode injects the freeze count: "carte : entrées".
 const SITE_INJECTION: usize = 1;
+/// The root map count of `NetGameConfig` and `NetPlayerInfo`: "carte nommée : compte".
+const SITE_RACINE: usize = 2;
+/// Written before that read; still there after it, the read failed. Not a possible count.
+const NON_LU: u32 = 0x7fff_fffe;
 /// `call qword ptr [rax+30h]`, juste avant chaque adresse de retour.
 const APPEL: [u8; 3] = [0xff, 0x50, 0x30];
 
@@ -119,6 +129,12 @@ const LIRE: usize = 3;
 const TRAITER: usize = 4;
 /// The configuration's player slots, 0x40 bytes each, run from `[+0x2e0]` to `[+0x2e8]`.
 const EMPLACEMENTS: usize = 0x2e0;
+/// `NetGameConfig`: number of changed keys (0: the whole configuration is replaced), received map.
+const CONFIG_CHANGED_KEYS: usize = 0x458;
+const CONFIG_MAP: usize = 0x468;
+/// Map: end marker, first entry (equal when the map is empty).
+const MAP_END: usize = 0x30;
+const MAP_FIRST: usize = 0x38;
 
 /// Everything that depends on the exe: Ghidra addresses (base `0x140000000`) and bytes that contain
 /// a relative displacement.
@@ -209,10 +225,18 @@ static RETOURS: [AtomicUsize; 7] = [
 static CONFIGURATION: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static CORRECTIONS: AtomicU32 = AtomicU32::new(0);
-/// Corrections pas encore annoncées dans le chat (`a_annoncer`).
+/// Impossible counts not yet said in the chat (`a_annoncer`): each would have frozen the game.
 static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
+/// Configuration wipes refused, not yet said in the chat (`wipes_to_announce`).
+static WIPES: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
+/// The exe is not one of the builds BGE knows: none of the network fixes is installed.
+static UNKNOWN_EXE: AtomicBool = AtomicBool::new(false);
+
+pub fn unknown_exe() -> bool {
+    UNKNOWN_EXE.load(Ordering::Relaxed)
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Mode {
@@ -257,16 +281,38 @@ pub fn joueur_valide(id: i32, emplacements: usize) -> bool {
     id == -1 || usize::try_from(id).is_ok_and(|i| i < emplacements)
 }
 
-/// Une correction de plus (journal, chat) ; le total.
+/// Would this `NetGameConfig` wipe the game configuration? No changed key (whole replacement) and an
+/// empty map (first entry = end marker).
+pub fn wipes_configuration(changed_keys: u32, first: usize, end: usize) -> bool {
+    changed_keys == 0 && first == end
+}
+
+unsafe fn config_wipes(msg: *mut u8) -> bool {
+    let changed_keys = std::ptr::read_unaligned(msg.add(CONFIG_CHANGED_KEYS) as *const u32);
+    let map = msg as usize + CONFIG_MAP;
+    wipes_configuration(changed_keys, std::ptr::read_unaligned((map + MAP_FIRST) as *const usize), map + MAP_END)
+}
+
+/// An impossible count replaced (log, chat: a freeze prevented); the total of corrections.
 fn compter() -> u32 {
     A_ANNONCER.fetch_add(1, Ordering::Relaxed);
+    compter_seul()
+}
+
+/// A correction logged only; the total.
+fn compter_seul() -> u32 {
     CORRECTIONS.fetch_add(1, Ordering::Relaxed) + 1
 }
 
-/// Les corrections faites depuis le dernier appel, remises à 0 : `Civ6Proxy_GardeMessages()`, que
-/// `partie.lua` interroge en jeu pour le dire dans le chat.
+/// Freezes prevented since the last call, reset to 0: `Civ6Proxy_GardeMessages()`, which
+/// `partie.lua` asks in game to say it in the chat.
 pub fn a_annoncer() -> u32 {
     A_ANNONCER.swap(0, Ordering::Relaxed)
+}
+
+/// Configuration wipes refused since the last call, reset to 0: `Civ6Proxy_GardeWipes()`.
+pub fn wipes_to_announce() -> u32 {
+    WIPES.swap(0, Ordering::Relaxed)
 }
 
 // `C-unwind` : si la lecture d'origine levait une exception C++, elle traverserait ces cadres au
@@ -279,25 +325,36 @@ type Lecture = unsafe extern "C-unwind" fn(*mut c_void, *mut c_void, *mut u8, us
 /// désérialiseur. Après la lecture d'origine, une valeur impossible à l'un des sept sites devient 0.
 unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut u8, n: usize, retour: usize) -> usize {
     let real: Lecture = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
+    let site = if n == 4 && !dest.is_null() { RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) } else { None };
+    let Some(i) = site else {
+        return real(lecteur, desc, dest, n);
+    };
+    // A failed read leaves the destination as it was: start from a known value, not from a leftover
+    // one. A message whose root map count cannot be read is damaged (not applied); elsewhere 0, as
+    // the game itself does for the changed keys.
+    let racine = i == SITE_RACINE;
+    std::ptr::write_unaligned(dest as *mut u32, if racine { NON_LU } else { 0 });
     let r = real(lecteur, desc, dest, n);
-    if n == 4 && !dest.is_null() {
-        if let Some(i) = RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) {
-            let (nom, regle) = SITES[i];
-            if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
-                std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
-                log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
-            }
-            let valeur = std::ptr::read_unaligned(dest as *const u32);
-            let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
-            if let Some(motif) = absurde(regle, valeur, drapeaux) {
-                std::ptr::write_unaligned(dest as *mut u32, 0);
-                let total = compter();
-                if total <= 20 || total % 100 == 0 {
-                    log(&format!(
-                        "messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"
-                    ));
-                }
-            }
+    let (nom, regle) = SITES[i];
+    if racine && std::ptr::read_unaligned(dest as *const u32) == NON_LU {
+        std::ptr::write_unaligned(dest as *mut u32, 0);
+        let total = compter();
+        if total <= 20 || total % 100 == 0 {
+            log(&format!("messages: {nom}: read failed, count set to 0 ({total} corrections)"));
+        }
+        return r;
+    }
+    if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
+        std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
+        log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
+    }
+    let valeur = std::ptr::read_unaligned(dest as *const u32);
+    let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
+    if let Some(motif) = absurde(regle, valeur, drapeaux) {
+        std::ptr::write_unaligned(dest as *mut u32, 0);
+        let total = compter();
+        if total <= 20 || total % 100 == 0 {
+            log(&format!("messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"));
         }
     }
     r
@@ -372,11 +429,17 @@ unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
         log(&format!("messages: damaged {} not applied, the configuration is kept", MESSAGES[i]));
         return;
     }
+    if i == 0 && config_wipes(msg) {
+        WIPES.fetch_add(1, Ordering::Relaxed);
+        let total = compter_seul();
+        log(&format!("messages: NetGameConfig replacing the whole configuration with nothing, not applied ({total} corrections)"));
+        return;
+    }
     if i == 1 {
         let id = std::ptr::read_unaligned(msg.add(0x38) as *const i32);
         if let Some(n) = emplacements() {
             if !joueur_valide(id, n) {
-                let total = compter();
+                let total = compter_seul();
                 log(&format!("messages : NetPlayerInfo : joueur {id} hors des {n} emplacements, non appliqué ({total} corrections)"));
                 return;
             }
@@ -500,6 +563,7 @@ pub unsafe fn install() {
             "messages: unknown exe ({}), guard not installed (DX12 or DX11 exe of 2026-11-05 expected)",
             raisons.join("; ")
         ));
+        UNKNOWN_EXE.store(true, Ordering::Relaxed);
         return;
     };
     let image = |adresse: u64| exe + (adresse - BASE) as usize;
@@ -541,6 +605,17 @@ mod tests {
         A_ANNONCER.store(3, Ordering::Relaxed);
         assert_eq!(a_annoncer(), 3);
         assert_eq!(a_annoncer(), 0, "une correction n'est annoncée qu'une fois");
+        WIPES.store(2, Ordering::Relaxed);
+        assert_eq!(wipes_to_announce(), 2);
+        assert_eq!(wipes_to_announce(), 0, "a wipe is said once");
+    }
+
+    #[test]
+    fn empty_whole_replacement_wipes() {
+        let end = 0x1000_0030;
+        assert!(wipes_configuration(0, end, end), "no changed key, empty map");
+        assert!(!wipes_configuration(0, 0x2000_0000, end), "whole replacement with entries");
+        assert!(!wipes_configuration(3, end, end), "only the changed keys are touched");
     }
 
     #[test]

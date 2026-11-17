@@ -10,6 +10,8 @@
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0) : 0 à chaque
 --                                         ouverture du salon, puis notre conclusion du verdict
 --   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
+--   Civ6Proxy_ExeInconnu()             -> 1 if the game exe is not a build BGE knows: its network
+--                                         fixes are not installed, said to everyone on arrival
 --
 -- Les configurations de joueur sont enregistrées avec la partie : une sauvegarde rechargée rapporte
 -- les annonces et le verdict d'une session précédente, peut-être chez des joueurs qui n'ont plus le
@@ -47,6 +49,11 @@
 -- ne s'affichent pas chez qui a BetterGameExperience (enveloppe d'OnChat). Le proxy a ajouté au XML du
 -- salon le bouton (BGD_CheckButton) et un minuteur (BGD_SalonMinuteur, environ 0,5 s) ; sans eux,
 -- l'annonce part tout de suite et le bouton n'existe pas.
+-- At the countdown, a line that depends on a message possibly still on its way (the host does not
+-- see us yet, or misses an announcement) is said BGD_AVIS_TICS timer ticks later, if still true. A
+-- player joining a game in progress says nothing about the host: that game's state is decided.
+-- After the countdown and until the game is loaded, a hidden lobby still follows the host's
+-- verdict, towards "on" only.
 -- Les messages partent en anglais (BGD_TxtAnglais), lisibles par ceux qui n'ont pas BetterGameDLLs ;
 -- chaque machine équipée les affiche dans sa langue (BGD_TxtChat, enveloppe d'OnChat en fin de bloc).
 -- On ne s'appuie que sur les événements du jeu et sur StartLaunchCountdown, présents dans
@@ -68,7 +75,9 @@ local BGD = {
 	annonce = false,   -- annonce « BetterGameExperience activé » à envoyer au prochain tic
 	session = nil,     -- session réseau de la dernière annonce envoyée
 	check = nil,       -- hôte : BGE Check en cours { jeton, ordre, attendus, reponses, tics }
+	avis = nil,        -- timer ticks left before the countdown line is said
 };
+local BGD_AVIS_TICS = 4;
 
 local BGD_CHECK_DEMANDE = ".bgd_check ";
 local BGD_CHECK_REPONSE = ".bgd_version ";
@@ -262,15 +271,36 @@ local function BGD_MessageDUnClient()
 	BGD_Dire("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_HOTE_SANS") .. "[ENDCOLOR]");
 end
 
+local function BGD_MessageDuLancement()
+	BGD.avis = nil;
+	if Network.IsGameHost() then
+		BGD_MessageDeLHote();
+	else
+		BGD_MessageDUnClient();
+	end
+end
+
 -- Au démarrage du compte à rebours, sur chaque machine : annonce et verdict à jour, message, et la
 -- conclusion locale au journal.
 local function BGD_AvantLancement()
 	if not BGD_Concerne() then return; end
 	BGD_Publier();
+	local doute;
 	if Network.IsGameHost() then
-		BGD_MessageDeLHote();
+		local sans, autres = BGD_Bilan();
+		doute = #sans > 0 or #autres > 0;
 	else
-		BGD_MessageDUnClient();
+		doute = not BGD_HoteNousVoit();
+		if doute and Network.IsPlayerHotJoining ~= nil and Network.IsPlayerHotJoining(Network.GetLocalPlayerID()) then
+			BGD_Journal("lancement : game in progress, the host's verdict does not name this machine yet");
+			BGD.avis = nil;
+			return;
+		end
+	end
+	if doute and Controls ~= nil and Controls.BGD_SalonMinuteur ~= nil then
+		BGD.avis = BGD_AVIS_TICS;
+	else
+		BGD_MessageDuLancement();
 	end
 	BGD_Journal("lancement : correctifs POL " .. (BGD_PolActifs() and "actifs" or "désactivés"));
 end
@@ -315,6 +345,9 @@ local function BGD_Annoncer()
 	end
 	BGD.session = session;
 	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+	if Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1 then
+		BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_EXE", BGD_Nom(Network.GetLocalPlayerID())) .. "[ENDCOLOR]");
+	end
 end
 
 -- Salon d'une partie en réseau en direct, que BetterGameExperience soit actif ou non (réponse au BGE Check).
@@ -481,6 +514,13 @@ local function BGD_Tic()
 	if BGD.annonce then
 		BGD_Annoncer();
 	end
+	if BGD.avis ~= nil then
+		BGD.avis = BGD.avis - 1;
+		if BGD.avis <= 0 then
+			BGD_Publier();
+			BGD_MessageDuLancement();
+		end
+	end
 	local c = BGD.check;
 	if c ~= nil then
 		c.tics = c.tics + 1;
@@ -510,6 +550,7 @@ end
 -- nouveau jeton de l'hôte.
 local function BGD_Ouverture(migration)
 	BGD.ouvert = true;
+	BGD.openedSession = BGD_Session();
 	-- Correctifs POL coupés jusqu'au verdict ; disponibilité relue, elle change quand le proxy de
 	-- GameCore se charge (première partie) ou que ses réglages changent.
 	Civ6Proxy_FixerPol(0, "ouverture du salon");
@@ -522,12 +563,26 @@ local function BGD_Ouverture(migration)
 	BGD.message = nil;
 	BGD.instantane = {};
 	BGD.check = nil;
+	BGD.avis = nil;
 	BGD.annonce = (migration ~= true);
 	if BGD_Concerne() then
 		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 			BGD.instantane[id] = BGD_Valeur(id, BGD_CLE_VERSION);
 		end
 	end
+	BGD_Publier();
+	BGD_Armer();
+end
+
+-- Back from the lobby's Game Setup tab (HostGame_ShowStagingRoom, offered only inside a session):
+-- same lobby, so tokens and POL are kept, and the announcement and verdict catch up on what changed
+-- while the lobby was hidden. Anything else opens the lobby as new.
+local function BGD_BackToStagingRoom()
+	if not BGD.ouvert or BGD_Session() ~= BGD.openedSession then
+		BGD_Ouverture();
+		return;
+	end
+	BGD_Journal("back from Game Setup, tokens kept");
 	BGD_Publier();
 	BGD_Armer();
 end
@@ -640,7 +695,7 @@ else
 	else
 		BGD_Journal("StartLaunchCountdown introuvable : pas de message avant le lancement");
 	end
-	LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
+	LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(BGD_BackToStagingRoom));
 	LuaEvents.JoiningRoom_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
 	Events.MultiplayerHostMigrated.Add(BGD_Protege(function()
 		if BGD.ouvert then
@@ -672,12 +727,15 @@ else
 	local function fermeture()
 		BGD.ouvert = false;
 	end
+	-- A verdict that arrives after this lobby is hidden is handled at load (chargement.lua).
 	Events.LoadScreenContentReady.Add(fermeture);
 	Events.LeaveGameComplete.Add(fermeture);
 	Events.MultiplayerPlayerConnected.Add(BGD_Protege(BGD_Publier));
 	Events.PlayerInfoChanged.Add(BGD_Protege(function()
 		if not ContextPtr:IsHidden() then
 			BGD_Publier();
+		elseif BGD_PolActifs() then
+			Civ6Proxy_FixerPol(1, "host verdict after the countdown");
 		end
 	end));
 	-- Redimensionnement de MPH (changement de résolution) : il recalcule la hauteur du tableau
@@ -769,6 +827,9 @@ do
 
 	-- Hôte, juste avant le lancement.
 	local function Ajouter()
+		if BGD.avis ~= nil and Network.IsGameHost() and BGD_Concerne() then
+			BGD_MessageDuLancement();
+		end
 		if not Network.IsGameHost() or DansConfig() then return; end
 		local pings = GameConfiguration.GetValue("BGD_TEAM_PINGS");
 		if not (pings == true or pings == 1) then return; end

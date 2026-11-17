@@ -111,6 +111,10 @@ macro_rules! forward {
                 crate::depart::reset();
                 crate::rendements_empire::reset();
             }
+            if $name == "DllDestroyGameContext" {
+                // End of the game: no turn-start hold outlives it.
+                crate::depart::game_destroyed();
+            }
             let p = resolve(&CACHE, concat!($name, "\0").as_bytes());
             if p == 0 {
                 // DllCreateGameContext rend alors un contexte nul : le jeu signale l'échec.

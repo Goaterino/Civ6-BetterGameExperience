@@ -374,6 +374,12 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="zh_Hans_CN">
 			<Text>已在没有 {1} 的情况下开始（{2} 秒后仍未准备好）。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="zh_Hans_CN">
+			<Text>{1} 连续两个回合未发出准备信号：回合开始将不再等待。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="zh_Hans_CN">
+			<Text>{1} 秒后仍未收到主机的开始信号：你的回合现在开始。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="zh_Hans_CN">
 			<Text>回合结束：主机的计时器已到。</Text>
 		</Row>
@@ -606,7 +612,19 @@
 			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="zh_Hans_CN">
-			<Text>已拦截一条损坏的网络消息，否则游戏会卡死。</Text>
+			<Text>已为 {1} 防止游戏卡死。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="zh_Hans_CN">
+			<Text>已为 {1} 防止游戏设置被清空。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="zh_Hans_CN">
+			<Text>已为 {1} 防止重复加载。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="zh_Hans_CN">
+			<Text>{1} 的游戏与主机相比缺少 {2} 个对象，多出 {3} 个：所有人重新加载主机的游戏，以防止 {1} 不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="zh_Hans_CN">
+			<Text>{1} 的游戏不是当前的 Steam 版本：BGE 的网络修复在其电脑上未启用。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="zh_Hans_CN">
 			<Text>{1} 和 {2} 通过主机连接（0 ms）。将在回合切换时尝试直接连接。</Text>

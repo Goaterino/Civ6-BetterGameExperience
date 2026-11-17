@@ -10,6 +10,7 @@
 --   Civ6Proxy_RelinkStart(partner, steamID) -> 1 if the direct link attempt started
 --   Civ6Proxy_RelinkState(partner) -> 0 in progress, 1 linked directly, 2 failed
 --   Civ6Proxy_RelayForgetPair(a, b) -> removes the pair from the local relay table (see below)
+--   Civ6Proxy_SyncNotes()     -> major objects repaired for a client at a turn end (host, see below)
 --
 -- Un joueur qui rejoint la partie en cours, ou s'y reconnecte, passe par le salon : il tire un
 -- nouveau jeton et ne croit le verdict de l'hôte que s'il l'y trouve (salon.lua). Or l'hôte est en
@@ -17,6 +18,10 @@
 -- version et le jeton de l'hôte, l'hôte ajoute son jeton au verdict de la partie, sans changer
 -- l'état des correctifs POL (on ne peut pas les activer ou les couper en pleine partie sans
 -- désynchroniser). Le nouveau venu conclut alors comme tout le monde.
+-- Only the machine that launched the game has a verdict. A machine that becomes host by migration
+-- writes its own: its version, the lobby token of its announcement (the one every player of this
+-- game announces), its own POL state, and the tokens of the players present. Without it, nobody
+-- joining after a migration would find its token and all would run with POL off.
 -- Si les correctifs POL sont actifs et qu'un humain se met prêt sans s'être annoncé (sans le proxy
 -- ou d'une autre version), l'hôte le dit dans le chat : sa partie va se désynchroniser. Les couper pour tous demanderait de
 -- le faire au même point de la simulation sur chaque machine, ce qui n'est pas encore fait.
@@ -44,8 +49,18 @@ local function BGD_PartieRelais()
 	-- Extra parentheses: GetValue of a missing key returns no value at all, and tostring() fails
 	-- when given none (a player without BGE in a new game).
 	local _, jetonAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#");
+	local repris = false;
 	if version == nil or jeton ~= jetonAnnonce then
-		return;  -- pas de verdict de notre salon : partie lancée sans notre proxy
+		-- No verdict of this game in our configuration: we did not launch it. Host now, with an
+		-- announcement of this game: we take the verdict over.
+		local vAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@[^@#:]*#[^@#:,]*$");
+		if vAnnonce == nil or jetonAnnonce == nil or jetonAnnonce == "" then
+			return;  -- pas d'annonce de notre salon : partie lancée sans notre proxy
+		end
+		version, jeton, liste = vAnnonce, jetonAnnonce, "";
+		actif = (Civ6Proxy_PolActifs() == 1) and "1" or "0";
+		verdict = version .. "@" .. jeton .. ":" .. actif .. ":";
+		repris = true;
 	end
 	if (actif == "1") ~= (Civ6Proxy_PolActifs() == 1) then
 		BGD_PartieJournal("verdict " .. verdict .. " différent de l'état local, verdict laissé tel quel");
@@ -72,12 +87,12 @@ local function BGD_PartieRelais()
 			end
 		end
 	end
-	if #ajoutes > 0 then
+	if #ajoutes > 0 or repris then
 		local nouveau = version .. "@" .. jeton .. ":" .. actif .. ":" .. liste
 			.. ((liste ~= "") and "," or "") .. table.concat(ajoutes, ",");
 		cfg:SetValue("BGD_VERDICT", nouveau);
 		Network.BroadcastPlayerInfo();
-		BGD_PartieJournal("verdict relayé : " .. nouveau);
+		BGD_PartieJournal((repris and "verdict taken over as the new host: " or "verdict relayé : ") .. nouveau);
 	end
 	if #sans > 0 then
 		-- En anglais : chaque machine équipée l'affiche dans sa langue (ui_depart_chat.lua).
@@ -96,40 +111,79 @@ if Civ6Proxy_PolActifs ~= nil then
 	end
 	Events.PlayerInfoChanged.Add(protege);
 	Events.MultiplayerPlayerConnected.Add(protege);
+	-- A player who joined while the host was loading announced itself before this block existed.
+	Events.LoadScreenClose.Add(protege);
+	Events.MultiplayerHostMigrated.Add(protege);
 end
 
--- Garde des messages réseau (startup_proxy/src/messages.rs) : quand elle a jeté un message abîmé
--- qui aurait gelé le jeu, le joueur le dit à tous dans le chat, en anglais (chaque machine équipée
--- l'affiche dans sa langue, ui_depart_chat.lua) : « <joueur>: BGE - Blocked a damaged network
--- message… ». Une correction faite avant l'arrivée en jeu (salon, chargement) est dite à la
--- première occasion. Au plus une ligne par minute : le reste est dans le journal. Sans chat (solo,
--- hotseat, PlayByCloud), le journal seulement.
-if Civ6Proxy_GardeMessages ~= nil then
-	local dernier = nil;
-	local function BGD_PartieGarde()
-		local n = Civ6Proxy_GardeMessages();
-		if n == nil or n <= 0 then
+-- Problems BGE prevented on this machine, said to everyone in English (each machine with BGE shows
+-- it in its language, ui_depart_chat.lua): a damaged network message that would have frozen the
+-- game, a wipe of the game settings (messages.rs), a second copy of the game after the load
+-- (snapshots.rs). The host logs the players still loading when its load screen closes: its launch
+-- guard kept a second copy from them, which only loads twice if it lands after their load, so it
+-- is not said. Something prevented before the game (lobby, load) is said at the first occasion. At
+-- most one line of each kind per minute. Without chat (solo, hotseat, PlayByCloud), the log only.
+-- The log names players by number, never by name.
+--   Civ6Proxy_GardeMessages(), Civ6Proxy_GardeWipes(), Civ6Proxy_DoubleLoadRefused() -> how many
+--   since the last call; Civ6Proxy_LaunchGuarded() -> "1,3" (host, once)
+do
+	local last = {};
+	local function Name(id)
+		local pc = PlayerConfigurations[id];
+		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
+	end
+	local function Prevented(kind, key, me)
+		BGD_PartieJournal(kind .. " prevented for player " .. tostring(me));
+		local now = os.clock();
+		if last[kind] ~= nil and now - last[kind] < 60 then
 			return;
 		end
-		BGD_PartieJournal("garde : " .. tostring(n) .. " lecture(s) corrigée(s)");
-		local maintenant = os.clock();
-		if dernier ~= nil and maintenant - dernier < 60 then
-			return;
-		end
-		dernier = maintenant;
+		last[kind] = now;
 		if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud() then
 			return;
 		end
-		local texte = "[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_GARDE") .. "[ENDCOLOR]";
+		local texte = "[COLOR_GREEN]BGE - " .. BGD_TxtAnglais(key, Name(me)) .. "[ENDCOLOR]";
 		Network.SendChat(texte, ChatTargetTypes.CHATTARGET_ALL, -1);
-		BGD_PartieJournal("message : " .. texte);
+		BGD_PartieJournal("message sent: " .. key);
 	end
-	Events.GameCoreEventPublishComplete.Add(function()
-		local ok, err = pcall(BGD_PartieGarde);
-		if not ok then
-			BGD_PartieJournal("erreur : " .. tostring(err));
+	local KINDS = {
+		{ "freeze", Civ6Proxy_GardeMessages, "LOC_BGD_CHAT_GARDE" },
+		{ "settings wipe", Civ6Proxy_GardeWipes, "LOC_BGD_CHAT_GARDE_CONFIG" },
+		{ "double load", Civ6Proxy_DoubleLoadRefused, "LOC_BGD_CHAT_DOUBLE_LOAD" },
+	};
+	local function Local()
+		for _, k in ipairs(KINDS) do
+			local n = k[2] ~= nil and k[2]() or 0;
+			if n ~= nil and n > 0 then
+				Prevented(k[1], k[3], Network.GetLocalPlayerID());
+			end
 		end
-	end);
+	end
+	local function LaunchGuarded()
+		if Civ6Proxy_LaunchGuarded == nil or not Network.IsGameHost() then
+			return;
+		end
+		local loading = {};
+		for id in string.gmatch(tostring(Civ6Proxy_LaunchGuarded() or ""), "%d+") do
+			id = tonumber(id);
+			if Network.IsPlayerHotJoining(id) or Network.IsPlayerResyncing(id) then
+				table.insert(loading, tostring(id));
+			end
+		end
+		if #loading > 0 then
+			BGD_PartieJournal("launch guard: no second copy for player(s) " .. table.concat(loading, ", ") .. ", still loading at the host's load end");
+		end
+	end
+	local function Safely(f)
+		return function()
+			local ok, err = pcall(f);
+			if not ok then
+				BGD_PartieJournal("erreur : " .. tostring(err));
+			end
+		end
+	end
+	Events.GameCoreEventPublishComplete.Add(Safely(Local));
+	Events.LoadScreenClose.Add(Safely(LaunchGuarded));
 end
 
 -- Links relayed through the host (startup_proxy/src/relink.rs): two players whose direct link
@@ -255,4 +309,125 @@ if Civ6Proxy_RelayedPairs ~= nil and Civ6Proxy_RelinkStart ~= nil and Civ6Proxy_
 			BGD_PartieJournal("relink: error: " .. tostring(err));
 		end
 	end);
+end
+
+-- Desyncs (sync_notes.rs, reload_all.rs). At a turn-end sync check, a client whose game has objects
+-- the host's has not (or the other way round) asks for the host's whole game: the game would reload
+-- that client alone, and a game loaded alone drifts away from the running ones. At that request,
+-- still inside the turn-end sync, the host reloads everyone: it says why, tells the clients
+-- (`.bgd_reload`) and asks for its own game. The game makes one copy and sends it to every machine
+-- that asked; while the sync runs it keeps that copy for a late request. A client asks once, not if
+-- it is already waiting for the game, and keeps its check after that load (rejoin.rs): the host,
+-- which loaded an end-of-turn copy too, waits for it. The turn then starts for everyone.
+--   Civ6Proxy_SyncNotes() -> "player|major|checks in a row|missing|extra|categories" separated by
+--                            ";", since the last call (host only)
+--   Civ6Proxy_ReloadAllReady() -> 1 if this machine, as host, reloads everyone after a desync
+--   Civ6Proxy_RejoinKeepCheck() -> the next load keeps its sync check
+if Civ6Proxy_SyncNotes ~= nil then
+	local JOIN_GRACE = 120;    -- seconds after a connection during which a snapshot is a (re)join
+	local RECENT = 30;         -- seconds a turn end's counts stay attached to a reload
+	local RELOAD_GAP = 60;     -- seconds after a reload of everyone whose requests belong to it
+	local RELOAD = ".bgd_reload ";
+	local S = { turnEnds = 0, joined = {}, last = {}, reloadedAt = nil };
+
+	local function IsHost()
+		return Network.GetLocalPlayerID() == Network.GetGameHostPlayerID();
+	end
+
+	local function Name(id)
+		local pc = PlayerConfigurations[id];
+		return pc and Locale.Lookup(pc:GetPlayerName()) or ("#" .. tostring(id));
+	end
+
+	local function Safely(f)
+		return function(...)
+			local ok, err = pcall(f, ...);
+			if not ok then
+				BGD_PartieJournal("sync: error: " .. tostring(err));
+			end
+		end
+	end
+
+	local function Send(text)
+		if GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud() then
+			Network.SendChat(text, ChatTargetTypes.CHATTARGET_ALL, -1);
+		end
+	end
+
+	-- Host: the hook's notes, kept per player for the reload that may follow.
+	local function Drain()
+		local notes = Civ6Proxy_SyncNotes();
+		if notes == nil or notes == "" or not IsHost() then
+			return;
+		end
+		for note in string.gmatch(notes, "[^;]+") do
+			local p, n, streak, missing, extra, list = string.match(note, "^(%-?%d+)|(%d+)|(%d+)|(%d+)|(%d+)|(.*)$");
+			p, missing, extra = tonumber(p), tonumber(missing), tonumber(extra);
+			if p ~= nil and missing ~= nil and extra ~= nil then
+				S.last[p] = { at = os.clock(), missing = missing, extra = extra };
+				BGD_PartieJournal("sync: player " .. p .. ": " .. n .. " major archive(s) repaired (" .. list .. "), " .. streak
+					.. " in a row; " .. missing .. " object(s) missing, " .. extra .. " extra");
+			end
+		end
+	end
+
+	Events.TurnEnd.Add(Safely(function()
+		S.turnEnds = S.turnEnds + 1;
+	end));
+
+	Events.MultiplayerPlayerConnected.Add(Safely(function(playerID)
+		if playerID ~= nil then
+			S.joined[playerID] = os.clock();
+		end
+	end));
+
+	-- Host: a client asks for the host's whole game after a desync: everyone reloads.
+	Events.MultiplayerSnapshotRequested.Add(Safely(function(playerID)
+		if not IsHost() or playerID == nil or playerID < 0 or playerID == Network.GetLocalPlayerID() then
+			return;
+		end
+		if S.reloadedAt ~= nil and os.clock() - S.reloadedAt < RELOAD_GAP then
+			return;  -- a client asking for the copy of this reload
+		end
+		Drain();
+		local joined = S.joined[playerID];
+		if S.turnEnds == 0 or Network.IsPlayerHotJoining(playerID) or (joined ~= nil and os.clock() - joined < JOIN_GRACE) then
+			BGD_PartieJournal("sync: player " .. playerID .. " asked for the host's game (join or remap)");
+			return;
+		end
+		if Civ6Proxy_ReloadAllReady == nil or Civ6Proxy_ReloadAllReady() ~= 1 then
+			BGD_PartieJournal("sync: player " .. playerID .. " reloads alone (reload_all off)");
+			return;
+		end
+		S.reloadedAt = os.clock();
+		local last = S.last[playerID];
+		if last ~= nil and os.clock() - last.at < RECENT and last.missing + last.extra > 0 then
+			local text = "[COLOR_Civ6Yellow]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_SYNC_RELOAD_ALL", Name(playerID), last.missing, last.extra) .. "[ENDCOLOR]";
+			BGD_PartieJournal("message sent: LOC_BGD_CHAT_SYNC_RELOAD_ALL for player " .. playerID);
+			Send(text);
+		end
+		BGD_PartieJournal("sync: player " .. playerID .. " out of sync: the host reloads everyone");
+		Send(RELOAD .. tostring(Game.GetCurrentGameTurn()));
+		Network.RequestSnapshot();
+	end));
+
+	-- Client: the host reloads everyone. One request, kept check.
+	Events.MultiplayerChat.Add(Safely(function(fromPlayer, toPlayer, text)
+		if type(text) ~= "string" or IsHost() or fromPlayer ~= Network.GetGameHostPlayerID()
+			or string.sub(text, 1, #RELOAD) ~= RELOAD then
+			return;
+		end
+		if Civ6Proxy_RejoinKeepCheck ~= nil then
+			Civ6Proxy_RejoinKeepCheck();
+		end
+		local me = Network.GetLocalPlayerID();
+		if Network.IsPlayerResyncing(me) or Network.IsPlayerHotJoining(me) then
+			BGD_PartieJournal("sync: the host reloads everyone; this game already waits for its copy");
+			return;
+		end
+		BGD_PartieJournal("sync: the host reloads everyone; this game asks for its copy");
+		Network.RequestSnapshot();
+	end));
+
+	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
 end

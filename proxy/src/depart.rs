@@ -338,11 +338,9 @@ unsafe extern "system" fn hook_publier(p: usize) {
         while taille != 0 && cur < fin {
             let genre = rd::<u32>(cur + E_TYPE);
             if (genre == TYPE_DEBUT_LOCAL || genre == TYPE_ACTIVE) && DIAG.fetch_add(1, Ordering::Relaxed) < MAX_DIAG {
-                log(&format!(
-                    "depart : publication du type {genre} (joueur {}), {}",
-                    rd::<i32>(cur + E_DONNEES + ACTIVE_JOUEUR),
-                    if ARME.load(Ordering::Relaxed) { "armé" } else { "pas armé" }
-                ));
+                // Only a "turn activated" event carries a player.
+                let joueur = if genre == TYPE_ACTIVE { format!(" (player {})", rd::<i32>(cur + E_DONNEES + ACTIVE_JOUEUR)) } else { String::new() };
+                log(&format!("depart: event type {genre}{joueur} published, {}", if ARME.load(Ordering::Relaxed) { "armed" } else { "not armed" }));
             }
             if ARME.load(Ordering::Relaxed) && activation_locale(cur) {
                 *((q + F_LU) as *mut u32) = (cur - base) as u32;
@@ -655,7 +653,41 @@ unsafe extern "C-unwind" fn lua_journal(l: *mut c_void) -> i32 {
     0
 }
 
-const NATIVES: [(&[u8], LuaCFn); 9] = [
+/// Host: the players no longer waited for (bit per player ID), kept across reloads of the interface
+/// for one lobby session (`key`, the lobby token of the host's announcement).
+static IGNORED: std::sync::Mutex<(String, u64)> = std::sync::Mutex::new((String::new(), 0));
+
+fn remember(key: &str, mask: u64) {
+    *IGNORED.lock().unwrap_or_else(|e| e.into_inner()) = (key.to_string(), mask);
+}
+
+fn recall(key: &str) -> u64 {
+    let g = IGNORED.lock().unwrap_or_else(|e| e.into_inner());
+    if !key.is_empty() && g.0 == key { g.1 } else { 0 }
+}
+
+unsafe fn arg_text(h: &Hks, l: *mut c_void, i: i32) -> String {
+    let p = (h.to_lstring)(l, i, std::ptr::null_mut());
+    if p.is_null() { String::new() } else { CStr::from_ptr(p).to_string_lossy().into_owned() }
+}
+
+/// `Civ6RolloverProxy_DepartMemoriser(session, mask)`.
+unsafe extern "C-unwind" fn lua_memoriser(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let key = arg_text(h, l, 1);
+    let mask = (h.to_number)(l, 2);
+    remember(&key, if mask.is_finite() && mask >= 0.0 { mask as u64 } else { 0 });
+    0
+}
+
+/// `Civ6RolloverProxy_DepartMemoire(session)` → the mask remembered for that session, else 0.
+unsafe extern "C-unwind" fn lua_memoire(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_number)(l, recall(&arg_text(h, l, 1)) as f64);
+    1
+}
+
+const NATIVES: [(&[u8], LuaCFn); 11] = [
     (b"Civ6RolloverProxy_DepartDispo\0", lua_dispo),
     (b"Civ6RolloverProxy_DepartArmer\0", lua_armer),
     (b"Civ6RolloverProxy_DepartAttendre\0", lua_attendre),
@@ -665,6 +697,8 @@ const NATIVES: [(&[u8], LuaCFn); 9] = [
     (b"Civ6RolloverProxy_DepartJournal\0", lua_journal),
     (b"Civ6RolloverProxy_FinForcer\0", lua_fin_forcer),
     (b"Civ6RolloverProxy_FinLever\0", lua_fin_lever),
+    (b"Civ6RolloverProxy_DepartMemoriser\0", lua_memoriser),
+    (b"Civ6RolloverProxy_DepartMemoire\0", lua_memoire),
 ];
 
 unsafe extern "C-unwind" fn installer(l: *mut c_void) -> i32 {
@@ -809,6 +843,16 @@ pub fn reset() {
     MINUTEUR_THIS.store(0, Ordering::Relaxed);
     REJETS.store(0, Ordering::Relaxed);
     LOGS.store(0, Ordering::Relaxed);
+}
+
+/// The game is destroyed: a hold still running is dropped, without touching the game's turn timer,
+/// which goes away with it.
+pub fn game_destroyed() {
+    let held = ATTENTE.load(Ordering::Relaxed) || RETENU.load(Ordering::Relaxed);
+    reset();
+    if held {
+        log("depart: game destroyed, turn-start hold dropped");
+    }
 }
 
 /// Le proxy est déchargé alors que l'exe et l'originale restent en mémoire : on remet leurs octets.

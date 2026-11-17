@@ -374,6 +374,12 @@
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="ru_RU">
 			<Text>ход начат без: {1} (не готовы через {2} с).</Text>
 		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ru_RU">
+			<Text>{1} два хода подряд не сообщил о готовности: начало хода больше его не ждёт.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="ru_RU">
+			<Text>нет сигнала старта от хоста через {1} с: ваш ход начинается сейчас.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ru_RU">
 			<Text>конец хода: таймер хоста истёк.</Text>
 		</Row>
@@ -606,7 +612,19 @@
 			<Text>{1}: отчёт об ошибке не удалось отправить, он сохранён на компьютере игрока.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ru_RU">
-			<Text>Заблокировано повреждённое сетевое сообщение: из-за него игра зависла бы.</Text>
+			<Text>Зависание игры у {1} предотвращено.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="ru_RU">
+			<Text>Сброс настроек игры у {1} предотвращён.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="ru_RU">
+			<Text>Двойная загрузка у {1} предотвращена.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ru_RU">
+			<Text>В игре {1} не хватает {2} объектов и есть {3} лишних по сравнению с игрой хоста: все перезагружают игру хоста, чтобы предотвратить рассинхронизацию у {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="ru_RU">
+			<Text>Игра у {1} — не текущая версия Steam: сетевые исправления BGE на этом ПК неактивны.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ru_RU">
 			<Text>{1} и {2} соединены через хоста (0 мс). Попытка прямого соединения во время смены хода.</Text>
