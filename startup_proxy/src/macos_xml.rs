@@ -61,16 +61,19 @@ fn est(chemin: &str, nom: &str) -> bool {
     chemin.rsplit(['/', '\\']).next().is_some_and(|n| n.eq_ignore_ascii_case(nom))
 }
 
-/// Texte de remplacement pour ce fichier, s'il y en a un. Pour l'instant, en diagnostic seulement
-/// (`BGE_DIAG_FICHIERS`), une marque invisible dans Options.xml : elle prouve que le remplacement
-/// passe, sans rien changer à l'écran. L'onglet BetterGameExperience prendra sa place.
+/// Texte de remplacement pour ce fichier, s'il y en a un : Options.xml avec l'onglet
+/// BetterGameExperience (options_texte.rs, commun avec Windows).
 fn remplacement(chemin: &str, texte: &[u8]) -> Option<Vec<u8>> {
-    if !est(chemin, "Options.xml") || (!cfg!(test) && std::env::var_os("BGE_DIAG_FICHIERS").is_none()) {
+    if !est(chemin, "Options.xml") {
         return None;
     }
-    let mut out = texte.to_vec();
-    out.extend_from_slice(b"\n<!-- BetterGameExperience -->\n");
-    Some(out)
+    match super::options_texte::patch_options_xml(texte) {
+        Ok(t) => Some(t),
+        Err(e) => {
+            log(&format!("options : {chemin} laissé tel quel : {e}"));
+            None
+        }
+    }
 }
 
 unsafe extern "C" fn load_file(doc: *mut c_void, path: *const u32, options: c_int) -> usize {
@@ -108,7 +111,7 @@ unsafe extern "C" fn parse(doc: *mut c_void, texte: *const c_char, options: c_in
     std::ptr::copy_nonoverlapping(nouveau.as_ptr(), data, nouveau.len());
     *data.add(nouveau.len()) = 0;
     let r = original(doc, data as *const c_char, options);
-    log(&format!("xml : {c} remplacé ({} → {} octets), analyse : {r}", lu.len(), nouveau.len()));
+    log(&format!("options : {c} : onglet BetterGameExperience ajouté ({} → {} octets), analyse : {r}", lu.len(), nouveau.len()));
     r
 }
 
@@ -160,7 +163,8 @@ mod tests {
         assert!(est(r"C:\Emu\AppAssets\Base\Assets\UI\Options.xml", "Options.xml"));
         assert!(est("Assets/Base/Assets/UI/options.xml", "Options.xml"));
         assert!(!est(r"C:\x\MyOptions.xml", "Options.xml"));
-        assert!(remplacement("a/Options.xml", b"<x/>").is_some_and(|t| t.starts_with(b"<x/>")));
+        // Sans les ancres d'Options.xml, le fichier reste tel quel.
+        assert!(remplacement("a/Options.xml", b"<x/>").is_none());
         assert!(remplacement("a/TopPanel.xml", b"<x/>").is_none());
     }
 }

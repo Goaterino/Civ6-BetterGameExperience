@@ -214,8 +214,16 @@ Conclusions, qui remplacent celles tirées de la CI :
      `Options.xml` remplacé, analysé, écran d'options intact. x86_64 : signatures à relever.
    - L'exe garde les noms de ses exports (`Platform::OpenFile`, `MemoryBuffer::GrowToFit`…) :
      `objdump` les affiche dans le code désassemblé, une aide pour l'étape 4.
-   - Reste : l'onglet BetterGameExperience (fonctions natives du bloc Lua, fichier de réglages), puis
-     les blocs Lua des correctifs d'interface et du salon.
+   - **Onglet BetterGameExperience** ([startup_proxy/src/macos_options.rs](../../startup_proxy/src/macos_options.rs)) :
+     les textes d'`Options.xml` et d'`Options.lua` sont communs avec Windows
+     ([options_texte.rs](../../startup_proxy/src/options_texte.rs)). Les fonctions natives du bloc
+     Lua (lire, écrire, réinitialiser `rollover_proxy.cfg`, à côté du journal) sont publiées dans la
+     table globale juste avant la compilation d'`Options.lua`, par les exports
+     `hks_pushnamedcclosure` et `hks_obj_rawset` (table globale en `L + 0x70`) et `lua_pushlstring`,
+     non exportée, trouvée par signature (0x10090f828). Une courte cale Lua leur donne les noms du
+     bloc Windows. Vérifié dans le jeu (arm64, 2026-11-17) : onglet affiché, limiteur d'images
+     ajouté, `Options.lua` compilé. x86_64 : signature de `lua_pushlstring` à relever.
+   - Reste : les blocs Lua des correctifs d'interface et du salon.
 4. Correctifs de GameCore : reporter les `Site` par architecture, les correctifs POL d'abord
    (ils conditionnent le multijoueur entre Mac et Windows).
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),

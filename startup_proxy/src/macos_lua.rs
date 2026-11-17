@@ -63,7 +63,28 @@ unsafe extern "C" fn loadbuffer(l: *mut c_void, buff: *const c_char, size: usize
     }
     let hks: HksLoadbuffer = std::mem::transmute(HKS_LOADBUFFER.load(Ordering::Relaxed));
     let global = *((l as *const u8).add(0x10) as *const usize);
-    hks(l, (global + REGLAGES) as *const c_void, buff, size, name)
+    let reglages = (global + REGLAGES) as *const c_void;
+    if name.is_null() || buff.is_null() {
+        return hks(l, reglages, buff, size, name);
+    }
+    let chunk = CStr::from_ptr(name).to_string_lossy();
+    if super::options_texte::script_name(&chunk) != "options.lua" {
+        return hks(l, reglages, buff, size, name);
+    }
+    let texte = super::options::options_lua(l, std::slice::from_raw_parts(buff as *const u8, size));
+    let r = hks(l, reglages, texte.as_ptr() as *const c_char, texte.len(), name);
+    if r == 0 {
+        log(&format!("options : {chunk} : onglet BetterGameExperience et limiteur d'images ajoutés, compilation réussie"));
+        return r;
+    }
+    // Le script modifié ne compile pas : on retire le message d'erreur (en haut de la pile) et on
+    // compile l'original, pour ne jamais casser l'écran du jeu.
+    let top = (l as *mut u8).add(0x48) as *mut usize;
+    let erreur = super::lua_message(l);
+    *top -= 16;
+    let r2 = hks(l, reglages, buff, size, name);
+    log(&format!("options : {chunk} : compilation en échec ({r} : {erreur}) ; original compilé ({r2})"));
+    r2
 }
 
 pub unsafe fn installer(mh: *const macho::MachHeader64, slide: isize) -> Result<(), String> {

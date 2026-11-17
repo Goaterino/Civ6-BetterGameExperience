@@ -39,6 +39,11 @@ pub(crate) mod patch;
 mod lua;
 #[path = "macos_xml.rs"]
 mod xml;
+#[path = "options_texte.rs"]
+#[allow(dead_code)]
+mod options_texte;
+#[path = "macos_options.rs"]
+mod options;
 
 use journal::log;
 
@@ -177,6 +182,9 @@ unsafe fn installer() {
     if let Err(e) = lua::installer(mh, slide) {
         log(&format!("lua : accroche impossible : {e}"));
     }
+    if let Err(e) = options::installer(mh, slide) {
+        log(&format!("options : natives impossibles : {e}"));
+    }
     if let Err(e) = xml::installer(mh, slide) {
         log(&format!("xml : accroche impossible : {e}"));
     }
@@ -213,4 +221,22 @@ mod tests {
         assert!(!est_gamecore("/x/Civ6.app/Contents/MacOS/GameCore_XP1.dll"));
         assert!(!est_gamecore("/x/GameCore_XP2.dll/autre"));
     }
+}
+
+/// Message en haut de la pile Lua de `l` (l'erreur d'une compilation ratée), par
+/// `hks_obj_tolstring`, exportée par l'exe. Vide s'il n'est pas lisible.
+pub(crate) unsafe fn lua_message(l: *mut c_void) -> String {
+    const RTLD_MAIN_ONLY: *mut c_void = -5isize as *mut c_void;
+    let f = dlsym(RTLD_MAIN_ONLY, c"_Z17hks_obj_tolstringP9lua_StateP9HksObjectPm".as_ptr());
+    if f.is_null() {
+        return String::new();
+    }
+    let tolstring: unsafe extern "C-unwind" fn(*mut c_void, *mut c_void, *mut usize) -> *const c_char = std::mem::transmute(f);
+    let top = *((l as *const u8).add(0x48) as *const usize);
+    let mut len = 0usize;
+    let p = tolstring(l, (top - 16) as *mut c_void, &mut len);
+    if p.is_null() {
+        return String::new();
+    }
+    String::from_utf8_lossy(std::slice::from_raw_parts(p as *const u8, len)).into_owned()
 }

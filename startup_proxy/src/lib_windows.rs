@@ -14,6 +14,7 @@ mod win;
 mod noms;
 
 mod chargeur;
+mod options_texte;
 mod relais;
 mod options;
 mod maj;
