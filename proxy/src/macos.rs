@@ -8,8 +8,9 @@
 //! que soit la signature de la fonction (inconnue). Comme sous Windows, l'original reste chargé
 //! ensuite.
 //!
-//! Aucun correctif n'est encore posé (étapes 3 et 4 de analyses/macos/README.md) : le jeu tourne
-//! avec BetterGameExperience chargé, sans changement.
+//! Une fois l'original chargé, les correctifs portés sont posés dans son code (étape 4 de
+//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, correctif POL. Les autres restent à
+//! porter : le bit `ST_POL`, qui permettrait au salon d'annoncer la machine, n'est pas encore levé.
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -26,15 +27,24 @@ mod journal;
 #[path = "macho.rs"]
 #[allow(dead_code)]
 mod macho;
+#[path = "patch_mac.rs"]
+#[allow(dead_code)]
+mod patch;
+#[path = "pol_mac.rs"]
+mod pol;
+#[path = "fin_tour_mac.rs"]
+mod fin_tour;
 
 use journal::log;
 
 static STATUS: AtomicU32 = AtomicU32::new(0);
 const ST_CHARGE: u32 = 1;
 const ST_ORIGINAL: u32 = 2;
+/// Les correctifs POL portés sont posés : le salon peut annoncer la machine (startup_proxy/src/macos_salon.rs).
+const ST_POL: u32 = 16;
 
 /// Export de diagnostic, marque que le lanceur cherche dans le fichier, et réponse au chargeur :
-/// chargé (1), original chargé et exports relayés (2). Sans le bit 2, le chargeur ouvre l'original
+/// chargé (1), original chargé et exports relayés (2), correctifs POL portés posés (16). Sans le bit 2, le chargeur ouvre l'original
 /// lui-même.
 #[no_mangle]
 pub extern "C" fn RolloverProxyStatus() -> u32 {
@@ -94,6 +104,48 @@ extern "C" {
     fn dlopen(path: *const c_char, mode: c_int) -> *mut c_void;
     fn dlsym(handle: *mut c_void, name: *const c_char) -> *mut c_void;
     fn dlerror() -> *const c_char;
+    fn dladdr(addr: *const c_void, info: *mut DlInfo) -> c_int;
+}
+
+#[repr(C)]
+struct DlInfo {
+    fname: *const c_char,
+    fbase: *mut c_void,
+    sname: *const c_char,
+    saddr: *mut c_void,
+}
+
+/// Adresse de chargement de l'original (son en-tête Mach-O : `__TEXT` commence en 0).
+unsafe fn base_original() -> Option<usize> {
+    let mut info: DlInfo = std::mem::zeroed();
+    (dladdr(CREATE as *const c_void, &mut info) != 0 && !info.fbase.is_null()).then_some(info.fbase as usize)
+}
+
+/// `actif=off` dans le fichier de réglages (dernière occurrence) : aucun correctif.
+fn desactive() -> bool {
+    let Some(cfg) = journal::data_dir().and_then(|d| std::fs::read_to_string(d.join("rollover_proxy.cfg")).ok()) else {
+        return false;
+    };
+    cfg.lines().filter_map(|l| l.trim().strip_prefix("actif=")).last().is_some_and(|v| v.trim() == "off")
+}
+
+/// Pose les correctifs portés dans l'original.
+unsafe fn poser_correctifs() {
+    if desactive() {
+        log("correctifs : actif=off, aucun posé");
+        return;
+    }
+    let Some(base) = base_original() else {
+        log("correctifs : adresse de l'original introuvable, aucun posé");
+        return;
+    };
+    match fin_tour::installer(base) {
+        Ok(m) => {
+            log(&format!("fin de tour : {m}"));
+            STATUS.fetch_or(ST_POL, Ordering::Relaxed);
+        }
+        Err(e) => log(&format!("fin de tour : {e}")),
+    }
 }
 const RTLD_NOW: c_int = 0x2;
 const RTLD_LOCAL: c_int = 0x4;
@@ -145,6 +197,7 @@ extern "C" fn demarrage() {
         Ok(chemin) => {
             STATUS.fetch_or(ST_ORIGINAL, Ordering::Relaxed);
             log(&format!("original chargé : {chemin}, DllCreateGameContext et DllDestroyGameContext relayés"));
+            unsafe { poser_correctifs() };
         }
         Err(e) => log(&format!("proxy : {e}")),
     }

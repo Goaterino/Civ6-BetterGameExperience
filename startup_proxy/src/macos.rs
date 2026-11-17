@@ -44,6 +44,15 @@ mod xml;
 mod options_texte;
 #[path = "macos_options.rs"]
 mod options;
+#[path = "macos_pol.rs"]
+mod pol;
+#[path = "macos_salon.rs"]
+mod salon;
+#[path = "salon_texte.rs"]
+#[allow(dead_code)]
+mod salon_texte;
+#[path = "xml_texte.rs"]
+mod xml_texte;
 
 use journal::log;
 
@@ -88,7 +97,7 @@ fn derniere_erreur() -> String {
 }
 
 /// Dossier des dylibs : `BGE_DYLIBS`, sinon celui de ce chargeur (essais à la main).
-fn dossier_dylibs() -> Option<PathBuf> {
+pub(crate) fn dossier_dylibs() -> Option<PathBuf> {
     if let Some(d) = std::env::var_os("BGE_DYLIBS").filter(|d| !d.is_empty()) {
         return Some(PathBuf::from(d));
     }
@@ -160,6 +169,7 @@ unsafe fn ouvrir_proxy(original: &str, mode: c_int) -> Option<*mut c_void> {
         return None;
     }
     STATUS.fetch_or(ST_PROXY, Ordering::Relaxed);
+    salon::PROXY.store(h as usize, Ordering::Relaxed);
     log(&format!("chargeur : {original} demandé, {} chargé à sa place", noms::MAC_GAMECORE_PROXY));
     Some(h)
 }

@@ -196,7 +196,10 @@ local function BGD_Publier()
 	-- Images et sons des signaux en place (posés par le proxy de démarrage) : notre jeton de ce
 	-- salon, qu'une valeur restée d'une sauvegarde ne peut pas porter. Lu par l'hôte au lancement.
 	local medias = (Civ6Proxy_MediasPings ~= nil and Civ6Proxy_MediasPings() == 1) and BGD.perso or "";
-	if cfg:GetValue(BGD_CLE_MEDIAS) ~= medias then
+	-- Une chaîne vide relue donne nil (sans media, sur Mac par exemple) : sans le « or "" », chaque
+	-- publication la réécrirait, BroadcastPlayerInfo relancerait PlayerInfoChanged, et le salon
+	-- tournerait en boucle.
+	if (cfg:GetValue(BGD_CLE_MEDIAS) or "") ~= medias then
 		cfg:SetValue(BGD_CLE_MEDIAS, medias);
 		change = true;
 	end

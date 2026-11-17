@@ -15,6 +15,8 @@ mod noms;
 
 mod chargeur;
 mod options_texte;
+mod salon_texte;
+mod xml_texte;
 mod relais;
 mod options;
 mod maj;

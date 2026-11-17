@@ -158,11 +158,23 @@ mod tests {
         assert_eq!(find(&hay, &sig("02 03")), vec![2]);
         assert!(find(&hay, &sig("07")).is_empty());
     }
+
+    #[test]
+    fn branches() {
+        // b 0x42d2c0 en 0x846138 (GameCore arm64, fin de DiplomacyAction::Execute).
+        assert_eq!(branche(0x846138, 0x42d2c0), Some([0x62, 0x9c, 0xef, 0x17]));
+        assert_eq!(cible_branche(0x846138, u32::from_le_bytes([0x62, 0x9c, 0xef, 0x17])), Some(0x42d2c0));
+        // bl 0x42aea8 en 0x846130.
+        assert_eq!(cible_branche(0x846130, u32::from_le_bytes([0x5e, 0x93, 0xef, 0x97])), Some(0x42aea8));
+        assert_eq!(branche(0, 1 << 27), None);
+        assert_eq!(cible_branche(0, 0xd65f03c0), None);
+    }
 }
 
 /// Mémoire exécutable pour les trampolines : `MAP_JIT` (droit `allow-jit` du jeu). En arm64, une
-/// page RW passée RX tue le processus ; sous Rosetta, `MAP_JIT` passe aussi.
-unsafe fn executable(bytes: &[u8]) -> Result<usize, String> {
+/// page RW passée RX tue le processus ; sous Rosetta, `MAP_JIT` passe aussi. `hint` : adresse
+/// souhaitée (0 : n'importe où), que le noyau suit si elle est libre.
+unsafe fn executable_at(bytes: &[u8], hint: usize) -> Result<usize, String> {
     extern "C" {
         #[link_name = "mmap"]
         fn mmap_jit(addr: *mut c_void, len: usize, prot: c_int, flags: c_int, fd: c_int, off: i64) -> *mut c_void;
@@ -172,7 +184,7 @@ unsafe fn executable(bytes: &[u8]) -> Result<usize, String> {
     const MAP_ANON: c_int = 0x1000;
     const MAP_JIT: c_int = 0x800;
     let (_, len) = pages(0, bytes.len());
-    let p = mmap_jit(std::ptr::null_mut(), len, PROT_RWX, MAP_PRIVATE | MAP_ANON | MAP_JIT, -1, 0);
+    let p = mmap_jit(hint as *mut c_void, len, PROT_RWX, MAP_PRIVATE | MAP_ANON | MAP_JIT, -1, 0);
     if p as isize == -1 {
         return Err(format!("mmap MAP_JIT : {}", std::io::Error::last_os_error()));
     }
@@ -183,6 +195,49 @@ unsafe fn executable(bytes: &[u8]) -> Result<usize, String> {
     pthread_jit_write_protect_np(1);
     sys_icache_invalidate(p, bytes.len());
     Ok(p as usize)
+}
+
+unsafe fn executable(bytes: &[u8]) -> Result<usize, String> {
+    executable_at(bytes, 0)
+}
+
+/// Mémoire exécutable à moins de `portee` octets de `pres` : pour qu'un branchement relatif du code
+/// du jeu l'atteigne (`b` arm64 : ±128 Mo). Essaie des adresses de 2 en 2 Mo de part et d'autre.
+#[allow(dead_code)]
+pub unsafe fn executable_near(bytes: &[u8], pres: usize, portee: usize) -> Result<usize, String> {
+    extern "C" {
+        fn munmap(addr: *mut c_void, len: usize) -> c_int;
+    }
+    const PAS: usize = 2 << 20;
+    let (_, len) = pages(0, bytes.len());
+    for k in 1..portee / PAS {
+        for hint in [pres.checked_add(k * PAS), pres.checked_sub(k * PAS)].into_iter().flatten() {
+            let p = executable_at(bytes, hint & !(PAS - 1))?;
+            if p.abs_diff(pres) + len < portee {
+                return Ok(p);
+            }
+            munmap(p as *mut c_void, len);
+        }
+    }
+    Err(format!("pas de mémoire exécutable à moins de {} Mo de {pres:#x}", portee >> 20))
+}
+
+/// `b` arm64 de `depuis` vers `vers`, s'il est à portée (±128 Mo).
+#[allow(dead_code)]
+pub fn branche(depuis: usize, vers: usize) -> Option<[u8; 4]> {
+    let ecart = vers as i64 - depuis as i64;
+    (ecart % 4 == 0 && (-(1i64 << 27)..1i64 << 27).contains(&ecart))
+        .then(|| (0x1400_0000u32 | ((ecart >> 2) as u32 & 0x03ff_ffff)).to_le_bytes())
+}
+
+/// Cible d'un `b` ou `bl` arm64, ou None si ce n'en est pas un.
+#[allow(dead_code)]
+pub fn cible_branche(at: usize, mot: u32) -> Option<usize> {
+    if mot & 0x7c00_0000 != 0x1400_0000 {
+        return None;
+    }
+    let imm = ((mot & 0x03ff_ffff) << 6) as i32 >> 6;
+    Some((at as i64 + imm as i64 * 4) as usize)
 }
 
 /// Détourne la fonction en `at` vers `hook`. Ses `prologue` premiers octets, recopiés tels quels

@@ -35,7 +35,7 @@ const L_TOP: usize = 0x48;
 const L_GLOBALES: usize = 0x70;
 const OBJET: usize = 16;
 
-type LuaCFn = unsafe extern "C-unwind" fn(*mut c_void) -> c_int;
+pub(crate) type LuaCFn = unsafe extern "C-unwind" fn(*mut c_void) -> c_int;
 type PushClosure = unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, c_int, *const c_char, c_int);
 type PushLString = unsafe extern "C-unwind" fn(*mut c_void, *const c_char, usize);
 type RawSet = unsafe extern "C-unwind" fn(*mut c_void, *const c_void, *const c_void, *const c_void);
@@ -89,7 +89,7 @@ fn proxy_installe() -> bool {
         .is_some_and(|d| d.join(super::noms::MAC_GAMECORE_PROXY).is_file())
 }
 
-fn lire() -> Result<String, String> {
+pub(crate) fn lire() -> Result<String, String> {
     let path = chemin_reglages().ok_or("dossier de BetterGameExperience introuvable")?;
     match std::fs::read_to_string(&path) {
         Ok(t) => Ok(t),
@@ -122,18 +122,23 @@ fn reinitialiser(cles: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Premier argument, une chaîne (la cale passe toujours une chaîne).
+unsafe fn argument(l: *mut c_void) -> String {
+    argument_n(l, 1)
+}
+
 /// Pousse `s` (une seule valeur de retour).
-unsafe fn rendre(l: *mut c_void, s: &str) -> c_int {
+pub(crate) unsafe fn rendre(l: *mut c_void, s: &str) -> c_int {
     let push: PushLString = std::mem::transmute(PUSH_LSTRING.load(Ordering::Relaxed));
     push(l, s.as_ptr() as *const c_char, s.len());
     1
 }
 
-/// Premier argument, une chaîne (la cale passe toujours une chaîne).
-unsafe fn argument(l: *mut c_void) -> String {
+/// Argument `i` en chaîne (un nombre est converti, comme par `tostring`).
+pub(crate) unsafe fn argument_n(l: *mut c_void, i: c_int) -> String {
     let check: CheckLString = std::mem::transmute(CHECK_LSTRING.load(Ordering::Relaxed));
     let mut len = 0usize;
-    let p = check(l, 1, &mut len);
+    let p = check(l, i, &mut len);
     if p.is_null() {
         return String::new();
     }
@@ -175,7 +180,7 @@ const NATIVES: [(LuaCFn, &str); 3] = [
 
 /// Écrit les natives dans la table globale du contexte de `l` : closure, puis nom, puis
 /// `rawset(globales, nom, closure)`, et la pile revient où elle était.
-unsafe fn publier(l: *mut c_void) -> bool {
+pub(crate) unsafe fn publier(l: *mut c_void, natives: &[(LuaCFn, &str)]) -> bool {
     if PUSH_LSTRING.load(Ordering::Relaxed) == 0 {
         return false;
     }
@@ -184,7 +189,7 @@ unsafe fn publier(l: *mut c_void) -> bool {
     let rawset: RawSet = std::mem::transmute(RAWSET.load(Ordering::Relaxed));
     let top = (l as *mut u8).add(L_TOP) as *mut usize;
     let globales = (l as *const u8).add(L_GLOBALES) as *const c_void;
-    for (f, nom) in NATIVES {
+    for &(f, nom) in natives {
         let avant = *top;
         closure(l, f, 0, nom.as_ptr() as *const c_char, 0);
         pushs(l, nom.as_ptr() as *const c_char, nom.len() - 1);
@@ -203,7 +208,7 @@ unsafe fn publier(l: *mut c_void) -> bool {
 /// Options.lua avec le limiteur d'images étendu et le bloc de l'onglet, précédé de la cale macOS si
 /// les natives ont été posées dans le contexte de `l`.
 pub unsafe fn options_lua(l: *mut c_void, src: &[u8]) -> Vec<u8> {
-    let natives = publier(l);
+    let natives = publier(l, &NATIVES);
     if !natives {
         log("options : natives non posées, l'onglet dira que les réglages sont indisponibles");
     }

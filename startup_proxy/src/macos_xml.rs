@@ -62,15 +62,22 @@ fn est(chemin: &str, nom: &str) -> bool {
 }
 
 /// Texte de remplacement pour ce fichier, s'il y en a un : Options.xml avec l'onglet
-/// BetterGameExperience (options_texte.rs, commun avec Windows).
+/// BetterGameExperience, StagingRoom.xml avec le BGE Check (textes communs avec Windows).
 fn remplacement(chemin: &str, texte: &[u8]) -> Option<Vec<u8>> {
-    if !est(chemin, "Options.xml") {
+    let (r, quoi) = if est(chemin, "Options.xml") {
+        (super::options_texte::patch_options_xml(texte), "options")
+    } else if est(chemin, super::salon::XML) {
+        (super::salon_texte::patch_staging_xml(texte), "salon")
+    } else {
         return None;
-    }
-    match super::options_texte::patch_options_xml(texte) {
-        Ok(t) => Some(t),
+    };
+    match r {
+        Ok(t) => {
+            log(&format!("{quoi} : {chemin} : modifié ({} → {} octets)", texte.len(), t.len()));
+            Some(t)
+        }
         Err(e) => {
-            log(&format!("options : {chemin} laissé tel quel : {e}"));
+            log(&format!("{quoi} : {chemin} laissé tel quel : {e}"));
             None
         }
     }
@@ -111,7 +118,7 @@ unsafe extern "C" fn parse(doc: *mut c_void, texte: *const c_char, options: c_in
     std::ptr::copy_nonoverlapping(nouveau.as_ptr(), data, nouveau.len());
     *data.add(nouveau.len()) = 0;
     let r = original(doc, data as *const c_char, options);
-    log(&format!("options : {c} : onglet BetterGameExperience ajouté ({} → {} octets), analyse : {r}", lu.len(), nouveau.len()));
+    log(&format!("xml : {c} : texte remplacé, analyse : {r}"));
     r
 }
 

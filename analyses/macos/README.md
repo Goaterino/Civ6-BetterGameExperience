@@ -223,9 +223,28 @@ Conclusions, qui remplacent celles tirées de la CI :
      non exportée, trouvée par signature (0x10090f828). Une courte cale Lua leur donne les noms du
      bloc Windows. Vérifié dans le jeu (arm64, 2026-11-17) : onglet affiché, limiteur d'images
      ajouté, `Options.lua` compilé. x86_64 : signature de `lua_pushlstring` à relever.
-   - Reste : les blocs Lua des correctifs d'interface et du salon.
+   - **Salon** ([startup_proxy/src/macos_salon.rs](../../startup_proxy/src/macos_salon.rs)) : les
+     blocs de Windows (`salon.lua`, `partie.lua`, `chargement.lua`, le BGE Check dans
+     `StagingRoom.xml`), communs ([salon_texte.rs](../../startup_proxy/src/salon_texte.rs)), avec des
+     natives à une seule chaîne et une cale Lua. Tant que tous les correctifs POL ne sont pas
+     portés, le Mac annonce `<version>-macos-partiel` : seul (ou entre Mac), verdict 1 et correctifs
+     portés actifs ; avec un PC, versions différentes, POL coupé pour tous. Vérifié dans le jeu
+     (2026-11-17, partie multijoueur seul, salon de MPH) : annonce, verdict 1, POL actifs, relais
+     du verdict ajouté à `InGame.lua`. Le test a révélé une boucle du salon commune aux deux
+     systèmes : sans médias des signaux, `BGD_MEDIAS` vide relu `nil` relançait la publication à
+     chaque `PlayerInfoChanged` (corrigé dans `salon.lua`).
+   - Reste : les blocs Lua des correctifs d'interface.
 4. Correctifs de GameCore : reporter les `Site` par architecture, les correctifs POL d'abord
-   (ils conditionnent le multijoueur entre Mac et Windows).
+   (ils conditionnent le multijoueur entre Mac et Windows). Le GameCore macOS n'a plus ses noms de
+   fonctions mais garde ses chaînes de journal et ses noms RTTI (`N8GameCore8Messages15DiplomacyActionE`…) :
+   les vtables en découlent, et les fonctions se retrouvent par comparaison avec l'analyse Windows.
+   Les sites sont des adresses fixes vérifiées octet par octet au chargement, comme sous Windows.
+   - **Fin de tour** ([proxy/src/fin_tour_mac.rs](../../proxy/src/fin_tour_mac.rs)) : porté (arm64),
+     posé dans le jeu. État lu par l'export `BgdPolActifs` du chargeur
+     ([proxy/src/pol_mac.rs](../../proxy/src/pol_mac.rs)) ; bit `ST_POL` (16) du proxy levé quand
+     les correctifs portés sont posés.
+   - Restent : citoyens, spectateurs, congrès, ports, modificateurs de production, empilement,
+     départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.
    **Le lanceur est fait** ([updater/README.md](../../updater/README.md#macos)) : il pose les deux

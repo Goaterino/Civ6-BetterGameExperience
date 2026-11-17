@@ -68,13 +68,18 @@ unsafe extern "C" fn loadbuffer(l: *mut c_void, buff: *const c_char, size: usize
         return hks(l, reglages, buff, size, name);
     }
     let chunk = CStr::from_ptr(name).to_string_lossy();
-    if super::options_texte::script_name(&chunk) != "options.lua" {
-        return hks(l, reglages, buff, size, name);
-    }
-    let texte = super::options::options_lua(l, std::slice::from_raw_parts(buff as *const u8, size));
+    let source = std::slice::from_raw_parts(buff as *const u8, size);
+    let (texte, quoi) = match super::options_texte::script_name(&chunk).as_str() {
+        "options.lua" => (super::options::options_lua(l, source), "options : onglet BetterGameExperience et limiteur d'images ajoutés"),
+        super::pol::SCRIPT_CHARGEMENT => (super::pol::chargement_lua(l, source), "chargement : correctifs POL des parties locales ajoutés"),
+        super::salon::SCRIPT => (super::salon::staging_lua(l, source), "salon : annonce de version ajoutée"),
+        super::salon::SCRIPT_PARTIE => (super::salon::partie_lua(l, source), "partie : relais du verdict ajouté"),
+        _ => return hks(l, reglages, buff, size, name),
+    };
     let r = hks(l, reglages, texte.as_ptr() as *const c_char, texte.len(), name);
+    let (prefixe, reste) = quoi.split_once(" : ").unwrap_or(("", quoi));
     if r == 0 {
-        log(&format!("options : {chunk} : onglet BetterGameExperience et limiteur d'images ajoutés, compilation réussie"));
+        log(&format!("{prefixe} : {chunk} : {reste}, compilation réussie"));
         return r;
     }
     // Le script modifié ne compile pas : on retire le message d'erreur (en haut de la pile) et on
@@ -83,7 +88,7 @@ unsafe extern "C" fn loadbuffer(l: *mut c_void, buff: *const c_char, size: usize
     let erreur = super::lua_message(l);
     *top -= 16;
     let r2 = hks(l, reglages, buff, size, name);
-    log(&format!("options : {chunk} : compilation en échec ({r} : {erreur}) ; original compilé ({r2})"));
+    log(&format!("{prefixe} : {chunk} : compilation en échec ({r} : {erreur}) ; original compilé ({r2})"));
     r2
 }
 

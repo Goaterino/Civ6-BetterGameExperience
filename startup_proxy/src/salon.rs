@@ -33,26 +33,10 @@
 //! chargé, sinon par sa marque `BgdVersion=<version>` dans le fichier (`version_du_fichier`).
 
 use crate::options::{hks, publish_natives, push_str, Natives};
-use crate::version::{MARQUE, VERSION};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use crate::version::VERSION;
+pub(crate) use crate::salon_texte::*;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-
-pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("salon.lua"));
-pub const SCRIPT: &str = "stagingroom.lua";
-pub const XML: &str = "StagingRoom.xml";
-/// Bouton de l'hôte, juste après celui-ci (même parent : la barre du haut du salon).
-const ANCRE_XML: &str = r#"ID="BackButton""#;
-const BOUTON_CHECK: &str = r#"<GridButton ID="BGD_CheckButton" Style="ShellButtonOrnateFlat" Anchor="L,C" Offset="180,0" Size="150,38" String="BGE CHECK" Hidden="1"/>"#;
-/// Minuteur du salon : une animation d'une demi-seconde environ (vitesse 2), relancée à sa fin.
-const MINUTEUR: &str = r#"  <!-- BetterGameExperience : minuteur du salon (startup_proxy/src/salon.rs) -->
-  <SlideAnim ID="BGD_SalonMinuteur" Size="1,1" Begin="0,0" End="0,0" Function="Root" Speed="2" Cycle="Once" Stopped="1"/>"#;
-pub const CHARGEMENT_BLOCK: &str = include_str!("chargement.lua");
-pub const SCRIPT_CHARGEMENT: &str = "loadscreen.lua";
-pub const PARTIE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("partie.lua"));
-pub const SCRIPT_PARTIE: &str = "ingame.lua";
-/// Option de partie « No First/Last moves (BGD) » (départ et fin de tour simultanés, depart_tour/README.md).
-pub const OPTION_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("option_partie.lua"));
-pub const SCRIPT_OPTION: &str = "setupparameters.lua";
 
 /// Correctifs POL actifs pour la partie en cours (voir l'en-tête). Désactivés tant que l'interface
 /// n'a rien dit.
@@ -65,11 +49,6 @@ pub fn pol_actifs() -> bool {
 /// Bits de `RolloverProxyStatus`, l'export d'état du proxy de GameCore (proxy/src/lib_windows.rs).
 const ST_ORIGINAL: u32 = 2;
 const ST_POL: u32 = 16;
-
-/// `actif=off` dans le fichier de réglages, dernière occurrence comme `read_config`.
-pub fn actif_off(cfg: &str) -> bool {
-    cfg.lines().filter_map(|l| l.trim().strip_prefix("actif=")).last().is_some_and(|v| v.trim() == "off")
-}
 
 /// Pourquoi cette machine n'appliquerait pas les correctifs POL, ou None si elle les appliquera.
 /// Proxy de GameCore déjà chargé : il le dit lui-même (bit ST_POL). Sinon, il le sera au lancement
@@ -157,74 +136,6 @@ fn version_du_fichier() -> Option<String> {
     let v = version_marquee(&data);
     *c = Some((cle, v.clone()));
     v
-}
-
-/// La première marque `BgdVersion=<version>\0` du fichier, version valide.
-pub fn version_marquee(data: &[u8]) -> Option<String> {
-    let marque = MARQUE.as_bytes();
-    let mut debut = 0;
-    while let Some(i) = data[debut..].windows(marque.len()).position(|w| w == marque) {
-        let apres = &data[debut + i + marque.len()..];
-        if let Some(fin) = apres.iter().take(64).position(|&b| b == 0) {
-            if let Some(v) = version_valide(&apres[..fin]) {
-                return Some(v);
-            }
-        }
-        debut += i + 1;
-    }
-    None
-}
-
-/// Une version comme celles de version.rs : `0.8.0`, `1.0.0-rc.1`.
-fn version_valide(octets: &[u8]) -> Option<String> {
-    let ok = !octets.is_empty() && octets.len() <= 32 && octets.iter().all(|&b| b.is_ascii_alphanumeric() || b"._+-".contains(&b));
-    ok.then(|| String::from_utf8_lossy(octets).into_owned())
-}
-
-/// StagingRoom.lua suivi du bloc du salon. Octets laissés tels quels, comme pour Options.lua.
-///
-/// Le bloc tourne dans sa propre fonction : ses locales ne comptent pas dans les registres de la
-/// fonction principale du script, déjà près de la limite chez MPH (146 locales au premier niveau ;
-/// HavokScript a refusé le script à 192 : « Function or expression requires too many registers »).
-pub fn patch_staging_lua(src: &[u8]) -> Vec<u8> {
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n(function()\r\n");
-    out.extend_from_slice(LUA_BLOCK.as_bytes());
-    out.extend_from_slice(b"\r\nend)();\r\n");
-    out
-}
-
-/// `StagingRoom.xml` avec le bouton du BGE Check après `BackButton` (même retrait) et le minuteur à
-/// la fin du contexte.
-pub fn patch_staging_xml(src: &[u8]) -> Result<Vec<u8>, String> {
-    let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
-    if text.contains("ID=\"BGD_CheckButton\"") {
-        return Err("bouton déjà présent".into());
-    }
-    let (debut, fin) = crate::rapport::element(text, ANCRE_XML).ok_or_else(|| "bouton BackButton introuvable".to_string())?;
-    let ligne = text[..debut].rfind('\n').map_or(0, |i| i + 1);
-    let retrait: String = text[ligne..debut].chars().take_while(|c| c.is_whitespace()).collect();
-    let mut out = String::with_capacity(text.len() + BOUTON_CHECK.len() + MINUTEUR.len() + 128);
-    out.push_str(&text[..fin]);
-    out.push_str("\r\n");
-    out.push_str(&retrait);
-    out.push_str("<!-- BetterGameExperience : BGE Check, symétrique du MOD CHECK de MPH (startup_proxy/src/salon.rs) -->\r\n");
-    out.push_str(&retrait);
-    out.push_str(BOUTON_CHECK);
-    out.push_str(&text[fin..]);
-    let fin = crate::rapport::fin_du_contexte(&out)?;
-    out.insert_str(fin, &format!("{MINUTEUR}\r\n"));
-    Ok(out.into_bytes())
-}
-
-/// Jeton d'une ouverture du salon : l'heure en nanosecondes, l'identifiant du processus et un
-/// compteur, en hexadécimal. Il suffit qu'il diffère d'une ouverture à l'autre et d'une machine à
-/// l'autre ; ce n'est pas un secret.
-pub fn new_token() -> String {
-    static COUNT: AtomicU64 = AtomicU64::new(0);
-    let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos() as u64).unwrap_or(0);
-    let n = COUNT.fetch_add(1, Ordering::Relaxed);
-    format!("{nanos:x}{:x}{n:x}", std::process::id())
 }
 
 /// `Civ6Proxy_Version()` → la version ; ou nil et la raison si cette machine n'appliquerait pas les
@@ -349,26 +260,10 @@ pub unsafe fn prepare(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
     patch_staging_lua(src)
 }
 
-/// LoadScreen.lua suivi de `chargement.lua`.
-pub fn patch_load_screen_lua(src: &[u8]) -> Vec<u8> {
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(CHARGEMENT_BLOCK.as_bytes());
-    out
-}
-
 /// Appelée par l'accroche sur LoadScreen.lua.
 pub unsafe fn prepare_chargement(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
     publish_natives(l, CHARGEMENT_NATIVES, "chargement");
     patch_load_screen_lua(src)
-}
-
-/// InGame.lua suivi de `partie.lua`.
-pub fn patch_in_game_lua(src: &[u8]) -> Vec<u8> {
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(PARTIE_BLOCK.as_bytes());
-    out
 }
 
 /// Appelée par l'accroche sur InGame.lua.
@@ -376,14 +271,6 @@ pub unsafe fn prepare_partie(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
     crate::relink::new_game();
     publish_natives(l, PARTIE_NATIVES, "partie");
     patch_in_game_lua(src)
-}
-
-/// SetupParameters.lua suivi de `option_partie.lua`.
-pub fn patch_setup_parameters_lua(src: &[u8]) -> Vec<u8> {
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(OPTION_BLOCK.as_bytes());
-    out
 }
 
 /// Appelée par l'accroche sur SetupParameters.lua, inclus par chaque écran de réglage de partie.
@@ -395,6 +282,7 @@ pub unsafe fn prepare_option(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::version::MARQUE;
 
     #[test]
     fn jetons_distincts() {

@@ -233,3 +233,20 @@ pub unsafe fn text_section(mh: *const MachHeader64, slide: isize) -> Option<(usi
     }
     None
 }
+
+/// Tranche arm64 d'un binaire universel (ou le binaire lui-même s'il est mince et arm64).
+pub fn tranche_arm64(b: &[u8]) -> Option<&[u8]> {
+    const CPU_ARM64: u32 = 0x0100_000c;
+    let be = |o: usize| b.get(o..o + 4).map(|s| u32::from_be_bytes(s.try_into().unwrap()));
+    let le = |o: usize| b.get(o..o + 4).map(|s| u32::from_le_bytes(s.try_into().unwrap()));
+    if le(0)? == 0xfeed_facf {
+        return (le(4)? == CPU_ARM64).then_some(b);
+    }
+    if be(0)? != 0xcafe_babe {
+        return None;
+    }
+    (0..be(4)? as usize).find_map(|i| {
+        let e = 8 + 20 * i;
+        (be(e)? == CPU_ARM64).then(|| b.get(be(e + 8)? as usize..(be(e + 8)? + be(e + 12)?) as usize)).flatten()
+    })
+}
