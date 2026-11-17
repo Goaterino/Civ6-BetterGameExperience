@@ -219,7 +219,7 @@
 			<Text>Aviso anticipado de alojamiento en el estandarte de ciudad</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="es_ES">
-			<Text>En el estandarte de tus ciudades aparece una casa amarilla cuando a la ciudad solo le queda 1 alojamiento para llegar al límite (crecimiento ralentizado un 50 %), y una naranja cuando está en el límite (75 %). El juego solo muestra su icono rojo cuando la ciudad supera el límite. Solo visualización.</Text>
+			<Text>En el estandarte de tus ciudades aparece una casa naranja cuando a la ciudad solo le queda 1 alojamiento para llegar al límite (crecimiento ralentizado un 50 %), y la casa roja en cuanto está en el límite (75 %). Sin esta opción, el juego solo muestra la casa roja cuando la ciudad supera el límite. Solo visualización.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="es_ES">
 			<Text>Descuento de distrito: -{1} % (tienes menos distritos de este tipo que tu media).</Text>

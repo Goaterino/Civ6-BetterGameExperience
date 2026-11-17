@@ -219,7 +219,7 @@
 			<Text>Aviso antecipado de habitações no estandarte da cidade</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pt_BR">
-			<Text>No estandarte de suas cidades, uma casa amarela aparece quando falta só 1 habitação para o limite (crescimento diminuído em 50%), e uma laranja quando a cidade está no limite (75%). O jogo só mostra seu ícone vermelho depois que a cidade passa do limite. Apenas exibição.</Text>
+			<Text>No estandarte de suas cidades, uma casa laranja aparece quando falta só 1 habitação para o limite (crescimento diminuído em 50%), e a casa vermelha assim que a cidade está no limite (75%). Sem esta opção, o jogo só mostra a casa vermelha depois que a cidade passa do limite. Apenas exibição.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pt_BR">
 			<Text>Desconto de distrito: -{1}% (você tem menos distritos deste tipo que a sua média).</Text>

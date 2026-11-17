@@ -7,24 +7,27 @@
 -- (`GetHousing() < GetPopulation()`), but growth is cut well before that
 -- (CITY_HOUSING_LEFT_50PCT_GROWTH = 1, CITY_HOUSING_LEFT_25PCT_GROWTH = 0):
 --   housing - population >= 2 : normal growth
---   housing - population == 1 : -50%   -> yellow house (this block)
---   housing - population == 0 : -75%   -> orange house (this block)
+--   housing - population == 1 : -50%   -> orange house (this block)
+--   housing - population == 0 : -75%   -> red house (this block, with the game's icon)
 --   housing - population <  0 : -75%, then no growth at -5 -> red house (the game's own icon)
+-- One colour per tier of the modifier: the red house comes with -75%, at the cap, not one
+-- population later.
 -- The level is not recomputed here: it is read from the growth modifier the game applies
 -- (CityGrowth:GetHousingGrowthModifier, the value CitySupport.lua puts in HousingMultiplier), so
 -- fractional housing and mods that change the thresholds follow.
 --
--- The icon is the one the city panel uses for housing (ICON_HOUSING, the white glyph of the Stats
--- atlas), with the colours the city panel gives it at those two levels (WarningMinor and
--- WarningMajor of Civ6_ColorAtlas.xml). Its tooltip needs no text of ours: population / housing
--- with the game's font icons, and the game's "Population growth rate slowed N%", already
--- translated.
+-- The orange house is the icon the city panel uses for housing (ICON_HOUSING, the white glyph of
+-- the Stats atlas), tinted with WarningMajor of Civ6_ColorAtlas.xml. The red house is the game's
+-- banner icon itself (ICON_CITY_EFFECTS_HOUSING), untouched: at the cap and over it, the same
+-- tier shows the same icon. The tooltip needs no text of ours: population / housing with the
+-- game's font icons, and the game's "Population growth rate slowed N%", already translated.
 --
 -- CityBanner:UpdateDetails is wrapped: the original fills the status and effect icons, then one
 -- more effect instance is taken for the house. Instances are reused by the next update for any
 -- other icon, and the game's SetDetailIcon resets neither the colour nor the size: the wrapper
--- puts them back before calling the original. No event is added: the icon is redrawn when the
--- game redraws its own, on the same refreshes of the banner.
+-- puts them back before calling the original (orange house only, the red one changes neither).
+-- No event is added: the icon is redrawn when the game redraws its own, on the same refreshes of
+-- the banner.
 -- Display only, local player's cities only. Everything runs under pcall; a failure writes
 -- `Logement echec <error>`.
 -- ===========================================================================
@@ -36,15 +39,16 @@ local Logement_Ok, Logement_Err = pcall(function()
 	BGD_Logement_Etat = true;
 
 	local ICONE = "ICON_HOUSING";
+	local ICONE_JEU = "ICON_CITY_EFFECTS_HOUSING";
 	-- The Stats atlas has no 20 px sheet (16, 22, 32...) : the 20 px slot is widened for this icon.
 	local TAILLE = 22;
-	-- 0xAABBGGRR. WarningMinor (206,199,91) and WarningMajor (200,146,52).
-	local JAUNE = UI.GetColorValueFromHexLiteral(0xFF5BC7CE);
+	-- 0xAABBGGRR. WarningMajor (200,146,52).
 	local ORANGE = UI.GetColorValueFromHexLiteral(0xFF3492C8);
 	local BLANC = UI.GetColorValueFromHexLiteral(0xFFFFFFFF);
 
-	-- Colour of the warning for this city, and the growth lost in percent ; nil when there is
-	-- nothing to add (normal growth, or the game already shows its red icon).
+	-- Level of the warning for this city (1 : -50%, orange ; 2 : -75%, red), and the growth lost in
+	-- percent ; nil when there is nothing to add (normal growth, or the game already shows its red
+	-- icon).
 	local function Niveau(pCity)
 		local pGrowth = pCity:GetGrowth();
 		if pGrowth == nil or type(pGrowth.GetHousingGrowthModifier) ~= "function" then return nil; end
@@ -53,7 +57,7 @@ local Logement_Ok, Logement_Err = pcall(function()
 		local logement, population = pGrowth:GetHousing(), pCity:GetPopulation();
 		if logement < population then return nil; end
 		local perte = math.floor((1 - m) * 100 + 0.5);
-		return (m > 0.25) and JAUNE or ORANGE, perte, logement, population;
+		return (m > 0.25) and 1 or 2, perte, logement, population;
 	end
 
 	-- 6 -> "6", 6.5 -> "6.5" (farms and other improvements give half points).
@@ -81,14 +85,19 @@ local Logement_Ok, Logement_Err = pcall(function()
 		if self.m_DetailEffectsIM == nil or type(self.GetCity) ~= "function" then return; end
 		local pCity = self:GetCity();
 		if pCity == nil or pCity:GetOwner() ~= Game.GetLocalPlayer() then return; end
-		local couleur, perte, logement, population = Niveau(pCity);
-		if couleur == nil then return; end
+		local niveau, perte, logement, population = Niveau(pCity);
+		if niveau == nil then return; end
 		local inst = self.m_DetailEffectsIM:GetInstance();
 		if inst == nil or inst.Icon == nil then return; end
-		self.BGD_Logement = { icone = inst.Icon, x = inst.Icon:GetSizeX(), y = inst.Icon:GetSizeY() };
-		inst.Icon:SetSizeVal(TAILLE, TAILLE);
-		inst.Icon:SetIcon(ICONE, TAILLE);
-		inst.Icon:SetColor(couleur);
+		if niveau == 1 then
+			self.BGD_Logement = { icone = inst.Icon, x = inst.Icon:GetSizeX(), y = inst.Icon:GetSizeY() };
+			inst.Icon:SetSizeVal(TAILLE, TAILLE);
+			inst.Icon:SetIcon(ICONE, TAILLE);
+			inst.Icon:SetColor(ORANGE);
+		else
+			-- As the game sets it over the cap.
+			inst.Icon:SetIcon(ICONE_JEU);
+		end
 		inst.Icon:SetHide(false);
 		inst.Icon:SetToolTipString("[ICON_Citizen] " .. Nombre(population) .. " / " .. Nombre(logement) .. " [ICON_Housing]"
 			.. "[NEWLINE]" .. Locale.Lookup("LOC_HUD_CITY_POPULATION_GROWTH_SLOWED", perte));

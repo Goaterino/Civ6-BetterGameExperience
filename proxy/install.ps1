@@ -67,7 +67,7 @@ param(
     # Production en réserve (débordement) sur le bandeau d'une ville sans production (BET-21).
     [ValidateSet("on", "off")]
     [string]$UiDebordement = "on",
-    # Early housing warning on the city banner: yellow house at -50% growth, orange at -75%.
+    # Early housing warning on the city banner: orange house at -50% growth, red at -75%.
     [ValidateSet("on", "off")]
     [string]$UiLogement = "on",
     # Science (culture) placée / coût de la technologie et du dogme en cours, en haut à gauche.

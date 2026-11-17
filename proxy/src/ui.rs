@@ -34,9 +34,9 @@
 //! - `ui_avancement=on|off` (on) : ajoute `ui_avancement.lua` à WorldTracker.lua, et un libellé à
 //!   WorldTrackerResearch.xml et WorldTrackerCivic.xml : « x/y (+z) » (placé / coût, excédent lu par `avancement`) à droite du nom de
 //!   la technologie et du dogme en cours, dans le panneau en haut à gauche ;
-//! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. A yellow house on
-//!   the banner of a city one housing below its cap (growth -50%), an orange one at the cap (-75%),
-//!   before the game's own red icon, which only comes over the cap ;
+//! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. An orange house on
+//!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
+//!   (-75%), where the game itself only shows it over the cap ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).

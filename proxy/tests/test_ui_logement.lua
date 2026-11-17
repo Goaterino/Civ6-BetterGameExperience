@@ -14,7 +14,7 @@ end
 local BLOCK = ReadFile(dir .. "/../src/ui_logement.lua");
 
 local LOCAL, AUTRE = 0, 1;
-local JAUNE, ORANGE, BLANC = 0xFF5BC7CE, 0xFF3492C8, 0xFFFFFFFF;
+local ORANGE, BLANC = 0xFF3492C8, 0xFFFFFFFF;
 
 local function NewMachine(sansBandeau)
 	local m = {
@@ -144,15 +144,21 @@ do
 	m.city.pop, m.city.mod = 5, 0.5;
 	banner:UpdateDetails();
 	local icon = im.all[1] and im.all[1].Icon or {};
-	Check("one below the cap: yellow house", im.used == 1 and icon.icon == "ICON_HOUSING" and icon.color == JAUNE and icon.hidden == false);
+	Check("one below the cap: orange house", im.used == 1 and icon.icon == "ICON_HOUSING" and icon.color == ORANGE and icon.hidden == false);
 	Check("one below the cap: 22 px icon of the Stats atlas in a 22 px slot", icon.iconSize == 22 and icon.x == 22 and icon.y == 22);
 	Check("one below the cap: tooltip", icon.tip == "[ICON_Citizen] 5 / 6 [ICON_Housing]" .. TIP50);
 	Check("one below the cap: banner sized again with the icon", m.resizes == 3 and m.sized == 3);
 
 	m.city.pop, m.city.mod = 6, 0.25;
 	banner:UpdateDetails();
-	Check("at the cap: orange house", im.used == 1 and icon.icon == "ICON_HOUSING" and icon.color == ORANGE
-		and icon.tip == "[ICON_Citizen] 6 / 6 [ICON_Housing]" .. TIP75);
+	Check("at the cap: the game's red house, untinted, in the 20 px slot", im.used == 1 and icon.icon == "ICON_CITY_EFFECTS_HOUSING"
+		and icon.iconSize == nil and icon.color == BLANC and icon.x == 20 and icon.y == 20 and icon.hidden == false);
+	Check("at the cap: tooltip", icon.tip == "[ICON_Citizen] 6 / 6 [ICON_Housing]" .. TIP75);
+
+	m.city.pop, m.city.mod = 5, 0.5;
+	banner:UpdateDetails();
+	Check("back to one below the cap: orange house again", icon.icon == "ICON_HOUSING" and icon.color == ORANGE and icon.x == 22);
+	m.city.mod = 0.25;
 
 	m.city.pop = 7;
 	banner:UpdateDetails();
@@ -171,12 +177,12 @@ do
 	local banner, im = m.Banner();
 	m.city.housing, m.city.pop, m.city.mod = 6.5, 5, 0.5;
 	banner:UpdateDetails();
-	Check("fractional housing: yellow, « 5 / 6.5 »", im.all[1].Icon.color == JAUNE
+	Check("fractional housing: orange, « 5 / 6.5 »", im.all[1].Icon.color == ORANGE
 		and im.all[1].Icon.tip == "[ICON_Citizen] 5 / 6.5 [ICON_Housing]" .. TIP50);
 	-- A mod with other thresholds: only the modifier counts.
 	m.city.housing, m.city.pop, m.city.mod = 9, 5, 0.5;
 	banner:UpdateDetails();
-	Check("modifier at 50% with more housing left (modded thresholds): yellow", im.used == 1 and im.all[1].Icon.color == JAUNE);
+	Check("modifier at 50% with more housing left (modded thresholds): orange", im.used == 1 and im.all[1].Icon.color == ORANGE);
 	m.city.mod = 0.75;
 	banner:UpdateDetails();
 	Check("modifier above 50%: nothing", im.used == 0);
@@ -198,12 +204,12 @@ do
 	banner:UpdateDetails();
 	local second = im.all[2].Icon;
 	Check("siege and warning: house after the game's icons",
-		m.Shown(im) == "ICON_CITY_EFFECTS_SIEGE ICON_HOUSING" and first.color == BLANC and second.color == JAUNE and second.x == 22);
+		m.Shown(im) == "ICON_CITY_EFFECTS_SIEGE ICON_HOUSING" and first.color == BLANC and second.color == ORANGE and second.x == 22);
 
 	m.city.siege = false;
 	banner:UpdateDetails();
 	Check("siege lifted: house in the first instance, second one put back",
-		m.Shown(im) == "ICON_HOUSING" and first.color == JAUNE and first.x == 22 and second.color == BLANC and second.x == 20);
+		m.Shown(im) == "ICON_HOUSING" and first.color == ORANGE and first.x == 22 and second.color == BLANC and second.x == 20);
 
 	-- The power icon leaves a click on its instance.
 	m.city.power, m.city.pop, m.city.mod = true, 3, 1;
@@ -224,7 +230,7 @@ do
 	a:UpdateDetails();
 	m.city.pop, m.city.mod = 3, 1;
 	b:UpdateDetails();
-	Check("two banners: the first keeps its house", ima.all[1].Icon.color == JAUNE and imb.used == 0);
+	Check("two banners: the first keeps its house", ima.all[1].Icon.color == ORANGE and imb.used == 0);
 	a:UpdateDetails();
 	Check("two banners: the first put back on its own update", ima.used == 0 and ima.all[1].Icon.color == BLANC);
 end
@@ -248,12 +254,12 @@ do
 	banner.GetCity = nil;
 
 	banner:UpdateDetails();
-	Check("warning shown", im.used == 1 and im.all[1].Icon.color == JAUNE);
+	Check("warning shown", im.used == 1 and im.all[1].Icon.color == ORANGE);
 	-- DestroyInstances: the control kept from the last update is gone, the manager starts again.
 	im.all[1].Icon.destroyed = true;
 	im.all = {};
 	local ok = pcall(banner.UpdateDetails, banner);
-	Check("instance destroyed since the last update: no error, new house", ok and im.used == 1 and im.all[1].Icon.color == JAUNE);
+	Check("instance destroyed since the last update: no error, new house", ok and im.used == 1 and im.all[1].Icon.color == ORANGE);
 	Check("no failure written", #m.printed == 0);
 end
 

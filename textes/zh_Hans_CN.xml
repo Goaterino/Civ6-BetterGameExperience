@@ -219,7 +219,7 @@
 			<Text>城市横幅上的住房预警</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="zh_Hans_CN">
-			<Text>在你的城市横幅上，距住房上限只差 1 时显示黄色房屋（人口增速减缓 50%），达到上限时显示橙色房屋（减缓 75%）。游戏自带的红色图标要到超出上限后才会显示。仅影响显示。</Text>
+			<Text>在你的城市横幅上，距住房上限只差 1 时显示橙色房屋（人口增速减缓 50%），一达到上限就显示红色房屋（减缓 75%）。不启用此选项时，游戏要到超出上限后才会显示红色房屋。仅影响显示。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
 			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
