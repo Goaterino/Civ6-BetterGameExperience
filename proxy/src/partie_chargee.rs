@@ -1,10 +1,10 @@
-//! Une partie chargée calcule comme la partie en cours (`visibilite_chargee=on` et
-//! `ecouteurs_charges=on`, par défaut ; GameCore_XP2 1.0.12.72).
+//! Une partie chargée calcule comme la partie en cours (`visibilite_chargee=on`,
+//! `ecouteurs_charges=on` et `preferences_chargees=on`, par défaut ; GameCore_XP2 1.0.12.72).
 //!
 //! Une machine qui charge une sauvegarde (rechargement après une désynchro, retour dans la partie)
 //! doit retrouver la partie que fait tourner l'hôte. La comparaison d'une partie en cours avec une
-//! partie rechargée (contrôle `testSync` juste après le rechargement) a trouvé deux écarts dus au
-//! chargement lui-même :
+//! partie rechargée (contrôle `testSync` juste après le rechargement, puis contrôles de synchro des
+//! tours suivants) a trouvé trois écarts dus au chargement lui-même :
 //!
 //! - **Améliorations mémorisées** (`visibilite_chargee`). Après un chargement, la première étape de
 //!   la passe post-chargement (`18063def0` -> `18025cb50`) écrit chaque amélioration de la carte
@@ -26,16 +26,32 @@
 //!   libres (`1801ad4a0`), qu'une nouvelle partie connecte juste après ceux du joueur des cités
 //!   libres et un chargement après tous les joueurs, vont là où commençait la lecture du joueur
 //!   suivant.
+//! - **Préférences d'IA** (`preferences_chargees`). La mise en place du grand stratège d'un joueur
+//!   (`AI::GrandStrategic`, `1804b39a0`) écrit dans son tableau de préférences de pseudo-rendements
+//!   (`+0x428`) les valeurs du profil d'IA de l'emplacement. Dans une nouvelle partie, son
+//!   initialisation (`1804b44a0`) remet ce tableau à zéro juste après ; les listes du leader
+//!   (`1802f9280`), puis les stratégies adoptées en cours de partie, s'y ajoutent ensuite. Un
+//!   chargement appelle la même mise en place à la fin de la lecture du grand stratège
+//!   (`1804b5560`), mais sans la remise à zéro : la machine qui charge gardait les valeurs du
+//!   profil (pour Sejong, −75 % sur le pseudo-rendement des points de Prophète illustre), que le
+//!   calcul de chaque tour conserve. Elles changeaient le score de ses doctrines (`AI::CultureAi`,
+//!   `m_policyAnalyzers`) ; l'hôte, dont la valeur ne change pas, ne la renvoie pas dans ses
+//!   deltas, et la désynchro restait jusqu'au rechargement suivant, qui la recréait. Après la
+//!   lecture du grand stratège, ce tableau est désormais remis à zéro comme dans une nouvelle
+//!   partie ; les listes du leader, appliquées à la fin de la lecture du joueur, et les stratégies,
+//!   au tour suivant, s'y ajoutent comme sur l'hôte.
 //!
 //! La divergence des barbares un tour après un rechargement venait d'ailleurs : du contrôle de
 //! synchro du tour chargé, que l'hôte compare à son tour suivant et auquel il répond par des deltas
 //! qui écrasent sur place le nouvel arbre de comportement des barbares du client. `rejoin.rs` saute
 //! ce contrôle.
 //!
-//! Les deux changent ce que calcule une machine qui charge : ce sont des correctifs POL, appliqués
+//! Les trois changent ce que calcule une machine qui charge : ce sont des correctifs POL, appliqués
 //! seulement quand `pol::actifs()` (tous les humains ont ce proxy à la même version, ou partie
-//! locale), et seulement si les cinq sites ont les octets attendus. Réglages :
-//! `visibilite_chargee=on|off`, `ecouteurs_charges=on|off` (on par défaut tous les deux).
+//! locale), et seulement si les six sites ont les octets attendus. Chaque chargement de la partie,
+//! le premier compris, suit la même règle sur toutes les machines. Réglages :
+//! `visibilite_chargee=on|off`, `ecouteurs_charges=on|off`, `preferences_chargees=on|off` (on par
+//! défaut tous les trois).
 
 use crate::exe::rd;
 use crate::patch::{self, Site, IMAGE_BASE};
@@ -97,7 +113,20 @@ const FC_CONNECT: Site = Site {
     copy: (0, 16),
     resume: 16,
 };
-const SITES: [Site; 5] = [POST_LOAD, SET_REMEMBERED, PLAYER_READ, PLAYER_CONNECT, FC_CONNECT];
+/// Lecture du grand stratège d'un joueur (grand stratège, flux) ; seul appelant : `1804affa0`,
+/// pendant la lecture du joueur. Finit par la mise en place `1804b39a0`.
+const GS_READ: Site = Site {
+    name: "grand strategy read",
+    address: 0x1_804b_5560,
+    // push rbp ; push rbx ; push rsi ; push rdi ; push r12 ; push r13 ; push r14 ; push r15 ;
+    // lea rbp,[rsp-0xb8]
+    expected: &[
+        0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56, 0x41, 0x57, 0x48, 0x8D, 0xAC, 0x24, 0x48, 0xFF, 0xFF, 0xFF,
+    ],
+    copy: (0, 21),
+    resume: 21,
+};
+const SITES: [Site; 6] = [POST_LOAD, SET_REMEMBERED, PLAYER_READ, PLAYER_CONNECT, FC_CONNECT, GS_READ];
 
 /// Les joueurs (objet rendu par `180306b80`) : `+0x20` le tableau des `Player*` par id, `+0x28` sa
 /// fin.
@@ -113,13 +142,21 @@ const EVENTS_SCAN: usize = 0x1800;
 const FC_PLAYER: usize = 0xe8;
 /// L'instance de visibilité partagée par tous les joueurs.
 const SHARED_INSTANCE: i32 = 1000;
+/// Le grand stratège : `+0x90` son joueur ; `+0x428` ses préférences de pseudo-rendements (`i32`
+/// en 8.8 par pseudo-rendement ; nombre en `+0x438`, valeur par défaut en `+0x440`), que
+/// l'initialisation `1804b44a0` remet à zéro.
+const GS_PLAYER: usize = 0x90;
+const GS_PREFS: usize = 0x428;
+const GS_PREFS_COUNT: usize = 0x438;
+const GS_PREFS_DEFAULT: usize = 0x440;
 
 // ------------------------------------------------------------------ état
 
 static VISIBILITY: AtomicBool = AtomicBool::new(true);
 static LISTENERS: AtomicBool = AtomicBool::new(true);
+static PREFERENCES: AtomicBool = AtomicBool::new(true);
 static BASE: AtomicUsize = AtomicUsize::new(0);
-static TRAMPS: [AtomicUsize; 5] = [const { AtomicUsize::new(0) }; 5];
+static TRAMPS: [AtomicUsize; 6] = [const { AtomicUsize::new(0) }; 6];
 
 static IN_POST_LOAD: AtomicBool = AtomicBool::new(false);
 static SKIPPED: AtomicU32 = AtomicU32::new(0);
@@ -133,6 +170,9 @@ static PLAYER_MARKS: Mutex<Vec<(i32, Vec<(usize, usize)>)>> = Mutex::new(Vec::ne
 /// qui ont déplacé quelque chose, écouteurs déplacés, listes changées, listes laissées telles
 /// quelles.
 static STATS: Mutex<[[u32; 4]; 2]> = Mutex::new([[0; 4]; 2]);
+/// Depuis la dernière passe post-chargement : grands stratèges remis à zéro après leur lecture, et
+/// pour chaque joueur dont le tableau n'était pas nul, (id, valeurs non nulles retirées).
+static PREFS_CLEARED: Mutex<(u32, Vec<(i32, u32)>)> = Mutex::new((0, Vec::new()));
 
 pub fn set_visibility(on: bool) {
     VISIBILITY.store(on, Ordering::Relaxed);
@@ -140,6 +180,10 @@ pub fn set_visibility(on: bool) {
 
 pub fn set_listeners(on: bool) {
     LISTENERS.store(on, Ordering::Relaxed);
+}
+
+pub fn set_preferences(on: bool) {
+    PREFERENCES.store(on, Ordering::Relaxed);
 }
 
 fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -230,6 +274,12 @@ unsafe extern "system-unwind" fn post_load_hook(game: usize) -> u64 {
         log(&format!(
             "loaded game: listeners of {} player(s) moved to where their read started ({} in {} list(s), {} list(s) left as they were); Free Cities manager: {} in {} list(s), {} left",
             st[0][0], st[0][1], st[0][2], st[0][3], st[1][1], st[1][2], st[1][3]
+        ));
+    }
+    let (cleared, profiles) = std::mem::take(&mut *lock(&PREFS_CLEARED));
+    if pol && PREFERENCES.load(Ordering::Relaxed) {
+        log(&format!(
+            "loaded game: AI preferences of {cleared} grand strategy object(s) cleared after their read, as in a new game; AI profile values dropped (player, count): {profiles:?}"
         ));
     }
     lock(&PLAYER_MARKS).clear();
@@ -389,11 +439,41 @@ unsafe fn move_after_marks(marks: &[(usize, usize)], before: &[usize], group: us
     }
 }
 
+// ------------------------------------------------------------------ préférences d'IA
+
+type GsReadFn = unsafe extern "system-unwind" fn(usize, usize);
+
+unsafe extern "system-unwind" fn gs_read_hook(gs: usize, stream: usize) {
+    let orig: GsReadFn = std::mem::transmute(tramp(5));
+    orig(gs, stream);
+    if !(PREFERENCES.load(Ordering::Relaxed) && pol::actifs()) || !readable(gs + GS_PREFS, 0x20) {
+        return;
+    }
+    // Ce que fait l'initialisation après la mise en place, dans une nouvelle partie.
+    let (data, n): (usize, u32) = (rd(gs + GS_PREFS), rd(gs + GS_PREFS_COUNT));
+    let n = n as usize;
+    let mut dropped = 0;
+    if data != 0 && n > 0 && n < 4096 && readable(data, n * 4) {
+        for i in 0..n {
+            let at = (data + i * 4) as *mut i32;
+            dropped += (*at != 0) as u32;
+            *at = 0;
+        }
+    }
+    *((gs + GS_PREFS_DEFAULT) as *mut i32) = 0;
+    let mut st = lock(&PREFS_CLEARED);
+    st.0 += 1;
+    if dropped > 0 {
+        let id = if readable(gs + GS_PLAYER, 8) { player_id(rd(gs + GS_PLAYER)) } else { -1 };
+        st.1.push((id, dropped));
+    }
+}
+
 // ------------------------------------------------------------------ pose
 
 pub unsafe fn on_gamecore_loaded(base: usize) {
-    if !VISIBILITY.load(Ordering::Relaxed) && !LISTENERS.load(Ordering::Relaxed) {
-        log("loaded game: off (visibilite_chargee=off, ecouteurs_charges=off), no hooks");
+    if !VISIBILITY.load(Ordering::Relaxed) && !LISTENERS.load(Ordering::Relaxed) && !PREFERENCES.load(Ordering::Relaxed) {
+        log("loaded game: off (visibilite_chargee=off, ecouteurs_charges=off, preferences_chargees=off), no hooks");
         return;
     }
     if let Err(e) = patch::check(base, &SITES) {
@@ -401,12 +481,13 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         return;
     }
     BASE.store(base, Ordering::Relaxed);
-    let hooks: [usize; 5] = [
+    let hooks: [usize; 6] = [
         post_load_hook as *const () as usize,
         set_remembered_hook as *const () as usize,
         player_read_hook as *const () as usize,
         player_connect_hook as *const () as usize,
         fc_connect_hook as *const () as usize,
+        gs_read_hook as *const () as usize,
     ];
     // Les trampolines d'abord, les détours ensuite : un détour peut appeler le trampoline d'un
     // autre.
@@ -426,11 +507,14 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
     *lock(&READ_MARKS) = None;
     lock(&PLAYER_MARKS).clear();
     *lock(&STATS) = [[0; 4]; 2];
+    *lock(&PREFS_CLEARED) = (0, Vec::new());
     crate::STATUS.fetch_or(crate::ST_POL, Ordering::Relaxed);
+    let on = |b: &AtomicBool| if b.load(Ordering::Relaxed) { "on" } else { "off" };
     log(&format!(
-        "loaded game: 5 hooks installed (visibility {}, listeners {})",
-        if VISIBILITY.load(Ordering::Relaxed) { "on" } else { "off" },
-        if LISTENERS.load(Ordering::Relaxed) { "on" } else { "off" }
+        "loaded game: 6 hooks installed (visibility {}, listeners {}, AI preferences {})",
+        on(&VISIBILITY),
+        on(&LISTENERS),
+        on(&PREFERENCES)
     ));
 }
 
@@ -457,7 +541,7 @@ mod tests {
             r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI".to_string(),
         ];
         let found = dirs.iter().filter(|d| !d.is_empty()).find_map(|d| {
-            std::fs::read(format!(r"{d}\Base\Binaries\Win64Steam\GameCore_XP2_FinalRelease.dll")).ok()
+            std::fs::read(format!(r"{d}\DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll")).ok()
         });
         let Some(file) = found else {
             eprintln!("GameCore missing, test skipped");

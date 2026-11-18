@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="de_DE">
 			<Text>Nach dem Laden eines Spiels erreichen Spielereignisse jeden Spieler vor seiner KI, wie in einem neuen Spiel: Die KI bewertet einen Stadtstaat nicht mehr vor dem Gesandten der ersten Begegnung (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="de_DE">
+			<Text>KI-Präferenzen wie in einem neuen Spiel</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="de_DE">
+			<Text>Nach dem Laden eines Spiels werden die KI-Präferenzen jedes Spielers wie in einem neuen Spiel aufgebaut, ohne die Startwerte des KI-Profils, die ein neues Spiel verwirft: Die KI-Werte (Politiken, Große Persönlichkeiten) bleiben dieselben wie auf den anderen Rechnern (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="de_DE">
 			<Text>Ladungen der Handwerker auf ihrer Flagge</Text>
 		</Row>

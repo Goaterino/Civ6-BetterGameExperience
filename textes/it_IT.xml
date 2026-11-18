@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="it_IT">
 			<Text>Dopo il caricamento di una partita, gli eventi di gioco raggiungono ogni giocatore prima della sua IA, come in una nuova partita: l'IA non valuta più una città-stato prima dell'inviato del primo incontro (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="it_IT">
+			<Text>Preferenze IA come in una nuova partita</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="it_IT">
+			<Text>Dopo il caricamento di una partita, le preferenze IA di ogni giocatore vengono ricostruite come in una nuova partita, senza i valori iniziali del profilo IA che una nuova partita scarta: i punteggi IA (politiche, grandi personaggi) restano gli stessi delle altre macchine (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="it_IT">
 			<Text>Cariche dei costruttori sulla loro bandiera</Text>
 		</Row>

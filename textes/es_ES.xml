@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="es_ES">
 			<Text>Al cargar una partida, los eventos del juego llegan a cada jugador antes que a su IA, como en una partida nueva: la IA ya no evalúa una ciudad-estado antes del enviado del primer encuentro (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="es_ES">
+			<Text>Preferencias de IA como en una partida nueva</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="es_ES">
+			<Text>Al cargar una partida, las preferencias de IA de cada jugador se reconstruyen como en una partida nueva, sin los valores iniciales del perfil de IA que una partida nueva descarta: las puntuaciones de IA (políticas, grandes personajes) siguen siendo las mismas que en las demás máquinas (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="es_ES">
 			<Text>Cargas de los constructores en su bandera</Text>
 		</Row>

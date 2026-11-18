@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="zh_Hans_CN">
 			<Text>载入游戏后，游戏事件会像新游戏一样先传达给每位玩家，再传达给其 AI：AI 不再在首次相遇的使者到来之前评估城邦（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="zh_Hans_CN">
+			<Text>AI 偏好与新游戏一致</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="zh_Hans_CN">
+			<Text>载入游戏后，每位玩家的 AI 偏好会像新游戏一样重建，不含新游戏会舍弃的 AI 档案初始值：AI 评分（政策、伟人）与其他机器保持一致（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="zh_Hans_CN">
 			<Text>在旗帜上显示建造者次数</Text>
 		</Row>

@@ -175,6 +175,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ecouteurs_charges", defaut = "on",
 		choix = PROXY_ON_OFF },
+	{ cle = "preferences_chargees", defaut = "on",
+		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_MODS" },
 	{ cle = "ui_charges", defaut = "on",

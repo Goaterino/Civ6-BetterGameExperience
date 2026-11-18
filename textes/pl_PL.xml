@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="pl_PL">
 			<Text>Po wczytaniu gry zdarzenia gry docierają do każdego gracza przed jego SI, jak w nowej grze: SI nie ocenia już miasta-państwa przed wysłannikiem z pierwszego spotkania (mniej desynchronizacji po ponownym wczytaniu). Tylko gdy wszyscy gracze mają tę wersję.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="pl_PL">
+			<Text>Preferencje SI jak w nowej grze</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="pl_PL">
+			<Text>Po wczytaniu gry preferencje SI każdego gracza są odtwarzane jak w nowej grze, bez początkowych wartości profilu SI, które nowa gra odrzuca: wyniki SI (polityki, wielcy ludzie) pozostają takie same jak na innych komputerach (mniej desynchronizacji po ponownym wczytaniu). Tylko gdy wszyscy gracze mają tę wersję.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="pl_PL">
 			<Text>Ładunki budowniczych na ich fladze</Text>
 		</Row>
