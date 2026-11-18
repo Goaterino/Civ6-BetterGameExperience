@@ -6,8 +6,10 @@
 //! remplies au chargement (`relais::init`) par les adresses de la winmm de System32, dont le chemin
 //! est lu à ce moment-là : pas de chemin figé, contrairement aux renvois PE.
 //!
-//! La chaîne d'outils est GNU : les exports passent par un fichier .def donné à ld, en plus de celui
-//! de rustc, qui associe chaque nom à son relais.
+//! Avec la chaîne GNU (celle de la CI et de la release), les exports passent par un fichier .def
+//! donné à ld, en plus de celui de rustc, qui associe chaque nom à son relais. Avec la chaîne MSVC,
+//! link.exe n'accepte qu'un seul .def, et rustc passe déjà le sien : chaque relais devient alors une
+//! option `/EXPORT` de même contenu.
 
 fn main() {
     let liste = std::fs::read_to_string("src/winmm_exports.txt").unwrap();
@@ -45,7 +47,19 @@ fn main() {
     );
     std::fs::write(out.join("winmm_relais.rs"), rs).unwrap();
     std::fs::write(out.join("winmm.def"), def).unwrap();
-    println!("cargo:rustc-cdylib-link-arg={}", out.join("winmm.def").display());
+    if std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
+        // link.exe : un seul .def (celui de rustc), donc une option /EXPORT par relais.
+        for (i, (nom, ordinal)) in entrees.iter().enumerate() {
+            match nom {
+                Some(n) => println!("cargo:rustc-cdylib-link-arg=/EXPORT:{n}=bgd_winmm_{i}"),
+                None => println!(
+                    "cargo:rustc-cdylib-link-arg=/EXPORT:bgd_winmm_ord{ordinal}=bgd_winmm_{i},@{ordinal},NONAME"
+                ),
+            }
+        }
+    } else {
+        println!("cargo:rustc-cdylib-link-arg={}", out.join("winmm.def").display());
+    }
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src/winmm_exports.txt");
 }
