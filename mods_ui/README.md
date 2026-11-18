@@ -168,7 +168,8 @@ le mod fonctionne comme avant.
 
 - **Lua** : deux insertions dans `GovernmentScreen.lua` du jeu, quel que soit le script du contexte
   (celui du jeu ou `governmentscreen_spec.lua` de BSM, qui inclut la chaîne) :
-  - en tête, le chargement de RMA (`Civ6Proxy_Charger`) ;
+  - en tête, le chargement de `BGD_Commun` puis de RMA (`Civ6Proxy_Charger`), à la lecture du
+    fichier ;
   - après `cardInstance.Background:SetTexture(GetPolicyBGTexture(policyType));` dans la fonction
     qui remplit une carte, l'effet de la carte.
 - **XML** : l'`EffectContainer` après la balise `NewIcon` de `GovernmentScreen.xml`.
@@ -183,9 +184,26 @@ le mod fonctionne comme avant.
   non textuel de `CalculateModifierEffect`. Un effet vide rendu sans erreur (carte sans rendement)
   n'est pas tracé. Ajoutées après le rapport BGE-BFBBC3 (12 novembre 2026) : effets perdus après le
   rechargement de la partie au tour 29, RMA jamais chargé dans l'écran du gouvernement, aucune trace.
+- **RMA chargé dans le mauvais contexte** (essai du 18 novembre 2026, cartes sans effet sur une
+  sauvegarde, effets revenus après un rechargement). `Lua.log` : RMA chargé par `InGamePopup`, puis
+  « RMA chargé sans CalculateModifierEffect » ; après le rechargement, chargé par `GovernmentScreen`.
+  - **Cause.** `Civ6Proxy_Charger` compile par le vrai `luaL_loadbuffer`, dans les globales du
+    contexte qui tourne, pas dans celles du script appelant. RMA était chargé à la première carte,
+    et l'écran peut dessiner ses cartes pendant qu'un autre contexte tourne. RMA s'installait alors
+    dans `InGamePopup`, sans `BGD_RMA_Table` ni `BGD_Lookup`, et la table de l'écran restait vide.
+    `BGD_ChargerRMA` gardait cette table vide en cache : pas d'effet jusqu'au rechargement.
+    Sans doute la même cause que BGE-BFBBC3.
+  - **Correctif.** RMA est chargé dans l'en-tête, à la lecture de `GovernmentScreen.lua`, quand ce
+    contexte-ci tourne forcément. `BGD_ChargerRMA` ne garde plus une table restée vide : l'appel
+    suivant recharge RMA, et après trois échecs la table vide est gardée, pour ne pas recompiler RMA
+    à chaque carte. Un échec du chargement en tête écrit « RMA chargé sans CalculateModifierEffect ».
+  - Coût : RMA est compilé au chargement de la partie dans l'écran du gouvernement, comme il l'était
+    déjà dans l'écran des rapports.
 - **Mieux que le mod** : ne dépend plus de BRS, puisque le proxy apporte RMA lui-même, et corrigé (voir
   [RMA](#rma--les-effets-mal-calculés)).
 - **Test hors jeu** : patch du vrai fichier, `luac -p`, XML bien formé (comme `top_panel_du_jeu`).
+  Chargement de RMA quand un autre contexte tourne : `lua proxy/tests/test_mods_politiques.lua`
+  (chaque fonction garde les globales de son contexte de compilation, comme dans le jeu).
 
 ### `ui_notifications` : NotificationClear
 
