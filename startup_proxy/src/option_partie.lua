@@ -130,6 +130,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		if Civ6Proxy_PolActifs == nil or Civ6Proxy_PolActifs() ~= 1 or Civ6Proxy_Version == nil then return false; end
 		local version = Civ6Proxy_Version();
 		local hote = Network.GetGameHostPlayerID();
+		-- Format et règle de salon.lua (BGD_LireAnnonce, BGD_AutresHumains) : changer les deux ensemble.
 		local function Annonce(id)
 			local pc = PlayerConfigurations[id];
 			local v = pc and pc:GetValue("BGD_VERSION");

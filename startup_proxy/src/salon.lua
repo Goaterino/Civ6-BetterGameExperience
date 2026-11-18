@@ -102,7 +102,8 @@ local function BGD_Concerne()
 end
 
 -- Annonce "<version>@<jeton de l'hôte>#<jeton du joueur>" -> les trois ; nil si la valeur manque
--- ou n'a pas cette forme.
+-- ou n'a pas cette forme. Même lecture dans option_partie.lua (SetupParameters.BGD_PolDisponible) :
+-- changer le format aux deux endroits.
 local function BGD_LireAnnonce(valeur)
 	if type(valeur) ~= "string" then return nil; end
 	return string.match(valeur, "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
@@ -747,8 +748,18 @@ else
 	Events.LoadScreenContentReady.Add(fermeture);
 	Events.LeaveGameComplete.Add(fermeture);
 	Events.MultiplayerPlayerConnected.Add(BGD_Protege(BGD_Publier));
-	Events.MultiplayerPostPlayerDisconnected.Add(BGD_Protege(BGD_Publier));
-	Events.GameConfigChanged.Add(BGD_Protege(BGD_Publier));
+	-- Salon visible seulement, comme PlayerInfoChanged : après le compte à rebours, le salon est
+	-- caché mais encore ouvert jusqu'à l'écran de chargement, et les données de lancement sont
+	-- parties avec le verdict d'alors. Un bilan refait ici (déconnexion pendant le lancement)
+	-- changerait POL chez l'hôte seul. Au retour de l'onglet Game Setup, BGD_BackToStagingRoom
+	-- republie.
+	local function publierSiVisible()
+		if not ContextPtr:IsHidden() then
+			BGD_Publier();
+		end
+	end
+	Events.MultiplayerPostPlayerDisconnected.Add(BGD_Protege(publierSiVisible));
+	Events.GameConfigChanged.Add(BGD_Protege(publierSiVisible));
 	Events.PlayerInfoChanged.Add(BGD_Protege(function()
 		if not ContextPtr:IsHidden() then
 			BGD_Publier();

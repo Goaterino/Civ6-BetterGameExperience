@@ -1120,6 +1120,29 @@ do
 		"in-game config/disconnect events do not renegotiate POL or rebuild lobby controls");
 end
 
+-- Launch window: after the countdown the lobby is hidden but still open until the load screen, and
+-- the launch data already carry the verdict. A player without BGE who leaves then must not turn the
+-- host's verdict (and POL) on for the host alone.
+do
+	local players = { { nom = "Hôte" }, { nom = "Bob", proxy = false } };
+	local l = NewLobby(players);
+	l.open();
+	check(l.actif() == "0", "launch window: verdict 0 with Bob without BGE");
+	l.countdown();
+	local h = l.machines[0];
+	local verdict, pol = l.verdict(), h.pol;
+	h.cache = true;
+	players[2].absent = true;
+	h.events.MultiplayerPostPlayerDisconnected.Fire(1);
+	h.events.GameConfigChanged.Fire();
+	check(l.verdict() == verdict and h.pol == pol,
+		"launch window: disconnect/config events leave the verdict and POL as launched");
+	-- The same events in a visible lobby do recompute it.
+	h.cache = false;
+	h.events.MultiplayerPostPlayerDisconnected.Fire(1);
+	check(l.actif() == "1", "visible lobby: disconnect recomputes the verdict");
+end
+
 if failures > 0 then
 	print(failures .. " échec(s)");
 	os.exit(1);
