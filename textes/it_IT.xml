@@ -215,6 +215,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="it_IT">
 			<Text>Mostra la produzione che una città tiene in riserva (eccedenza, al massimo un turno), aggiunta alla sua produzione del turno successivo: sullo stendardo della città, nel pannello della città e nel pannello di produzione. Solo visualizzazione.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="it_IT">
+			<Text>Avviso anticipato sulle abitazioni nello stendardo della città</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="it_IT">
+			<Text>Sullo stendardo delle tue città compare una casa arancione quando alla città manca 1 sola abitazione al limite (crescita rallentata del 50%), e la casa rossa non appena è al limite (75%). Senza questa opzione, il gioco mostra la casa rossa solo quando la città supera il limite. Solo visualizzazione.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="it_IT">
 			<Text>Sconto del distretto: -{1}% (hai meno distretti di questo tipo della tua media).</Text>
 		</Row>

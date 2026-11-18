@@ -215,6 +215,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="pl_PL">
 			<Text>Pokazuje produkcję, którą miasto trzyma w zapasie (nadwyżka, najwyżej jedna tura) i która dochodzi do jego produkcji w następnej turze: w banerze miasta, w panelu miasta i w panelu produkcji. Tylko wyświetlanie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="pl_PL">
+			<Text>Wczesne ostrzeżenie o obszarach mieszkalnych w banerze miasta</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pl_PL">
+			<Text>W banerze twoich miast pojawia się pomarańczowy dom, gdy miastu brakuje 1 obszaru mieszkalnego do limitu (przyrost spowolniony o 50%), a czerwony dom, gdy tylko miasto osiągnie limit (75%). Bez tej opcji gra pokazuje czerwony dom dopiero po przekroczeniu limitu. Tylko wyświetlanie.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pl_PL">
 			<Text>Zniżka dzielnicy: -{1}% (masz mniej dzielnic tego typu niż twoja średnia).</Text>
 		</Row>

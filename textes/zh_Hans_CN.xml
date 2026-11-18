@@ -215,6 +215,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>在城市横幅、城市面板和生产面板中显示城市储备的生产力（溢出部分，最多一回合），它会加到下一回合的生产中。仅影响显示。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>城市横幅上的住房预警</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>在你的城市横幅上，距住房上限只差 1 时显示橙色房屋（人口增速减缓 50%），一达到上限就显示红色房屋（减缓 75%）。不启用此选项时，游戏要到超出上限后才会显示红色房屋。仅影响显示。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
 			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
 		</Row>
