@@ -239,6 +239,24 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="it_IT">
 			<Text>La barra superiore si aggiorna dopo un titolo di governatore, uno spostamento di governatore o un grande personaggio, senza spostare un cittadino. Solo visualizzazione: nessuna desincronizzazione.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="it_IT">
+			<Text>Unità di distretto dell'IA in ordine fisso</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="it_IT">
+			<Text>La tabella delle unità promesse all'IA per i suoi prossimi distretti viene salvata, sincronizzata e ricostruita in un ordine fisso: dopo un ricaricamento ogni computer le crea nello stesso ordine (meno desincronizzazioni). Misura: non cambia nulla, registra. Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="it_IT">
+			<Text>Miglioramenti ricordati mantenuti al caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="it_IT">
+			<Text>Dopo il caricamento di una partita, la mappa di ogni giocatore mantiene i miglioramenti che ricordava, come salvati, invece di mostrare anche quelli posti da allora su caselle che non vede più (villaggi tribali): la partita ricaricata corrisponde a quella in corso (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="it_IT">
+			<Text>Ordine degli eventi mantenuto al caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="it_IT">
+			<Text>Dopo il caricamento di una partita, gli eventi di gioco raggiungono ogni giocatore prima della sua IA, come in una nuova partita: l'IA non valuta più una città-stato prima dell'inviato del primo incontro (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="it_IT">
 			<Text>Cariche dei costruttori sulla loro bandiera</Text>
 		</Row>

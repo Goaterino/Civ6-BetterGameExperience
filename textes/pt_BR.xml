@@ -239,6 +239,24 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="pt_BR">
 			<Text>A barra superior é atualizada após um título de governador, uma transferência de governador ou uma grande personalidade, sem mexer num cidadão. Apenas exibição: sem dessincronização.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="pt_BR">
+			<Text>Unidades de distrito da IA em ordem fixa</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="pt_BR">
+			<Text>A tabela de unidades prometidas à IA pelos seus próximos distritos é salva, sincronizada e reconstruída em uma ordem fixa: após um recarregamento, todos os computadores as criam na mesma ordem (menos dessincronizações). Medição: não muda nada, registra. Somente se todos os jogadores tiverem esta versão.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="pt_BR">
+			<Text>Melhorias lembradas mantidas ao carregar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="pt_BR">
+			<Text>Após carregar uma partida, o mapa de cada jogador mantém as melhorias que ele lembrava, como foram salvas, em vez de mostrar também as colocadas desde então em hexágonos que ele não vê mais (aldeias tribais): a partida recarregada corresponde à que está em andamento (menos dessincronizações após um recarregamento). Somente se todos os jogadores tiverem esta versão.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="pt_BR">
+			<Text>Ordem dos eventos mantida ao carregar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="pt_BR">
+			<Text>Após carregar uma partida, os eventos do jogo chegam a cada jogador antes da sua IA, como em uma partida nova: a IA não avalia mais uma cidade-estado antes do enviado do primeiro encontro (menos dessincronizações após um recarregamento). Somente se todos os jogadores tiverem esta versão.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="pt_BR">
 			<Text>Cargas dos construtores na bandeira</Text>
 		</Row>

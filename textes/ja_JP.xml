@@ -239,6 +239,24 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ja_JP">
 			<Text>総督の称号、総督の移動、偉人の後に、市民を動かさなくても上部バーが更新されます。表示のみで、同期ずれは起きません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="ja_JP">
+			<Text>AIの区域ユニットを固定順に</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="ja_JP">
+			<Text>AIが次の区域で受け取るユニットの表を、固定の順序で保存・同期・再構築します。再読み込みの後もすべてのPCが同じ順序でユニットを作成します（同期ずれが減ります）。計測：何も変更せず、記録のみ。全プレイヤーがこのバージョンの場合のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="ja_JP">
+			<Text>読み込み時に記憶した施設を保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="ja_JP">
+			<Text>ゲームを読み込んだ後、各プレイヤーのマップは記憶していた施設を保存時のまま保持し、見えなくなったタイルにその後置かれたもの（部族の村）を追加しません。再読み込みしたゲームが進行中のゲームと一致します（再読み込み後の同期ずれが減ります）。全プレイヤーがこのバージョンの場合のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="ja_JP">
+			<Text>読み込み時にイベントの順序を保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="ja_JP">
+			<Text>ゲームを読み込んだ後、ゲームのイベントは新しいゲームと同じく、AIより先に各プレイヤーに届きます。AIが最初の出会いの代表団より前に都市国家を評価することはなくなります（再読み込み後の同期ずれが減ります）。全プレイヤーがこのバージョンの場合のみ。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="ja_JP">
 			<Text>労働者の残り回数を旗に表示</Text>
 		</Row>

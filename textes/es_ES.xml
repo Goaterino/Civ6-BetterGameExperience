@@ -239,6 +239,24 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="es_ES">
 			<Text>La barra superior se actualiza tras un título de gobernador, un traslado de gobernador o un gran personaje, sin mover a ningún ciudadano. Solo visualización: sin desincronización.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="es_ES">
+			<Text>Unidades de distrito de la IA en orden fijo</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="es_ES">
+			<Text>La tabla de unidades prometidas a la IA por sus próximos distritos se guarda, sincroniza y reconstruye en un orden fijo: tras una recarga, todos los equipos las crean en el mismo orden (menos desincronizaciones). Medición: no cambia nada, lo registra. Solo si todos los jugadores tienen esta versión.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="es_ES">
+			<Text>Mejoras recordadas conservadas al cargar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="es_ES">
+			<Text>Al cargar una partida, el mapa de cada jugador conserva las mejoras que recordaba, tal como se guardaron, en lugar de mostrar también las colocadas desde entonces en casillas que ya no ve (aldeas tribales): la partida recargada coincide con la que está en curso (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="es_ES">
+			<Text>Orden de eventos conservado al cargar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="es_ES">
+			<Text>Al cargar una partida, los eventos del juego llegan a cada jugador antes que a su IA, como en una partida nueva: la IA ya no evalúa una ciudad-estado antes del enviado del primer encuentro (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="es_ES">
 			<Text>Cargas de los constructores en su bandera</Text>
 		</Row>

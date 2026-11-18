@@ -239,6 +239,24 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="de_DE">
 			<Text>Die obere Leiste aktualisiert sich nach einem Gouverneurstitel, einer Gouverneursversetzung oder einer Großen Persönlichkeit, ohne einen Bürger zu verschieben. Nur Anzeige: keine Desynchronisation.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="de_DE">
+			<Text>KI-Bezirkseinheiten in fester Reihenfolge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="de_DE">
+			<Text>Die Tabelle der Einheiten, die der KI für ihre nächsten Bezirke versprochen sind, wird in fester Reihenfolge gespeichert, synchronisiert und neu aufgebaut: Nach einem Neuladen erzeugt jeder Rechner sie in derselben Reihenfolge (weniger Desynchronisationen). Messung: ändert nichts, protokolliert. Nur wenn alle Spieler diese Version haben.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="de_DE">
+			<Text>Gemerkte Modernisierungen beim Laden behalten</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="de_DE">
+			<Text>Nach dem Laden eines Spiels behält die Karte jedes Spielers die Modernisierungen, die er sich gemerkt hatte, wie gespeichert, statt auch jene zu zeigen, die seitdem auf Feldern platziert wurden, die er nicht mehr sieht (Stammesdörfer): Das neu geladene Spiel entspricht dem laufenden (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="de_DE">
+			<Text>Ereignisreihenfolge beim Laden behalten</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="de_DE">
+			<Text>Nach dem Laden eines Spiels erreichen Spielereignisse jeden Spieler vor seiner KI, wie in einem neuen Spiel: Die KI bewertet einen Stadtstaat nicht mehr vor dem Gesandten der ersten Begegnung (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="de_DE">
 			<Text>Ladungen der Handwerker auf ihrer Flagge</Text>
 		</Row>

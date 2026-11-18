@@ -159,6 +159,17 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rendements", defaut = "on",
 		choix = PROXY_ON_OFF },
+	-- Correctifs de désynchronisation : POL, lus par le proxy de GameCore.
+	{ cle = "unites_promises", defaut = "on",
+		choix = {
+			{ "on", "LOC_BGD_OPT_CHOIX_ACTIVE" },
+			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+			{ "count", "LOC_BGD_OPT_CHOIX_MESURE" },
+		} },
+	{ cle = "visibilite_chargee", defaut = "on",
+		choix = PROXY_ON_OFF },
+	{ cle = "ecouteurs_charges", defaut = "on",
+		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_MODS" },
 	{ cle = "ui_charges", defaut = "on",
