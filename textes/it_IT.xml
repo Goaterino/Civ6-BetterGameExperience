@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="it_IT">
 			<Text>Nell'elenco di produzione, i distretti con costo ridotto (meno distretti di quel tipo della tua media) mostrano lo sconto, aggiornato non appena viene posizionato un distretto. Solo visualizzazione.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="it_IT">
+			<Text>Formazione più alta per prima</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="it_IT">
+			<Text>Nell'elenco di produzione, il pulsante principale di un'unità addestra la formazione più alta che la città può addestrare (Esercito, altrimenti Corpo), e l'unità singola passa nel menu a discesa sottostante. Il gioco fa il contrario. Gli acquisti con oro e fede non cambiano.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="it_IT">
 			<Text>Produzione in riserva</Text>
 		</Row>

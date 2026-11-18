@@ -34,6 +34,9 @@
 //! - `ui_avancement=on|off` (on) : ajoute `ui_avancement.lua` à WorldTracker.lua, et un libellé à
 //!   WorldTrackerResearch.xml et WorldTrackerCivic.xml : « x/y (+z) » (placé / coût, excédent lu par `avancement`) à droite du nom de
 //!   la technologie et du dogme en cours, dans le panneau en haut à gauche ;
+//! - `ui_formations=on|off` (on) : adds `ui_formations.lua` to ProductionPanel.lua. In the
+//!   production list, the main button of a unit trains the highest formation the city can train
+//!   (army, else corps), and the drawer under it holds the lower ones: the reverse of the game ;
 //! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. An orange house on
 //!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
 //!   (-75%), where the game itself only shows it over the cap ;
@@ -80,6 +83,8 @@ const QUARTIERS_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_quartiers.lua"));
 const DEBORDEMENT_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
+/// Block of the `ui_formations` setting (ProductionPanel.lua). Its texts are the game's own.
+const FORMATIONS_BLOCK: &str = include_str!("ui_formations.lua");
 /// Block of the `ui_logement` setting (CityBannerManager.lua). Its texts are the game's own.
 const LOGEMENT_BLOCK: &str = include_str!("ui_logement.lua");
 /// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
@@ -100,6 +105,7 @@ static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
 static ANNULER: AtomicBool = AtomicBool::new(true);
 static QUARTIERS: AtomicBool = AtomicBool::new(true);
 static AVANCEMENT: AtomicBool = AtomicBool::new(true);
+static FORMATIONS: AtomicBool = AtomicBool::new(true);
 static LOGEMENT: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
@@ -148,6 +154,10 @@ pub fn set_avancement(on: bool) {
     AVANCEMENT.store(on, Ordering::Relaxed);
 }
 
+pub fn set_formations(on: bool) {
+    FORMATIONS.store(on, Ordering::Relaxed);
+}
+
 pub fn set_logement(on: bool) {
     LOGEMENT.store(on, Ordering::Relaxed);
 }
@@ -172,6 +182,7 @@ fn active() -> bool {
         || ANNULER.load(Ordering::Relaxed)
         || QUARTIERS.load(Ordering::Relaxed)
         || AVANCEMENT.load(Ordering::Relaxed)
+        || FORMATIONS.load(Ordering::Relaxed)
         || LOGEMENT.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
@@ -1374,12 +1385,17 @@ fn append_blocks(src: &[u8], blocks: &[&str]) -> Vec<u8> {
 }
 
 /// ProductionPanel.lua : blocs des réglages `ui_reduction_quartiers` (badge des quartiers en
-/// réduction) et `ui_debordement` (production en réserve), après `ui_production.lua`. None si aucun.
+/// réduction), `ui_formations` (highest formation on the main button of a unit) et `ui_debordement`
+/// (production en réserve), après `ui_production.lua`. None si aucun.
 unsafe fn production_extras(l: *mut c_void, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
     let mut blocks: Vec<&str> = Vec::new();
     if QUARTIERS.load(Ordering::Relaxed) {
         blocks.push(QUARTIERS_BLOCK);
         what.push("badge des quartiers en réduction".into());
+    }
+    if FORMATIONS.load(Ordering::Relaxed) {
+        blocks.push(FORMATIONS_BLOCK);
+        what.push("formation la plus haute sur le bouton principal".into());
     }
     if crate::debordement::pose() && crate::debordement::publier(l) {
         blocks.push(DEBORDEMENT_BLOCK);

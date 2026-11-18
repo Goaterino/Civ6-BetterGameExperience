@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="de_DE">
 			<Text>In der Produktionsliste zeigen Bezirke mit gesenkten Kosten (weniger Bezirke dieses Typs als euer Durchschnitt) ihren Rabatt an, aktualisiert, sobald ein Bezirk platziert wird. Nur Anzeige.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="de_DE">
+			<Text>Höchste Formation zuerst</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="de_DE">
+			<Text>In der Produktionsliste bildet die Hauptschaltfläche einer Einheit die höchste Formation aus, die die Stadt ausbilden kann (Armee, sonst Korps); die einzelne Einheit wandert in das Aufklappmenü darunter. Das Spiel macht es umgekehrt. Käufe mit Gold und Glauben bleiben unverändert.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="de_DE">
 			<Text>Gespeicherte Produktion</Text>
 		</Row>

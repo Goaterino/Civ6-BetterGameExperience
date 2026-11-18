@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="en_US">
 			<Text>In the production list, districts whose cost is currently reduced (fewer of that district than your average) show their discount, updated as soon as a district is placed. Display only.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="en_US">
+			<Text>Highest unit formation first</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="en_US">
+			<Text>In the production list, a unit's main button trains the highest formation the city can train (Army, otherwise Corps), and the single unit moves to the drop-down under it. The game does the reverse. Gold and Faith purchases are unchanged.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="en_US">
 			<Text>Stored production</Text>
 		</Row>

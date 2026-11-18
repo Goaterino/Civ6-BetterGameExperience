@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="es_ES">
 			<Text>En la lista de producción, los distritos cuyo coste está reducido (menos distritos de ese tipo que tu media) muestran su descuento, actualizado en cuanto se coloca un distrito. Solo visualización.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="es_ES">
+			<Text>Formación más alta primero</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="es_ES">
+			<Text>En la lista de producción, el botón principal de una unidad entrena la formación más alta que la ciudad puede entrenar (Ejército; si no, Corps), y la unidad individual pasa al desplegable de debajo. El juego hace lo contrario. Las compras con oro y fe no cambian.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="es_ES">
 			<Text>Producción en reserva</Text>
 		</Row>

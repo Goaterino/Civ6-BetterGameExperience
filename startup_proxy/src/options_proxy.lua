@@ -145,6 +145,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_reduction_quartiers", defaut = "on",
 		choix = PROXY_ON_OFF },
+	{ cle = "ui_formations", defaut = "on",
+		choix = PROXY_ON_OFF },
 	{ cle = "ui_debordement", defaut = "on",
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_logement", defaut = "on",
