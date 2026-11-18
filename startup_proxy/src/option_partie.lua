@@ -6,6 +6,7 @@
 --   Civ6Proxy_Journal(texte) -> écrit dans RolloverProxy.log
 --   Civ6Proxy_Actif() -> 1 si BetterGameExperience est actif sur cette machine, sinon 0 ; les options
 --     sont alors grisées (hôte qui a désactivé BGE)
+--   Civ6Proxy_PolActifs() -> verdict POL courant ; Civ6Proxy_Version() -> version active locale
 --
 -- Les options de partie sont les lignes de la table Parameters de la base Configuration, lues par
 -- Data_DiscoverParameters. Le proxy n'est pas un mod : avant chaque lecture, on y insère la ligne
@@ -51,7 +52,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		},
 		{
 			id = "BGD_TEAM_PINGS", nom = "LOC_BGD_PINGS_NAME", ordre = 45, defaut = 0,
-			aide = "LOC_BGD_PINGS_HELP",
+			aide = "LOC_BGD_PINGS_HELP", avantPartie = true,
 		},
 	};
 
@@ -62,6 +63,7 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 
 	local refusJournalise = false;
 	local function AjouterUne(o)
+		local modifiable = o.avantPartie and 0 or 1;
 		if Presente(o.id) then
 			-- Ligne écrite par une version précédente avec une autre valeur par défaut, dans une base pas
 			-- encore reconstruite : on remet celle-ci.
@@ -71,13 +73,21 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 				QueryCache = {};
 				J(o.id .. (o.defaut == 1 and " : cochée par défaut" or " : décochée par défaut"));
 			end
+			-- Les bases déjà ouvertes peuvent encore porter l'ancien drapeau des signaux.
+			local r = DB.ConfigurationQuery("SELECT ChangeableAfterGameStart FROM Parameters WHERE ParameterId = ?1", o.id);
+			local v = r and r[1] and r[1].ChangeableAfterGameStart;
+			-- DB.ConfigurationQuery peut rendre les colonnes BOOLEAN comme booléens Lua.
+			if r ~= nil and r[1] ~= nil and (v == true or v == 1 or v == "1") ~= (modifiable == 1) then
+				DB.ConfigurationQuery("UPDATE Parameters SET ChangeableAfterGameStart = " .. modifiable .. " WHERE ParameterId = ?1", o.id);
+				QueryCache = {};
+			end
 			return;
 		end
 		local avant = DB.ConfigurationChanges and DB.ConfigurationChanges();
 		DB.ConfigurationQuery("INSERT INTO Parameters (ParameterId, Name, Description, Domain, DefaultValue, "
 			.. "ConfigurationGroup, ConfigurationId, GroupId, SupportsSinglePlayer, SupportsHotSeat, "
 			.. "SupportsPlayByCloud, ChangeableAfterGameStart, SortIndex) "
-			.. "VALUES (?1, ?2, ?3, 'bool', " .. o.defaut .. ", 'Game', ?1, 'GameOptions', 0, 0, 0, 1, ?4)",
+			.. "VALUES (?1, ?2, ?3, 'bool', " .. o.defaut .. ", 'Game', ?1, 'GameOptions', 0, 0, 0, " .. modifiable .. ", ?4)",
 			o.id, BGD_Txt(o.nom), BGD_Txt(o.aide), o.ordre);
 		local ok = Presente(o.id);
 		if ok then
@@ -108,14 +118,49 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 	-- La valeur reste celle de la config de partie. Native absente (ancien proxy) : rien ne change.
 	local NOTRE = {};
 	for _, o in ipairs(OPTIONS) do
-		NOTRE[o.id] = true;
+		NOTRE[o.id] = o;
 	end
+
+	-- Disponibilité pour l'hôte, sans écrire ni le choix ni le verdict. Avant de créer le salon,
+	-- il peut préparer ses choix. Dans le salon, le verdict doit être acquis et les annonces de
+	-- tous les participants encore valides. Pour activer les signaux, vérifier les observateurs
+	-- même quand l'option est décochée (le verdict ordinaire ne les inclut pas encore).
+	function SetupParameters.BGD_PolDisponible(observateurs)
+		if Network == nil or not Network.IsInSession() then return true; end
+		if Civ6Proxy_PolActifs == nil or Civ6Proxy_PolActifs() ~= 1 or Civ6Proxy_Version == nil then return false; end
+		local version = Civ6Proxy_Version();
+		local hote = Network.GetGameHostPlayerID();
+		local function Annonce(id)
+			local pc = PlayerConfigurations[id];
+			local v = pc and pc:GetValue("BGD_VERSION");
+			if type(v) ~= "string" then return nil; end
+			return string.match(v, "^([^@#:]*)@([^@#:]*)#([^@#:,]+)$");
+		end
+		local vh, jeton = Annonce(hote);
+		if version == nil or vh ~= version or jeton == nil or jeton == "" then return false; end
+		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+			local pc = PlayerConfigurations[id];
+			if id ~= hote and pc ~= nil and Network.IsPlayerConnected(id)
+				and ((pc:IsHuman() and pc:GetSlotStatus() == SlotStatus.SS_TAKEN)
+					or (observateurs and pc:GetSlotStatus() == SlotStatus.SS_OBSERVER)) then
+				local v, j = Annonce(id);
+				if v ~= version or j ~= jeton then return false; end
+			end
+		end
+		return true;
+	end
+
 	local griseesJournal = nil;
 	local enabledBase = SetupParameters.Parameter_GetEnabled;
 	if enabledBase ~= nil then
 		SetupParameters.Parameter_GetEnabled = function(self, parameter, ...)
 			local enabled = enabledBase(self, parameter, ...);
-			if enabled and parameter ~= nil and NOTRE[parameter.ParameterId] and Civ6Proxy_Actif ~= nil then
+			local o = parameter and NOTRE[parameter.ParameterId];
+			if not enabled or o == nil then return enabled; end
+			-- Aussi vérifier ici : un paramètre déjà en cache peut porter l'ancien drapeau.
+			if o.avantPartie and GameConfiguration ~= nil and GameStateTypes ~= nil
+				and GameConfiguration.GetGameState() ~= GameStateTypes.GAMESTATE_PREGAME then return false; end
+			if Civ6Proxy_Actif ~= nil then
 				local ok, actif = pcall(Civ6Proxy_Actif);
 				local grisee = ok and actif == 0;
 				if grisee ~= griseesJournal then
@@ -125,6 +170,16 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 				end
 				if grisee then
 					return false;
+				end
+			end
+			if o.id ~= "BGD_INDICATEURS_OFF" then
+				local ok, disponible = pcall(SetupParameters.BGD_PolDisponible, o.id == "BGD_TEAM_PINGS");
+				if not ok or not disponible then
+					-- Un choix conservé (préréglage, ou joueur incompatible arrivé ensuite) peut être
+					-- décoché, jamais recoché. Sinon les signaux cochés bloqueraient les autres POL
+					-- avec un observateur incompatible, sans moyen de les couper.
+					local v = GameConfiguration.GetValue(o.id);
+					return v == true or v == 1;
 				end
 			end
 			return enabled;

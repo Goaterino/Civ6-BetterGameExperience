@@ -190,6 +190,19 @@ local function BGD_PolActifs()
 	return BGD_HoteNousVoit();
 end
 
+-- Les contrôles suivent le verdict et le roster, sans modifier les valeurs de la partie.
+local function BGD_ActualiserOptions()
+	if not BGD.ouvert or ContextPtr:IsHidden() or SetupParameters == nil
+		or SetupParameters.BGD_PolDisponible == nil then return; end
+	local pol = SetupParameters.BGD_PolDisponible(false);
+	local pings = SetupParameters.BGD_PolDisponible(true);
+	if BGD.optionsPol ~= pol or BGD.optionsPings ~= pings then
+		BGD.optionsPol, BGD.optionsPings = pol, pings;
+		-- Rafraîchissement local seulement : aucun BroadcastGameConfig ni changement de Prêt.
+		if GameSetup_RefreshParameters ~= nil then GameSetup_RefreshParameters(); end
+	end
+end
+
 -- Écrit notre annonce, et pour l'hôte le verdict, dans notre configuration de joueur ; ne la
 -- diffuse que si elle a changé, sinon chaque PlayerInfoChanged en relancerait un.
 local function BGD_Publier()
@@ -228,6 +241,7 @@ local function BGD_Publier()
 	end
 	-- L'état lu par le proxy de GameCore suit le verdict jusqu'au lancement.
 	Civ6Proxy_FixerPol(BGD_PolActifs() and 1 or 0, "verdict de l'hôte");
+	BGD_ActualiserOptions();
 end
 
 -- Un message dans le chat, pour tous, une fois par contenu.
@@ -511,6 +525,7 @@ end
 -- Un tic du minuteur (environ 0,5 s), tant que le salon est ouvert : annonce différée, bouton,
 -- délai du BGE Check.
 local function BGD_Tic()
+	BGD_ActualiserOptions();
 	if BGD.annonce then
 		BGD_Annoncer();
 	end
@@ -564,6 +579,7 @@ local function BGD_Ouverture(migration)
 	BGD.instantane = {};
 	BGD.check = nil;
 	BGD.avis = nil;
+	BGD.optionsPol, BGD.optionsPings = nil, nil;
 	BGD.annonce = (migration ~= true);
 	if BGD_Concerne() then
 		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
@@ -731,6 +747,8 @@ else
 	Events.LoadScreenContentReady.Add(fermeture);
 	Events.LeaveGameComplete.Add(fermeture);
 	Events.MultiplayerPlayerConnected.Add(BGD_Protege(BGD_Publier));
+	Events.MultiplayerPostPlayerDisconnected.Add(BGD_Protege(BGD_Publier));
+	Events.GameConfigChanged.Add(BGD_Protege(BGD_Publier));
 	Events.PlayerInfoChanged.Add(BGD_Protege(function()
 		if not ContextPtr:IsHidden() then
 			BGD_Publier();

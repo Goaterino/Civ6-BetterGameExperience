@@ -62,6 +62,9 @@ whatever their own settings.
 
 **Team pings (BGE)** is off by default for new network games. The host can turn it on in game setup.
 It uses the same lobby version check as No First/Last moves, including connected observers.
+The host must select it before starting the game; it is locked for games already started,
+including loaded saves. In a mixed lobby, unavailable POL options can be switched off but cannot
+be switched on. Disable Advanced UI indicators does not require POL.
 Tap **X** over the map to mark a tile, or hold **X**, move toward a call and release. Up is danger,
 right is on my way, down is assist, and left is enemy missing. **Alt+1–4** send missing, danger,
 on my way and assist directly. Change the wheel or individual shortcuts in **Options → Key Bindings**. Teammates see the sender’s name for four seconds. Spectators see both teams.
