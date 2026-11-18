@@ -3,6 +3,7 @@
 mod avancement;
 mod carte;
 mod citoyens;
+mod citoyens_regle;
 mod coalesce;
 mod congres;
 mod congres_regle;

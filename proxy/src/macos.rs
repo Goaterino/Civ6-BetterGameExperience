@@ -9,7 +9,8 @@
 //! ensuite.
 //!
 //! Une fois l'original chargé, les correctifs portés sont posés dans son code (étape 4 de
-//! analyses/macos/README.md) : pour l'instant `fin_tour_mac`, `ports_mac`, `production_mac`, `empilement_mac` et `spectateurs_mac`, correctifs POL. Les autres restent à
+//! analyses/macos/README.md) : pour l'instant `citoyens_mac`, `fin_tour_mac`, `ports_mac`, `production_mac`, `empilement_mac`,
+//! `spectateurs_mac` et `congres_mac`, correctifs POL. Les autres restent à
 //! porter : le bit `ST_POL`, qui permettrait au salon d'annoncer la machine, n'est pas encore levé.
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
@@ -50,6 +51,10 @@ mod spectateurs;
 mod congres;
 #[path = "congres_regle.rs"]
 mod congres_regle;
+#[path = "citoyens_mac.rs"]
+mod citoyens;
+#[path = "citoyens_regle.rs"]
+mod citoyens_regle;
 #[path = "spectateurs_calcul.rs"]
 mod spectateurs_calcul;
 
@@ -170,7 +175,8 @@ unsafe fn poser_correctifs() {
     };
     // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
     // annoncerait des règles qu'elle n'applique pas.
-    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 6] = [
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 7] = [
+        ("citoyens", citoyens::installer),
         ("fin de tour", fin_tour::installer),
         ("ports", ports::installer),
         ("production", production::installer),
