@@ -5,6 +5,7 @@ mod carte;
 mod citoyens;
 mod coalesce;
 mod congres;
+mod congres_regle;
 mod congres_texte;
 mod debordement;
 mod depart;

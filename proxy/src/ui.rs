@@ -62,11 +62,6 @@ const MESURE_BLOCK: &str = include_str!("ui_epingles.lua");
 const OPTI_BLOCK: &str = include_str!("ui_epingles_opti.lua");
 const MERVEILLES_BLOCK: &str = include_str!("ui_merveilles.lua");
 const RENDEMENTS_BLOCK: &str = include_str!("ui_rendements.lua");
-const CONGRES_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres.lua"));
-const VOTE_BLOCK: &str = include_str!("ui_congres_vote.lua");
-const ATTENTE_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_congres_attente.lua"));
-const ATTENTE_XML: &str = include_str!("ui_congres_attente.xml");
-const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
 /// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
@@ -870,71 +865,6 @@ pub fn patch_top_panel(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// WorldCongressPopup.lua suivi de `ui_congres.lua` si `spectateurs` (la fenêtre du congrès en
-/// lecture seule pour un spectateur), puis de `ui_congres_vote.lua` (retour au vote). Les blocs
-/// lisent les locales du fichier : on vérifie qu'elles y sont.
-pub fn patch_congres(src: &[u8], spectateurs: bool) -> Result<Vec<u8>, String> {
-    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
-    if has("Civ6RolloverProxy (src/ui_congres") {
-        return Err("déjà corrigé".into());
-    }
-    for pat in [
-        "local m_IsInSession",
-        "local m_CurrentPhase",
-        "local m_CurrentStage",
-        "local m_StartingFavor",
-        "local m_WorkingFavor",
-        "local PHASE_STEP_MAX",
-        "local WORLD_CONGRESS_STAGE_1",
-        "local WORLD_CONGRESS_STAGE_2",
-        "local m_kResolutionVotes",
-        "local m_kResolutionChoices",
-        "local m_kProposalVotes",
-        "function UpdateWorkingFavor(",
-        "function OnAccept(",
-        "function SetupWorldCongress(",
-        "function OnLocalPlayerTurnEnd(",
-        "function OnResumeCongress(",
-    ] {
-        if !has(pat) {
-            return Err(format!("{pat} introuvable"));
-        }
-    }
-    let mut out = src.to_vec();
-    if spectateurs {
-        out.extend_from_slice(b"\r\n");
-        out.extend_from_slice(CONGRES_BLOCK.as_bytes());
-    }
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(VOTE_BLOCK.as_bytes());
-    Ok(out)
-}
-
-/// WorldCongressBetweenTurns.lua suivi de `ui_congres_attente.lua` : bouton de retour au vote.
-pub fn patch_congres_attente(src: &[u8]) -> Result<Vec<u8>, String> {
-    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
-    if has("Civ6RolloverProxy (src/ui_congres_attente.lua)") {
-        return Err("déjà corrigé".into());
-    }
-    for pat in [
-        "local m_kPlayerStages",
-        "local m_uiPlayersByID",
-        "local COLOR_WAITING",
-        "local LOC_PROPOSAL_WAITING",
-        "function UpdateCanContinue(",
-        "function OnHide(",
-    ] {
-        if !has(pat) {
-            return Err(format!("{pat} introuvable"));
-        }
-    }
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(ATTENTE_BLOCK.as_bytes());
-    Ok(out)
-}
-
-/// WorldCongressBetweenTurns.xml : le bouton `BGD_Revoter` sous la description de l'écran d'attente.
 /// WorldTrackerResearch.xml / WorldTrackerCivic.xml : libellé `BGD_Avancement` dans l'en-tête du
 /// panneau, après le bouton du nom (`ui_avancement.lua` le remplit).
 pub fn patch_avancement_xml(src: &[u8]) -> Result<Vec<u8>, String> {
@@ -966,43 +896,9 @@ pub fn patch_avancement(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(append_blocks(src, &[AVANCEMENT_BLOCK]))
 }
 
-pub fn patch_congres_attente_xml(src: &[u8]) -> Result<Vec<u8>, String> {
-    let text = std::str::from_utf8(src).map_err(|_| "texte non UTF-8".to_string())?;
-    if text.contains("BGD_Revoter") {
-        return Err("déjà corrigé".into());
-    }
-    let at = text.find("LOC_WORLD_CONGRESS_BETWEEN_TURNS_DESCRIPTION").ok_or("description introuvable")?;
-    let end = text[at..].find("/>").ok_or("description non fermée")? + at + 2;
-    let mut out = String::with_capacity(text.len() + ATTENTE_XML.len() + 2);
-    out.push_str(&text[..end]);
-    out.push_str("\r\n");
-    out.push_str(ATTENTE_XML.trim_end());
-    out.push_str(&text[end..]);
-    Ok(out.into_bytes())
-}
-
-/// WorldCongressIntro.lua suivi de `ui_congres_intro.lua` : l'intro ne s'ouvre qu'une fois par tour
-/// et par session, même si l'annulation de fin de tour d'un autre joueur relance l'événement.
-pub fn patch_congres_intro(src: &[u8]) -> Result<Vec<u8>, String> {
-    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
-    if has("Civ6RolloverProxy (src/ui_congres_intro.lua)") {
-        return Err("déjà corrigé".into());
-    }
-    // Les rappels des événements appellent OnOpen par son nom global : l'enveloppe les atteint.
-    for pat in ["function OnOpen(", "OnOpen(1); end", "OnOpen(2); end"] {
-        if !has(pat) {
-            return Err(format!("{pat} introuvable"));
-        }
-    }
-    let mut out = src.to_vec();
-    out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(INTRO_BLOCK.as_bytes());
-    Ok(out)
-}
-
-pub(crate) use crate::congres_texte::patch_congres_cibles;
+pub(crate) use crate::congres_texte::{patch_congres, patch_congres_attente, patch_congres_attente_xml, patch_congres_cibles, patch_congres_intro};
 #[cfg(test)]
-use crate::congres_texte::CIBLES_BLOCK;
+use crate::congres_texte::{ATTENTE_BLOCK, CIBLES_BLOCK, CONGRES_BLOCK, INTRO_BLOCK, VOTE_BLOCK};
 
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 

@@ -18,12 +18,9 @@
 //!   valeur.
 
 use crate::patch::{self, IMAGE_BASE};
+use crate::congres_regle::{decision, WC_1, WC_2};
 use crate::{log, pol};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
-
-// Hachages des segments (`~CRC32`, comme `DB.MakeHash`).
-const WC_1: u32 = 0xb52a_667b;
-const WC_2: u32 = 0x2c23_37c1;
 
 // Données de GameCore.
 const SEGMENT_COURANT: u64 = 0x1_80b6_17c0; // u32, indice de la ligne TurnSegments du segment
@@ -110,11 +107,6 @@ unsafe fn segment_courant(base: usize) -> Option<usize> {
     }
     let segment: usize = rd(ligne + 0x60);
     (segment != 0).then_some(segment)
-}
-
-/// Décision de `annulable` : le drapeau du segment, levé pendant le vote si le correctif est actif.
-pub fn decision(drapeau: bool, type_segment: u32, actif: bool) -> bool {
-    drapeau || (actif && (type_segment == WC_1 || type_segment == WC_2))
 }
 
 /// `18005b640` réécrite. Son argument (le joueur, dans ecx) n'est pas lu, pas plus que par le jeu.
@@ -267,40 +259,4 @@ pub unsafe fn on_proxy_unload() {
 pub fn reset() {
     ANNULATIONS.store(0, Ordering::Relaxed);
     REMBOURSEMENTS.store(0, Ordering::Relaxed);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn annulation_pendant_le_vote_seulement() {
-        // Segment normal : le drapeau du jeu, actif ou non.
-        assert!(decision(true, 0x1234, false));
-        assert!(!decision(false, 0x1234, true));
-        // Vote : permis si le correctif est actif.
-        assert!(decision(false, WC_1, true));
-        assert!(decision(false, WC_2, true));
-        assert!(!decision(false, WC_1, false));
-        // Résultats (TURNSEG_WORLDCONGRESS_RESOLUTION) : jamais.
-        assert!(!decision(false, 0xd74f_83e5, true));
-    }
-
-    #[test]
-    fn hachages_des_segments() {
-        let h = |s: &str| !crc32(s.as_bytes());
-        assert_eq!(h("TURNSEG_WORLDCONGRESS_1"), WC_1);
-        assert_eq!(h("TURNSEG_WORLDCONGRESS_2"), WC_2);
-    }
-
-    fn crc32(b: &[u8]) -> u32 {
-        let mut c = !0u32;
-        for &x in b {
-            c ^= x as u32;
-            for _ in 0..8 {
-                c = if c & 1 != 0 { (c >> 1) ^ 0xedb8_8320 } else { c >> 1 };
-            }
-        }
-        !c
-    }
 }

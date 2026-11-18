@@ -174,42 +174,6 @@ pub unsafe fn partie_lua(l: *mut c_void, src: &[u8]) -> Vec<u8> {
     avec_cale(src, patch_in_game_lua(src), CALE_PARTIE)
 }
 
-/// `Civ6Proxy_MacSpectateursPol()` → `1` si les détours des spectateurs sont posés et les
-/// correctifs POL actifs (export `BgdSpectateursPol` du proxy de GameCore), sinon `0`.
-unsafe extern "C-unwind" fn spectateurs_pol(l: *mut c_void) -> c_int {
-    let h = PROXY.load(Ordering::Relaxed) as *mut c_void;
-    let p = if h.is_null() { std::ptr::null_mut() } else { dlsym(h, c"BgdSpectateursPol".as_ptr()) };
-    let actif = !p.is_null() && std::mem::transmute::<*mut c_void, extern "C" fn() -> u32>(p)() != 0;
-    rendre(l, if actif { "1" } else { "0" })
-}
-
-const NATIVES_CONGRES: [(LuaCFn, &str); 1] = [(spectateurs_pol, "Civ6Proxy_MacSpectateursPol\0")];
-const CALE_CONGRES: &str = r#"
--- macOS : natives à une seule chaîne (startup_proxy/src/macos_salon.rs).
-if Civ6Proxy_MacSpectateursPol ~= nil then
-	Civ6RolloverProxy_Pol = function() return tonumber(Civ6Proxy_MacSpectateursPol()) or 0; end
-end
-"#;
-pub(crate) const SCRIPT_CONGRES: &str = "worldcongress.lua";
-
-/// WorldCongress.lua (script de gameplay, exécuté par chaque machine) avec les cibles sans les
-/// spectateurs et la liste des luxes recalculée (congres_texte.rs, commun avec Windows), précédé de
-/// la cale. Proxy de GameCore absent ou sans le correctif : le script reste tel quel, comme sous
-/// Windows.
-pub unsafe fn congres_lua(l: *mut c_void, src: &[u8]) -> Result<Vec<u8>, String> {
-    let h = PROXY.load(Ordering::Relaxed) as *mut c_void;
-    if h.is_null() || dlsym(h, c"BgdSpectateursPol".as_ptr()).is_null() {
-        return Err("proxy de GameCore sans le correctif des spectateurs".into());
-    }
-    let corrige = super::congres_texte::patch_congres_cibles(src)?;
-    if !publier(l, &NATIVES_CONGRES) {
-        return Err("native non posée".into());
-    }
-    let mut out = CALE_CONGRES.as_bytes().to_vec();
-    out.extend_from_slice(&corrige);
-    Ok(out)
-}
-
 #[cfg(test)]
 mod tests {
     use super::super::salon_texte::{LUA_BLOCK, PARTIE_BLOCK};
@@ -238,19 +202,6 @@ mod tests {
             vus += 1;
         }
         eprintln!("{vus} salon(s) vérifié(s)");
-    }
-
-    /// Le WorldCongress.lua du jeu macOS installé accepte le correctif commun.
-    #[test]
-    fn congres_du_jeu() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let p = std::path::Path::new(&home)
-            .join("Library/Application Support/Steam/steamapps/common/Sid Meier's Civilization VI/Civ6.app/Contents/Assets/DLC/Expansion2/Scripts/WorldCongress.lua");
-        let Ok(src) = std::fs::read(&p) else { return };
-        let out = String::from_utf8_lossy(&super::super::congres_texte::patch_congres_cibles(&src).unwrap()).into_owned();
-        assert!(out.matches("BGD_MajorsCibles()").count() >= 5, "validateurs à cible joueur");
-        assert!(out.contains("BGD_LuxesARecalculer()"), "cache des luxes");
-        assert!(CALE_CONGRES.contains("Civ6RolloverProxy_Pol") && CALE_CONGRES.contains("Civ6Proxy_MacSpectateursPol"));
     }
 
     #[test]

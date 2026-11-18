@@ -46,6 +46,10 @@ mod empilement;
 mod empilement_regle;
 #[path = "spectateurs_mac.rs"]
 mod spectateurs;
+#[path = "congres_mac.rs"]
+mod congres;
+#[path = "congres_regle.rs"]
+mod congres_regle;
 #[path = "spectateurs_calcul.rs"]
 mod spectateurs_calcul;
 
@@ -84,11 +88,15 @@ static MARQUE_VERSION: [u8; LONGUEUR_MARQUE] = {
     out
 };
 
-/// Lu par le chargeur pour `Civ6RolloverProxy_Pol()`, que les scripts du congrès consultent :
-/// 1 si les détours des spectateurs sont posés et les correctifs POL actifs.
+/// Lu par le chargeur pour les écrans du congrès : bit 0, détours des spectateurs posés ; bit 1,
+/// retour au vote posé ; bit 2, spectateurs actifs (`Civ6RolloverProxy_Pol`) ; bit 3, retour au vote
+/// actif (`Civ6RolloverProxy_Revote`).
 #[no_mangle]
-pub extern "C" fn BgdSpectateursPol() -> u32 {
-    spectateurs::lua_actif() as u32
+pub extern "C" fn BgdCongres() -> u32 {
+    spectateurs::poses() as u32
+        | (congres::pose() as u32) << 1
+        | (spectateurs::lua_actif() as u32) << 2
+        | (congres::actif() as u32) << 3
 }
 
 #[no_mangle]
@@ -162,12 +170,14 @@ unsafe fn poser_correctifs() {
     };
     // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
     // annoncerait des règles qu'elle n'applique pas.
-    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 5] = [
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 6] = [
         ("fin de tour", fin_tour::installer),
         ("ports", ports::installer),
         ("production", production::installer),
         ("empilement", empilement::installer),
         ("spectateurs", spectateurs::installer),
+        // Après les spectateurs : leurs détours de vote rendent la faveur d'un second vote.
+        ("congrès", congres::installer),
     ];
     let mut tous = true;
     for (nom, installer) in correctifs {

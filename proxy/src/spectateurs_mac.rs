@@ -7,8 +7,11 @@
 //! - touristes pris `0x8e8c78(culture, P)` et demande `0x8e96e4(culture, P)`, lues par les deux
 //!   `GlobalParameters` du tourisme (`[0x1390220]`, `+0x6d0` et `+0x6e0`, comme Windows) ;
 //! - vote sur une résolution `0xc1de04(congrès, joueur, résolution, voix)` et sur une proposition
-//!   `0xc1eb30(congrès, joueur, proposition, voix)`, appelés par l'exécution des opérations
-//!   `WORLD_CONGRESS_RESOLUTION_VOTE` et `WORLD_CONGRESS_DISCUSSION_VOTE` (`0x9f1538`) ;
+//!   `0xc1e0a0(congrès, joueur, proposition, voix)`, appelés par l'exécution des opérations
+//!   `WORLD_CONGRESS_RESOLUTION_VOTE` (`0x9f2a18`) et `WORLD_CONGRESS_DISCUSSION_VOTE` (`0x9f2d2c`,
+//!   la proposition étant rendue par `0xc1ef34`) de `0x9f1538`. `0xc1eb30`, appelée en `0x9f2bbc`,
+//!   est `WORLD_CONGRESS_DISCUSSION_SELECTION` (proposer un sujet), que Windows laisse aux
+//!   spectateurs ;
 //! - dépouillement `0xc28d78(résolution)` : voix d'office aux majeurs vivants (`PlayerManager+0xfa0`)
 //!   sans voix, choix en `+4`, voix en `+0x104` (comme Windows) ;
 //! - PlayerManager rendu par `0x9eba84()` ; joueur : ID `+0xe0`, diplomatie `+0x6e8`, culture
@@ -17,7 +20,7 @@
 //! - spectateur : configuration `0x383328([0x1390240], id)`, hachage du leader `0x38a0cc(config)`
 //!   (ce qu'appelle la méthode Lua `GetLeaderTypeID`).
 //!
-//! Le retour au vote (`congres`, sous Windows dans les mêmes détours) n'est pas encore porté.
+//! Les mêmes détours de vote rendent la faveur d'un second vote (retour au vote, congres_mac.rs).
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
 
@@ -38,7 +41,7 @@ struct Fonction {
 const TOURISTES: Fonction = Fonction { nom: "touristes", adresse: 0x8e8c78, taille: 256, empreinte: 0x9277f3e8e7318705 };
 const DEMANDE: Fonction = Fonction { nom: "demande", adresse: 0x8e96e4, taille: 232, empreinte: 0xf60ebff3c4ea3e2c };
 const VOTE: Fonction = Fonction { nom: "vote", adresse: 0xc1de04, taille: 668, empreinte: 0x913f465c58a7868a };
-const DISCUSSION: Fonction = Fonction { nom: "vote sur une proposition", adresse: 0xc1eb30, taille: 1028, empreinte: 0x431b3ab16d6c9488 };
+const DISCUSSION: Fonction = Fonction { nom: "vote sur une proposition", adresse: 0xc1e0a0, taille: 316, empreinte: 0xd825ff978aac3b63 };
 const DEPOUILLEMENT: Fonction = Fonction { nom: "dépouillement", adresse: 0xc28d78, taille: 7696, empreinte: 0xa11df123f04288ce };
 /// Prologue recopié dans les trampolines : quatre instructions de pile, sans adresse relative.
 const PROLOGUE: usize = 16;
@@ -198,7 +201,12 @@ unsafe extern "C" fn hook_vote(congres: usize, joueur: u32, resolution: u32, voi
         return 0;
     }
     let original: unsafe extern "C" fn(usize, u32, u32, i32) -> u32 = std::mem::transmute(T_VOTE.load(Ordering::Relaxed));
-    original(congres, joueur, resolution, voix)
+    let rendu = super::congres::avant_vote(congres, joueur, resolution);
+    let r = original(congres, joueur, resolution, voix);
+    if let (0, Some(rendu)) = (r & 1, rendu) {
+        super::congres::reprendre(rendu);
+    }
+    r
 }
 
 unsafe extern "C" fn hook_discussion(congres: usize, joueur: u32, discussion: usize, voix: i32) -> u32 {
@@ -207,7 +215,12 @@ unsafe extern "C" fn hook_discussion(congres: usize, joueur: u32, discussion: us
         return 0;
     }
     let original: unsafe extern "C" fn(usize, u32, usize, i32) -> u32 = std::mem::transmute(T_DISCUSSION.load(Ordering::Relaxed));
-    original(congres, joueur, discussion, voix)
+    let rendu = super::congres::avant_discussion(congres, joueur, discussion);
+    let r = original(congres, joueur, discussion, voix);
+    if let (0, Some(rendu)) = (r & 1, rendu) {
+        super::congres::reprendre(rendu);
+    }
+    r
 }
 
 unsafe extern "C" fn hook_depouillement(resolution: usize) -> usize {
@@ -265,6 +278,11 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
 #[cfg(target_arch = "x86_64")]
 pub unsafe fn installer(_base: usize) -> Result<String, String> {
     Err("pas encore relevé en x86_64".into())
+}
+
+/// Détours posés (l'état POL se décide ensuite, en partie).
+pub fn poses() -> bool {
+    POSES.load(Ordering::Relaxed)
 }
 
 /// Ce que rend `Civ6RolloverProxy_Pol()` aux scripts du congrès : détours posés et correctifs POL

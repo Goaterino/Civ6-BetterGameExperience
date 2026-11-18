@@ -256,16 +256,29 @@ Conclusions, qui remplacent celles tirées de la CI :
      Offsets de l'unité : ceux de Windows plus 8. Posé dans le jeu (2026-11-17) ; un combat avec
      unités empilées reste à observer.
    - **Spectateurs** ([proxy/src/spectateurs_mac.rs](../../proxy/src/spectateurs_mac.rs)) : porté
-     (arm64). Tourisme `0x8e8c78`/`0x8e96e4`, votes `0xc1de04`/`0xc1eb30` (retrouvés par l'exécution
-     des opérations `WORLD_CONGRESS_*_VOTE`), dépouillement `0xc28d78` ; spectateur par
+     (arm64). Tourisme `0x8e8c78`/`0x8e96e4`, votes `0xc1de04`/`0xc1e0a0` (retrouvés par l'exécution
+     des opérations `WORLD_CONGRESS_*_VOTE` ; `0xc1eb30`, d'abord accroché par erreur, est
+     `WORLD_CONGRESS_DISCUSSION_SELECTION`, proposer un sujet, corrigé le 2026-11-18), dépouillement `0xc28d78` ; spectateur par
      `0x383328([0x1390240], id)` puis `0x38a0cc` (ce qu'appelle `GetLeaderTypeID`). Offsets du
      joueur et de la culture : ceux de Windows plus 8. Formule commune
      ([spectateurs_calcul.rs](../../proxy/src/spectateurs_calcul.rs)) ; `WorldCongress.lua` corrigé
      par le chargeur avec le texte commun ([congres_texte.rs](../../proxy/src/congres_texte.rs)),
-     `Civ6RolloverProxy_Pol()` lisant l'export `BgdSpectateursPol` du proxy. Vérifié dans le jeu
+     `Civ6RolloverProxy_Pol()` lisant l'export `BgdCongres` du proxy. Vérifié dans le jeu
      (2026-11-17, BSM, 2 spectateurs) : tourisme divisé par 8 au lieu de 10, votes du spectateur
      refusés, dépouillement sans sa voix d'office.
-   - Restent : citoyens, congrès,
+   - **Congrès** ([proxy/src/congres_mac.rs](../../proxy/src/congres_mac.rs)) : porté (arm64).
+     L'annulation de fin de tour `0x8ae624` (appelée en `0x9f56a8`, `0x9f5b7c`, `0x9f5dd4`) est
+     réécrite avec la règle commune ([congres_regle.rs](../../proxy/src/congres_regle.rs)) ; segment
+     courant `[0x1394090]` indexé par `0x138e460`, drapeau en `+0x50` (bit 2), type en `+0x18`. Avant
+     un second vote (détours des spectateurs sur `0xc1de04` et `0xc1e0a0`), le coût des voix déjà
+     payées (`0xae0f4c`) est rendu par `0x8c460c`, raison 1 (résolution) ou 2 (proposition), puis
+     repris si le jeu refuse le vote ; le cumul gagné (`+0xe0`) est remis à la main, le suivi étant
+     en ligne sous macOS. Les écrans (`WorldCongressPopup`, `Intro`, `BetweenTurns` et son XML)
+     reçoivent les textes communs ([congres_texte.rs](../../proxy/src/congres_texte.rs)) par
+     [startup_proxy/src/macos_congres.rs](../../startup_proxy/src/macos_congres.rs), état par
+     l'export `BgdCongres`. Posé et compilé dans le jeu (2026-11-18) ; le retour au vote demande un
+     second joueur humain (les IA votent aussitôt) et reste à observer.
+   - Restent : citoyens,
      départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.

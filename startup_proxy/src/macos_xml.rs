@@ -62,12 +62,15 @@ fn est(chemin: &str, nom: &str) -> bool {
 }
 
 /// Texte de remplacement pour ce fichier, s'il y en a un : Options.xml avec l'onglet
-/// BetterGameExperience, StagingRoom.xml avec le BGE Check (textes communs avec Windows).
+/// BetterGameExperience, StagingRoom.xml avec le BGE Check, WorldCongressBetweenTurns.xml avec le
+/// bouton de retour au vote (textes communs avec Windows).
 fn remplacement(chemin: &str, texte: &[u8]) -> Option<Vec<u8>> {
     let (r, quoi) = if est(chemin, "Options.xml") {
         (super::options_texte::patch_options_xml(texte), "options")
     } else if est(chemin, super::salon::XML) {
         (super::salon_texte::patch_staging_xml(texte), "salon")
+    } else if est(chemin, super::congres::XML_ATTENTE) {
+        (super::congres::xml_attente(texte), "congrès")
     } else {
         return None;
     };
