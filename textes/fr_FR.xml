@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="fr_FR">
 			<Text>Dans la liste de production, les quartiers dont le coût est réduit (moins de quartiers de ce type que votre moyenne) affichent leur réduction, mise à jour dès qu'un quartier est posé. Affichage seulement.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="fr_FR">
+			<Text>Formation la plus haute en premier</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="fr_FR">
+			<Text>Dans la liste de production, le bouton principal d'une unité forme la plus haute formation que la ville peut former (armée, sinon régiment), et l'unité seule passe dans le menu déroulant en dessous. Le jeu fait l'inverse. Les achats en or et en foi ne changent pas.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="fr_FR">
 			<Text>Production en réserve</Text>
 		</Row>

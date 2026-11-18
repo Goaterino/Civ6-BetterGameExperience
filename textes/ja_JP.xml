@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ja_JP">
 			<Text>生産リストで、コストが割引されている区域 (その種類の区域数が平均より少ない) に割引率を表示します。区域を配置するとすぐに更新されます。表示のみ。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="ja_JP">
+			<Text>最上位の編成を優先表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="ja_JP">
+			<Text>生産リストで、ユニットのメインボタンが都市で訓練できる最上位の編成 (大軍団、なければ軍団) を訓練するようになり、単独ユニットはその下のドロップダウンに移ります。ゲーム本来の並びとは逆です。ゴールドと信仰力による購入は変わりません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ja_JP">
 			<Text>蓄えられた生産力</Text>
 		</Row>

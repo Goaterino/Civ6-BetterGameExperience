@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ru_RU">
 			<Text>В списке производства районы со сниженной стоимостью (таких районов у вас меньше среднего) показывают скидку; она обновляется сразу после размещения района. Только отображение.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="ru_RU">
+			<Text>Сначала высшее формирование</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="ru_RU">
+			<Text>В списке производства основная кнопка юнита обучает высшее формирование, доступное городу (армия, иначе корпус), а одиночный юнит переходит в раскрывающийся список под ней. В игре порядок обратный. Покупки за золото и веру не меняются.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ru_RU">
 			<Text>Запасённое производство</Text>
 		</Row>

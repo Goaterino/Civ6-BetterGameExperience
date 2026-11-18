@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="zh_Hans_CN">
 			<Text>在生产列表中，成本降低的区域（该类区域数量少于你的平均值）会显示折扣，放置区域后立即更新。仅影响显示。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="zh_Hans_CN">
+			<Text>优先显示最高编制</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="zh_Hans_CN">
+			<Text>在生产列表中，单位的主按钮会训练城市可训练的最高编制（军队，否则为军团），单个单位则移到下方的下拉菜单中。游戏原本的顺序与此相反。金币和信仰值购买不受影响。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="zh_Hans_CN">
 			<Text>储备的生产力</Text>
 		</Row>

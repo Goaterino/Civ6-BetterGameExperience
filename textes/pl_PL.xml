@@ -209,6 +209,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="pl_PL">
 			<Text>Na liście produkcji dzielnice o obniżonym koszcie (mniej dzielnic tego typu niż twoja średnia) pokazują zniżkę, odświeżaną od razu po umieszczeniu dzielnicy. Tylko wyświetlanie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="pl_PL">
+			<Text>Najwyższa formacja jako pierwsza</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="pl_PL">
+			<Text>Na liście produkcji główny przycisk jednostki szkoli najwyższą formację, jaką miasto może wyszkolić (armia, w przeciwnym razie korpus), a pojedyncza jednostka trafia do rozwijanej listy poniżej. Gra robi odwrotnie. Zakupy za złoto i wiarę pozostają bez zmian.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="pl_PL">
 			<Text>Zachowana produkcja</Text>
 		</Row>
