@@ -221,6 +221,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="en_US">
 			<Text>Shows the production a city keeps in reserve (overflow, at most one turn), which is added to its production next turn: on the city banner, in the city panel and in the production panel. Display only.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="en_US">
+			<Text>Early housing warning on the city banner</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="en_US">
+			<Text>On your city banners, an orange house appears when a city is one Housing below its cap (growth slowed by 50%), and the red house as soon as it is at the cap (75%). Without this option, the game only shows the red house once the city is over the cap. Display only.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
 			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>
 		</Row>

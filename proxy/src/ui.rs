@@ -37,6 +37,9 @@
 //! - `ui_formations=on|off` (on) : adds `ui_formations.lua` to ProductionPanel.lua. In the
 //!   production list, the main button of a unit trains the highest formation the city can train
 //!   (army, else corps), and the drawer under it holds the lower ones: the reverse of the game ;
+//! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. An orange house on
+//!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
+//!   (-75%), where the game itself only shows it over the cap ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -82,6 +85,8 @@ const DEBORDEMENT_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
 /// Block of the `ui_formations` setting (ProductionPanel.lua). Its texts are the game's own.
 const FORMATIONS_BLOCK: &str = include_str!("ui_formations.lua");
+/// Block of the `ui_logement` setting (CityBannerManager.lua). Its texts are the game's own.
+const LOGEMENT_BLOCK: &str = include_str!("ui_logement.lua");
 /// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
 /// WorldTrackerCivic.xml).
 const AVANCEMENT_BLOCK: &str = include_str!("ui_avancement.lua");
@@ -101,6 +106,7 @@ static ANNULER: AtomicBool = AtomicBool::new(true);
 static QUARTIERS: AtomicBool = AtomicBool::new(true);
 static AVANCEMENT: AtomicBool = AtomicBool::new(true);
 static FORMATIONS: AtomicBool = AtomicBool::new(true);
+static LOGEMENT: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -152,6 +158,10 @@ pub fn set_formations(on: bool) {
     FORMATIONS.store(on, Ordering::Relaxed);
 }
 
+pub fn set_logement(on: bool) {
+    LOGEMENT.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -173,6 +183,7 @@ fn active() -> bool {
         || QUARTIERS.load(Ordering::Relaxed)
         || AVANCEMENT.load(Ordering::Relaxed)
         || FORMATIONS.load(Ordering::Relaxed)
+        || LOGEMENT.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
@@ -1351,6 +1362,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
     if crate::debordement::pose() && crate::debordement::publier(l) {
         blocks.push(DEBORDEMENT_BLOCK);
         what.push("production en réserve sur le bandeau".into());
+    }
+    if LOGEMENT.load(Ordering::Relaxed) {
+        blocks.push(LOGEMENT_BLOCK);
+        what.push("alerte de logement sur le bandeau".into());
     }
     if blocks.is_empty() {
         return new;
