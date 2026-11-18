@@ -195,7 +195,15 @@ static ADD_REPAIR: AtomicUsize = AtomicUsize::new(0);
 static MAP_INSERT: AtomicUsize = AtomicUsize::new(0);
 static ADD_CREATE: AtomicUsize = AtomicUsize::new(0);
 static INSTALLED: AtomicBool = AtomicBool::new(false);
+/// The calls redirected here (call site, the game's function), for modules that redirect the same
+/// calls afterwards and chain to this one (`reparation_synchro`).
+static REDIRECTED: Mutex<Vec<(usize, usize)>> = Mutex::new(Vec::new());
 static NOTES: Mutex<Option<Notes>> = Mutex::new(None);
+
+/// The game's function that `call` reached before this module redirected it.
+pub fn original_target(call: usize) -> Option<usize> {
+    REDIRECTED.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|&&(c, _)| c == call).map(|&(_, t)| t)
+}
 
 /// Are the hooks in place (the host can tell which clients have objects on one side only)?
 pub fn installed() -> bool {
@@ -360,9 +368,13 @@ pub unsafe fn install() {
     ADD_REPAIR.store(image(exe.add_repair), Ordering::Relaxed);
     MAP_INSERT.store(image(exe.map_insert), Ordering::Relaxed);
     ADD_CREATE.store(image(exe.add_create), Ordering::Relaxed);
-    for ((call, _), rel) in calls.iter().zip(rels) {
+    let targets = [exe.handler, exe.add_repair, exe.map_insert, exe.add_create];
+    let mut redirected = REDIRECTED.lock().unwrap_or_else(|e| e.into_inner());
+    for (((call, _), rel), target) in calls.iter().zip(rels).zip(targets) {
+        redirected.push((image(*call), image(target)));
         patch::write_rel32(image(*call), rel);
     }
+    drop(redirected);
     INSTALLED.store(true, Ordering::Relaxed);
     log(&format!("sync notes: installed ({})", exe.name));
 }
