@@ -15,8 +15,15 @@
 //! host, and every barrier entered at a turn end, are untouched. The snapshot's flags come from the
 //! snapshot guard's hook (`snapshots.rs`); without it, nothing is skipped.
 //!
+//! A sync round that ends while a machine is loading posts its "round complete" event, which the game
+//! hands out after the load: it ends the barrier that load has just entered, before that barrier's
+//! check starts. After the host reloads everyone, the host then starts the next turn without the
+//! clients' checks, and compares them one turn late. On host and clients, that event is ignored in a
+//! barrier entered by a load whose check has not started: no round of that barrier has run yet.
+//!
 //! Settings in `rollover_proxy.cfg`: `actif=off` installs nothing; `rejoin_barrier=off` turns off
-//! this fix alone (`on` by default). Addresses of both exes of 2026-11-05, checked at startup.
+//! both fixes, `stale_round_guard=off` the second one alone (`on` by default). Addresses of both
+//! exes of 2026-11-05, checked at startup.
 
 use crate::{log, patch, win};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
@@ -29,6 +36,8 @@ struct Exe {
     update: u64,
     /// The controller's "game turn ended": enters the barrier.
     turn_end: u64,
+    /// The controller's handler of the "sync round complete" event: leaves the barrier.
+    round_complete: u64,
     /// The sync manager's "start check", read only to confirm `net_manager` and `lookup`.
     start_check: u64,
     /// Network manager method: session of an ID.
@@ -50,6 +59,7 @@ const EXES: [Exe; 2] = [
         name: "DX12",
         update: 0x1_400f_7f70,
         turn_end: 0x1_400f_62e0,
+        round_complete: 0x1_400f_5c70,
         start_check: 0x1_407f_8c10,
         lookup: 0x1_407f_b740,
         jobs: 0x1_4230_e728,
@@ -63,6 +73,7 @@ const EXES: [Exe; 2] = [
         name: "DX11",
         update: 0x1_400f_75b0,
         turn_end: 0x1_400f_5920,
+        round_complete: 0x1_400f_52b0,
         start_check: 0x1_407f_6d20,
         lookup: 0x1_407f_9960,
         jobs: 0x1_422d_70a8,
@@ -88,6 +99,12 @@ const UPDATE_JOBS_AT: usize = 9;
 const UPDATE_SYNC_AT: usize = 0x2a;
 /// `sub rsp,28h ; mov byte [rcx+8],1 ; mov word [rcx+0Eh],100h`: moved to the trampoline as is.
 const TURN_END: [u8; 14] = [0x48, 0x83, 0xec, 0x28, 0xc6, 0x41, 0x08, 0x01, 0x66, 0xc7, 0x41, 0x0e, 0x00, 0x01];
+/// The whole "sync round complete" handler, replaced by `round_complete`: `cmp byte [rcx+8],0 ; je ;
+/// mov word [rcx+7],1 ; mov byte [rcx+9],0 ; ret ; mov word [rcx+8],0 ; ret`.
+const ROUND_COMPLETE: [u8; 24] = [
+    0x80, 0x79, 0x08, 0x00, 0x74, 0x0b, 0x66, 0xc7, 0x41, 0x07, 0x01, 0x00, 0xc6, 0x41, 0x09, 0x00, 0xc3, 0x66, 0xc7, 0x41, 0x08, 0x00,
+    0x00, 0xc3,
+];
 const LOOKUP: [u8; 16] = [0x44, 0x8b, 0x49, 0x18, 0x44, 0x8b, 0xc2, 0x4c, 0x8b, 0x51, 0x10, 0x33, 0xd2, 0x41, 0x8b, 0xc0];
 /// In "start check": `mov rcx,[net_manager]` at + 0x11, `call lookup` at + 0x18.
 const START_CHECK_MANAGER_AT: usize = 0x11;
@@ -101,8 +118,9 @@ const PROCESS_JMP_AT: usize = 0x78;
 /// mov [rcx+28h],r8d ; ret`.
 const SET_WAITING: [u8; 17] = [0x88, 0x51, 0x1a, 0x84, 0xd2, 0x75, 0x05, 0xc6, 0x41, 0x1c, 0x01, 0xc3, 0x44, 0x89, 0x41, 0x28, 0xc3];
 
-// Controller: uses background jobs, in the barrier, check started.
+// Controller: uses background jobs, next turn to start, in the barrier, check started.
 const CTL_JOBS: usize = 4;
+const CTL_NEXT_TURN: usize = 7;
 const CTL_IN_BARRIER: usize = 8;
 const CTL_CHECK_STARTED: usize = 9;
 const JOBS_PENDING: usize = 0x40;
@@ -161,6 +179,40 @@ impl Load {
 /// The `rejoin_barrier` setting (last occurrence wins; `on` by default).
 pub fn enabled(cfg: &str) -> bool {
     cfg.lines().filter_map(|l| l.trim().strip_prefix("rejoin_barrier=")).last().map(str::trim) != Some("off")
+}
+
+/// The `stale_round_guard` setting (last occurrence wins; `on` by default).
+pub fn guard_enabled(cfg: &str) -> bool {
+    cfg.lines().filter_map(|l| l.trim().strip_prefix("stale_round_guard=")).last().map(str::trim) != Some("off")
+}
+
+/// Is a "round complete" event left over from before this barrier? Only in a barrier entered by a
+/// load whose check has not started.
+fn stale_round(in_barrier: bool, check_started: bool, after_turn_end: bool) -> bool {
+    in_barrier && !check_started && !after_turn_end
+}
+
+/// The game's handler, unless the round is stale: in a barrier, leave it and start the next turn;
+/// otherwise clear both barrier flags. False when the event is ignored.
+unsafe fn complete_round(ctl: *mut u8, after_turn_end: bool) -> bool {
+    let in_barrier = *ctl.add(CTL_IN_BARRIER) != 0;
+    if stale_round(in_barrier, *ctl.add(CTL_CHECK_STARTED) != 0, after_turn_end) {
+        return false;
+    }
+    if in_barrier {
+        std::ptr::write_unaligned(ctl.add(CTL_NEXT_TURN).cast::<u16>(), 1);
+        *ctl.add(CTL_CHECK_STARTED) = 0;
+    } else {
+        std::ptr::write_unaligned(ctl.add(CTL_IN_BARRIER).cast::<u16>(), 0);
+    }
+    true
+}
+
+/// Replaces the controller's "sync round complete" handler.
+unsafe extern "C-unwind" fn round_complete(ctl: *mut u8) {
+    if !complete_round(ctl, AFTER_TURN_END.load(Ordering::Relaxed)) {
+        log("rejoin: a sync round that ended before this load did not end its turn barrier");
+    }
 }
 
 /// A new game or a loaded snapshot (the in-game interface loads). The last snapshot is kept: it
@@ -313,6 +365,9 @@ fn fingerprint<'a>(t: &Exe, read: impl Fn(u64, usize) -> &'a [u8]) -> Result<(),
     if read(t.turn_end, TURN_END.len()) != TURN_END {
         return Err(format!("turn end: unexpected bytes at {:#x}", t.turn_end));
     }
+    if read(t.round_complete, ROUND_COMPLETE.len()) != ROUND_COMPLETE {
+        return Err(format!("round complete: unexpected bytes at {:#x}", t.round_complete));
+    }
     if read(t.lookup, LOOKUP.len()) != LOOKUP {
         return Err(format!("session lookup: unexpected bytes at {:#x}", t.lookup));
     }
@@ -378,7 +433,20 @@ pub unsafe fn install() {
     let update_at = at(t.update);
     match patch::install_at("rejoin barrier update", update_at, &[], update_at, update as *const () as usize) {
         Ok(_) => log(&format!("rejoin: no turn barrier after loading on clients ({})", t.name)),
-        Err(e) => log(&format!("rejoin: {e}, fix not installed")),
+        Err(e) => {
+            log(&format!("rejoin: {e}, fix not installed"));
+            return;
+        }
+    }
+    // Needs both hooks above: they tell a barrier entered by a load from one entered at a turn end.
+    if !guard_enabled(&cfg) {
+        log("rejoin: stale round guard turned off (stale_round_guard=off)");
+        return;
+    }
+    let round_at = at(t.round_complete);
+    match patch::install_at("rejoin round complete", round_at, &[], round_at, round_complete as *const () as usize) {
+        Ok(_) => log(&format!("rejoin: a sync round that ended before a load no longer ends that load's barrier ({})", t.name)),
+        Err(e) => log(&format!("rejoin: {e}, stale round guard not installed")),
     }
 }
 
@@ -428,6 +496,35 @@ mod tests {
         assert!(UPDATE.len() >= 14);
         assert_eq!(UPDATE[UPDATE.len() - 1], 0xc3, "the update ends at its ret");
         assert_eq!(TURN_END.len(), 14);
+        assert!(ROUND_COMPLETE.len() >= 14);
+        assert_eq!(ROUND_COMPLETE[ROUND_COMPLETE.len() - 1], 0xc3, "the handler ends at its ret");
+    }
+
+    /// Flags +7, +8, +9 of a controller after the "round complete" event, and whether it was handled.
+    fn round(next_turn: u8, in_barrier: u8, check_started: u8, after_turn_end: bool) -> (bool, u8, u8, u8) {
+        let mut ctl = [0xaa_u8; 12];
+        (ctl[CTL_NEXT_TURN], ctl[CTL_IN_BARRIER], ctl[CTL_CHECK_STARTED]) = (next_turn, in_barrier, check_started);
+        let handled = unsafe { complete_round(ctl.as_mut_ptr(), after_turn_end) };
+        assert_eq!((ctl[6], ctl[10]), (0xaa, 0xaa), "neighbours untouched");
+        (handled, ctl[CTL_NEXT_TURN], ctl[CTL_IN_BARRIER], ctl[CTL_CHECK_STARTED])
+    }
+
+    #[test]
+    fn round_complete_as_the_game_except_before_a_load_barrier_check() {
+        // The game's handler.
+        assert_eq!(round(0, 1, 1, true), (true, 1, 0, 0), "turn-end barrier: left, next turn");
+        assert_eq!(round(0, 1, 0, true), (true, 1, 0, 0), "turn-end barrier before its check: as the game");
+        assert_eq!(round(0, 1, 1, false), (true, 1, 0, 0), "load barrier whose check ran: left, next turn");
+        assert_eq!(round(5, 0, 1, false), (true, 5, 0, 0), "no barrier: flags cleared, next turn untouched");
+        // A round that ended before the load: the barrier waits for its own check.
+        assert_eq!(round(1, 1, 0, false), (false, 1, 1, 0), "load barrier before its check");
+    }
+
+    #[test]
+    fn guard_setting() {
+        assert!(guard_enabled(""));
+        assert!(!guard_enabled("stale_round_guard=off\r\n"));
+        assert!(guard_enabled("stale_round_guard=off\nstale_round_guard=on\n"), "the last occurrence wins");
     }
 
     fn load(reason: i32, flags: u32, ack_on_receipt: bool) -> Option<Load> {
