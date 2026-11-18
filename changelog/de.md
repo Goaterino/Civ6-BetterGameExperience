@@ -2,6 +2,99 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.12.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.12.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.11.0 und 0.12.0 mischt, schaltet sie ab.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Desync nach einem Wiederbeitritt**: Ein Spieler, der wieder beitrat oder allein neu geladen
+  wurde, spielte ein frisch geladenes Spiel gegen die laufenden Spiele der anderen. Beide
+  unterscheiden sich in Daten, die die Synchronisationsprüfung nicht abdeckt: Das Spiel lief wieder
+  auseinander und lud diesen Spieler immer wieder neu. Wenn das Spiel eines Spielers nicht mehr
+  übereinstimmt, nennt der Host jetzt den Grund im Chat und alle laden sofort das Spiel des Hosts
+  neu; der Host wartet auf die Prüfung jedes Spielers am neu geladenen Spiel, dann beginnt die Runde
+  für alle. Beitrag von yodha.
+- **Wiederbeitritt am Rundenende**: Ein Spieler, der während eines Rundenendes wieder beitrat, wurde
+  mit der nächsten Runde verglichen. Das führte zu einer unnötigen Reparatur und dann zu einem
+  Neuladen alle zwei Runden. Beitrag von yodha.
+- **Remap von Multiplayer Helper**: Nach einem Remap spielte der Host das gerade erzeugte Spiel,
+  alle anderen Spieler dasselbe Spiel aus dem Spielstand des Hosts geladen, und die KI traf auf
+  beiden Seiten leicht unterschiedliche Entscheidungen (Reparaturen von mehreren MB pro Runde in
+  einem Spiel mit 8 Spielern). Der Host lädt jetzt ebenfalls seinen eigenen Spielstand, sodass alle
+  Rechner dasselbe Spiel spielen. Kosten: ein zusätzlicher Ladebildschirm für den Host, einmal pro
+  Remap. Beitrag von yodha.
+- **Jedes Spiel beginnt sauber**: Einige Zähler des Spiels wurden innerhalb derselben Sitzung von
+  einem Spiel ins nächste übernommen, sodass Objekte anders nummeriert wurden als bei den anderen
+  Spielern. Beitrag von yodha.
+
+### Mehrspieler
+- **Doppeltes Laden beim Start eines Spielstands**: Der Host schickt Spielern, die noch laden, keine
+  zweite Kopie des Spiels mehr, durch die einige zweimal luden. Wird noch eine Kopie abgelehnt, zeigt
+  der Chat „Doppeltes Laden verhindert“. Beitrag von yodha.
+- **Beschädigte Netzwerknachrichten**: Eine Nachricht, die die Spieleinstellungen löschen würde,
+  wird jetzt ebenfalls abgelehnt. Der Chat nennt den Spieler und was verhindert wurde („Einfrieren
+  des Spiels verhindert“, „Löschen der Spieleinstellungen verhindert“). Beitrag von yodha.
+- **Abgeschnittene Nachrichten am Ende eines Ladevorgangs**: Eine während des Ladens zurückgehaltene
+  Nachricht wird nicht mehr an eine Nachricht angehängt, die noch stückweise ankommt. Beitrag von
+  yodha.
+- **Korrekturen von BetterGameExperience beim Laden entschieden**: Die Entscheidung, die Korrekturen
+  **[alle Spieler]** einzuschalten, wird beim Laden und beim Schließen des Ladebildschirms erneut
+  geprüft, ein neuer Host nach einer Host-Migration übernimmt sie (Spieler, die nach einer Migration
+  beitraten, spielten bisher ohne sie), und ignorierte Spieler bleiben nach einem Neuladen
+  ignoriert. Beitrag von yodha.
+- **Veraltete Spielversion**: Ein Spieler, dessen Spiel nicht die aktuelle Steam-Version ist, wird
+  bei seiner Ankunft im Chat gemeldet, da die Netzwerkkorrekturen von BetterGameExperience auf
+  seinem PC nicht funktionieren können.
+- **Popup „Spiel pausiert“**: Es stapelt sich während des Ladens nicht mehr und erscheint nicht mehr
+  über dem Ladebildschirm.
+- **Spieleinrichtung**: Team-Pings lassen sich nach Spielbeginn nicht mehr ein- oder ausschalten
+  (die Änderung bewirkte nichts oder ließ die Pings aktiv), auch bei geladenen Spielständen. No
+  First/Last moves und Team-Pings lassen sich in einer Lobby, in der einem Spieler
+  BetterGameExperience oder die richtige Version fehlt, nicht mehr einschalten, aber weiterhin
+  ausschalten. Beitrag von mariusbw.
+
+### No First/Last moves
+- Die Option bleibt eingeschaltet, sobald sie aktiv ist. Der Host wartet nicht mehr auf einen
+  Spieler, der zwei Runden hintereinander nicht bereit war, und sagt das im Chat. Ein Spieler, der
+  75 s lang kein Startsignal vom Host erhält, beginnt seine Runde allein. Beitrag von yodha.
+- **Ruhigerer Chat**: Die Aktivierungsmeldung ist auf „No First/Last moves aktiv.“ gekürzt, und die
+  Zeilen zum Zurückhalten der Befehle und zum Start erscheinen einmal pro Spiel statt jede Runde. Die
+  Ankündigung, dass BetterGameExperience aktiv ist, wird einmal pro Lobby gesendet und nicht bei
+  jedem erneuten Öffnen des Lobby-Bildschirms.
+
+### Schnelleres Laden
+- Neue Einstellungen im Reiter BetterGameExperience, alle standardmäßig eingeschaltet, die das
+  Laden verkürzen, ohne das Spiel zu ändern: schnellere Suche nach Grafikdateien (mehrere Sekunden
+  aus dem Hauptmenü), Gameplay-Datenbank und Mod-Texte bleiben zwischen Ladevorgängen erhalten, wenn
+  die Mods gleich sind (je etwa 1,5 s), kein Warten auf VSync auf Ladebildschirmen (etwa 2 s, nur
+  bei eingeschaltetem VSync), eine einzige Lua-Bereinigung beim Schließen der Oberfläche (etwa 2 s
+  vor einem Remap), ein leichterer erster Ladevorgang für den Host beim Remap (etwa 10 s) und eine
+  schnellere Engpassanalyse bei der Kartenerzeugung (etwa 2 s, gleiches Ergebnis). Das
+  Engpass-Protokoll der KI (AI_ChokePoint.csv, 12 MB) wird standardmäßig nicht mehr geschrieben.
+- **Job-Threads**: Untätige Threads verschwenden beim Warten weniger Prozessorzeit (Einstellungen im
+  selben Reiter).
+
+### Oberfläche
+- **Höchste Formation zuerst**: In der Produktionsliste bildet die Hauptschaltfläche einer Einheit
+  die höchste Formation aus, die die Stadt ausbilden kann (Armee, sonst Korps; auf See Armada, sonst
+  Flotte), und die Einzeleinheit wandert in das Aufklappmenü darunter. Käufe mit Gold und Glauben
+  bleiben unverändert. Standardmäßig eingeschaltet. Beitrag von huchenlei.
+- **Frühe Wohnraum-Warnung**: Die Banner deiner Städte zeigen ein oranges Haus, wenn eine Stadt
+  einen Wohnraum unter der Grenze liegt (Wachstum -50 %), und das rote Haus, sobald sie die Grenze
+  erreicht (-75 %); das Spiel zeigte das rote Haus erst oberhalb der Grenze. Standardmäßig
+  eingeschaltet. Beitrag von huchenlei.
+- **Politikkarten**: Ihre Effekte verschwinden nicht mehr für den Rest des Spiels, wenn der
+  Regierungsbildschirm zum ersten Mal in einem ungünstigen Moment gezeichnet wird (beobachtet nach
+  dem Neuladen eines Spiels); sie kamen erst nach einem weiteren Neuladen zurück.
+- **Einheitenflaggen**: Kampfeinheiten mit Ladungen (römische Legion, Toa, Nau …) zeigen wieder ihre
+  Beförderungen statt ihrer Ladungen; Bautrupps, Militäringenieure und andere Zivil- und
+  Unterstützungseinheiten zeigen weiterhin ihre Ladungen.
+
+### Fehlerbericht
+- Protokolle mit Anmeldetokens (FiraxisLive.log, EOS.log) werden ausgelassen, und lange Protokolle
+  behalten ihren Anfang und ihr Ende. Beitrag von yodha.
+
 ## BetterGameExperience 0.11.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.11.0 für die Korrekturen **[alle

@@ -2,6 +2,98 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.12.0
+
+En multijoueur, tous les humains doivent être en 0.12.0 pour les correctifs **[tous les
+joueurs]** : un salon qui mélange 0.11.0 et 0.12.0 les coupe.
+
+### Correctifs multijoueur [tous les joueurs]
+- **Désynchronisation après une reconnexion** : un joueur reconnecté, ou rechargé seul, faisait
+  tourner une partie fraîchement chargée face aux parties en cours des autres. Les deux diffèrent
+  dans des données que la vérification de synchronisation ne couvre pas : la partie dérivait de
+  nouveau et rechargeait ce joueur encore et encore. Désormais, quand la partie d'un joueur ne
+  correspond plus, l'hôte en donne la raison dans le chat et tout le monde recharge aussitôt la
+  partie de l'hôte ; l'hôte attend la vérification de chaque joueur sur la partie rechargée, puis le
+  tour commence pour tous. Contribution de yodha.
+- **Reconnexion en fin de tour** : un joueur reconnecté pendant une fin de tour était comparé au tour
+  suivant, ce qui causait une réparation inutile puis un rechargement tous les deux tours.
+  Contribution de yodha.
+- **Remap de Multiplayer Helper** : après un remap, l'hôte faisait tourner la partie qu'il venait de
+  générer, et tous les autres joueurs la même partie chargée depuis la sauvegarde de l'hôte ; l'IA
+  faisait des choix légèrement différents de chaque côté (réparations de plusieurs Mo par tour dans
+  une partie à 8 joueurs). L'hôte charge maintenant lui aussi sa propre sauvegarde : toutes les
+  machines font tourner la même partie. Coût : un écran de chargement de plus pour l'hôte, une fois
+  par remap. Contribution de yodha.
+- **Chaque partie repart de zéro** : certains compteurs du jeu passaient d'une partie à la suivante
+  dans la même session, et les objets étaient numérotés autrement que chez les autres joueurs.
+  Contribution de yodha.
+
+### Multijoueur
+- **Double chargement au lancement d'une sauvegarde** : l'hôte n'envoie plus une deuxième copie de la
+  partie aux joueurs qui chargent encore, ce qui en faisait charger certains deux fois. Quand une
+  copie est encore refusée, le chat affiche « Double chargement évité ». Contribution de yodha.
+- **Messages réseau abîmés** : un message qui effacerait les réglages de la partie est aussi refusé.
+  Le chat nomme le joueur et ce qui a été évité (« Gel de la partie évité », « Effacement des
+  réglages de la partie évité »). Contribution de yodha.
+- **Messages coupés en fin de chargement** : un message mis en attente pendant un chargement n'est
+  plus collé à un message qui arrive encore en morceaux. Contribution de yodha.
+- **Correctifs de BetterGameExperience décidés au chargement** : la décision d'activer les correctifs
+  **[tous les joueurs]** est revérifiée au chargement et à la fermeture de l'écran de chargement, un
+  nouvel hôte après une migration la reprend (les joueurs arrivés après une migration jouaient sans
+  eux), et les joueurs ignorés le restent après un rechargement. Contribution de yodha.
+- **Jeu pas à jour** : un joueur dont le jeu n'est pas la version Steam actuelle est annoncé dans le
+  chat à son arrivée, car les correctifs réseau de BetterGameExperience ne peuvent pas fonctionner
+  sur son PC.
+- **Popup « Partie en pause »** : il ne s'empile plus pendant les chargements et ne s'affiche plus
+  par-dessus l'écran de chargement.
+- **Configuration de la partie** : les signaux d'équipe ne peuvent plus être activés ni désactivés
+  une fois la partie lancée (le changement ne faisait rien, ou laissait les signaux actifs),
+  sauvegardes comprises. No First/Last moves et les signaux d'équipe ne peuvent plus être activés
+  dans un salon où un joueur n'a pas BetterGameExperience ou pas la bonne version, mais peuvent
+  toujours être désactivés. Contribution de mariusbw.
+
+### No First/Last moves
+- L'option reste active une fois activée. L'hôte n'attend plus un joueur qui n'a pas été prêt deux
+  tours de suite, et le dit dans le chat. Un joueur qui ne reçoit pas le signal de départ de l'hôte
+  pendant 75 s commence son tour seul. Contribution de yodha.
+- **Chat plus discret** : le message d'activation se réduit à « No First/Last moves actif. », et les
+  lignes de retenue des ordres puis de départ s'affichent une fois par partie au lieu de chaque tour.
+  L'annonce « a BetterGameExperience actif » est envoyée une fois par salon, et non à chaque
+  réouverture de l'écran du salon.
+
+### Chargements plus rapides
+- Nouveaux réglages dans l'onglet BetterGameExperience, tous activés par défaut, qui raccourcissent
+  les chargements sans changer la partie : recherche plus rapide des fichiers graphiques (plusieurs
+  secondes depuis le menu principal), base de gameplay et textes des mods gardés d'un chargement à
+  l'autre quand les mods sont les mêmes (environ 1,5 s chacun), pas d'attente de la VSync sur les
+  écrans de chargement (environ 2 s, seulement si la VSync est active), un seul nettoyage Lua à la
+  fermeture de l'interface (environ 2 s avant un remap), un premier chargement allégé pour l'hôte au
+  remap (environ 10 s), et une analyse des goulets plus rapide à la génération de la carte (environ
+  2 s, même résultat). Le journal des goulets de l'IA (AI_ChokePoint.csv, 12 Mo) n'est plus écrit
+  par défaut.
+- **Threads de tâches** : les threads inoccupés gaspillent moins de temps processeur en attendant
+  (réglages dans le même onglet).
+
+### Interface
+- **Formation la plus haute en premier** : dans la liste de production, le bouton principal d'une
+  unité forme la plus haute formation que la ville peut former (armée, sinon corps ; armada, sinon
+  flotte en mer), et l'unité seule passe dans le menu déroulant en dessous. Les achats en or et en foi
+  ne changent pas. Activé par défaut. Contribution de huchenlei.
+- **Alerte d'habitations précoce** : le bandeau de vos villes montre une maison orange à une
+  habitation de la limite (croissance -50 %) et la maison rouge dès que la ville l'atteint (-75 %) ;
+  le jeu ne montrait la maison rouge qu'au-delà de la limite. Activé par défaut. Contribution de
+  huchenlei.
+- **Cartes de politique** : leurs effets ne disparaissent plus pour le reste de la partie quand
+  l'écran du gouvernement est dessiné pour la première fois au mauvais moment (vu après le
+  rechargement d'une partie) ; ils ne revenaient qu'après un autre rechargement.
+- **Drapeaux des unités** : les unités de combat qui ont des charges (légion romaine, toa, nau…)
+  montrent de nouveau leurs promotions au lieu de leurs charges ; les ouvriers, les ingénieurs
+  militaires et les autres civils et unités de soutien montrent toujours leurs charges.
+
+### Rapport de bug
+- Les journaux qui contiennent des jetons de connexion (FiraxisLive.log, EOS.log) sont exclus, et
+  les longs journaux gardent leur début et leur fin. Contribution de yodha.
+
 ## BetterGameExperience 0.11.0
 
 En multijoueur, tous les humains doivent être en 0.11.0 pour les correctifs **[tous les
