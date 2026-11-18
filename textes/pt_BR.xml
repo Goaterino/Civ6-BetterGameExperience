@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="pt_BR">
 			<Text>Com o VSync ativado, o jogo espera cada atualização da tela, o que também atrasa a criação do terreno 3D durante um carregamento. Ele é suspenso apenas nas telas de carregamento e, na partida, continua como configurado (cerca de 2 s por carregamento). Sem efeito se o VSync estiver desativado. Entra em vigor no próximo início do jogo.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="pt_BR">
+			<Text>Manter a configuração inalterada ao recarregar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="pt_BR">
+			<Text>Ao recarregar, o jogo reconstrói seu banco de dados de configuração e restaura seus textos mesmo que nada tenha mudado desde o último carregamento. Ambos são mantidos quando não mudaram; as regras do jogo são recarregadas normalmente (cerca de 3 s por recarga). Entra em vigor no próximo início do jogo.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="pt_BR">
+			<Text>Sem pausa no fim de um carregamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="pt_BR">
+			<Text>No fim de um carregamento, o jogo prepara o terreno 3D poucos hexágonos por vez e faz uma pausa entre cada etapa (LoadGameTickIntervalInMS, 16 ms por padrão). A pausa é removida apenas nessa última fase (cerca de 1,5 s por carregamento). Entra em vigor no próximo início do jogo.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="pt_BR">
 			<Text>Primeiro carregamento do remap do anfitrião sem terreno</Text>
 		</Row>

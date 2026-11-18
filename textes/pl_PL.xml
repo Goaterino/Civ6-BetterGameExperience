@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="pl_PL">
 			<Text>Gdy VSync jest włączony, gra czeka na każde odświeżenie ekranu, co spowalnia też tworzenie terenu 3D podczas wczytywania. Jest wyłączany tylko na ekranach wczytywania, a w grze pozostaje zgodnie z ustawieniem (około 2 s na wczytanie). Bez efektu, gdy VSync jest wyłączony. Działa od następnego uruchomienia gry.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="pl_PL">
+			<Text>Zachowaj niezmienioną konfigurację przy ponownym wczytaniu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="pl_PL">
+			<Text>Przy ponownym wczytaniu gra odbudowuje bazę konfiguracji i przywraca swoje teksty, nawet jeśli od ostatniego wczytania nic się nie zmieniło. Jeśli się nie zmieniły, oba są zachowywane; zasady gry są wczytywane ponownie jak zwykle (około 3 s na ponowne wczytanie). Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="pl_PL">
+			<Text>Bez przerw na końcu wczytywania</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="pl_PL">
+			<Text>Na końcu wczytywania gra przygotowuje teren 3D po kilka pól naraz i robi przerwę między krokami (LoadGameTickIntervalInMS, domyślnie 16 ms). Przerwa jest usuwana tylko w tej ostatniej fazie (około 1,5 s na wczytanie). Działa od następnego uruchomienia gry.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="pl_PL">
 			<Text>Pierwsze wczytanie remapu hosta bez terenu</Text>
 		</Row>

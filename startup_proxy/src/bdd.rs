@@ -90,6 +90,15 @@ static LOC: AtomicUsize = AtomicUsize::new(0);
 static LOC_GARDEE: AtomicBool = AtomicBool::new(false);
 /// Rejeu des textes des mods depuis la mémoire (`textes_gardes`, `on` par défaut).
 static LOC_ACTIF: AtomicBool = AtomicBool::new(false);
+/// La base de localisation telle que l'a laissée le dernier `UpdateContent` réussi, après sa mise
+/// en cache (connexion, compteur de modifications, actions des mods). Quand l'étape de
+/// configuration a été gardée (`config_gardee`), rien ne la rétablit avant l'`UpdateContent`
+/// suivant : si elle correspond encore, cet `UpdateContent` la laisse telle quelle (ni
+/// `ROLLBACK TO Origin`, ni rejeu, ni UpdateText), et le jeu, qui la voit inchangée, saute aussi
+/// la mise en cache des textes.
+static LOC_FIN: Mutex<Option<(usize, i32, Vec<u32>)>> = Mutex::new(None);
+/// L'`UpdateContent` en cours a laissé la base de localisation intacte.
+static LOC_INTACTE: AtomicBool = AtomicBool::new(false);
 
 /// Capture en cours (chargement complet) : empreinte du schéma avant UpdateText.
 static CAPTURE: Mutex<Option<localisation::Capture>> = Mutex::new(None);
@@ -145,6 +154,7 @@ unsafe extern "C" fn update_content(contenu: usize, resultat: *mut u8, rappel: *
     BASE.store(0, Ordering::Relaxed);
     LOC.store(0, Ordering::Relaxed);
     LOC_GARDEE.store(false, Ordering::Relaxed);
+    LOC_INTACTE.store(false, Ordering::Relaxed);
     let r = orig(contenu, resultat, rappel);
     DANS_UPDATE.store(false, Ordering::Relaxed);
     fin_localisation(contenu, reussi(resultat));
@@ -181,15 +191,26 @@ unsafe extern "C" fn update_content(contenu: usize, resultat: *mut u8, rappel: *
 unsafe fn fin_localisation(contenu: usize, ok: bool) {
     let loc = LOC.swap(0, Ordering::Relaxed);
     let gardee = LOC_GARDEE.swap(false, Ordering::Relaxed);
+    let intacte = LOC_INTACTE.swap(false, Ordering::Relaxed);
     // Capture commencée mais jamais lue (composants non atteints) : rien à retirer.
     CAPTURE.lock().unwrap_or_else(|e| e.into_inner()).take();
     let lu = DELTA_LU.lock().unwrap_or_else(|e| e.into_inner()).take();
     let mut delta = DELTA.lock().unwrap_or_else(|e| e.into_inner());
+    let mut fin = LOC_FIN.lock().unwrap_or_else(|e| e.into_inner());
+    *fin = None;
     if !ok {
         *delta = None;
         return;
     }
     if loc == 0 {
+        return;
+    }
+    let connexion = *((loc + CONNEXION) as *const usize);
+    if connexion != 0 {
+        *fin = Some((connexion, compteur(connexion), actions(contenu)));
+    }
+    if intacte {
+        log("localization: left as the last load built it (no rollback, no replay, no caching)");
         return;
     }
     if gardee {
@@ -208,6 +229,20 @@ unsafe fn fin_localisation(contenu: usize, ok: bool) {
 /// (UpdateText sera neutralisé), soit la capture est posée.
 unsafe extern "C" fn remise_loc(loc: usize) -> u8 {
     let orig: unsafe extern "C" fn(usize) -> u8 = std::mem::transmute(ORIG_REMISE_LOC.load(Ordering::Relaxed));
+    if DANS_UPDATE.load(Ordering::Relaxed) && LOC.load(Ordering::Relaxed) == 0 && LOC_ACTIF.load(Ordering::Relaxed) && crate::config_gardee::actif() {
+        let connexion = *((loc + CONNEXION) as *const usize);
+        let contenu = CONTENU.load(Ordering::Relaxed);
+        if connexion != 0 && contenu != 0 && gestionnaire(contenu + CADRE, b"UpdateText") != 0 {
+            let fin = LOC_FIN.lock().unwrap_or_else(|e| e.into_inner());
+            if fin.as_ref() == Some(&(connexion, compteur(connexion), actions(contenu))) {
+                LOC.store(loc, Ordering::Relaxed);
+                LOC_GARDEE.store(true, Ordering::Relaxed);
+                LOC_INTACTE.store(true, Ordering::Relaxed);
+                // « Localization database unchanged, no rollback needed. »
+                return 0;
+            }
+        }
+    }
     let r = orig(loc);
     if !DANS_UPDATE.load(Ordering::Relaxed) || LOC.load(Ordering::Relaxed) != 0 || !LOC_ACTIF.load(Ordering::Relaxed) {
         return r;

@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="it_IT">
 			<Text>Con la VSync attiva, il gioco attende ogni aggiornamento dello schermo, il che rallenta anche la creazione del terreno 3D durante un caricamento. Viene sospesa solo durante le schermate di caricamento e in partita resta come impostata (circa 2 s per caricamento). Nessun effetto se la VSync è disattivata. Ha effetto al prossimo avvio del gioco.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="it_IT">
+			<Text>Mantenere la configurazione invariata ai ricaricamenti</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="it_IT">
+			<Text>A ogni ricaricamento, il gioco ricostruisce il database di configurazione e ripristina i suoi testi anche se nulla è cambiato dall'ultimo caricamento. Entrambi vengono mantenuti se invariati; le regole di gioco vengono ricaricate come sempre (circa 3 s per ricaricamento). Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="it_IT">
+			<Text>Nessuna pausa alla fine di un caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="it_IT">
+			<Text>Alla fine di un caricamento, il gioco prepara il terreno 3D poche caselle alla volta e fa una pausa tra un passo e l'altro (LoadGameTickIntervalInMS, 16 ms di default). La pausa viene tolta solo durante quest'ultima fase (circa 1,5 s per caricamento). Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="it_IT">
 			<Text>Primo caricamento del remap dell'host senza terreno</Text>
 		</Row>

@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="en_US">
 			<Text>When VSync is on, the game waits for each screen refresh, and this also slows down the creation of the 3D terrain during a load. It is lifted during loading screens only, and stays as set in game (about 2 s per load). No effect when VSync is off. Takes effect at the next game launch.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="en_US">
+			<Text>Keep the unchanged configuration on reloads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="en_US">
+			<Text>On a reload, the game rebuilds its configuration database and reverts its texts even when nothing changed since the last load. Both are kept when unchanged; the game rules are still reloaded as usual (about 3 s per reload). Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="en_US">
+			<Text>No pause at the end of a load</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="en_US">
+			<Text>At the end of a load, the game prepares the 3D terrain a few tiles at a time and pauses between steps (LoadGameTickIntervalInMS, 16 ms by default). The pause is lifted during that last phase only (about 1.5 s per load). Takes effect at the next game launch.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="en_US">
 			<Text>Host's first remap load without terrain</Text>
 		</Row>

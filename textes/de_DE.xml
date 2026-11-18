@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="de_DE">
 			<Text>Bei aktivierter VSync wartet das Spiel auf jede Bildschirmaktualisierung, was beim Laden auch den Aufbau des 3D-Geländes verlangsamt. Sie wird nur auf Ladebildschirmen aufgehoben und bleibt im Spiel wie eingestellt (etwa 2 s pro Ladevorgang). Ohne Wirkung, wenn VSync deaktiviert ist. Wirkt ab dem nächsten Spielstart.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="de_DE">
+			<Text>Unveränderte Konfiguration beim Neuladen behalten</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="de_DE">
+			<Text>Beim Neuladen baut das Spiel seine Konfigurationsdatenbank neu auf und setzt seine Texte zurück, auch wenn sich seit dem letzten Laden nichts geändert hat. Beides wird behalten, wenn es unverändert ist; die Spielregeln werden wie gewohnt neu geladen (etwa 3 s pro Neuladen). Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="de_DE">
+			<Text>Keine Pause am Ende eines Ladevorgangs</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="de_DE">
+			<Text>Am Ende eines Ladevorgangs bereitet das Spiel das 3D-Gelände wenige Felder auf einmal vor und pausiert zwischen den Schritten (LoadGameTickIntervalInMS, standardmäßig 16 ms). Die Pause wird nur in dieser letzten Phase aufgehoben (etwa 1,5 s pro Ladevorgang). Wirkt ab dem nächsten Spielstart.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="de_DE">
 			<Text>Erster Remap-Ladevorgang des Hosts ohne Gelände</Text>
 		</Row>

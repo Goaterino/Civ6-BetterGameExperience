@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>开启垂直同步时，游戏会等待每次屏幕刷新，这也会拖慢加载时 3D 地形的创建。仅在加载画面期间解除，游戏中仍按设置保持（每次加载约 2 秒）。关闭垂直同步时无影响。下次启动游戏时生效。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="zh_Hans_CN">
+			<Text>重新加载时保留未更改的配置</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="zh_Hans_CN">
+			<Text>重新加载时，即使自上次加载以来没有任何变化，游戏也会重建其配置数据库并还原其文本。两者未变化时将予以保留；游戏规则仍照常重新加载（每次重新加载约 3 秒）。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>加载末尾不暂停</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>加载末尾，游戏每次只准备几个单元格的 3D 地形，并在每步之间暂停（LoadGameTickIntervalInMS，默认 16 毫秒）。仅在这最后阶段取消暂停（每次加载约 1.5 秒）。下次启动游戏时生效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="zh_Hans_CN">
 			<Text>重新生成地图时主机首次加载跳过地形</Text>
 		</Row>

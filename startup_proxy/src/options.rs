@@ -686,7 +686,9 @@ mod tests {
         lib += include_str!("assets.rs");
         lib += include_str!("ramasse_miettes.rs");
         lib += include_str!("bdd.rs");
+        lib += include_str!("config_gardee.rs");
         lib += include_str!("vsync.rs");
+        lib += include_str!("fin_chargement.rs");
         lib += include_str!("pool.rs");
         lib += include_str!("remap_leger.rs");
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();

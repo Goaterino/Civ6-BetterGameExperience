@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="ja_JP">
 			<Text>垂直同期が有効な場合、ゲームは画面の更新ごとに待機し、ロード中の3D地形の作成も遅くなります。ロード画面の間だけ解除され、ゲーム中は設定どおりのままです（ロード1回あたり約2秒）。垂直同期が無効なら影響はありません。次回のゲーム起動時に有効になります。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="ja_JP">
+			<Text>再読み込み時に変更のない構成を保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="ja_JP">
+			<Text>再読み込みのたびに、前回のロードから何も変わっていなくても、ゲームは構成データベースを作り直し、テキストを元に戻します。変更がなければ両方を保持します。ゲームのルールは通常どおり読み込み直されます（再読み込み1回あたり約3秒）。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="ja_JP">
+			<Text>ロードの最後に待機しない</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="ja_JP">
+			<Text>ロードの最後に、ゲームは3D地形を数タイルずつ準備し、各ステップの間で待機します（LoadGameTickIntervalInMS、既定値16ミリ秒）。この最後の段階の間だけ待機をなくします（ロード1回あたり約1.5秒）。次回のゲーム起動時に有効になります。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="ja_JP">
 			<Text>リマップ時のホストの初回ロードで地形を省略</Text>
 		</Row>

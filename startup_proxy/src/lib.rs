@@ -54,8 +54,10 @@ mod motifs;
 mod assets;
 mod ramasse_miettes;
 mod bdd;
+mod config_gardee;
 mod localisation;
 mod vsync;
+mod fin_chargement;
 mod pool;
 mod remap_leger;
 #[cfg(feature = "diag")]
@@ -140,7 +142,9 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             assets::install(exe_base);
             ramasse_miettes::install(exe_base);
             bdd::install(exe_base);
+            config_gardee::install(exe_base);
             vsync::install(exe_base);
+            fin_chargement::install(exe_base);
             pool::install(exe_base);
             remap_leger::install(exe_base);
             #[cfg(feature = "diag")]
