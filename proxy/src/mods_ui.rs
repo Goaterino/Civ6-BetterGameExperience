@@ -8,6 +8,9 @@
 //! - `ui_notifications` : bouton « tout effacer » des notifications (NotificationClear, 336tarot) ;
 //! - `ui_bandeau` : nourriture, production, population, activités moyennes par ville et luxes dans
 //!   le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) ;
+//! - `ui_luxes` : addition of BetterGameExperience to `ui_bandeau`, which it needs: a notification
+//!   for each player who has surplus luxuries the local player does not own (the ones the tooltip
+//!   of the luxury button lists) ; a click opens the deal screen with these luxuries in the deal ;
 //! - `ui_politiques` : effet chiffré des cartes de politique (Extended Policy Cards, Aristos) ;
 //! - `ui_rapports` : écran des rapports de Better Report Screen (Infixo).
 //!
@@ -34,6 +37,7 @@ static CHARGES: AtomicBool = AtomicBool::new(true);
 static ROUTES: AtomicBool = AtomicBool::new(true);
 static NOTIFICATIONS: AtomicBool = AtomicBool::new(true);
 static BANDEAU: AtomicBool = AtomicBool::new(true);
+static LUXES: AtomicBool = AtomicBool::new(true);
 static POLITIQUES: AtomicBool = AtomicBool::new(true);
 static RAPPORTS: AtomicBool = AtomicBool::new(true);
 
@@ -49,6 +53,9 @@ pub fn set_notifications(on: bool) {
 pub fn set_bandeau(on: bool) {
     BANDEAU.store(on, Ordering::Relaxed);
 }
+pub fn set_luxes(on: bool) {
+    LUXES.store(on, Ordering::Relaxed);
+}
 pub fn set_politiques(on: bool) {
     POLITIQUES.store(on, Ordering::Relaxed);
 }
@@ -60,6 +67,11 @@ fn on(flag: &AtomicBool) -> bool {
     flag.load(Ordering::Relaxed)
 }
 
+/// Luxury trade notifications: the list comes from the top panel block (`ui_bandeau`).
+fn luxes() -> bool {
+    on(&LUXES) && on(&BANDEAU)
+}
+
 /// Une reprise au moins est active : l'accroche Lua doit être posée.
 pub fn any() -> bool {
     [&CHARGES, &ROUTES, &NOTIFICATIONS, &BANDEAU, &POLITIQUES, &RAPPORTS].iter().any(|f| on(f))
@@ -68,11 +80,12 @@ pub fn any() -> bool {
 pub fn journal_reglages() -> String {
     let s = |f: &AtomicBool| if on(f) { "on" } else { "off" };
     format!(
-        "charges {}, routes {}, notifications {}, bandeau {}, politiques {}, rapports {}",
+        "charges {}, routes {}, notifications {}, bandeau {}, luxes {}, politiques {}, rapports {}",
         s(&CHARGES),
         s(&ROUTES),
         s(&NOTIFICATIONS),
         s(&BANDEAU),
+        if luxes() { "on" } else { "off" },
         s(&POLITIQUES),
         s(&RAPPORTS)
     )
@@ -99,7 +112,11 @@ const EMBARQUES: [(&str, &[u8]); 12] = [
 
 const DRAPEAUX: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/drapeaux.lua"));
 const ROUTES_CHOIX: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/routes_choix.lua"));
-const NOTIFS: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("mods/notifications.lua"));
+/// Textes des blocs de NotificationPanel.lua, une fois devant ceux qui sont insérés.
+const NOTIFS_TEXTES: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"));
+const NOTIFS: &str = include_str!("mods/notifications.lua");
+/// Block of the `ui_luxes` setting (NotificationPanel.lua), after `NOTIFS`.
+const LUXES_LUA: &str = include_str!("ui_luxes.lua");
 const BANDEAU_LUA: &str = include_str!("mods/bandeau.lua");
 const BANDEAU_XML: &str = include_str!("mods/bandeau.xml");
 const POL_ENTETE: &str = include_str!("mods/politiques_entete.lua");
@@ -345,8 +362,9 @@ pub fn patch_drapeaux(src: &[u8], charges: bool, routes: bool) -> Vec<u8> {
     out
 }
 
-/// Le bloc des notifications, juste après le joker des fichiers NotificationPanel_.
-pub fn patch_notifications(src: &[u8]) -> Result<Vec<u8>, String> {
+/// Les blocs des notifications, juste après le joker des fichiers NotificationPanel_ : leurs
+/// textes, puis le bouton d'effacement (`effacer`) et les notifications d'échange de luxes (`luxes`).
+pub fn patch_notifications(src: &[u8], effacer: bool, luxes: bool) -> Result<Vec<u8>, String> {
     const JOKER: &str = "include(\"NotificationPanel_\", true);";
     let at = match find(src, JOKER).as_slice() {
         [at] => at + JOKER.len(),
@@ -354,7 +372,13 @@ pub fn patch_notifications(src: &[u8]) -> Result<Vec<u8>, String> {
     };
     let mut out = src[..at].to_vec();
     out.extend_from_slice(b"\r\n");
-    out.extend_from_slice(NOTIFS.as_bytes());
+    out.extend_from_slice(NOTIFS_TEXTES.as_bytes());
+    if effacer {
+        out.extend_from_slice(NOTIFS.as_bytes());
+    }
+    if luxes {
+        out.extend_from_slice(LUXES_LUA.as_bytes());
+    }
     out.extend_from_slice(&src[at..]);
     Ok(out)
 }
@@ -398,8 +422,12 @@ pub fn ajouter(chunk: &str, src: &[u8], entree_bandeau: bool) -> Option<Result<(
         }
         return Some(Ok((ajoute(src, ROUTES_CHOIX), "or reçu par la destination d'une route intérieure".into())));
     }
-    if on(&NOTIFICATIONS) && is_file(chunk, "NotificationPanel.lua") {
-        return Some(patch_notifications(src).map(|t| (t, "bouton d'effacement des notifications".into())));
+    if (on(&NOTIFICATIONS) || luxes()) && is_file(chunk, "NotificationPanel.lua") {
+        let quoi: Vec<&str> = [(on(&NOTIFICATIONS), "bouton d'effacement des notifications"), (luxes(), "notifications d'échange de luxes")]
+            .iter()
+            .filter_map(|&(actif, quoi)| actif.then_some(quoi))
+            .collect();
+        return Some(patch_notifications(src, on(&NOTIFICATIONS), luxes()).map(|t| (t, quoi.join(" ; "))));
     }
     if on(&BANDEAU) && entree_bandeau {
         return Some(Ok((ajoute(src, BANDEAU_LUA), "bandeau de TopPanel Extension Pro".into())));
@@ -790,12 +818,40 @@ mod tests {
     #[test]
     fn notifications_du_jeu() {
         let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Panels\NotificationPanel.lua")) else { return };
-        let out = patch_notifications(&src).unwrap();
+        let out = patch_notifications(&src, true, true).unwrap();
         let joker = find(&out, "include(\"NotificationPanel_\", true);")[0];
         let bloc = find(&out, "BetterGameDLLs (src/mods/notifications.lua)")[0];
+        let luxes = find(&out, "Civ6RolloverProxy (src/ui_luxes.lua)")[0];
         let init = out.len() - find(&out, "Initialize();").iter().map(|&i| out.len() - i).min().unwrap();
-        assert!(joker < bloc && bloc < init);
-        assert!(patch_notifications(b"x = 1").is_err());
+        assert!(joker < bloc && bloc < luxes && luxes < init);
+        assert!(patch_notifications(b"x = 1", true, true).is_err());
+    }
+
+    /// NotificationPanel.lua : les textes une seule fois, puis les blocs des réglages actifs.
+    #[test]
+    fn notifications_blocs() {
+        const SRC: &[u8] = b"m = 1\r\ninclude(\"NotificationPanel_\", true);\r\nInitialize();";
+        const EFFACER: &str = "BetterGameDLLs (src/mods/notifications.lua)";
+        const LUXES_BLOC: &str = "Civ6RolloverProxy (src/ui_luxes.lua)";
+        for (effacer, luxes) in [(true, true), (true, false), (false, true)] {
+            let out = patch_notifications(SRC, effacer, luxes).unwrap();
+            assert!(out.starts_with(b"m = 1\r\ninclude(\"NotificationPanel_\", true);\r\n") && out.ends_with(b"\r\nInitialize();"));
+            assert_eq!(find(&out, "BGD_TXT = {").len(), 1, "textes une fois");
+            assert_eq!(find(&out, EFFACER).len(), effacer as usize);
+            assert_eq!(find(&out, LUXES_BLOC).len(), luxes as usize);
+            assert!(has(&out, "LOC_BGD_LUXES_TITRE = {") && has(&out, "LOC_BGD_LUXES_RESUME = {"));
+        }
+        let both = patch_notifications(SRC, true, true).unwrap();
+        assert!(find(&both, EFFACER)[0] < find(&both, LUXES_BLOC)[0]);
+
+        let chunk = r"C:\x\Base\Assets\UI\Panels\NotificationPanel.lua";
+        // Seul `ui_luxes` est basculé : les autres réglages servent aux tests voisins, en parallèle.
+        set_luxes(false);
+        let sans = ajouter(chunk, SRC, false).map(|r| r.unwrap().1);
+        set_luxes(true);
+        let avec = ajouter(chunk, SRC, false).map(|r| r.unwrap().1);
+        assert_eq!(sans.as_deref(), Some("bouton d'effacement des notifications"));
+        assert_eq!(avec.as_deref(), Some("bouton d'effacement des notifications ; notifications d'échange de luxes"));
     }
 
     #[test]

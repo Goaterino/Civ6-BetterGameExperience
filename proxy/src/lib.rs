@@ -13,7 +13,7 @@
 //! (on par défaut, voir `carte`), `ui_rendements=on|off`
 //! (on par défaut, voir `rendements_empire`), `tours_production=on|off` (on par défaut, voir `tours`), `ui_debordement=on|off` (on, voir
 //! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_formations`, `ui_logement` et `ui_avancement` (on, voir `ui`),
-//! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
+//! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_luxes`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `journal_chokepoints=on|off` (off, voir `journal_chokepoints`),
 //! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
@@ -262,6 +262,9 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_bandeau=") {
             mods_ui::set_bandeau(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("ui_luxes=") {
+            mods_ui::set_luxes(v.trim() != "off");
+        }
         if let Some(v) = line.trim().strip_prefix("ui_politiques=") {
             mods_ui::set_politiques(v.trim() != "off");
         }
@@ -311,6 +314,7 @@ const NOUVEAUTES_UI: &[(&str, fn())] = &[
     ("ui_routes", || mods_ui::set_routes(false)),
     ("ui_notifications", || mods_ui::set_notifications(false)),
     ("ui_bandeau", || mods_ui::set_bandeau(false)),
+    ("ui_luxes", || mods_ui::set_luxes(false)),
     ("ui_politiques", || mods_ui::set_politiques(false)),
     ("ui_rapports", || mods_ui::set_rapports(false)),
 ];
