@@ -102,7 +102,7 @@ mod tests {
             let canal = [vtable.as_ptr() as usize];
             let cellule = [0u32; 0x1e];
             let f: unsafe extern "system" fn(usize, usize) =
-                std::mem::transmute(h + (ECRITURE_CELLULE.address - patch::IMAGE_BASE) as usize);
+                std::mem::transmute(h + crate::patch::rva(ECRITURE_CELLULE.address));
             f(cellule.as_ptr() as usize, canal.as_ptr() as usize);
             assert_eq!(APPELS_CANAL.swap(0, Ordering::Relaxed), 1, "l'originale interroge le canal");
             patch::install(h, &ECRITURE_CELLULE, sans_ecriture as *const () as usize).expect("détour");

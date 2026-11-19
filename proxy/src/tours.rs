@@ -31,7 +31,7 @@
 //!
 //! Réglage `tours_production=on|off` dans rollover_proxy.cfg (on par défaut).
 
-use crate::patch::{alloc_near, rel32, write_rel32, IMAGE_BASE};
+use crate::patch::{alloc_near, rel32, write_rel32};
 use crate::log;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
@@ -77,7 +77,7 @@ const WONDER: u32 = 0x5953_bf98;
 const DISTRICT: u32 = 0x0112_d393;
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -292,9 +292,9 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
 /// Remet les `call` d'origine (les relais restent alloués, ils ne sont plus visés).
 unsafe fn on_proxy_unload_at(base: usize) {
     for (site, callee) in CALLS {
-        let at = base + (site - IMAGE_BASE) as usize;
+        let at = base + crate::patch::rva(site);
         if rd::<u8>(at) == 0xe8 {
-            if let Some(rel) = rel32(at, base + (callee - IMAGE_BASE) as usize) {
+            if let Some(rel) = rel32(at, base + crate::patch::rva(callee)) {
                 if rd::<i32>(at + 1) != rel {
                     write_rel32(at, rel);
                 }

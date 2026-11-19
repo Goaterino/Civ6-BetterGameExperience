@@ -25,7 +25,7 @@
 //! Réglage `ui_debordement=on|off` dans rollover_proxy.cfg (on par défaut).
 
 use crate::log;
-use crate::patch::{alloc_near, rel32, write_rel32, IMAGE_BASE};
+use crate::patch::{alloc_near, rel32, write_rel32};
 use crate::win;
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void};
@@ -62,7 +62,7 @@ pub fn pose() -> bool {
 }
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -220,8 +220,8 @@ pub unsafe fn on_proxy_unload() {
     if base == 0 {
         return;
     }
-    let at = base + (SITE - IMAGE_BASE) as usize;
-    if let Some(rel) = rel32(at, base + (CALLEE - IMAGE_BASE) as usize) {
+    let at = base + crate::patch::rva(SITE);
+    if let Some(rel) = rel32(at, base + crate::patch::rva(CALLEE)) {
         if rd::<u8>(at) == 0xe8 && rd::<i32>(at + 1) != rel {
             write_rel32(at, rel);
         }

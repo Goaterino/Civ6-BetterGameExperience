@@ -22,7 +22,7 @@
 //! - `fast` : la mémoire répond quand elle peut, comptée et chronométrée ;
 //! - `quiet` : comme `fast`, sans compteur ni chronomètre ni journal.
 
-use crate::patch::{self, Site, IMAGE_BASE};
+use crate::patch::{self, Site};
 use crate::{log, win};
 use std::sync::atomic::{fence, AtomicI64, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 
@@ -86,7 +86,7 @@ unsafe fn rd<T: Copy>(addr: usize) -> T {
 }
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 /// Attentes de l'IA en cours (0 ou 1 en pratique) et génération de la mémoire. La génération change

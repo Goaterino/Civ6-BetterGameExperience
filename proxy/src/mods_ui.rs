@@ -698,7 +698,7 @@ unsafe fn fin_route(a: [i32; 6]) -> Option<(i32, i32)> {
     if base == 0 {
         return None;
     }
-    let at = |s: &Site| base + s.address - crate::patch::IMAGE_BASE as usize;
+    let at = |s: &Site| base + crate::patch::rva(s.address as u64);
     let manager: unsafe extern "system" fn() -> usize = std::mem::transmute(at(&TRADE_MANAGER));
     let find: unsafe extern "system" fn(usize, *const CityKey, *const CityKey) -> usize = std::mem::transmute(at(&FIND_ROUTE));
     let end: unsafe extern "system" fn(usize, i32) -> i32 = std::mem::transmute(at(&ROUTE_END));
@@ -740,8 +740,8 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         return;
     }
     for s in [&TRADE_MANAGER, &FIND_ROUTE, &ROUTE_END] {
-        let at = base + s.address - crate::patch::IMAGE_BASE as usize;
-        let have = std::slice::from_raw_parts(at as *const u8, s.expected.len());
+        let at = base + crate::patch::rva(s.address as u64);
+        let have = crate::patch::as_known(s.address as u64, std::slice::from_raw_parts(at as *const u8, s.expected.len()));
         if have != s.expected {
             log(&format!("mods : octets inattendus en {:#x} ({have:02x?}), pas de tours des routes commerciales", s.address));
             return;
@@ -881,8 +881,8 @@ mod tests {
             })
         };
         for s in [&TRADE_MANAGER, &FIND_ROUTE, &ROUTE_END] {
-            let o = offset(s.address - crate::patch::IMAGE_BASE as usize).unwrap();
-            assert_eq!(&d[o..o + s.expected.len()], &s.expected, "{:#x}", s.address);
+            let o = offset(crate::patch::rva(s.address as u64)).unwrap();
+            assert_eq!(crate::patch::as_known(s.address as u64, &d[o..o + s.expected.len()]), s.expected, "{:#x}", s.address);
         }
     }
 

@@ -100,7 +100,7 @@ pub fn reset() {
 }
 
 fn addr(f: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (f - patch::IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(f)
 }
 
 /// Note le joueur s'il est le joueur local : seul son bandeau compte, et c'est le seul que les

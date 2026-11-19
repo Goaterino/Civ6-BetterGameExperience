@@ -21,6 +21,8 @@
 //! clients' checks, and compares them one turn late. On host and clients, that event is ignored in a
 //! barrier entered by a load whose check has not started: no round of that barrier has run yet.
 //!
+//! `reload_all.rs` uses the session found here, and is told when a round is over.
+//!
 //! Settings in `rollover_proxy.cfg`: `actif=off` installs nothing; `rejoin_barrier=off` turns off
 //! both fixes, `stale_round_guard=off` the second one alone (`on` by default). Addresses of both
 //! exes of 2026-11-05, checked at startup.
@@ -54,7 +56,7 @@ struct Exe {
     set_waiting: u64,
 }
 
-const EXES: [Exe; 2] = [
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12",
         update: 0x1_400f_7f70,
@@ -82,6 +84,34 @@ const EXES: [Exe; 2] = [
         snapshot_process: 0x1_4080_f230,
         ack_on_receipt: 0x1_407f_6c90,
         set_waiting: 0x1_4081_6210,
+    },
+    Exe {
+        name: "DX12 1.0.12.74",
+        update: 0x1_400f_8130,
+        turn_end: 0x1_400f_64a0,
+        round_complete: 0x1_400f_5e30,
+        start_check: 0x1_407f_8c40,
+        lookup: 0x1_407f_b770,
+        jobs: 0x1_4230_e728,
+        sync: 0x1_4239_2ee8,
+        net_manager: 0x1_4239_2ef8,
+        snapshot_process: 0x1_4081_0fe0,
+        ack_on_receipt: 0x1_407f_8bb0,
+        set_waiting: 0x1_4081_7a20,
+    },
+    Exe {
+        name: "DX11 1.0.12.74",
+        update: 0x1_400f_73f0,
+        turn_end: 0x1_400f_5760,
+        round_complete: 0x1_400f_50f0,
+        start_check: 0x1_407f_7a30,
+        lookup: 0x1_407f_a670,
+        jobs: 0x1_422d_70a8,
+        sync: 0x1_4235_b868,
+        net_manager: 0x1_4235_b878,
+        snapshot_process: 0x1_4080_ff60,
+        ack_on_receipt: 0x1_407f_79a0,
+        set_waiting: 0x1_4081_6e70,
     },
 ];
 
@@ -152,6 +182,9 @@ static LAST_SNAPSHOT: AtomicU64 = AtomicU64::new(0);
 /// The host reloads everyone (`partie.lua`, `.bgd_reload`): the host waits for the check of the
 /// next load, whatever the snapshot says. When it was asked; read once by the next load's barrier.
 static KEEP_NEXT: std::sync::Mutex<Option<std::time::Instant>> = std::sync::Mutex::new(None);
+/// The reload hooks are missing: a host that reloads everyone cannot be told from a lone resync, so
+/// no check after a load is skipped.
+static NEVER_SKIP: AtomicBool = AtomicBool::new(false);
 /// After this, a request to keep the check is forgotten.
 const KEEP_MAX_AGE_S: u64 = 300;
 const SNAPSHOT_KNOWN: u64 = 1 << 63;
@@ -210,9 +243,31 @@ unsafe fn complete_round(ctl: *mut u8, after_turn_end: bool) -> bool {
 
 /// Replaces the controller's "sync round complete" handler.
 unsafe extern "C-unwind" fn round_complete(ctl: *mut u8) {
-    if !complete_round(ctl, AFTER_TURN_END.load(Ordering::Relaxed)) {
+    let after_turn_end = AFTER_TURN_END.load(Ordering::Relaxed);
+    if !complete_round(ctl, after_turn_end) {
         log("rejoin: a sync round that ended before this load did not end its turn barrier");
+        return;
     }
+    if let Some((_, _, host)) = network() {
+        crate::reload_all::round_done(host, after_turn_end);
+    }
+}
+
+/// From now on every check after a load is sent (`reload_all.rs` could not install its hooks).
+pub fn never_skip() {
+    NEVER_SKIP.store(true, Ordering::Relaxed);
+}
+
+/// Are the barrier hooks in place?
+pub fn installed() -> bool {
+    TABLE.load(Ordering::Relaxed) != usize::MAX
+}
+
+/// The session the sync manager belongs to, the sync manager, and whether this machine hosts.
+pub(crate) unsafe fn network() -> Option<(usize, usize, bool)> {
+    let t = EXES.get(TABLE.load(Ordering::Relaxed))?;
+    let session = session(t)?;
+    Some((session, read(image(t.sync)), is_host(t)?))
 }
 
 /// A new game or a loaded snapshot (the in-game interface loads). The last snapshot is kept: it
@@ -327,9 +382,11 @@ unsafe extern "C-unwind" fn update(ctl: *mut u8) {
         let packed = LAST_SNAPSHOT.swap(0, Ordering::Relaxed);
         if packed != 0 {
             let load = local_reason(t).and_then(|reason| unpack(packed, reason));
-            if take_keep() {
+            // Both are read: each is a request for this load only.
+            let asked = take_keep();
+            if crate::reload_all::take_keep() || asked {
                 log(&describe("sync check after loading kept: the host reloaded everyone", load));
-            } else if skip(after_turn_end, host, load) {
+            } else if !NEVER_SKIP.load(Ordering::Relaxed) && skip(after_turn_end, host, load) {
                 *ctl.add(CTL_IN_BARRIER) = 0;
                 log(&describe("turn barrier after loading left without a sync check", load));
                 return;
@@ -455,7 +512,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {
@@ -474,7 +531,7 @@ mod tests {
     #[test]
     fn bytes_in_installed_exes() {
         for (i, name) in FILES.iter().enumerate() {
-            let Ok(file) = std::fs::read(format!(r"{EXE_DIR}\{name}")) else {
+            let Ok(file) = std::fs::read(crate::test_exe(EXE_DIR, i, name)) else {
                 eprintln!("{name} missing, test skipped");
                 continue;
             };
