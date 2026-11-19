@@ -293,6 +293,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="ja_JP">
 			<Text>TopPanel Extension Pro (号码菌 / Azukii) に基づきます。食料、生産力、人口、都市あたりの平均快適性、高級資源を都市ごとの詳細とともに上部バーに表示し、チームメイトの資源も表示します。MOD が有効な場合はそれに置き換わります。MOD がない場合は Better Spectator Mod の上部バーが維持されます。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="ja_JP">
+			<Text>高級資源の取引通知</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="ja_JP">
+			<Text>自分が持っていない高級資源を余分に持つプレイヤーごとに通知を表示します (拡張された上部バーの高級資源ボタンに表示されるものです)。クリックすると、その資源を取引に入れた状態で取引画面を開きます。右クリックで閉じます。取引できなくなると通知は消えます。拡張された上部バーが必要です。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="ja_JP">
 			<Text>政策カードの効果</Text>
 		</Row>
@@ -517,6 +523,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="ja_JP">
 			<Text>自分で閉じられる通知を消去します (取引と未決の選択は残ります)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="ja_JP">
+			<Text>高級資源の取引が可能</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="ja_JP">
+			<Text>{1} は、あなたが持っていない高級資源を余分に持っています: {2}。クリックして取引を開きます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="ja_JP">
 			<Text>操作に失敗しました</Text>

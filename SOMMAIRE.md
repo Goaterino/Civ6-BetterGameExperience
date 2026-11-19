@@ -49,7 +49,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [mods_ui](mods_ui/README.md) : mods d'interface du Workshop (Better Report Screen, Extended Policy
   Cards, TopPanel Extension Pro, NotificationClear, Better Builder Charges Tracking) repris dans le
   proxy, corrigés (RMA) et prioritaires sur le mod ; tours restants des routes commerciales
-  et or de Poundmaker dans l'écran de choix des routes ;
+  et or de Poundmaker dans l'écran de choix des routes ; notification des luxes en double des
+  autres joueurs, qui ouvre l'écran d'accord avec ces luxes déjà dans l'accord ;
 - [pantheon](analyses/pantheon/README.md) : joueur désigné pour le panthéon, égalités et restriction d'un tour
   (analyse statique) ;
 - [congres](congres/README.md) : congrès mondial en multijoueur, triplets divergents, tours passés et

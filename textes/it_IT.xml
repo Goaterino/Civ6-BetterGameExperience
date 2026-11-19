@@ -293,6 +293,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="it_IT">
 			<Text>Basato su TopPanel Extension Pro (号码菌 / Azukii). Cibo, produzione, popolazione, attrattiva media per città e risorse di lusso nella barra superiore, con il dettaglio per città; risorse dei compagni di squadra. Sostituisce la mod se è attiva. Senza la mod, la barra superiore di Better Spectator Mod viene mantenuta.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="it_IT">
+			<Text>Notifiche di scambio di risorse di lusso</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="it_IT">
+			<Text>Una notifica per ogni giocatore che ha risorse di lusso in eccesso che tu non possiedi, quelle elencate dal pulsante dei lussi della barra superiore estesa. Un clic apre la schermata dell'accordo con quelle risorse già nell'accordo; un clic destro la chiude. Scompare quando lo scambio non è più possibile. Richiede la barra superiore estesa.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="it_IT">
 			<Text>Effetto delle carte politica</Text>
 		</Row>
@@ -517,6 +523,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="it_IT">
 			<Text>Cancella le notifiche che puoi chiudere da solo (gli accordi e le scelte da fare restano).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="it_IT">
+			<Text>Scambio di risorse di lusso disponibile</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="it_IT">
+			<Text>{1} ha risorse di lusso in eccesso che tu non possiedi: {2}. Fai clic per aprire l'accordo.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="it_IT">
 			<Text>L'operazione non è riuscita</Text>

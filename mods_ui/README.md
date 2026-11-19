@@ -274,6 +274,25 @@ le mod fonctionne comme avant.
   Un luxe gagné ou perdu en cours de tour ne redessinait que les ressources : `PlayerResourceChanged`
   (joueur local) demande aussi les rendements. D'après un module séparé (`AmenitiesTopPanel_custom`),
   même calcul ; il détaillait les villes dans une infobulle à lui, en double de celle de la population.
+- **Ajout : notifications d'échange de luxes** (`ui_luxes`, novembre 2026, essayé en jeu avec une compilation locale).
+  Le bouton des luxes signale qu'un autre joueur a des luxes en double que le joueur local n'a pas,
+  mais il faut survoler le bouton pour lire lesquels et chez qui, puis aller ouvrir l'écran d'accord
+  de ce joueur. La liste de l'infobulle est désormais publiée (`LuaEvents.BGD_Luxes_Offres` :
+  `{ { joueur, luxes = { Index… } }… }`, à chaque changement, et à la demande du panneau des
+  notifications, `LuaEvents.BGD_Luxes_Demande`), et `proxy/src/ui_luxes.lua` en fait une notification
+  par joueur, à l'icône du bouton : un clic ouvre l'écran d'accord avec ces luxes déjà dans l'accord,
+  un clic droit la ferme, et elle est retirée dès que la liste n'a plus ce joueur. Pour que le retrait
+  suive, le bouton des luxes est aussi recalculé, seul, quand les luxes d'un partenaire changent
+  (`PlayerResourceChanged` d'un autre joueur), à une déclaration de guerre, une paix ou une
+  rencontre : le jeu ne redessine pas le bandeau à ces moments, et l'infobulle restait en retard.
+  Le bouton d'effacement (`ui_notifications`) reste en bas de la file : la pile du panneau croît vers
+  le haut et `InstanceManager` remet en fin de pile toute instance prise ou rendue, le bouton doit
+  donc être pris avant toute autre instance. Il l'était avant la première notification du jeu, mais
+  une notification de luxes pouvait le précéder et il se retrouvait au-dessus d'elle :
+  `ui_luxes.lua` le fait créer d'abord (`BGD_Bouton`). Au passage, le bouton est refait quand le jeu
+  détruit les instances du panneau (`NotificationRefreshRequested`, mode observateur) ; il gardait
+  jusque-là une instance détruite et ne revenait pas.
+  Détail dans [proxy/README.md](../proxy/README.md) (`ui_luxes`).
 
 ### `ui_rapports` : Better Report Screen
 
@@ -494,6 +513,7 @@ BetterGameExperience (`PROXY_REGLAGES` de `options_proxy.lua`, que vérifie `cle
 |---|---|---|
 | `ui_politiques=on\|off` | `-UiPolitiques` | on |
 | `ui_bandeau=on\|off` | `-UiBandeau` | on |
+| `ui_luxes=on\|off` | `-UiLuxes` | on |
 | `ui_rapports=on\|off` | `-UiRapports` | on |
 | `ui_notifications=on\|off` | `-UiNotifications` | on |
 | `ui_charges=on\|off` | `-UiCharges` | on |
@@ -550,6 +570,17 @@ drapeaux ont leurs tests Lua. Restent à voir en jeu :
 6. **Avec les mods encore actifs** : la version du proxy doit s'afficher seule (un seul bouton de
    notifications, pas de double bandeau, l'écran des rapports du proxy).
 7. **Les crédits**, en bas de l'onglet BetterGameExperience.
+8. **Les notifications d'échange de luxes** (`ui_luxes`) : avec un partenaire qui a un luxe en double
+   que l'on n'a pas, une notification à l'icône des luxes doit apparaître (journal : `notifications
+   d'échange de luxes` sur `NotificationPanel.lua`), son texte nommer le joueur et les luxes, et un
+   clic ouvrir l'écran d'accord avec ces luxes côté partenaire, face à une IA comme face à un humain.
+   À regarder : l'icône de 38 px dans l'emplacement de 40 px ; le retrait une fois l'échange accepté ;
+   qu'un accord rempli puis abandonné ne retire pas la notification (`MaxAmount` de
+   `GetPossibleDealItems` est demandé avec l'accord en cours : s'il décompte l'exemplaire déjà dans
+   l'accord, un partenaire qui n'a que deux exemplaires sortirait de la liste jusqu'à ce que l'accord
+   soit vidé) ; le clic droit et le bouton d'effacement, qui doit rester en bas de la file, sous
+   les notifications de luxes comme sous celles du jeu ; un `Events.NotificationRefreshRequested`
+   (rechargement) ; `Lua.log` dira tout échec (`Luxes echec …`).
 
 **Pertes connues sans le mod** : le raccourci F8 de l'écran des rapports, et les 15 icônes de police de
 BRS (quelques quartiers dans l'onglet des villes).

@@ -293,6 +293,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="en_US">
 			<Text>Based on TopPanel Extension Pro (号码菌 / Azukii). Food, production, population, average amenities per city and luxury resources in the top panel, with per-city details; teammates' resources. Replaces the mod if it is active. Without the mod, Better Spectator Mod's top panel is kept.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="en_US">
+			<Text>Luxury trade notifications</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="en_US">
+			<Text>A notification for each player who has spare luxury resources you do not own, the ones listed by the luxury button of the extended top panel. Click it to open the deal screen with those luxuries already in the deal; right-click to dismiss it. It goes away when the trade is no longer possible. Needs the extended top panel.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="en_US">
 			<Text>Policy card effects</Text>
 		</Row>
@@ -517,6 +523,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="en_US">
 			<Text>Clears the notifications you can dismiss yourself (deals and pending choices stay).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="en_US">
+			<Text>Luxury trade available</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="en_US">
+			<Text>{1} has spare luxuries you do not own: {2}. Click to open the deal.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="en_US">
 			<Text>The operation failed</Text>
