@@ -112,6 +112,14 @@ correctif.
 **DX11 et DX12.** Les deux exe chargent le même `GameCore_XP2_FinalRelease.dll` : le correctif ne
 dépend pas de l'exe.
 
+**Compatibilité 1.0.12.74.** Les quatre appels du cache et les prédicteurs de la file restent aux
+mêmes adresses, mais leurs dépendances ont changé. Par exemple, le gestionnaire des joueurs passe
+de `180306b80` à `180305dc0`, et la recherche d'un bâtiment de `1802209a0` à `1802210a0`.
+Vérifier seulement les quatre appels du cache laissait donc installer un correctif dont les
+adresses internes étaient périmées. `tours.rs` vérifie maintenant quinze appels natifs des chemins
+de prévision et de progression, puis choisit les adresses de la version .72 ou .74. Les quinze
+doivent appartenir à la même version. Sinon, le compteur du jeu est conservé.
+
 **Le chemin `18058e4e0`.** Il appelle `1800fe300` directement quand il a la vraie file (sinon il
 passe par le cache, qui est corrigé). Il reste non corrigé : on n'a pas établi s'il sert à
 l'interface ou aux scripts de règles.

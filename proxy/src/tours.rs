@@ -37,6 +37,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 static ENABLED: AtomicBool = AtomicBool::new(true);
 static BASE: AtomicUsize = AtomicUsize::new(0);
+static LAYOUT: AtomicUsize = AtomicUsize::new(0);
 static PATCHED_BASE: AtomicUsize = AtomicUsize::new(0);
 
 pub fn set_enabled(on: bool) {
@@ -51,24 +52,63 @@ const CALLS: [(u64, u64); 4] = [
     (0x1_8006_c7b5, BY_HASH),
 ];
 
-// Fonctions de l'originale, adresses Ghidra.
+// The UI call sites and the two original queue functions stayed put in 1.0.12.74.
 const HEAD: u64 = 0x1_800f_e9b0; // (file) -> tours de l'élément en tête
 const BY_HASH: u64 = 0x1_800f_e300; // (file, hash, formation) -> tours
-const PREDICT_UNIT: u64 = 0x1_800f_e8b0; // (file, index, formation, &bonus)
-const PREDICT_BUILDING: u64 = 0x1_800f_e420; // (file, index, &bonus, -1, -1)
-const PREDICT_DISTRICT: u64 = 0x1_800f_e610; // (file, index, -1, -1, &multiplicateur, 0)
-const PREDICT_PROJECT: u64 = 0x1_800f_e780; // (file, index, &bonus du multiplicateur)
-const BUILDINGS: u64 = 0x1_807d_04a0; // () -> table des bâtiments (vecteur de lignes)
-const UNITS: u64 = 0x1_807d_1b00;
-const DISTRICTS: u64 = 0x1_807d_08e0;
-const PROJECTS: u64 = 0x1_807d_13a0;
-const FIND_BUILDING: u64 = 0x1_8022_09a0; // (table, hash) -> ligne ou nul ; index en +0x14
-const FIND_UNIT: u64 = 0x1_8006_78d0;
-const FIND_INDEXED: u64 = 0x1_801a_eec0; // districts et projets
-const PLAYERS: u64 = 0x1_8030_6b80; // () -> joueurs ; +0x20 : tableau de pointeurs
-const PLAYER: u64 = 0x1_8004_4f00; // (id joueur) -> joueur (bonus par unité en +0x6c8)
-const BONUSES: u64 = 0x1_8026_10b0; // (joueur) -> Player_Bonuses
-const FLAT_BONUS: u64 = 0x1_8026_10f0; // (bonus, hash) -> GetFlatBonus
+
+// Native call site and target RVAs in GameCore 1.0.12.72 and .74. Check the calls in the
+// game's production code before installing. All helpers must belong to the same layout.
+#[derive(Clone, Copy)]
+struct GameCall {
+    site: usize,
+    targets: [usize; 2],
+}
+
+impl GameCall {
+    const fn new(site: usize, targets: [usize; 2]) -> Self {
+        Self { site, targets }
+    }
+
+    unsafe fn matches(self, base: usize, layout: usize) -> bool {
+        let at = base + self.site;
+        if rd::<u8>(at) != 0xe8 {
+            return false;
+        }
+        let displacement = std::ptr::read_unaligned((at + 1) as *const i32);
+        (at + 5).wrapping_add_signed(displacement as isize) == base + self.targets[layout]
+    }
+
+    fn address(self) -> usize {
+        BASE.load(Ordering::Relaxed) + self.targets[LAYOUT.load(Ordering::Relaxed)]
+    }
+}
+
+// GetTurnsLeft(hash), the unit predictor, and the unit production progress calculation.
+const PREDICT_UNIT: GameCall = GameCall::new(0xfe381, [0xfe8b0; 2]);
+const PREDICT_BUILDING: GameCall = GameCall::new(0xfe347, [0xfe420; 2]);
+const PREDICT_DISTRICT: GameCall = GameCall::new(0xfe3c9, [0xfe610; 2]);
+const PREDICT_PROJECT: GameCall = GameCall::new(0xfe400, [0xfe780; 2]);
+const BUILDINGS: GameCall = GameCall::new(0xfe314, [0x7d04a0, 0x7d04e0]);
+const UNITS: GameCall = GameCall::new(0xfe357, [0x7d1b00, 0x7d1b40]);
+const DISTRICTS: GameCall = GameCall::new(0xfe391, [0x7d08e0, 0x7d0920]);
+const PROJECTS: GameCall = GameCall::new(0xfe3d9, [0x7d13a0, 0x7d13e0]);
+const FIND_BUILDING: GameCall = GameCall::new(0xfe320, [0x2209a0, 0x2210a0]);
+const FIND_UNIT: GameCall = GameCall::new(0xfe363, [0x678d0; 2]);
+const FIND_INDEXED: GameCall = GameCall::new(0xfe39d, [0x1aeec0, 0x1af580]);
+const PLAYERS: GameCall = GameCall::new(0x1058e6, [0x306b80, 0x305dc0]);
+const PLAYER: GameCall = GameCall::new(0xfe90e, [0x44f00; 2]);
+const BONUSES: GameCall = GameCall::new(0x10593c, [0x2610b0, 0x261090]);
+const FLAT_BONUS: GameCall = GameCall::new(0x105949, [0x2610f0, 0x2610d0]);
+
+const HELPERS: [GameCall; 15] = [
+    PREDICT_UNIT, PREDICT_BUILDING, PREDICT_DISTRICT, PREDICT_PROJECT,
+    BUILDINGS, UNITS, DISTRICTS, PROJECTS, FIND_BUILDING, FIND_UNIT, FIND_INDEXED,
+    PLAYERS, PLAYER, BONUSES, FLAT_BONUS,
+];
+
+unsafe fn production_layout(base: usize) -> Option<usize> {
+    (0..2).find(|&layout| HELPERS.iter().all(|call| call.matches(base, layout)))
+}
 
 // Hachages des bonus plats lus par la progression (noms déduits, voir l'analyse).
 const OVERALL: u32 = 0xc1a0_05d2;
@@ -84,13 +124,13 @@ unsafe fn rd<T: Copy>(addr: usize) -> T {
     std::ptr::read(addr as *const T)
 }
 
-unsafe fn call0(f: u64) -> usize {
-    let f: unsafe extern "system" fn() -> usize = std::mem::transmute(gc(f));
+unsafe fn call0(f: GameCall) -> usize {
+    let f: unsafe extern "system" fn() -> usize = std::mem::transmute(f.address());
     f()
 }
 
-unsafe fn call2(f: u64, a: usize, b: usize) -> usize {
-    let f: unsafe extern "system" fn(usize, usize) -> usize = std::mem::transmute(gc(f));
+unsafe fn call2(f: GameCall, a: usize, b: usize) -> usize {
+    let f: unsafe extern "system" fn(usize, usize) -> usize = std::mem::transmute(f.address());
     f(a, b)
 }
 
@@ -166,7 +206,7 @@ unsafe fn unit(queue: usize, index: i32, formation: u32) -> i32 {
             bonus = scale(m, f) - m;
         }
     }
-    let p: unsafe extern "system" fn(usize, i32, u32, *mut i32) -> i32 = std::mem::transmute(gc(PREDICT_UNIT));
+    let p: unsafe extern "system" fn(usize, i32, u32, *mut i32) -> i32 = std::mem::transmute(PREDICT_UNIT.address());
     p(queue, index, formation, &mut bonus)
 }
 
@@ -184,7 +224,7 @@ unsafe fn building(queue: usize, index: i32) -> i32 {
             bonus = scale(m, f) - m;
         }
     }
-    let p: unsafe extern "system" fn(usize, i32, *mut i32, i32, i32) -> i32 = std::mem::transmute(gc(PREDICT_BUILDING));
+    let p: unsafe extern "system" fn(usize, i32, *mut i32, i32, i32) -> i32 = std::mem::transmute(PREDICT_BUILDING.address());
     p(queue, index, &mut bonus, -1, -1)
 }
 
@@ -197,7 +237,7 @@ unsafe fn district(queue: usize, index: i32) -> i32 {
             mult = f;
         }
     }
-    let p: unsafe extern "system" fn(usize, i32, i32, i32, *mut i32, usize) -> i32 = std::mem::transmute(gc(PREDICT_DISTRICT));
+    let p: unsafe extern "system" fn(usize, i32, i32, i32, *mut i32, usize) -> i32 = std::mem::transmute(PREDICT_DISTRICT.address());
     p(queue, index, -1, -1, &mut mult, 0)
 }
 
@@ -207,7 +247,7 @@ unsafe fn project(queue: usize, index: i32) -> i32 {
     if let Some(o) = Owner::of(queue) {
         bonus = factor(o.flat(OVERALL)) - 256;
     }
-    let p: unsafe extern "system" fn(usize, i32, *mut i32) -> i32 = std::mem::transmute(gc(PREDICT_PROJECT));
+    let p: unsafe extern "system" fn(usize, i32, *mut i32) -> i32 = std::mem::transmute(PREDICT_PROJECT.address());
     p(queue, index, &mut bonus)
 }
 
@@ -253,7 +293,12 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
     if !ENABLED.load(Ordering::Relaxed) {
         return;
     }
+    let Some(layout) = production_layout(base) else {
+        log("tours : fonctions de production inconnues, compteur d'origine conservé");
+        return;
+    };
     BASE.store(base, Ordering::Relaxed);
+    LAYOUT.store(layout, Ordering::Relaxed);
     // Chaque site doit être un `call` vers la fonction attendue : sinon, autre version, rien n'est posé.
     for (site, callee) in CALLS {
         let at = gc(site);
@@ -314,6 +359,28 @@ pub unsafe fn on_proxy_unload() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_production_helpers_must_match_one_layout() {
+        let mut image = vec![0u8; HELPERS.iter().map(|call| call.site + 5).max().unwrap()];
+        let write_call = |image: &mut [u8], call: GameCall, layout: usize| {
+            image[call.site] = 0xe8;
+            let offset = rel32(call.site, call.targets[layout]).unwrap();
+            image[call.site + 1..call.site + 5].copy_from_slice(&offset.to_le_bytes());
+        };
+        let base = image.as_ptr() as usize;
+        for layout in 0..2 {
+            for call in HELPERS {
+                write_call(&mut image, call, layout);
+            }
+            assert_eq!(unsafe { production_layout(base) }, Some(layout));
+            write_call(&mut image, PLAYERS, 1 - layout);
+            assert_eq!(unsafe { production_layout(base) }, None);
+            write_call(&mut image, PLAYERS, layout);
+            image[PLAYER.site] = 0xe9;
+            assert_eq!(unsafe { production_layout(base) }, None);
+        }
+    }
 
     #[test]
     fn facteurs_du_jeu() {
