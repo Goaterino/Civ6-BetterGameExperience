@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- Civ6RolloverProxy (src/ui_luxes.lua), inserted by the proxy into NotificationPanel.lua right
 -- after include("NotificationPanel_", true), like src/mods/notifications.lua, with `ui_luxes=on`
--- (and `ui_bandeau=on`, which computes the list): a notification for each player who has surplus
+-- (off by default; and `ui_bandeau=on`, which computes the list): a notification for each player who has surplus
 -- luxuries the local player does not own.
 --
 -- The top panel (src/mods/bandeau.lua) already marks its luxury button when another player has

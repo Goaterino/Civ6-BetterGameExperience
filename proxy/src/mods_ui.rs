@@ -8,7 +8,7 @@
 //! - `ui_notifications` : bouton « tout effacer » des notifications (NotificationClear, 336tarot) ;
 //! - `ui_bandeau` : nourriture, production, population, activités moyennes par ville et luxes dans
 //!   le bandeau (TopPanel Extension Pro, 号码菌 / Azukii) ;
-//! - `ui_luxes` : addition of BetterGameExperience to `ui_bandeau`, which it needs: a notification
+//! - `ui_luxes` (off by default) : addition of BetterGameExperience to `ui_bandeau`, which it needs: a notification
 //!   for each player who has surplus luxuries the local player does not own (the ones the tooltip
 //!   of the luxury button lists) ; a click opens the deal screen with these luxuries in the deal ;
 //! - `ui_politiques` : effet chiffré des cartes de politique (Extended Policy Cards, Aristos) ;
@@ -37,7 +37,7 @@ static CHARGES: AtomicBool = AtomicBool::new(true);
 static ROUTES: AtomicBool = AtomicBool::new(true);
 static NOTIFICATIONS: AtomicBool = AtomicBool::new(true);
 static BANDEAU: AtomicBool = AtomicBool::new(true);
-static LUXES: AtomicBool = AtomicBool::new(true);
+static LUXES: AtomicBool = AtomicBool::new(false);
 static POLITIQUES: AtomicBool = AtomicBool::new(true);
 static RAPPORTS: AtomicBool = AtomicBool::new(true);
 
@@ -846,10 +846,11 @@ mod tests {
 
         let chunk = r"C:\x\Base\Assets\UI\Panels\NotificationPanel.lua";
         // Seul `ui_luxes` est basculé : les autres réglages servent aux tests voisins, en parallèle.
-        set_luxes(false);
+        // Off par défaut, et rendu à son défaut.
         let sans = ajouter(chunk, SRC, false).map(|r| r.unwrap().1);
         set_luxes(true);
         let avec = ajouter(chunk, SRC, false).map(|r| r.unwrap().1);
+        set_luxes(false);
         assert_eq!(sans.as_deref(), Some("bouton d'effacement des notifications"));
         assert_eq!(avec.as_deref(), Some("bouton d'effacement des notifications ; notifications d'échange de luxes"));
     }
