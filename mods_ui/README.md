@@ -274,7 +274,8 @@ le mod fonctionne comme avant.
   Un luxe gagné ou perdu en cours de tour ne redessinait que les ressources : `PlayerResourceChanged`
   (joueur local) demande aussi les rendements. D'après un module séparé (`AmenitiesTopPanel_custom`),
   même calcul ; il détaillait les villes dans une infobulle à lui, en double de celle de la population.
-- **Ajout : notifications d'échange de luxes** (`ui_luxes`, novembre 2026, essayé en jeu avec une compilation locale).
+- **Ajout : notifications d'échange de luxes** (`ui_luxes`, désactivé par défaut, novembre 2026,
+  essayé en jeu avec une compilation locale).
   Le bouton des luxes signale qu'un autre joueur a des luxes en double que le joueur local n'a pas,
   mais il faut survoler le bouton pour lire lesquels et chez qui, puis aller ouvrir l'écran d'accord
   de ce joueur. La liste de l'infobulle est désormais publiée (`LuaEvents.BGD_Luxes_Offres` :
@@ -513,7 +514,7 @@ BetterGameExperience (`PROXY_REGLAGES` de `options_proxy.lua`, que vérifie `cle
 |---|---|---|
 | `ui_politiques=on\|off` | `-UiPolitiques` | on |
 | `ui_bandeau=on\|off` | `-UiBandeau` | on |
-| `ui_luxes=on\|off` | `-UiLuxes` | on |
+| `ui_luxes=on\|off` | `-UiLuxes` | off |
 | `ui_rapports=on\|off` | `-UiRapports` | on |
 | `ui_notifications=on\|off` | `-UiNotifications` | on |
 | `ui_charges=on\|off` | `-UiCharges` | on |
@@ -570,8 +571,8 @@ drapeaux ont leurs tests Lua. Restent à voir en jeu :
 6. **Avec les mods encore actifs** : la version du proxy doit s'afficher seule (un seul bouton de
    notifications, pas de double bandeau, l'écran des rapports du proxy).
 7. **Les crédits**, en bas de l'onglet BetterGameExperience.
-8. **Les notifications d'échange de luxes** (`ui_luxes`) : avec un partenaire qui a un luxe en double
-   que l'on n'a pas, une notification à l'icône des luxes doit apparaître (journal : `notifications
+8. **Les notifications d'échange de luxes** (`ui_luxes=on`, désactivé par défaut) : avec un
+   partenaire qui a un luxe en double que l'on n'a pas, une notification à l'icône des luxes doit apparaître (journal : `notifications
    d'échange de luxes` sur `NotificationPanel.lua`), son texte nommer le joueur et les luxes, et un
    clic ouvrir l'écran d'accord avec ces luxes côté partenaire, face à une IA comme face à un humain.
    À regarder : l'icône de 38 px dans l'emplacement de 40 px ; le retrait une fois l'échange accepté ;

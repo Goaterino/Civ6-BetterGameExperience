@@ -105,9 +105,9 @@ param(
     [ValidateSet("on", "off")]
     [string]$UiBandeau = "on",
     # Notification for each player who has surplus luxuries the local player does not own; a click
-    # opens the deal screen with them in the deal. Needs -UiBandeau on.
+    # opens the deal screen with them in the deal. Off by default. Needs -UiBandeau on.
     [ValidateSet("on", "off")]
-    [string]$UiLuxes = "on",
+    [string]$UiLuxes = "off",
     [ValidateSet("on", "off")]
     [string]$UiPolitiques = "on",
     [ValidateSet("on", "off")]
