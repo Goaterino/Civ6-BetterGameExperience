@@ -19,7 +19,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour, bouton
   « Signaler un bug » du menu Échap, garde des messages réseau contre le gel à la déconnexion
   d'un joueur ; [rapport_worker](rapport_worker/README.md) : le relais
-  Cloudflare qui reçoit les rapports et les publie dans le forum Discord ;
+  Cloudflare qui reçoit les rapports et les publie dans le forum Discord, et
+  [ANALYSE.md](rapport_worker/ANALYSE.md) : récupérer un rapport (`rapports.ps1`) et l'analyser ;
 - [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe`, et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
