@@ -234,10 +234,10 @@
 			<Text>On your city banners, an orange house appears when a city is one Housing below its cap (growth slowed by 50%), and the red house as soon as it is at the cap (75%). Without this option, the game only shows the red house once the city is over the cap. Display only.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="en_US">
-			<Text>Shift+click and Ctrl+click on deal resources</Text>
+			<Text>Shift+click and Ctrl+click in the deal screen</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="en_US">
-			<Text>In the deal screen, Shift+click on an available resource puts as many of it in the deal as the deal accepts, and Ctrl+click puts 10 more. Without this option, each click adds one, and a larger amount has to be typed in the amount box. Local only: no effect on other players.</Text>
+			<Text>In the deal screen, on an available resource, gold, gold per turn or Diplomatic Favor, Shift+click puts as much in the deal as the deal accepts, and Ctrl+click adds ten times a normal click: 10 of a resource, 1000 gold, 100 gold per turn, 10 Diplomatic Favor. Without this option, a larger amount has to be typed in the amount box. Local only: no effect on other players.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
 			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>

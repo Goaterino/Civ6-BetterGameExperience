@@ -234,10 +234,10 @@
 			<Text>Sullo stendardo delle tue città compare una casa arancione quando alla città manca 1 sola abitazione al limite (crescita rallentata del 50%), e la casa rossa non appena è al limite (75%). Senza questa opzione, il gioco mostra la casa rossa solo quando la città supera il limite. Solo visualizzazione.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="it_IT">
-			<Text>Maiusc+clic e Ctrl+clic sulle risorse di un accordo</Text>
+			<Text>Maiusc+clic e Ctrl+clic nella schermata degli accordi</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="it_IT">
-			<Text>Nella schermata degli accordi, Maiusc+clic su una risorsa disponibile ne aggiunge quante l'accordo ne accetta, e Ctrl+clic ne aggiunge 10. Senza questa opzione, ogni clic ne aggiunge una, e una quantità maggiore va digitata nel campo della quantità. Solo locale: nessun effetto sugli altri giocatori.</Text>
+			<Text>Nella schermata degli accordi, su una risorsa, sull'oro, sull'oro per turno o sul supporto diplomatico disponibili, Maiusc+clic ne aggiunge quanto l'accordo ne accetta, e Ctrl+clic aggiunge dieci volte un clic normale: 10 di una risorsa, 1000 oro, 100 oro per turno, 10 di supporto diplomatico. Senza questa opzione, una quantità maggiore va digitata nel campo della quantità. Solo locale: nessun effetto sugli altri giocatori.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="it_IT">
 			<Text>Sconto del distretto: -{1}% (hai meno distretti di questo tipo della tua media).</Text>

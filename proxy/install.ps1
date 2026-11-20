@@ -82,7 +82,8 @@ param(
     # Early housing warning on the city banner: orange house at -50% growth, red at -75%.
     [ValidateSet("on", "off")]
     [string]$UiLogement = "on",
-    # Deal screen: Shift+click on an available resource puts as many as the deal accepts, Ctrl+click 10 more.
+    # Deal screen: Shift+click on an available resource, gold or favor puts as much as the deal accepts,
+    # Ctrl+click ten times what a click adds.
     [ValidateSet("on", "off")]
     [string]$UiAccordQuantites = "on",
     # Science (culture) placée / coût de la technologie et du dogme en cours, en haut à gauche.

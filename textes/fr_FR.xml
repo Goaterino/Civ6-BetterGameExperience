@@ -234,10 +234,10 @@
 			<Text>Sur le bandeau de vos villes, une maison orange apparaît quand il ne reste qu'une habitation avant la limite (croissance ralentie de 50 %), et la maison rouge dès que la limite est atteinte (75 %). Sans cette option, le jeu n'affiche la maison rouge qu'une fois la limite dépassée. Affichage seulement.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="fr_FR">
-			<Text>Maj+clic et Ctrl+clic sur les ressources d'un accord</Text>
+			<Text>Maj+clic et Ctrl+clic dans l'écran d'accord</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="fr_FR">
-			<Text>Dans l'écran d'accord, Maj+clic sur une ressource disponible en met autant que l'accord en accepte, et Ctrl+clic en ajoute 10. Sans cette option, chaque clic en ajoute une, et une quantité plus grande doit être saisie dans la zone de quantité. Purement local : sans effet sur les autres joueurs.</Text>
+			<Text>Dans l'écran d'accord, sur une ressource, l'or, l'or par tour ou la faveur diplomatique disponibles, Maj+clic en met autant que l'accord en accepte, et Ctrl+clic ajoute dix fois un clic normal : 10 d'une ressource, 1000 d'or, 100 d'or par tour, 10 de faveur diplomatique. Sans cette option, une quantité plus grande doit être saisie dans la zone de quantité. Purement local : sans effet sur les autres joueurs.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
 			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>

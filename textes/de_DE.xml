@@ -234,10 +234,10 @@
 			<Text>Im Banner eurer Städte erscheint ein orangefarbenes Haus, wenn nur noch 1 Wohnraum bis zur Obergrenze frei ist (Wachstum um 50 % gesenkt), und das rote Haus, sobald die Obergrenze erreicht ist (75 %). Ohne diese Option zeigt das Spiel das rote Haus erst, wenn die Obergrenze überschritten ist. Nur Anzeige.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="de_DE">
-			<Text>Umschalt+Klick und Strg+Klick auf Ressourcen im Abkommen</Text>
+			<Text>Umschalt+Klick und Strg+Klick im Abkommensbildschirm</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="de_DE">
-			<Text>Im Abkommensbildschirm fügt Umschalt+Klick auf eine verfügbare Ressource so viele hinzu, wie das Abkommen zulässt, und Strg+Klick fügt 10 hinzu. Ohne diese Option fügt jeder Klick eine hinzu, und eine größere Menge muss im Mengenfeld eingegeben werden. Rein lokal: keine Auswirkung auf andere Spieler.</Text>
+			<Text>Im Abkommensbildschirm fügt Umschalt+Klick auf eine verfügbare Ressource, Gold, Gold pro Runde oder Diplomatische Gunst so viel hinzu, wie das Abkommen zulässt, und Strg+Klick das Zehnfache eines normalen Klicks: 10 einer Ressource, 1000 Gold, 100 Gold pro Runde, 10 Diplomatische Gunst. Ohne diese Option muss eine größere Menge im Mengenfeld eingegeben werden. Rein lokal: keine Auswirkung auf andere Spieler.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="de_DE">
 			<Text>Bezirksrabatt: -{1} % (weniger Bezirke dieses Typs als euer Durchschnitt).</Text>

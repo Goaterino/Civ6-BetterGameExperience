@@ -234,10 +234,10 @@
 			<Text>No estandarte de suas cidades, uma casa laranja aparece quando falta só 1 habitação para o limite (crescimento diminuído em 50%), e a casa vermelha assim que a cidade está no limite (75%). Sem esta opção, o jogo só mostra a casa vermelha depois que a cidade passa do limite. Apenas exibição.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="pt_BR">
-			<Text>Shift+clique e Ctrl+clique nos recursos de um acordo</Text>
+			<Text>Shift+clique e Ctrl+clique na tela de acordo</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="pt_BR">
-			<Text>Na tela de acordo, Shift+clique em um recurso disponível adiciona tantos quantos o acordo aceita, e Ctrl+clique adiciona 10. Sem esta opção, cada clique adiciona um, e uma quantidade maior precisa ser digitada no campo de quantidade. Apenas local: sem efeito sobre os outros jogadores.</Text>
+			<Text>Na tela de acordo, em um recurso, ouro, ouro por turno ou Favorecimento Diplomático disponível, Shift+clique adiciona tanto quanto o acordo aceita, e Ctrl+clique adiciona dez vezes um clique normal: 10 de um recurso, 1000 de ouro, 100 de ouro por turno, 10 de Favorecimento Diplomático. Sem esta opção, uma quantidade maior precisa ser digitada no campo de quantidade. Apenas local: sem efeito sobre os outros jogadores.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pt_BR">
 			<Text>Desconto de distrito: -{1}% (você tem menos distritos deste tipo que a sua média).</Text>

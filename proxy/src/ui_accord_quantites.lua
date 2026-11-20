@@ -1,17 +1,23 @@
 -- ===========================================================================
 -- Civ6RolloverProxy (src/ui_accord_quantites.lua), appended by the proxy to the end of
--- DiplomacyDealView.lua with `ui_accord_quantites=on`: quantity shortcuts on the resources of the
--- "available" column of the deal screen.
---   Shift+click : as many of the resource as the deal accepts ;
---   Ctrl+click  : 10 more (or what is left).
+-- DiplomacyDealView.lua with `ui_accord_quantites=on`: quantity shortcuts on the resources, the
+-- gold, the gold per turn and the diplomatic favor of the "available" column of the deal screen.
+--   Shift+click : as much as the deal accepts ;
+--   Ctrl+click  : ten times what a click adds (or what is left): 10 of a resource, 1000 gold,
+--                 100 gold per turn, 10 favor.
 --
--- The game adds one unit per click. Asking for a whole stock of a strategic resource takes a
--- click on the available icon, a click on the icon in the deal, a number typed in the amount
--- editor ("1111") and a confirmation.
+-- The game adds one unit of a resource per click (100 gold, 10 gold per turn, 1 favor). Asking
+-- for a whole stock of a strategic resource takes a click on the available icon, a click on the
+-- icon in the deal, a number typed in the amount editor ("1111") and a confirmation.
 --
--- OnClickAvailableResource is wrapped (the game's, or the one a "DiplomacyDealView_" file put in
--- its place: XP2, a mod; the wildcard include runs before this block). A plain click goes to the
--- game untouched. With Shift or Ctrl held:
+-- Gold and favor. OnClickAvailableOneTimeGold, OnClickAvailableMultiTurnGold and
+-- OnClickAvailableOneTimeFavor (XP2) receive the amount to add from the icon's callback and cap
+-- it themselves by GetMaxAmount. They are wrapped and only that amount changes: times 10 with
+-- Ctrl, more than any treasury with Shift. The rest is the game's click, refreshes included.
+--
+-- Resources. OnClickAvailableResource takes no amount. It is wrapped (the game's, or the one a
+-- "DiplomacyDealView_" file put in its place: XP2, a mod; the wildcard include runs before this
+-- block). A plain click goes to the game untouched. With Shift or Ctrl held:
 --   1. the game's own click runs first. It decides everything a click decides: whose demand or
 --      gift cannot be changed, which item of the deal receives the unit (the 30-turn one, or the
 --      one-time one of a stockpiled resource), a new item and its duration, the sound ;
@@ -42,6 +48,9 @@ do
 		BGD_AccordQuantites = true;
 
 		local PAS_CTRL = 10;
+		-- Shift on gold and favor: more than a player can have, capped by the game's click. A
+		-- finite number, the click adds it to the amount already in the deal.
+		local TOUT = 1000000000;
 
 		local OnClickAvailableResource_jeu = OnClickAvailableResource;
 		local InputHandler_jeu = InputHandler;
@@ -69,6 +78,37 @@ do
 			pcall(ReadModifiers, pInputStruct);
 			return InputHandler_jeu(pInputStruct);
 		end, true);
+
+		-- Gold and favor: the amount the icon's callback gives to the click.
+		local function Scaled(iAddAmount)
+			if type(iAddAmount) ~= "number" then
+				return iAddAmount;
+			elseif m_Maj then
+				return TOUT;
+			elseif m_Ctrl then
+				return iAddAmount * PAS_CTRL;
+			end
+			return iAddAmount;
+		end
+
+		if type(OnClickAvailableOneTimeGold) == "function" then
+			local OnClickAvailableOneTimeGold_jeu = OnClickAvailableOneTimeGold;
+			function OnClickAvailableOneTimeGold(player, iAddAmount, ...)
+				return OnClickAvailableOneTimeGold_jeu(player, Scaled(iAddAmount), ...);
+			end
+		end
+		if type(OnClickAvailableMultiTurnGold) == "function" then
+			local OnClickAvailableMultiTurnGold_jeu = OnClickAvailableMultiTurnGold;
+			function OnClickAvailableMultiTurnGold(player, iAddAmount, ...)
+				return OnClickAvailableMultiTurnGold_jeu(player, Scaled(iAddAmount), ...);
+			end
+		end
+		if type(OnClickAvailableOneTimeFavor) == "function" then
+			local OnClickAvailableOneTimeFavor_jeu = OnClickAvailableOneTimeFavor;
+			function OnClickAvailableOneTimeFavor(player, iAddAmount, ...)
+				return OnClickAvailableOneTimeFavor_jeu(player, Scaled(iAddAmount), ...);
+			end
+		end
 
 		-- Amounts of the deal items of this resource given by this player: { [item id] = amount }.
 		local function Amounts(player, resourceType)

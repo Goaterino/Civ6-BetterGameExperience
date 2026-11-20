@@ -41,8 +41,9 @@
 //!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
 //!   (-75%), where the game itself only shows it over the cap ;
 //! - `ui_accord_quantites=on|off` (on) : adds `ui_accord_quantites.lua` to DiplomacyDealView.lua.
-//!   On a resource of the "available" column of the deal screen, Shift+click puts as many as the
-//!   deal accepts, Ctrl+click 10 more, where the game adds one per click ;
+//!   On a resource, the gold, the gold per turn or the favor of the "available" column of the deal
+//!   screen, Shift+click puts as much as the deal accepts, Ctrl+click ten times what a click adds
+//!   (10 of a resource, 1000 gold, 100 gold per turn, 10 favor) ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -867,7 +868,7 @@ const ACCORD_QUANTITES_NAMES: [&str; 5] = [
 ];
 
 /// DiplomacyDealView.lua followed by `ui_accord_quantites.lua`: Shift+click and Ctrl+click on an
-/// available resource of the deal screen (`ui_accord_quantites` setting).
+/// available resource, gold or favor of the deal screen (`ui_accord_quantites` setting).
 pub fn patch_accord_quantites(src: &[u8]) -> Result<Vec<u8>, String> {
     let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
     if let Some(missing) = ACCORD_QUANTITES_NAMES.iter().find(|n| !has(n)) {
@@ -1311,7 +1312,7 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         let fixed = if ACCORD_QUANTITES.load(Ordering::Relaxed) {
             match patch_accord_quantites(fixed.as_deref().unwrap_or(src)) {
                 Ok(text) => {
-                    what.push("Maj+clic et Ctrl+clic sur une ressource disponible".into());
+                    what.push("Maj+clic et Ctrl+clic sur les ressources, l'or et la faveur disponibles".into());
                     Some(text)
                 }
                 Err(e) => {
