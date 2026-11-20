@@ -92,7 +92,25 @@ const fn dispatch_prologue(disp: [u8; 4]) -> [u8; 17] {
 }
 
 /// Un agencement par exe connu : le premier dont tous les octets vérifiés correspondent est pris.
-const EXES: [Exe; 4] = [
+const EXES: [Exe; 6] = [
+    Exe {
+        name: "DX12, build 26595377",
+        vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400f_0550, expected: dispatch_prologue([0x27, 0xdc, 0x21, 0x02]) },
+        vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400f_05b0, expected: dispatch_prologue([0xd7, 0xdb, 0x21, 0x02]) },
+        user_config: 0x1_4011_8be0,
+        is_quick_combat: 0x1_4011_97c0,
+        app: 0x1_412f_b2c8,
+        timescale: 0x559c,
+    },
+    Exe {
+        name: "DX11, build 26595377",
+        vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400e_f630, expected: dispatch_prologue([0xc7, 0x74, 0x1e, 0x02]) },
+        vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400e_f690, expected: dispatch_prologue([0x77, 0x74, 0x1e, 0x02]) },
+        user_config: 0x1_4011_80c0,
+        is_quick_combat: 0x1_4011_8ca0,
+        app: 0x1_412c_3c88,
+        timescale: 0x557c,
+    },
     Exe {
         name: "DX12, build 26407122",
         vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400f_0390, expected: dispatch_prologue([0xe7, 0xdd, 0x21, 0x02]) },

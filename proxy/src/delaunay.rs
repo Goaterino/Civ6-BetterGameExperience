@@ -57,7 +57,7 @@
 //!
 //! Chaque triangulation (`1805cbc60`) journalise une ligne : durée, appels, écarts.
 
-use crate::patch::{self, Site, IMAGE_BASE};
+use crate::patch::{self, Site};
 use crate::{log, win};
 use std::sync::atomic::{AtomicU64, AtomicU8, AtomicUsize, Ordering};
 
@@ -85,9 +85,10 @@ const TRIANGULATION: Site = Site {
 /// Corps entier de la fermeture (`1805c9bb0`..`1805cab56`) et du test du cercle
 /// (`1805c8d80`..`1805c8fdf`) : empreintes FNV-1a 64 des octets du fichier. Ni l'un ni l'autre n'a
 /// de relocation.
-const EMPREINTES: [(u64, u64, u64); 2] = [
-    (0x1_805c_9bb0, 0x1_805c_ab56, 0x7322_a5b0_b92b_66b6),
-    (0x1_805c_8d80, 0x1_805c_8fdf, 0xaf42_4267_f769_5c5b),
+/// The second value is the fingerprint in the 1.0.12.74 build (same code, other relative addresses).
+const EMPREINTES: [(u64, u64, [u64; 2]); 2] = [
+    (0x1_805c_9bb0, 0x1_805c_ab56, [0x7322_a5b0_b92b_66b6, 0x295b_d911_ef85_0010]),
+    (0x1_805c_8d80, 0x1_805c_8fdf, [0xaf42_4267_f769_5c5b, 0x4c79_7c81_b095_06dc]),
 ];
 
 // Fonctions et données de l'originale, adresses Ghidra.
@@ -156,7 +157,7 @@ macro_rules! couvre {
 }
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -737,11 +738,11 @@ fn fnv1a(octets: &[u8]) -> u64 {
 /// Tout ce dont la réécriture dépend, vérifié avant de poser quoi que ce soit.
 unsafe fn verifier_version(base: usize) -> Result<(), String> {
     patch::check(base, &[FERMETURE, TRIANGULATION])?;
-    let a = |x: u64| base + (x - IMAGE_BASE) as usize;
+    let a = |x: u64| base + crate::patch::rva(x);
     for (debut, fin, attendue) in EMPREINTES {
         let h = fnv1a(std::slice::from_raw_parts(a(debut) as *const u8, (fin - debut) as usize));
-        if h != attendue {
-            return Err(format!("empreinte de {debut:#x} : {h:#x} au lieu de {attendue:#x}"));
+        if !attendue.contains(&h) {
+            return Err(format!("empreinte de {debut:#x} : {h:#x} au lieu de {attendue:#x?}"));
         }
     }
     for (adr, valeur) in CONSTANTES {
@@ -750,7 +751,7 @@ unsafe fn verifier_version(base: usize) -> Result<(), String> {
             return Err(format!("constante en {adr:#x} : {lu:#x} au lieu de {:#x}", valeur.to_bits()));
         }
     }
-    if rd::<[u8; 6]>(a(SQRTF_THUNK.0)) != SQRTF_THUNK.1 || rd::<usize>(a(SQRTF_IAT)) == 0 {
+    if crate::patch::as_known(SQRTF_THUNK.0, &rd::<[u8; 6]>(a(SQRTF_THUNK.0)))[..] != SQRTF_THUNK.1 || rd::<usize>(a(SQRTF_IAT)) == 0 {
         return Err("saut vers sqrtf inattendu".to_string());
     }
     Ok(())

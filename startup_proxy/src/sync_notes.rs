@@ -38,7 +38,7 @@ struct Exe {
     add_create: u64,
 }
 
-const EXES: [Exe; 2] = [
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12",
         check_call: 0x1_407f_9cf6,
@@ -60,6 +60,28 @@ const EXES: [Exe; 2] = [
         map_insert: 0x1_407f_0680,
         missing_call: 0x1_407f_57af,
         add_create: 0x1_407f_69d0,
+    },
+    Exe {
+        name: "DX12 1.0.12.74",
+        check_call: 0x1_407f_9d26,
+        handler: 0x1_407f_65e0,
+        repair_call: 0x1_407f_71ad,
+        add_repair: 0x1_407f_8a20,
+        extra_call: 0x1_407f_6cb9,
+        map_insert: 0x1_407f_2460,
+        missing_call: 0x1_407f_76cf,
+        add_create: 0x1_407f_88f0,
+    },
+    Exe {
+        name: "DX11 1.0.12.74",
+        check_call: 0x1_407f_8b16,
+        handler: 0x1_407f_53d0,
+        repair_call: 0x1_407f_5f9d,
+        add_repair: 0x1_407f_7810,
+        extra_call: 0x1_407f_5aa9,
+        map_insert: 0x1_407f_1260,
+        missing_call: 0x1_407f_64bf,
+        add_create: 0x1_407f_76e0,
     },
 ];
 
@@ -372,7 +394,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {
@@ -391,7 +413,7 @@ mod tests {
     #[test]
     fn bytes_in_installed_exes() {
         for (i, name) in FILES.iter().enumerate() {
-            let Ok(file) = std::fs::read(format!(r"{EXE_DIR}\{name}")) else {
+            let Ok(file) = std::fs::read(crate::test_exe(EXE_DIR, i, name)) else {
                 eprintln!("{name} missing, test skipped");
                 continue;
             };

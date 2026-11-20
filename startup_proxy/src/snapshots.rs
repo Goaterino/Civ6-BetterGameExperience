@@ -191,7 +191,7 @@ struct Exe {
     ctor: u64,
 }
 
-const EXES: [Exe; 2] = [
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12",
         snapshot: (0x1_4105_0c58, [0x1_4080_e510, 0x1_4080_f6c0, 0x1_4081_1530, 0x1_4081_1f20, 0x1_4081_0fa0]),
@@ -213,6 +213,28 @@ const EXES: [Exe; 2] = [
         handle: 0x1_4083_e680,
         launch: 0x1_4027_af66,
         ctor: 0x1_4080_c1d0,
+    },
+    Exe {
+        name: "DX12 1.0.12.74",
+        snapshot: (0x1_4105_0cf8, [0x1_4080_e550, 0x1_4080_f700, 0x1_4081_15c0, 0x1_4081_1f60, 0x1_4081_0fe0]),
+        in_game: 0x1_400f_1c70,
+        current_view: 0x5420,
+        request: (0x1_4105_0cd0, 0x1_4081_10e0),
+        set_waiting: 0x1_4081_7a20,
+        handle: 0x1_4084_0540,
+        launch: 0x1_4027_d6d6,
+        ctor: 0x1_4080_df30,
+    },
+    Exe {
+        name: "DX11 1.0.12.74",
+        snapshot: (0x1_4104_17b8, [0x1_4080_d4d0, 0x1_4080_e680, 0x1_4081_0590, 0x1_4081_0f30, 0x1_4080_ff60]),
+        in_game: 0x1_400f_0d50,
+        current_view: 0x5400,
+        request: (0x1_4104_1790, 0x1_4081_0060),
+        set_waiting: 0x1_4081_6e70,
+        handle: 0x1_4083_e210,
+        launch: 0x1_4027_be76,
+        ctor: 0x1_4080_ced0,
     },
 ];
 
@@ -477,7 +499,7 @@ mod tests {
     }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {
@@ -501,7 +523,7 @@ mod tests {
     #[test]
     fn bytes_in_installed_exes() {
         for (i, name) in FILES.iter().enumerate() {
-            let Ok(file) = std::fs::read(format!(r"{EXE_DIR}\{name}")) else {
+            let Ok(file) = std::fs::read(crate::test_exe(EXE_DIR, i, name)) else {
                 eprintln!("{name} missing, test skipped");
                 continue;
             };

@@ -2089,8 +2089,8 @@ mod tests {
 
     #[test]
     fn signature_xml() {
-        // Adresse de chaque build connu : 15296837, puis 26407122 (exe du 2026-11-02).
-        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80])] {
+        // Address in each known build: 15296837, 26407122 (exe of 2026-11-02), 26595377 (1.0.12.74).
+        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700, 0xa2df50]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80, 0xa1f770])] {
             let Some(bytes) = read(format!(r"{GAME}\Base\Binaries\Win64Steam\{exe}")) else { continue };
             // Adresse virtuelle relative de chaque occurrence, par les en-têtes de sections.
             let base = bytes.as_ptr() as usize;
