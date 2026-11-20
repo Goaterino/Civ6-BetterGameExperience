@@ -615,6 +615,26 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
 - **Tests.** `cargo test` (règle d'excédent, hachages des classes) ; `check_hooks.py` vérifie les
   octets des deux sites, la redirection et sa restauration.
 
+## Échange d'unités qui laisse une unité en chemin (correctif POL)
+
+[src/echange.rs](src/echange.rs). Analyse :
+[analyses/unites_superposees/README.md](../analyses/unites_superposees/README.md) (rapport BGE-DAA7E7).
+
+- **Le bug.** L'exécution de `UNITOPERATION_SWAP_UNITS` (`18067c860`) ne fait qu'un pas du chemin
+  A* (`1801a82a0`) pour chaque unité. Quand l'A* passe par une case voisine au lieu d'aller droit
+  (zone de contrôle, rivière, route), la première unité s'arrête sur cette case, même occupée.
+- **Le détour.** L'entrée de vtable `180a2ce28` (`.rdata`) mène au proxy, qui appelle l'original puis
+  fait continuer, pas à pas et avec les mêmes drapeaux, chaque unité qui n'est pas sur sa case
+  d'arrivée, tant qu'elle avance (deux tours, 8 pas au plus par unité). Si elle reste empilée, elle
+  est placée sur sa case d'arrivée (`1803b11b0`, mode 1, comme le filet de `MoveTo` : case de repli
+  si elle est prise).
+- **Correctif POL, sans réglage** (`BgdPolActifs`) : bug pur.
+- **Garde-fou.** Premiers octets des six fonctions appelées, et l'entrée de vtable doit pointer sur
+  `18067c860` ; sinon rien n'est posé. L'entrée d'origine revient au déchargement.
+- **Le journal.** `echange : exécution de SWAP_UNITS détournée (vtable 0x180a2ce28)`, puis les 30
+  premières corrections de chaque partie : unité, cases, ce qui a été fait, mouvements restants.
+- **Tests.** `check_hooks.py` (entrée détournée, puis restaurée). Pas encore essayé en partie.
+
 ## Diplomatie reçue pendant le passage de tour (correctif POL)
 
 [src/fin_tour.rs](src/fin_tour.rs). Analyse : [depart_tour/README.md](../depart_tour/README.md),

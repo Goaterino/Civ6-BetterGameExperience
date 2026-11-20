@@ -22,6 +22,11 @@ Pas d'implémentation. Correctif proposé : **POL**, détour GameCore, sans rég
   routes n'est **pas démontrée**.
 - Correctif : étendre le filet existant aux arrêts en chemin (détour de `MoveTo`, 2 entrées de vtable).
   Il ne dépend pas de la cause exacte de l'écart.
+- **Vérifié (2026-11-20, rapport BGE-DAA7E7) : une deuxième cause, l'échange d'unités.**
+  `UNITOPERATION_SWAP_UNITS` ne fait faire qu'**un pas** du chemin A* à chaque unité. Quand l'A*
+  passe par une case voisine au lieu d'aller droit sur la case de l'autre unité, la première unité
+  s'arrête sur cette case, même occupée. Le filet de `MoveTo` n'y peut rien (ce n'est pas `MoveTo`).
+  Voir [Échange d'unités](#échange-dunités-swap_units-rapport-bge-daa7e7).
 
 ## L'interface n'y est pour rien
 
@@ -208,6 +213,101 @@ unsafe extern "system" fn move_to(h: usize, unite: usize, req: usize, res: usize
   Bug pur : pas de clé de réglage.
 - Variante plus fine, non retenue : ne pas entrer (dans `1801a82a0`) dans une case occupée si
   l'unité ne pourra pas en repartir. Il faut alors recalculer le pas suivant ; plus intrusif.
+
+## Échange d'unités (`SWAP_UNITS`), rapport BGE-DAA7E7
+
+### Ce que montre le rapport
+
+Partie multijoueur du 2026-11-14 (4 humains, BGE 0.11.0), rapport envoyé par le joueur 3 (Chine)
+au T55, 39 s après le début du tour, avec la description « unité superposées ». La Chine est en
+guerre avec les Zoulous (joueur 2, `CombatLog.csv` : tigres accroupis contre chevaliers au T55).
+
+`AStar_GC.log` (chemins de GameCore, dans l'ordre) et `UnitOperations.log` donnent la séquence
+exacte au T55 :
+
+| étape | unité | position | ligne |
+|---|---|---|---|
+| avant | épéiste A `2293777` | (28,14) | GC 10565 |
+| avant | épéiste B `2424851` | (27,13) | GC 10568 |
+| avant | tigre accroupi `3538973` | (27,14), n'en bouge pas de tout le tour | GC 10570 |
+| avant | chevaliers zoulous `3145751`, `3342362` | (28,13) et (29,14), déplacés juste avant | GC 10540-10541 |
+| ordre | A : `UNITOPERATION_SWAP_UNITS` | | Ops 4231 |
+| chemins | A (28,14)→(27,13) drapeaux `0x4114` (avec `IGNORE_STACKING`), B (27,13)→(28,14) `0x4110` | | GC 10590-10591 |
+| après | B | (28,14) : arrivé | GC 10608 |
+| après | **A** | **(27,14), sur la case du tigre** | GC 10609 |
+| reprise | A : `MOVE_TO` (27,14)→(27,13) donné à la main par le joueur | | GC 10634, Ops 4234 |
+| fin | A | (27,13) ; puis `SKIP_TURN` | GC 10662, Ops 4235 |
+
+(27,13) et (28,14) sont voisines, mais l'épéiste A est passé par (27,14), qui est voisine des deux,
+et s'y est arrêté avec un mouvement en réserve : le `MOVE_TO` qui suit l'amène bien en (27,13) le
+même tour. Le joueur a vu deux unités de combat superposées (épéiste et tigre accroupi, même
+classe). La superposition a été réparée à la main, puis signalée.
+
+### Le code (`Unit_Operations_SwapUnits.cpp`, vtable `180a2cde8`)
+
+| adresse | emplacement | rôle |
+|---|---|---|
+| `18067c350` | `+0xc0` (`180a2cea8`) | trouve la partenaire et valide l'échange |
+| `18067c860` | `+0x40` (`180a2ce28`) | exécute l'échange |
+| `1801a82a0` | | **un pas** du chemin (voir [L'exécution](#lexécution-1801a82a0)) |
+
+`18067c350` (validation) : les deux cases sont à distance 1 (`180015ec0`), la partenaire est à
+nous, de même classe d'empilement, et **un chemin existe** pour chacune vers la case de l'autre
+(`1801aa510(formation, case, 4)`, `4` = `IGNORE_STACKING`). Le nombre de pas de ces chemins n'est
+pas regardé.
+
+`18067c860` (exécution) :
+
+```
+B = partenaire (vtable +0xc0)
+1801a82a0(formation de A, case de B, drapeaux | 4)   // UN pas, ignore l'empilement
+1801a82a0(formation de B, ancienne case de A, drapeaux)  // UN pas
+```
+
+Aucune boucle, aucun contrôle de la position d'arrivée. `1801a82a0` avance d'**un nœud** du chemin
+en cache, et marque la case comme intermédiaire (drapeau `8`, empilement ignoré) dès qu'elle n'est
+pas la destination. Si le chemin de A compte deux pas, A finit sur la case du milieu, quelle
+qu'elle soit. B, qui a son propre chemin, peut subir la même chose.
+
+### Pourquoi l'A* fait un détour entre deux cases voisines
+
+Il prend le chemin le moins coûteux, pas le plus court en cases. Un détour gagne ou fait jeu égal
+dès que le pas direct coûte cher :
+
+- **Zone de contrôle (probable ici).** (28,14) et (27,13) sont toutes deux voisines du chevalier
+  zoulou en (28,13) ; (27,14) ne touche aucune unité zouloue. Entrer en (27,13) coûte tous les
+  mouvements restants, qu'on y aille droit (2 PM → 0) ou par (27,14) (1 PM, puis le dernier → 0) :
+  égalité, et l'A* a gardé le détour. Le terrain des trois cases n'est pas dans le rapport (la
+  sauvegarde le contient) : une rivière sans pont donne le même résultat.
+- **Routes.** Deux pas sur route peuvent coûter moins qu'un pas direct hors route (colline, forêt,
+  rivière). C'est le détour qui gagne : cela colle avec « surtout sur des routes » dit par les
+  joueurs.
+
+### Correctif (POL, sans réglage)
+
+**Implémenté le 2026-11-20** dans [proxy/src/echange.rs](../../proxy/src/echange.rs), pas encore
+essayé en partie. Adresses dans la build 1.0.12.74 : entrée `180a2ce88`, exécution `18067c8a0`,
+`1801a8960`, `1803b0a70`, `1803afc30` (table `MOVED` de `proxy/src/patch.rs`). Save de départ :
+`AutoSave_0055` du rapport (début du T55, avant l'échange ; les chevaliers zoulous n'ont pas
+encore bougé à ce moment-là).
+
+Détour de `18067c860` par son entrée de vtable `180a2ce28` (`.rdata`, `VirtualProtect`, octets
+vérifiés d'abord) :
+
+1. noter les deux cases de départ, appeler l'original ;
+2. si `pol::actifs()` et qu'une unité n'est pas sur sa case d'arrivée, refaire `1801a82a0` avec
+   les mêmes drapeaux tant qu'elle avance et n'est pas arrivée (quelques pas au plus) : elle suit
+   le chemin de l'A* jusqu'au bout, la case d'arrivée étant libre puisque l'autre unité est partie ;
+3. si elle reste empilée malgré tout (chemin sur deux tours), la placer comme le fait le filet de
+   `MoveTo` : `1803b11b0(unité, case d'arrivée, 1, 0)` (mode 1 : case de repli si occupée), et
+   journaliser (unités, cases, mouvements).
+
+Les coûts de mouvement sont ceux du jeu (pas réels de `1801a82a0`), et le résultat est celui que le
+joueur attend d'un échange. Simulation modifiée : POL, actif seulement si tous les joueurs ont le
+proxy.
+
+Ce correctif et celui de `MoveTo` (plus haut) sont indépendants : le premier traite une cause
+démontrée, le second le cas général d'un arrêt en chemin.
 
 ## Prochaine étape
 

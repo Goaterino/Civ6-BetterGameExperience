@@ -71,6 +71,7 @@ pub(crate) fn real_module() -> usize {
         crate::fin_tour::on_gamecore_loaded(h);
         crate::drop_slot::on_gamecore_loaded(h);
         crate::empilement::on_gamecore_loaded(h);
+        crate::echange::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
         crate::carte::on_gamecore_loaded();
         crate::journal_chokepoints::on_gamecore_loaded(h);
@@ -113,6 +114,7 @@ macro_rules! forward {
                 crate::fin_tour::reset();
                 crate::drop_slot::reset();
                 crate::empilement::reset();
+                crate::echange::reset();
                 crate::depart::reset();
                 crate::rendements_empire::reset();
             }

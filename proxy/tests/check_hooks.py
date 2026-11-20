@@ -169,6 +169,13 @@ for rva in PILE_RVAS:
     assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
     print(f"empilement : call {base + R(rva):#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
+# Échange d'unités (echange.rs) : l'entrée de l'exécution de SWAP_UNITS dans sa vtable (`.rdata`)
+# mène au proxy.
+SWAP_SLOT, SWAP_EXEC = 0xA2CE28, 0x67C860
+hook = struct.unpack("<Q", ctypes.string_at(base + R(SWAP_SLOT), 8))[0]
+assert h <= hook < h + 0x400000, f"echange : entrée de vtable non détournée ({hook:#x})"
+print(f"echange : vtable {base + R(SWAP_SLOT):#x} -> {hook:#x} dans le proxy")
+
 # Passage de tour (fin_tour.rs) : l'étape de mise à jour `18063e2e0` en fin de DiplomacyAction,
 # DiplomacyDeal (jmp terminal) et DiplomacySession (call) redirigée vers un relais
 # `mov edx,quel ; jmp [rip+0]`.
@@ -225,4 +232,6 @@ for rva, opcode in FIN_APPELS:
     code = ctypes.string_at(base + R(rva), 5)
     assert code[0] == opcode and base + R(rva) + 5 + struct.unpack("<i", code[1:])[0] == base + R(FIN_CALLEE), f"fin de tour {rva:#x} : appel non restauré"
 print("fin de tour : appels d'origine restaurés après déchargement du proxy")
+assert struct.unpack("<Q", ctypes.string_at(base + R(SWAP_SLOT), 8))[0] == base + R(SWAP_EXEC), "echange : entrée de vtable non restaurée"
+print("echange : entrée de vtable d'origine restaurée après déchargement du proxy")
 print("OK")
