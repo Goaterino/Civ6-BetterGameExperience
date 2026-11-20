@@ -480,22 +480,27 @@ unsafe fn fin_forcer() -> bool {
     true
 }
 
-/// Début du tour suivant : on retire ce qu'on a ajouté, sur les chronos que le jeu n'a pas remis à
-/// zéro.
+/// Début du tour ou du segment suivant (congrès compris) après une fin forcée : chronos remis à
+/// zéro et relancés. Retirer seulement le temps ajouté ne suffit pas : l'exe ne remet pas toujours
+/// le temps écoulé à zéro au changement de segment. Rapport BGE-9E21BE : fin forcée pendant une
+/// réactivation du tour (automatisation), puis segment de congrès ouvert avec 167 s écoulées pour
+/// une limite de 165 s ; l'exe a fini le tour du congrès 2 s après son ouverture, sans vote.
 unsafe fn fin_lever() {
     if !FORCE.swap(false, Ordering::Relaxed) {
         return;
     }
     let this = MINUTEUR_THIS.load(Ordering::Relaxed);
-    if this == 0 {
+    let tramp = MINUTEUR_TRAMP.load(Ordering::Relaxed);
+    if this == 0 || tramp == 0 {
         return;
     }
-    for (_, cumul, _) in CHRONOS {
-        let p = (this + cumul) as *mut f64;
-        if *p >= FORCE_S {
-            *p -= FORCE_S;
-        }
+    chronos_a_zero(this);
+    // Pendant l'attente du départ simultané, le minuteur reste gelé : `partir` le relancera.
+    if !ATTENTE.load(Ordering::Relaxed) {
+        let real: unsafe extern "system" fn(usize) = std::mem::transmute(tramp);
+        real(this);
     }
+    log("depart : fin forcée levée, minuteur remis à zéro");
 }
 
 /// Rend à l'interface l'activation retenue : elle part à la prochaine publication.
@@ -636,8 +641,8 @@ unsafe extern "C-unwind" fn lua_fin_forcer(l: *mut c_void) -> i32 {
     1
 }
 
-/// `Civ6RolloverProxy_FinLever()` : au début du tour local, minuteur rendu à son état sans la fin
-/// forcée.
+/// `Civ6RolloverProxy_FinLever()` : au début du tour local (ou d'un segment de congrès), après une
+/// fin forcée, minuteur remis à zéro.
 unsafe extern "C-unwind" fn lua_fin_lever(_l: *mut c_void) -> i32 {
     fin_lever();
     0

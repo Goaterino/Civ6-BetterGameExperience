@@ -457,7 +457,9 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 	-- 3. Fin simultanée ---------------------------------------------------------------------------
 	-- Hôte : le minuteur n'est « armé » qu'après avoir été vu sous sa limite pendant le tour, pour
 	-- qu'une mise à jour encore écoulée du tour précédent ne termine pas le nouveau. Un nouveau
-	-- segment (congrès) remet le minuteur à zéro et le réarme.
+	-- segment (congrès) le réarme dès qu'il repasse sous sa limite. Après une fin forcée, l'exe ne
+	-- remet pas toujours le temps écoulé à zéro au changement de segment : FinLever le fait, au
+	-- LocalPlayerTurnBegin du segment (BGE-9E21BE).
 	D.finArme = -1;      -- tour pour lequel le minuteur de l'hôte a été vu sous sa limite
 	D.finRecue = -1;     -- dernier tour terminé à réception de la fin
 
