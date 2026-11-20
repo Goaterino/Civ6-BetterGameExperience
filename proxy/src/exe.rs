@@ -27,6 +27,55 @@ pub unsafe fn text_section(module: usize) -> Option<(usize, usize)> {
     })
 }
 
+/// Version d'un module projeté en image, lue dans sa ressource de version (`VS_FIXEDFILEINFO`,
+/// reconnue à sa signature dans le répertoire des ressources) : `[1, 0, 12, 74]`.
+pub unsafe fn module_version(module: usize) -> Option<[u16; 4]> {
+    let nt = module + rd::<u32>(module + 0x3c) as usize;
+    // PE32+ : répertoire des ressources, troisième entrée des répertoires de données.
+    let (rva, size) = (rd::<u32>(nt + 24 + 0x80) as usize, rd::<u32>(nt + 24 + 0x84) as usize);
+    if rva == 0 {
+        return None;
+    }
+    let at = (0..size.saturating_sub(16)).step_by(4).map(|o| module + rva + o).find(|&a| rd::<u32>(a) == 0xfeef_04bd)?;
+    let (ms, ls) = (rd::<u32>(at + 8), rd::<u32>(at + 12));
+    Some([(ms >> 16) as u16, ms as u16, (ls >> 16) as u16, ls as u16])
+}
+
+/// Version du jeu en cours, celle de l'exe : « 1.0.12.74 ». Elle choisit les tables d'adresses ;
+/// `BGE_VERSION_JEU` la remplace pour les tests hors jeu (`tests/check_hooks.py`).
+pub fn game_version() -> Option<&'static str> {
+    static VERSION: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+    VERSION
+        .get_or_init(|| {
+            if let Ok(v) = std::env::var("BGE_VERSION_JEU") {
+                return Some(v);
+            }
+            let exe = unsafe { win::GetModuleHandleW(std::ptr::null()) } as usize;
+            let v = unsafe { module_version(exe) }?;
+            Some(format!("{}.{}.{}.{}", v[0], v[1], v[2], v[3]))
+        })
+        .as_deref()
+}
+
+/// L'entrée de table nommée `name` (« DX12 1.0.12.74 ») est-elle faite pour la version du jeu ?
+/// Les empreintes départagent ensuite les entrées de cette version (DX12 et DX11).
+pub fn for_this_game(name: &str) -> bool {
+    game_version().is_some_and(|v| for_version(name, v))
+}
+
+fn for_version(name: &str, version: &str) -> bool {
+    name.strip_suffix(version).is_some_and(|n| n.ends_with(' '))
+}
+
+/// Raison à journaliser quand aucune entrée ne convient : version sans table, ou empreintes.
+pub fn no_table(reasons: &[String]) -> String {
+    match game_version() {
+        None => "game version unreadable".to_string(),
+        Some(v) if reasons.is_empty() => format!("no table for game {v}"),
+        Some(v) => format!("game {v}: {}", reasons.join("; ")),
+    }
+}
+
 /// Le nom importé est-il `func`, tel quel ou décoré en C++ (`?func@@…`) ? L'exe importe les
 /// fonctions de HavokScript sous leur nom décoré : `?luaL_loadbuffer@@YAHPEAUlua_State@@PEBD_K1@Z`.
 pub fn is_import(name: &[u8], func: &str) -> bool {
@@ -217,6 +266,53 @@ pub unsafe fn unhook_read_xml(h: &XmlHook) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn entree_de_la_version() {
+        assert!(for_version("DX12 1.0.12.58", "1.0.12.58"));
+        assert!(for_version("DX11 1.0.12.74", "1.0.12.74"));
+        assert!(!for_version("DX12 1.0.12.58", "1.0.12.5"));
+        assert!(!for_version("DX12 11.0.12.58", "1.0.12.58"));
+        assert!(!for_version("DX12 1.0.12.74", "1.0.12.58"));
+    }
+
+    /// Version lue dans les vrais exe, projetés comme images sans être exécutés : celle de
+    /// l'installation, et 1.0.12.58 si `CIV6_EXE_58_DIR` désigne ses exe.
+    #[test]
+    fn version_des_exe() {
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn LoadLibraryExW(name: *const u16, file: *mut c_void, flags: u32) -> win::HMODULE;
+            fn FreeLibrary(module: win::HMODULE) -> i32;
+        }
+        const LOAD_LIBRARY_AS_IMAGE_RESOURCE: u32 = 0x20;
+        let installed = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam".to_string();
+        let mut dirs = vec![(installed, None)];
+        dirs.extend(std::env::var("CIV6_EXE_58_DIR").map(|d| (d, Some([1, 0, 12, 58]))));
+        for (dir, expected) in dirs {
+            let mut seen = Vec::new();
+            for exe in ["CivilizationVI_DX12.exe", "CivilizationVI.exe"] {
+                let path = format!(r"{dir}\{exe}");
+                if !std::path::Path::new(&path).exists() {
+                    eprintln!("absent, test sauté : {path}");
+                    continue;
+                }
+                unsafe {
+                    let h = LoadLibraryExW(win::wide(&path).as_ptr(), std::ptr::null_mut(), LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+                    assert!(!h.is_null(), "{path}");
+                    let v = module_version(h as usize & !3);
+                    FreeLibrary(h);
+                    let v = v.unwrap_or_else(|| panic!("{path} : pas de version"));
+                    assert_eq!(&v[..3], &[1, 0, 12], "{path}");
+                    if let Some(e) = expected {
+                        assert_eq!(v, e, "{path}");
+                    }
+                    seen.push(v);
+                }
+            }
+            assert!(seen.windows(2).all(|w| w[0] == w[1]), "DX12 et DX11 de {dir} : {seen:?}");
+        }
+    }
 
     #[test]
     fn signature_deja_detournee() {

@@ -56,9 +56,9 @@ struct Exe {
     set_waiting: u64,
 }
 
-const EXES: [Exe; 4] = [
+const EXES: [Exe; 6] = [
     Exe {
-        name: "DX12",
+        name: "DX12 1.0.12.72",
         update: 0x1_400f_7f70,
         turn_end: 0x1_400f_62e0,
         round_complete: 0x1_400f_5c70,
@@ -72,7 +72,7 @@ const EXES: [Exe; 4] = [
         set_waiting: 0x1_4081_79e0,
     },
     Exe {
-        name: "DX11",
+        name: "DX11 1.0.12.72",
         update: 0x1_400f_75b0,
         turn_end: 0x1_400f_5920,
         round_complete: 0x1_400f_52b0,
@@ -112,6 +112,34 @@ const EXES: [Exe; 4] = [
         snapshot_process: 0x1_4080_ff60,
         ack_on_receipt: 0x1_407f_79a0,
         set_waiting: 0x1_4081_6e70,
+    },
+    Exe {
+        name: "DX12 1.0.12.58",
+        update: 0x1_400f_3930,
+        turn_end: 0x1_400f_1ca0,
+        round_complete: 0x1_400f_1630,
+        start_check: 0x1_407f_31d0,
+        lookup: 0x1_407f_5e30,
+        jobs: 0x1_4230_9628,
+        sync: 0x1_4238_dde8,
+        net_manager: 0x1_4238_ddf8,
+        snapshot_process: 0x1_4080_b7d0,
+        ack_on_receipt: 0x1_407f_3140,
+        set_waiting: 0x1_4081_23b0,
+    },
+    Exe {
+        name: "DX11 1.0.12.58",
+        update: 0x1_400f_2060,
+        turn_end: 0x1_400f_03d0,
+        round_complete: 0x1_400e_fd60,
+        start_check: 0x1_407f_2c90,
+        lookup: 0x1_407f_57c0,
+        jobs: 0x1_422d_1028,
+        sync: 0x1_4235_57e8,
+        net_manager: 0x1_4235_57f8,
+        snapshot_process: 0x1_4080_af70,
+        ack_on_receipt: 0x1_407f_2c00,
+        set_waiting: 0x1_4081_1e40,
     },
 ];
 
@@ -470,9 +498,9 @@ pub unsafe fn install() {
     let at = |address: u64| module + (address - BASE) as usize;
     let mut reasons = Vec::new();
     let Some(i) = EXES.iter().position(|t| {
-        fingerprint(t, |address, n| std::slice::from_raw_parts(at(address) as *const u8, n)).map_err(|e| reasons.push(format!("{}: {e}", t.name))).is_ok()
+        crate::exe::for_this_game(t.name) && fingerprint(t, |address, n| std::slice::from_raw_parts(at(address) as *const u8, n)).map_err(|e| reasons.push(format!("{}: {e}", t.name))).is_ok()
     }) else {
-        log(&format!("rejoin: unknown exe ({}), fix not installed", reasons.join("; ")));
+        log(&format!("rejoin: unknown exe ({}), fix not installed", crate::exe::no_table(&reasons)));
         return;
     };
     let t = &EXES[i];
@@ -512,7 +540,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

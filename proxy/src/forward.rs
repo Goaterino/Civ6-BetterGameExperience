@@ -51,7 +51,13 @@ pub(crate) fn real_module() -> usize {
             log("proxy désactivé (actif=off) : aucun détour posé, GameCore d'origine");
             return h;
         }
-        crate::patch::detect(h);
+        match crate::patch::detect(h) {
+            Ok(v) => log(&format!("jeu {v} : tables d'adresses connues")),
+            Err(e) => {
+                log(&format!("{e} : aucun correctif posé, GameCore d'origine"));
+                return h;
+            }
+        }
         coalesce::on_gamecore_loaded(h);
         crate::improvements::on_gamecore_loaded(h);
         crate::rendements::on_gamecore_loaded(h);

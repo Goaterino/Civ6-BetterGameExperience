@@ -25,11 +25,13 @@ struct Exe {
     controller: u64,
 }
 
-const EXES: [Exe; 4] = [
-    Exe { name: "DX12", send: 0x1_400f_7630, controller: 0x1_400f_4b20 },
-    Exe { name: "DX11", send: 0x1_400f_6c70, controller: 0x1_400f_4150 },
+const EXES: [Exe; 6] = [
+    Exe { name: "DX12 1.0.12.72", send: 0x1_400f_7630, controller: 0x1_400f_4b20 },
+    Exe { name: "DX11 1.0.12.72", send: 0x1_400f_6c70, controller: 0x1_400f_4150 },
     Exe { name: "DX12 1.0.12.74", send: 0x1_400f_77f0, controller: 0x1_400f_4ce0 },
     Exe { name: "DX11 1.0.12.74", send: 0x1_400f_6ab0, controller: 0x1_400f_3f90 },
+    Exe { name: "DX12 1.0.12.58", send: 0x1_400f_2ff0, controller: 0x1_400f_04d0 },
+    Exe { name: "DX11 1.0.12.58", send: 0x1_400f_1720, controller: 0x1_400e_ec00 },
 ];
 
 /// `mov [rsp+18h],rbx ; push rsi ; push rdi ; push r14 ; mov eax,2090h ; call`.
@@ -95,11 +97,11 @@ pub unsafe fn install() {
     let module = win::GetModuleHandleW(std::ptr::null()) as usize;
     let image = |address: u64| module + (address - BASE) as usize;
     let mut reasons = Vec::new();
-    let found = EXES.iter().find_map(|t| {
+    let found = EXES.iter().filter(|t| crate::exe::for_this_game(t.name)).find_map(|t| {
         fingerprint(t, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n)).map_err(|e| reasons.push(format!("{}: {e}", t.name))).ok().map(|global| (t, global))
     });
     let Some((t, global)) = found else {
-        log(&format!("absent turn: unknown exe ({}), not installed", reasons.join("; ")));
+        log(&format!("absent turn: unknown exe ({}), not installed", crate::exe::no_table(&reasons)));
         return;
     };
     CONTROLLER.store(image(global), Ordering::Relaxed);
@@ -112,7 +114,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

@@ -54,9 +54,9 @@ struct Exe {
     waiting_test: u64,
 }
 
-const EXES: [Exe; 4] = [
+const EXES: [Exe; 6] = [
     Exe {
-        name: "DX12",
+        name: "DX12 1.0.12.72",
         request_vtable: 0x1_4105_0c30,
         request_process: 0x1_4081_10a0,
         request_ctor: 0x1_4080_dfe0,
@@ -68,7 +68,7 @@ const EXES: [Exe; 4] = [
         waiting_test: 0x1_4084_16f0,
     },
     Exe {
-        name: "DX11",
+        name: "DX11 1.0.12.72",
         request_vtable: 0x1_4104_17c0,
         request_process: 0x1_4080_f330,
         request_ctor: 0x1_4080_c2c0,
@@ -102,6 +102,30 @@ const EXES: [Exe; 4] = [
         check_process: 0x1_4080_eb10,
         ignore_call: 0x1_4084_1c88,
         waiting_test: 0x1_4083_f6a0,
+    },
+    Exe {
+        name: "DX12 1.0.12.58",
+        request_vtable: 0x1_4104_ba30,
+        request_process: 0x1_4080_b8d0,
+        request_ctor: 0x1_4080_8810,
+        ack_vtable: 0x1_4104_baa8,
+        ack_process: 0x1_4080_a450,
+        check_vtable: 0x1_4104_9800,
+        check_process: 0x1_4080_a380,
+        ignore_call: 0x1_4083_d558,
+        waiting_test: 0x1_4083_af70,
+    },
+    Exe {
+        name: "DX11 1.0.12.58",
+        request_vtable: 0x1_4103_b4f0,
+        request_process: 0x1_4080_b070,
+        request_ctor: 0x1_4080_7fd0,
+        ack_vtable: 0x1_4103_b568,
+        ack_process: 0x1_4080_9bf0,
+        check_vtable: 0x1_4103_92d0,
+        check_process: 0x1_4080_9b20,
+        ignore_call: 0x1_4083_d0c8,
+        waiting_test: 0x1_4083_aae0,
     },
 ];
 
@@ -554,10 +578,10 @@ pub unsafe fn install() {
     let delta = (module as u64).wrapping_sub(BASE);
     let mut reasons = Vec::new();
     let Some(i) = EXES.iter().position(|t| {
-        fingerprint(t, delta, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n)).map_err(|e| reasons.push(format!("{}: {e}", t.name))).is_ok()
+        crate::exe::for_this_game(t.name) && fingerprint(t, delta, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n)).map_err(|e| reasons.push(format!("{}: {e}", t.name))).is_ok()
     }) else {
         crate::rejoin::never_skip();
-        log(&format!("reload: unknown exe ({}), not installed; every check after a load is kept", reasons.join("; ")));
+        log(&format!("reload: unknown exe ({}), not installed; every check after a load is kept", crate::exe::no_table(&reasons)));
         return;
     };
     let t = &EXES[i];
@@ -609,7 +633,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

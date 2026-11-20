@@ -81,13 +81,14 @@ pub extern "system" fn BgdPolActifs() -> u32 {
 
 /// Tests: path of the exe a table index stands for. 0 and 1 are the 1.0.12.72 build
 /// (`CIV6_EXE_72_DIR`), 2 and 3 the 1.0.12.74 build (`CIV6_EXE_74_DIR`, or the installed game when
-/// unset). A build whose folder is not set or lacks the file is skipped.
+/// unset), 4 and 5 the 1.0.12.58 build (`CIV6_EXE_58_DIR`). A build whose folder is not set or
+/// lacks the file is skipped.
 #[cfg(test)]
 pub(crate) fn test_exe(installed: &str, index: usize, name: &str) -> String {
-    let var = ["CIV6_EXE_72_DIR", "CIV6_EXE_74_DIR"][index / 2];
+    let var = ["CIV6_EXE_72_DIR", "CIV6_EXE_74_DIR", "CIV6_EXE_58_DIR"][index / 2];
     match std::env::var(var) {
         Ok(dir) => format!(r"{dir}\{name}"),
-        Err(_) if index >= 2 => format!(r"{installed}\{name}"),
+        Err(_) if index / 2 == 1 => format!(r"{installed}\{name}"),
         Err(_) => format!("{var} not set"),
     }
 }

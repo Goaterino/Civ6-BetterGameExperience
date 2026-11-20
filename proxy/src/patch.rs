@@ -21,10 +21,16 @@ pub struct Site {
 }
 
 pub const IMAGE_BASE: u64 = 0x1_8000_0000;
-/// Link time (PE header) of the original DLL of game 1.0.12.74 (2026-11-10). The addresses in
-/// the modules are those of the 2026-11-02 build; this build holds the same code and data at
-/// other places.
-const BUILD_1_0_12_74: u32 = 0x6af3_bcb5;
+/// Versions du jeu connues : (version de l'exe, édition de liens de GameCore, adresses déplacées).
+/// Les adresses des modules sont celles du GameCore du 2026-11-02 (1.0.12.72). Celui de 1.0.12.74
+/// (2026-11-10) a le même code et les mêmes données à d'autres endroits : `MOVED` et `FIXUPS`.
+/// Celui de 1.0.12.58 (build 970508, 2023-11-11) a `.text` et `.data` identiques octet pour octet
+/// à celui du 2026-11-02 ; seuls une empreinte de build et des horodatages de `.rdata` diffèrent.
+const BUILDS: [(&str, u32, bool); 3] = [
+    ("1.0.12.58", 0x654e_cd4e, false),
+    ("1.0.12.72", 0x6ae8_e9d4, false),
+    ("1.0.12.74", 0x6af3_bcb5, true),
+];
 static MOVED_BUILD: AtomicBool = AtomicBool::new(false);
 
 /// Every address the modules use, and where it is in the 1.0.12.74 build.
@@ -74,14 +80,27 @@ const MOVED: [(u64, u64); 129] = [
     (0x1_80b8_e140, 0x1_80b8_e140),
 ];
 
-/// Looks at the loaded original once, before any module reads an address.
-pub unsafe fn detect(base: usize) {
+/// Reconnaît le build une fois, avant qu'un module ne lise une adresse : la version de l'exe
+/// choisit la ligne de `BUILDS`, et le GameCore chargé doit être celui de cette version. Erreur :
+/// la raison, et aucun correctif ne doit être posé.
+pub unsafe fn detect(base: usize) -> Result<&'static str, String> {
     let nt = base + *((base + 0x3c) as *const u32) as usize;
-    set_build(*((nt + 8) as *const u32));
+    let link_time = *((nt + 8) as *const u32);
+    let version = crate::exe::game_version().ok_or("version du jeu illisible dans l'exe")?;
+    let Some(&(v, expected, moved)) = BUILDS.iter().find(|b| b.0 == version) else {
+        return Err(format!("jeu {version} inconnu (versions connues : {})", BUILDS.map(|b| b.0).join(", ")));
+    };
+    if link_time != expected {
+        return Err(format!("GameCore {link_time:#x} n'est pas celui du jeu {v} ({expected:#x})"));
+    }
+    MOVED_BUILD.store(moved, Ordering::Relaxed);
+    Ok(v)
 }
 
+/// Tests : adresses du build dont GameCore a cette date d'édition de liens.
+#[cfg(test)]
 pub fn set_build(link_time: u32) {
-    MOVED_BUILD.store(link_time == BUILD_1_0_12_74, Ordering::Relaxed);
+    MOVED_BUILD.store(BUILDS.iter().any(|b| b.1 == link_time && b.2), Ordering::Relaxed);
 }
 
 fn moved(addr: u64) -> u64 {

@@ -42,7 +42,13 @@ _moved = sorted((_num(a) - 0x180000000, _num(b) - 0x180000000) for a, b in re.fi
 _fixups = {_num(a) - 0x180000000: (int(b, 16), int(c, 16)) for a, b, c in re.findall(r"\((0x1_80[0-9a-f_]+), (0x[0-9a-f]{2}), (0x[0-9a-f]{2})\)", _block("FIXUPS"))}
 with open(original_src, "rb") as _f:
     _head = _f.read(0x400)
-MOVED_BUILD = struct.unpack_from("<I", _head, struct.unpack_from("<I", _head, 0x3C)[0] + 8)[0] == 0x6AF3BCB5
+_link = struct.unpack_from("<I", _head, struct.unpack_from("<I", _head, 0x3C)[0] + 8)[0]
+# Hors du jeu, l'exe est python.exe : la version du jeu que le proxy lirait dans l'exe lui est
+# donnée par BGE_VERSION_JEU, celle dont GameCore est l'original testé (table BUILDS).
+_builds = {_num(t): (v, m == "true") for v, t, m in re.findall(r'\("([0-9.]+)", (0x[0-9a-f_]+), (true|false)\)', _block("BUILDS"))}
+assert _link in _builds, f"GameCore {_link:#x} absent de BUILDS"
+os.environ["BGE_VERSION_JEU"], MOVED_BUILD = _builds[_link]
+print(f"jeu {_builds[_link][0]} (GameCore {_link:#x})")
 
 
 def R(rva):

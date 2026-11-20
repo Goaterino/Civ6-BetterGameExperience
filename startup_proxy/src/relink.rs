@@ -89,9 +89,9 @@ const PROLOGUES: [(&str, [u8; 12]); 8] = [
 
 /// The DX11 addresses were found function by function as for the network message guard (same bytes
 /// except relative displacements, same size in `.pdata`); tool: `Tools\civ6-dx11-map\relais_map.py`.
-const EXES: [Exe; 4] = [
+const EXES: [Exe; 6] = [
     Exe {
-        name: "DX12",
+        name: "DX12 1.0.12.72",
         intro: (0x1_4105_7460, [0x1_4085_1500, 0x1_4085_16d0, 0x1_4085_1ba0, 0x1_4085_1c00, 0x1_4085_1730]),
         relay: (0x1_4105_0b90, [0x1_4080_a9a0, 0x1_4080_f610, 0x1_4080_af90, 0x1_4080_afe0, 0x1_4081_0c60]),
         peer_info: (0x1_4105_7438, [0x1_4085_1500, 0x1_4085_1700, 0x1_4085_1ba0, 0x1_4085_1c00, 0x1_4085_1aa0]),
@@ -112,7 +112,7 @@ const EXES: [Exe; 4] = [
         relay_contains: 0x1_4084_f3e0,
     },
     Exe {
-        name: "DX11",
+        name: "DX11 1.0.12.72",
         intro: (0x1_4104_7fd0, [0x1_4084_f860, 0x1_4084_fa30, 0x1_4084_ff00, 0x1_4084_ff60, 0x1_4084_fa90]),
         relay: (0x1_4104_1720, [0x1_4080_9350, 0x1_4080_d8a0, 0x1_4080_f780, 0x1_4081_0080, 0x1_4080_eef0]),
         peer_info: (0x1_4104_7fa8, [0x1_4084_f860, 0x1_4084_fa60, 0x1_4084_ff00, 0x1_4084_ff60, 0x1_4084_fe00]),
@@ -173,6 +173,48 @@ const EXES: [Exe; 4] = [
         map_slot: 0x1_4081_1950,
         relay_erase: 0x1_4084_d8e0,
         relay_contains: 0x1_4084_d2f0,
+    },
+    Exe {
+        name: "DX12 1.0.12.58",
+        intro: (0x1_4105_2220, [0x1_4084_ae60, 0x1_4084_b030, 0x1_4084_b500, 0x1_4084_b560, 0x1_4084_b090]),
+        relay: (0x1_4104_b990, [0x1_4081_3490, 0x1_4080_9e40, 0x1_4080_ba00, 0x1_4080_c5f0, 0x1_4080_b490]),
+        peer_info: (0x1_4105_21f8, [0x1_4084_ae60, 0x1_4084_b060, 0x1_4084_b500, 0x1_4084_b560, 0x1_4084_b400]),
+        repeated: [
+            (0x1_4104_b9e0, [0x1_4080_8cf0, 0x1_4080_9de0, 0x1_4080_bcf0, 0x1_4080_c5c0, 0x1_4080_b160]),
+            (0x1_4104_ba08, [0x1_4081_3490, 0x1_4080_99b0, 0x1_4080_be10, 0x1_4080_c8a0, 0x1_4080_a080]),
+            (0x1_4104_ba80, [0x1_4081_3490, 0x1_4080_9f10, 0x1_4080_be10, 0x1_4080_c8a0, 0x1_4080_b850]),
+        ],
+        net_manager: 0x1_4238_ddf8,
+        net_manager_read_at: 0x52,
+        queue_front: 0x1_4084_6e00,
+        queue_pop: 0x1_4084_6e60,
+        connection: 0x1_4083_1780,
+        connection_set_steam: 0x1_4084_84b0,
+        player_find: 0x1_4080_df00,
+        map_slot: 0x1_4080_d1b0,
+        relay_erase: 0x1_4084_9220,
+        relay_contains: 0x1_4084_8c30,
+    },
+    Exe {
+        name: "DX11 1.0.12.58",
+        intro: (0x1_4104_1d00, [0x1_4084_a980, 0x1_4084_ab50, 0x1_4084_b020, 0x1_4084_b080, 0x1_4084_abb0]),
+        relay: (0x1_4103_b450, [0x1_4080_8500, 0x1_4080_95e0, 0x1_4080_5000, 0x1_4080_b840, 0x1_4080_ac30]),
+        peer_info: (0x1_4104_1cd8, [0x1_4084_a980, 0x1_4084_ab80, 0x1_4084_b020, 0x1_4084_b080, 0x1_4084_af20]),
+        repeated: [
+            (0x1_4103_b4a0, [0x1_4080_8460, 0x1_4080_9580, 0x1_4080_b4f0, 0x1_4080_bf70, 0x1_4080_a900]),
+            (0x1_4103_b4c8, [0x1_4080_8500, 0x1_4080_9150, 0x1_4080_b1c0, 0x1_4080_b780, 0x1_4080_9820]),
+            (0x1_4103_b540, [0x1_4080_8500, 0x1_4080_96b0, 0x1_4080_b1c0, 0x1_4080_b780, 0x1_4080_aff0]),
+        ],
+        net_manager: 0x1_4235_57f8,
+        net_manager_read_at: 0x52,
+        queue_front: 0x1_4084_6970,
+        queue_pop: 0x1_4084_69c0,
+        connection: 0x1_4083_14a0,
+        connection_set_steam: 0x1_4084_8130,
+        player_find: 0x1_4080_d6c0,
+        map_slot: 0x1_4080_c970,
+        relay_erase: 0x1_4084_8e50,
+        relay_contains: 0x1_4084_8860,
     },
 ];
 
@@ -840,8 +882,8 @@ pub unsafe fn install() {
     }
     let module = win::GetModuleHandleW(std::ptr::null()) as usize;
     let mut reasons = Vec::new();
-    let Some(i) = EXES.iter().position(|t| verify(module, t).map_err(|e| reasons.push(format!("{}: {e}", t.name))).is_ok()) else {
-        log(&format!("relink: unknown exe ({}), re-link not installed", reasons.join("; ")));
+    let Some(i) = EXES.iter().position(|t| crate::exe::for_this_game(t.name) && verify(module, t).map_err(|e| reasons.push(format!("{}: {e}", t.name))).is_ok()) else {
+        log(&format!("relink: unknown exe ({}), re-link not installed", crate::exe::no_table(&reasons)));
         return;
     };
     MODULE.store(module, Ordering::Relaxed);
@@ -896,7 +938,7 @@ mod tests {
     }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

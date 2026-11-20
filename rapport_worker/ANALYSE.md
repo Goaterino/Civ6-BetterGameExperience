@@ -66,8 +66,10 @@ Sans la clé, le fil Discord donne aussi un lien de téléchargement (`/rapport/
    - chaque partie chargée commence par `chargeur : … BGD_GameCore_XP2.dll chargé à sa place` ;
    - `salon : lancement : correctifs POL actifs/désactivés` donne l'état des correctifs au lancement.
 3. **Vérifier l'équipement BGE.** En tête de lancement : `messages: guard installed (DX12
-   1.0.12.74 …)` si les correctifs réseau sont posés, `unknown exe (…)` sinon (exe différent de la
-   version Steam du jour : correctifs réseau absents sur ce PC). Dans le salon, les messages `BGE -`
+   1.0.12.74 …)` si les correctifs réseau sont posés, `unknown exe (…)` sinon (version du jeu sans
+   table, ou exe différent sous ce numéro : correctifs réseau absents sur ce PC). Côté GameCore,
+   `jeu 1.0.12.… : tables d'adresses connues`, ou `… : aucun correctif posé` si la version est
+   inconnue ou si GameCore ne correspond pas à l'exe. Dans le salon, les messages `BGE -`
    du chat (`net_message_debug.log`) donnent l'état de chaque joueur et le verdict de l'hôte.
 4. **Faire la chronologie.** Convertir les horodatages unix en UTC (`date -u -d @1795163565`) et
    trouver le décalage des journaux réseau (heure locale) en alignant un même événement : un départ
