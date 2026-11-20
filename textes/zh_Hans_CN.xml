@@ -155,6 +155,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="zh_Hans_CN">
 			<Text>地图生成：用于寻找咽喉要道的三角剖分改用更快的等效算法计算，结果完全相同（每张生成的地图约 2 秒）。验证：两者都计算，保留游戏的结果并记录任何差异。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="zh_Hans_CN">
+			<Text>更新带来的界面新功能</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="zh_Hans_CN">
+			<Text>禁用：BetterGameExperience 今后更新加入的界面功能将以禁用状态到达，你可以随时在此启用。当前的界面选项保持不变。修复不受影响。重新启用：期间加入且你未自行设置的功能将被启用。仅限本地：不影响其他玩家。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="zh_Hans_CN">
 			<Text>加速核打击动画</Text>
 		</Row>
@@ -304,6 +310,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="zh_Hans_CN">
 			<Text>将发送和收到的交易提议以及交易界面显示的内容写入 Lua.log，用于分析人类玩家之间交错的交易。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="zh_Hans_CN">
+			<Text>生产储备与折扣区域诊断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="zh_Hans_CN">
+			<Text>将各城市储备生产力（溢出）的读取过程写入代理日志，将折扣区域徽章的计算过程写入 Lua.log，用于分析报告 BGE-E6DF54 和 BGE-36E0D7。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="zh_Hans_CN">
 			<Text>显示同时开始与结束回合的信号</Text>

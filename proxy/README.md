@@ -342,6 +342,7 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
 
 | réglage | défaut | effet |
 |---|---|---|
+| `ui_nouveautes=on\|off` (`-UiNouveautes`) | on | off : les ajouts d'interface absents du fichier sont coupés (`NOUVEAUTES_UI` et `nouveautes_coupees`, [src/lib.rs](src/lib.rs)). Quand le joueur confirme ce choix, l'onglet écrit la valeur de chaque ajout qui n'est pas encore dans le fichier. Seuls les ajouts livrés par les mises à jour suivantes y manquent donc, et ils arrivent désactivés. Sont des ajouts : `wmd_accel`, `ui_boutons`, `ui_carte_entiere`, `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_formations`, `ui_debordement`, `ui_logement`, `ui_avancement` et les mods d'interface repris. Les correctifs n'en sont pas (`ui_epingles`, `tours_production`, `ui_merveilles`, `ui_rendements`), ni `ui_recentrage`, dont « off » est le comportement de BGE. Un nouvel ajout d'interface réglable va dans `NOUVEAUTES_UI` et porte `nouveaute_ui = true` dans l'onglet ; sa valeur `off` doit être le jeu sans l'ajout. Un test du proxy de démarrage vérifie que les deux listes concordent |
 | `ui_boutons=on\|off` (`-UiBoutons`) | on | boutons d'attaque (ville, campement) et de frappe nucléaire (silo) au-dessus des drapeaux d'unités ; `ConsumeMouse` sur les boutons nucléaires |
 | `ui_recentrage=on\|off` (`-UiRecentrage`) | off | off : plus de recentrage de la caméra au clic sur ces boutons |
 | `ui_journal=on\|off` (`-UiJournal`) | off | note chaque script Lua et chaque XML lus |

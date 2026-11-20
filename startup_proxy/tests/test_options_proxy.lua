@@ -187,7 +187,7 @@ do
 		if not stacks[b.parent] then rows = -100; end
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; else titles = titles + 1; end
 	end
-	Check("44 réglages et 7 titres (crédits compris), dans le panneau", rows == 44 and titles == 7);
+	Check("46 réglages et 7 titres (crédits compris), dans le panneau", rows == 46 and titles == 7);
 
 	-- Options avancées : performances et diagnostic, cachées par défaut derrière un bouton.
 	local function StackOf(name)
@@ -257,7 +257,7 @@ do
 	for _, b in ipairs(m.built) do
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; end
 	end
-	Check("release : 39 réglages", rows == 39);
+	Check("release : 40 réglages", rows == 40);
 	Check("release : réglages de diagnostic absents", m.Row("Journal des scripts et XML chargés") == nil
 		and m.Row("Mesure du coût des épingles") == nil and m.Row("Diagnostic des accords entre joueurs") == nil
 		and m.Row("Profil des zones de l'exe") == nil);
@@ -437,6 +437,41 @@ do
 	m3.env.Controls.ProxyResetButton.callbacks.LClick();
 	m3.Answer("LOC_OPTIONS_RESET_OPTIONS_POPUP_YES");
 	Check("réinit sans partie : pas de redémarrage", m3.cfg == "" and not m3.RestartShown());
+end
+
+do
+	-- Nouveautés d'interface coupées : les ajouts déjà là sont écrits avec leur valeur, les autres
+	-- clés ne le sont pas.
+	local m = NewScreen("ui_logement=off\r\n", 1, 0);
+	local C = m.env.Controls;
+	local nouveautes = m.Row("Nouveautés d'interface des mises à jour");
+	Check("nouveautés : activées par défaut", nouveautes.PullDown.button.text == "Activé");
+	m.Choose(nouveautes, "Désactivé");
+	C.ConfirmButton.callbacks.LClick();
+	local w = m.written[1] or "";
+	Check("nouveautés : réglage écrit", w:find("ui_nouveautes=off", 1, true) ~= nil);
+	Check("nouveautés : ajouts actuels gelés", w:find("ui_boutons=on", 1, true) and w:find("wmd_accel=20", 1, true)
+		and w:find("ui_rapports=on", 1, true) and w:find("ui_formations=on", 1, true));
+	Check("nouveautés : valeur du fichier gardée", w:find("ui_logement", 1, true) == nil);
+	Check("nouveautés : ni correctifs ni recentrage", w:find("ui_merveilles", 1, true) == nil
+		and w:find("ui_epingles", 1, true) == nil and w:find("ui_recentrage", 1, true) == nil
+		and w:find("ameliorations", 1, true) == nil);
+	m.show();
+	Check("nouveautés : relues désactivées", m.Row("Nouveautés d'interface des mises à jour").PullDown.button.text == "Désactivé"
+		and m.Row("Boutons d'attaque au-dessus des drapeaux d'unités").PullDown.button.text == "Activé");
+
+	-- Un ajout absent du fichier (arrivé par une mise à jour) est montré désactivé, comme le proxy le
+	-- prend ; le choisir désactivé n'écrit rien, l'activer l'écrit.
+	local m2 = NewScreen("ui_nouveautes=off\r\nui_boutons=on\r\n", 1, 0);
+	local formations = m2.Row("Formation la plus haute en premier");
+	Check("nouveauté absente : montrée désactivée", formations ~= nil and formations.PullDown.button.text == "Désactivé");
+	Check("correctif absent : valeur par défaut", m2.Row("Merveille gardée dans la file après un échange").PullDown.button.text == "Activé");
+	m2.Choose(formations, "Désactivé");
+	m2.env.Controls.ConfirmButton.callbacks.LClick();
+	Check("nouveauté laissée désactivée : rien d'écrit", #m2.written == 0);
+	m2.Choose(formations, "Activé");
+	m2.env.Controls.ConfirmButton.callbacks.LClick();
+	Check("nouveauté activée : écrite", m2.written[1] == "ui_formations=on");
 end
 
 do

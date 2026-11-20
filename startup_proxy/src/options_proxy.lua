@@ -54,6 +54,8 @@ local PROXY_CACHE = {
 -- derrière le bouton « Afficher les options avancées », comme les options vidéo avancées du jeu.
 -- Restent visibles le confort et l'interface. `diag` : outil d'analyse, seulement dans les builds
 -- locaux (feature `diag` des proxys) ; la release ne le compile pas et l'onglet ne le montre pas.
+-- `nouveaute_ui` : ajout d'interface, coupé s'il manque au fichier quand `ui_nouveautes` vaut off
+-- (NOUVEAUTES_UI, proxy/src/lib.rs, même liste) ; sa valeur « off » est le jeu sans l'ajout.
 local PROXY_REGLAGES = {
 	{ titre = "LOC_BGD_OPT_TITRE_GENERAL" },
 	-- Interrupteur général : off, les autres réglages sont grisés (et gardés dans le fichier). Lu
@@ -120,7 +122,12 @@ local PROXY_REGLAGES = {
 		} },
 
 	{ titre = "LOC_BGD_OPT_TITRE_INTERFACE" },
-	{ cle = "wmd_accel", defaut = "20",
+	-- Off : les ajouts d'interface (`nouveaute_ui`) absents du fichier sont coupés. À la
+	-- confirmation de ce choix, l'onglet écrit la valeur de chaque ajout déjà là (Proxy_Save) : seuls
+	-- ceux des mises à jour suivantes restent absents, donc coupés (nouveautes_coupees, proxy/src/lib.rs).
+	{ cle = "ui_nouveautes", defaut = "on",
+		choix = PROXY_ON_OFF },
+	{ cle = "wmd_accel", defaut = "20", nouveaute_ui = true,
 		choix = {
 			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
 			{ "5", "x5" },
@@ -128,7 +135,7 @@ local PROXY_REGLAGES = {
 			{ "20", "x20" },
 			{ "40", "x40" },
 		} },
-	{ cle = "ui_boutons", defaut = "on",
+	{ cle = "ui_boutons", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_recentrage", defaut = "off",
 		choix = {
@@ -137,21 +144,21 @@ local PROXY_REGLAGES = {
 		} },
 	{ cle = "ui_epingles", defaut = "on",
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_carte_entiere", defaut = "on",
+	{ cle = "ui_carte_entiere", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "tours_production", defaut = "on",
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_banniere_annuler", defaut = "on",
+	{ cle = "ui_banniere_annuler", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_reduction_quartiers", defaut = "on",
+	{ cle = "ui_reduction_quartiers", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_formations", defaut = "on",
+	{ cle = "ui_formations", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_debordement", defaut = "on",
+	{ cle = "ui_debordement", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_logement", defaut = "on",
+	{ cle = "ui_logement", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_avancement", defaut = "on",
+	{ cle = "ui_avancement", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_CORRECTIFS" },
@@ -161,17 +168,17 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_MODS" },
-	{ cle = "ui_charges", defaut = "on",
+	{ cle = "ui_charges", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_routes", defaut = "on",
+	{ cle = "ui_routes", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_notifications", defaut = "on",
+	{ cle = "ui_notifications", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_bandeau", defaut = "on",
+	{ cle = "ui_bandeau", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_politiques", defaut = "on",
+	{ cle = "ui_politiques", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
-	{ cle = "ui_rapports", defaut = "on",
+	{ cle = "ui_rapports", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_DIAGNOSTIC", avance = true },
@@ -180,6 +187,8 @@ local PROXY_REGLAGES = {
 	{ cle = "ui_mesure_epingles", defaut = "off", diag = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_diag_accords", defaut = "off", diag = true,
+		choix = PROXY_ON_OFF },
+	{ cle = "diag_production", defaut = "off", diag = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_mesure_mouvements", defaut = "off",
 		choix = PROXY_ON_OFF },
@@ -252,10 +261,17 @@ local function Proxy_ShowAdvanced(shown)
 	Proxy_Resize();
 end
 
+-- Valeur d'une clé absente du fichier, comme la prend le proxy : off pour un ajout d'interface
+-- quand `ui_nouveautes` vaut off dans le fichier (nouveautes_coupees, proxy/src/lib.rs).
+local function Proxy_Defaut(r)
+	if r.nouveaute_ui and m_proxySaved.ui_nouveautes == "off" then return "off"; end
+	return r.defaut;
+end
+
 local function Proxy_Current(r)
 	local v = m_proxyPending[r.cle];
 	if v == nil then v = m_proxySaved[r.cle]; end
-	if v == nil then v = r.defaut; end
+	if v == nil then v = Proxy_Defaut(r); end
 	return v;
 end
 
@@ -305,7 +321,7 @@ local function Proxy_Populate()
 				-- Valeur du fichier lue au moment du choix, pas à la construction de la liste : après
 				-- une confirmation sans réouverture, l'ancienne valeur faisait ignorer le retour en
 				-- arrière (un changement sur deux perdu).
-				if value == (m_proxySaved[r.cle] or r.defaut) then
+				if value == (m_proxySaved[r.cle] or Proxy_Defaut(r)) then
 					m_proxyPending[r.cle] = nil;
 				else
 					m_proxyPending[r.cle] = value;
@@ -328,6 +344,15 @@ end
 -- Enregistre les choix en attente ; vrai s'ils sont écrits et qu'ils attendent le redémarrage du
 -- jeu : le proxy de GameCore a déjà lu le fichier, ou l'un d'eux n'est lu qu'au lancement du jeu.
 local function Proxy_Save()
+	-- Passage de `ui_nouveautes` à off : chaque ajout d'interface absent du fichier y est écrit avec
+	-- sa valeur actuelle, pour qu'il reste tel quel. Seuls les ajouts à venir manqueront au fichier.
+	if m_proxyPending.ui_nouveautes == "off" and m_proxySaved.ui_nouveautes ~= "off" then
+		for _, r in ipairs(PROXY_REGLAGES) do
+			if r.nouveaute_ui and m_proxyPending[r.cle] == nil and m_proxySaved[r.cle] == nil then
+				m_proxyPending[r.cle] = r.defaut;
+			end
+		end
+	end
 	local lines = {};
 	local demarrage = false;
 	for k, v in pairs(m_proxyPending) do

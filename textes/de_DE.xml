@@ -155,6 +155,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="de_DE">
 			<Text>Kartenerzeugung: Die Triangulation zum Finden der Engpässe wird von einem schnelleren Äquivalent mit exakt demselben Ergebnis berechnet (etwa 2 s pro erzeugter Karte). Überprüfung: berechnet beides, behält das Ergebnis des Spiels und protokolliert jeden Unterschied.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="de_DE">
+			<Text>Neue Oberflächenfunktionen aus Updates</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="de_DE">
+			<Text>Deaktiviert: Oberflächenfunktionen aus künftigen Updates von BetterGameExperience kommen deaktiviert an, und Sie können sie hier jederzeit einschalten. Ihre aktuellen Oberflächenoptionen behalten ihre Werte. Fehlerbehebungen sind nicht betroffen. Wieder aktiviert: Neuerungen, die inzwischen hinzugekommen sind und die Sie nicht selbst eingestellt haben, werden eingeschaltet. Nur lokal: keine Auswirkung auf andere Spieler.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="de_DE">
 			<Text>Beschleunigte Animation von Atomschlägen</Text>
 		</Row>
@@ -304,6 +310,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="de_DE">
 			<Text>Schreibt in Lua.log die gesendeten und empfangenen Abkommensvorschläge und was der Abkommensbildschirm zeigt, um gekreuzte Abkommen zwischen Menschen zu verstehen.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="de_DE">
+			<Text>Diagnose der Produktionsreserve und der vergünstigten Bezirke</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="de_DE">
+			<Text>Schreibt ins Proxy-Protokoll, wie die zurückgehaltene Produktion (Überschuss) für jede Stadt gelesen wird, und in Lua.log, wie das Abzeichen der vergünstigten Bezirke berechnet wird, um die Berichte BGE-E6DF54 und BGE-36E0D7 zu analysieren.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="de_DE">
 			<Text>Signale des gleichzeitigen Rundenbeginns und -endes anzeigen</Text>

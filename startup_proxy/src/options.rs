@@ -700,6 +700,26 @@ mod tests {
         }
     }
 
+    /// Les ajouts d'interface coupés par `ui_nouveautes=off` : ceux de `NOUVEAUTES_UI`
+    /// (proxy/src/lib.rs) sont exactement ceux que l'onglet marque `nouveaute_ui`, sinon l'onglet
+    /// en gèlerait un que le proxy ne coupe pas, ou montrerait activé un ajout coupé.
+    #[test]
+    fn nouveautes_ui_communes_avec_le_proxy() {
+        let lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib.rs")).unwrap();
+        let table = lib.split("const NOUVEAUTES_UI").nth(1).unwrap().split("];").next().unwrap();
+        let mut proxy: Vec<&str> = table.split("(\"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
+        let mut tab: Vec<&str> = LUA_BLOCK
+            .split("{ cle = \"")
+            .skip(1)
+            .filter(|s| s.lines().next().unwrap().contains("nouveaute_ui = true"))
+            .map(|s| s.split('"').next().unwrap())
+            .collect();
+        proxy.sort_unstable();
+        tab.sort_unstable();
+        assert!(proxy.len() >= 10, "{proxy:?}");
+        assert_eq!(proxy, tab);
+    }
+
     /// Chaque réglage de l'onglet a son nom et son aide dans les textes (textes/en_US.xml), et
     /// chaque clé LOC_ que le bloc emploie existe.
     #[test]

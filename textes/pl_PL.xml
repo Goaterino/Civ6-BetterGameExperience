@@ -155,6 +155,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="pl_PL">
 			<Text>Generowanie mapy: triangulacja służąca do znajdowania przewężeń jest liczona szybszym odpowiednikiem o dokładnie tym samym wyniku (około 2 s na wygenerowaną mapę). Weryfikacja: liczy oba, zachowuje wynik gry i zapisuje każdą różnicę.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="pl_PL">
+			<Text>Nowości interfejsu z aktualizacji</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="pl_PL">
+			<Text>Wyłączone: nowości interfejsu z kolejnych aktualizacji BetterGameExperience przychodzą wyłączone i możesz je tu włączyć, kiedy chcesz. Obecne opcje interfejsu zachowują swoje wartości. Poprawki nie są objęte. Ponownie włączone: nowości dodane w międzyczasie, których nie ustawiłeś sam, zostają włączone. Tylko lokalnie: bez wpływu na innych graczy.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="pl_PL">
 			<Text>Przyspieszona animacja ataków jądrowych</Text>
 		</Row>
@@ -304,6 +310,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="pl_PL">
 			<Text>Zapisuje w Lua.log wysłane i otrzymane propozycje umów oraz to, co pokazuje ekran umowy, aby zrozumieć krzyżujące się umowy między ludźmi.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="pl_PL">
+			<Text>Diagnostyka produkcji w rezerwie i dzielnic ze zniżką</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="pl_PL">
+			<Text>Zapisuje w dzienniku proxy, jak odczytywana jest produkcja w rezerwie (nadwyżka) każdego miasta, a w Lua.log, jak obliczana jest odznaka dzielnic ze zniżką, aby przeanalizować zgłoszenia BGE-E6DF54 i BGE-36E0D7.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="pl_PL">
 			<Text>Pokazuj sygnały jednoczesnego początku i końca tury</Text>

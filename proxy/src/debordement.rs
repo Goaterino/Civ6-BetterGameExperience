@@ -84,7 +84,8 @@ pub fn set_enabled(on: bool) {
     ENABLED.store(on, Ordering::Relaxed);
 }
 
-/// Réglage `diag_production`.
+/// Réglage `diag_production`, outil d'analyse : builds locaux seulement (feature `diag`).
+#[cfg(feature = "diag")]
 pub fn set_diag(on: bool) {
     DIAG.store(on, Ordering::Relaxed);
 }
