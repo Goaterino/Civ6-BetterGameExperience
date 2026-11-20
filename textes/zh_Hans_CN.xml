@@ -714,7 +714,7 @@
 			<Text>{1} 的游戏与主机相比缺少 {2} 个对象，多出 {3} 个：所有人重新加载主机的游戏，以防止 {1} 不同步。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="zh_Hans_CN">
-			<Text>{1} 的游戏不是当前的 Steam 版本：BGE 的网络修复在其电脑上未启用。</Text>
+			<Text>BGE 不支持 {1} 的游戏版本：BGE 的修复在其电脑上未启用。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="zh_Hans_CN">
 			<Text>{1} 和 {2} 通过主机连接（0 ms）。将在回合切换时尝试直接连接。</Text>

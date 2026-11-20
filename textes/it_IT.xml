@@ -714,7 +714,7 @@
 			<Text>Alla partita di {1} mancano {2} oggetti e ne ha {3} in più rispetto a quella dell'host: tutti ricaricano la partita dell'host per evitare la desincronizzazione di {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="it_IT">
-			<Text>Il gioco di {1} non è la versione Steam attuale: le correzioni di rete di BGE sono inattive sul suo PC.</Text>
+			<Text>La versione del gioco di {1} non è supportata da BGE: le correzioni di BGE sono inattive sul suo PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="it_IT">
 			<Text>{1} e {2} sono collegati tramite l'host (0 ms). Tentativo di collegamento diretto durante il cambio di turno.</Text>

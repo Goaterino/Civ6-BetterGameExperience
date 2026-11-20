@@ -714,7 +714,7 @@
 			<Text>W grze {1} brakuje {2} obiektów i ma {3} nadmiarowych w porównaniu z grą hosta: wszyscy wczytują ponownie grę hosta, aby zapobiec desynchronizacji {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="pl_PL">
-			<Text>Gra gracza {1} nie jest aktualną wersją ze Steam: poprawki sieciowe BGE są nieaktywne na tym komputerze.</Text>
+			<Text>BGE nie obsługuje wersji gry gracza {1}: poprawki BGE są nieaktywne na tym komputerze.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pl_PL">
 			<Text>{1} i {2} są połączeni przez hosta (0 ms). Próba bezpośredniego połączenia podczas zmiany tury.</Text>

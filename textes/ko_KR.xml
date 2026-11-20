@@ -714,7 +714,7 @@
 			<Text>{1} 님의 게임에 호스트보다 오브젝트 {2}개가 없고 {3}개가 더 있습니다. {1} 님의 동기화 오류를 막기 위해 모두가 호스트의 게임을 다시 불러옵니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="ko_KR">
-			<Text>{1}의 게임이 현재 Steam 버전이 아닙니다. 해당 PC에서는 BGE의 네트워크 수정이 비활성화됩니다.</Text>
+			<Text>{1}의 게임 버전은 BGE에서 지원하지 않습니다. 해당 PC에서는 BGE의 수정이 비활성화됩니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ko_KR">
 			<Text>{1}와(과) {2}이(가) 호스트를 통해 연결되어 있습니다(0 ms). 턴 전환 중에 직접 연결을 시도합니다.</Text>

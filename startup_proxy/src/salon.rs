@@ -276,8 +276,8 @@ unsafe extern "C-unwind" fn lua_medias(l: *mut std::ffi::c_void) -> i32 {
     1
 }
 
-/// `Civ6Proxy_ExeInconnu()` → 1 if the game exe is not a build BGE knows (network fixes not
-/// installed), else 0.
+/// `Civ6Proxy_ExeInconnu()` → 1 if the game version has no address table (fixes not installed),
+/// else 0.
 unsafe extern "C-unwind" fn lua_unknown_exe(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
     (h.push_integer)(l, crate::messages::unknown_exe() as i32);

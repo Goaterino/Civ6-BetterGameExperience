@@ -303,11 +303,11 @@ static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
 static WIPES: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
-/// The exe is not one of the builds BGE knows: none of the network fixes is installed.
-static UNKNOWN_EXE: AtomicBool = AtomicBool::new(false);
-
+/// The game version has no table (or cannot be read): BGE knows neither its exe nor its GameCore,
+/// and installs none of the fixes that use their addresses. An exe that only fails the fingerprints
+/// of its version is not counted: the log says it, the chat does not.
 pub fn unknown_exe() -> bool {
-    UNKNOWN_EXE.load(Ordering::Relaxed)
+    !EXES.iter().any(|t| crate::exe::for_this_game(t.nom))
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -635,7 +635,6 @@ pub unsafe fn install() {
             "messages: unknown exe ({}), guard not installed",
             crate::exe::no_table(&raisons)
         ));
-        UNKNOWN_EXE.store(true, Ordering::Relaxed);
         return;
     };
     let image = |adresse: u64| exe + (adresse - BASE) as usize;

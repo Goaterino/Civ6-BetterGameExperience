@@ -714,7 +714,7 @@
 			<Text>{1}'s game is missing {2} objects and has {3} extra compared to the host's: everyone reloads the host's game to prevent {1}'s desync.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="en_US">
-			<Text>{1}'s copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.</Text>
+			<Text>{1}'s game version is not supported by BGE: BGE's fixes are inactive on their PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="en_US">
 			<Text>{1} and {2} are linked through the host (0 ms). Trying to connect them directly during the turn change.</Text>

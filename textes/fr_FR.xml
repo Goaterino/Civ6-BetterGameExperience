@@ -714,7 +714,7 @@
 			<Text>Il manque {2} objets à la partie de {1} et elle en a {3} en trop par rapport à celle de l'hôte : tout le monde recharge la partie de l'hôte pour éviter la désynchronisation de {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="fr_FR">
-			<Text>Le jeu de {1} n'est pas la version Steam actuelle : les correctifs réseau de BGE sont inactifs sur son PC.</Text>
+			<Text>La version du jeu de {1} n'est pas prise en charge par BGE : les correctifs de BGE sont inactifs sur son PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="fr_FR">
 			<Text>{1} et {2} passent par l'hôte (0 ms). Tentative de lien direct pendant le changement de tour.</Text>
