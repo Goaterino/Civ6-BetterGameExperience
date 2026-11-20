@@ -176,6 +176,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_bandeau", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
+	{ cle = "ui_luxes", defaut = "off", nouveaute_ui = true,
+		choix = PROXY_ON_OFF },
 	{ cle = "ui_politiques", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rapports", defaut = "on", nouveaute_ui = true,

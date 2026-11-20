@@ -275,6 +275,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="zh_Hans_CN">
 			<Text>基于 TopPanel Extension Pro（号码菌 / Azukii）。在顶部栏显示食物、生产力、人口、每座城市的平均宜居度和奢侈品资源，并附各城市详情；还显示队友的资源。如果该模组已启用，则取代它。没有该模组时，保留 Better Spectator Mod 的顶部栏。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="zh_Hans_CN">
+			<Text>奢侈品交易通知</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="zh_Hans_CN">
+			<Text>为每个拥有你没有的多余奢侈品资源的玩家显示一条通知（即扩展顶部栏的奢侈品按钮所列出的那些）。左键点击会打开交易界面，并已将这些奢侈品放入交易；右键点击可关闭通知。交易不再可行时，通知会自动消失。需要启用扩展顶部栏。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="zh_Hans_CN">
 			<Text>政策卡效果</Text>
 		</Row>
@@ -496,6 +502,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="zh_Hans_CN">
 			<Text>清除你能自行关闭的通知（交易和待做的选择会保留）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="zh_Hans_CN">
+			<Text>可交易奢侈品</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="zh_Hans_CN">
+			<Text>{1} 拥有你没有的多余奢侈品：{2}。点击打开交易。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="zh_Hans_CN">
 			<Text>操作失败</Text>

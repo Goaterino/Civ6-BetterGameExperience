@@ -275,6 +275,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="ru_RU">
 			<Text>На основе TopPanel Extension Pro (号码菌 / Azukii). Пища, производство, население, среднее довольство на город и ресурсы роскоши на верхней панели, с подробностями по городам; ресурсы союзников по команде. Заменяет мод, если он включён. Без мода сохраняется верхняя панель Better Spectator Mod.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="ru_RU">
+			<Text>Уведомления о торговле редкими ресурсами</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="ru_RU">
+			<Text>Уведомление для каждого игрока, у которого есть излишки редких ресурсов, которых нет у вас: тех, что перечисляет кнопка редких ресурсов расширенной верхней панели. Щелчок открывает экран сделки, в которую эти ресурсы уже добавлены; щелчок правой кнопкой закрывает уведомление. Оно исчезает, когда обмен больше невозможен. Требуется расширенная верхняя панель.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="ru_RU">
 			<Text>Эффект карточек политики</Text>
 		</Row>
@@ -496,6 +502,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="ru_RU">
 			<Text>Очищает уведомления, которые вы можете закрыть сами (сделки и ожидающие решения остаются).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="ru_RU">
+			<Text>Доступна торговля редкими ресурсами</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="ru_RU">
+			<Text>У игрока {1} есть излишки редких ресурсов, которых нет у вас: {2}. Щёлкните, чтобы открыть сделку.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="ru_RU">
 			<Text>Операция не удалась</Text>
