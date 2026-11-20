@@ -2,6 +2,27 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.13.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.13.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.12.0 y 0.13.0 las desactiva.
+
+### Actualización del juego 1.0.12.74
+- **Actualización de Civilization VI del 19 de noviembre (1.0.12.74)**: BetterGameExperience ya
+  reconoce el juego actualizado, en DX12 y DX11. Las versiones anteriores no instalan en él ninguna
+  de sus correcciones. Contribución de yodha.
+
+### Correcciones multijugador [todos los jugadores]
+- **Jugador que se desconecta**: el juego entregaba a la IA un jugador desconectado en cada máquina
+  por separado, sin ningún mensaje entre ellas, así que las máquinas podían jugar ese turno de forma
+  distinta y desincronizarse. Ahora el puesto sigue siendo humano, y el anfitrión termina el turno del
+  jugador ausente cuando todos los humanos conectados han terminado el suyo. Un jugador expulsado
+  sigue pasando a la IA. Contribución de yodha.
+- **Recarga de todos**: cuando la partida de un jugador deja de coincidir, el anfitrión inicia ahora
+  la recarga y todos los jugadores cargan la misma copia de su partida; el turno solo empieza cuando
+  cada jugador la ha cargado y su partida se ha comprobado. Un jugador que sigue difiriendo se recarga
+  una vez más. Contribución de yodha.
+
 ## BetterGameExperience 0.12.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.12.0 para las correcciones

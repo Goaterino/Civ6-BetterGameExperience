@@ -2,6 +2,27 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.13.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.13.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.12.0 und 0.13.0 mischt, schaltet sie ab.
+
+### Spielupdate 1.0.12.74
+- **Civilization-VI-Update vom 19. November (1.0.12.74)**: BetterGameExperience erkennt jetzt das
+  aktualisierte Spiel, DX12 und DX11. Frühere Versionen installieren darauf keine ihrer Korrekturen.
+  Beitrag von yodha.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Spieler, der die Verbindung verliert**: Das Spiel übergab einen getrennten Spieler auf jedem
+  Rechner einzeln an die KI, ohne Nachricht zwischen ihnen, sodass die Rechner diese Runde
+  unterschiedlich spielen und auseinanderlaufen konnten. Der Platz bleibt jetzt menschlich, und der
+  Host beendet die Runde des abwesenden Spielers, sobald alle verbundenen Menschen ihre beendet
+  haben. Ein gekickter Spieler wird weiterhin von der KI übernommen. Beitrag von yodha.
+- **Neuladen für alle**: Wenn das Spiel eines Spielers nicht mehr übereinstimmt, startet der Host
+  das Neuladen jetzt selbst, und alle Spieler laden dieselbe Kopie seines Spiels; die Runde beginnt
+  erst, wenn jeder Spieler sie geladen hat und sein Spiel geprüft wurde. Ein Spieler, der danach
+  noch abweicht, wird noch einmal neu geladen. Beitrag von yodha.
+
 ## BetterGameExperience 0.12.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.12.0 für die Korrekturen **[alle

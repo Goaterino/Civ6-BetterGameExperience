@@ -2,6 +2,26 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.13.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.13.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.12.0 i 0.13.0, je wyłącza.
+
+### Aktualizacja gry 1.0.12.74
+- **Aktualizacja Civilization VI z 19 listopada (1.0.12.74)**: BetterGameExperience rozpoznaje teraz
+  zaktualizowaną grę, w DX12 i DX11. Wcześniejsze wersje nie instalują w niej żadnej ze swoich
+  poprawek. Wkład yodha.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Gracz, który się rozłącza**: gra oddawała rozłączonego gracza SI na każdym komputerze osobno, bez
+  żadnej wiadomości między nimi, więc komputery mogły rozegrać tę turę inaczej i się rozsynchronizować.
+  Miejsce pozostaje teraz ludzkie, a host kończy turę nieobecnego gracza, gdy wszyscy połączeni
+  ludzie zakończą swoją. Wyrzucony gracz nadal przechodzi pod SI. Wkład yodha.
+- **Ponowne wczytanie u wszystkich**: gdy gra jednego gracza przestaje się zgadzać, host sam
+  rozpoczyna ponowne wczytanie i wszyscy gracze wczytują tę samą kopię jego gry; tura zaczyna się
+  dopiero, gdy każdy gracz ją wczyta, a jego gra zostanie sprawdzona. Gracz, który nadal się różni,
+  jest wczytywany jeszcze raz. Wkład yodha.
+
 ## BetterGameExperience 0.12.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.12.0, aby działały poprawki

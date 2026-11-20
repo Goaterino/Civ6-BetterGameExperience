@@ -4,6 +4,26 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.13.0
+
+Multiplayer games need every human player on 0.13.0 for the **[all players]** fixes: a lobby that
+mixes 0.12.0 and 0.13.0 turns them off.
+
+### Game update 1.0.12.74
+- **Civilization VI update of 19 November (1.0.12.74)**: BetterGameExperience now recognizes the
+  updated game, DX12 and DX11. Earlier versions install none of their fixes on it. Contributed by
+  yodha.
+
+### Multiplayer fixes [all players]
+- **Player who drops**: the game handed a player who dropped to the AI on each machine separately,
+  with no message between them, so the machines could play that turn differently and desync. The
+  slot now stays human, and the host ends the absent player's turn once every connected human has
+  ended theirs. A kicked player is still taken over by the AI. Contributed by yodha.
+- **Reload of everyone**: when a player's game no longer matches, the host now starts the reload
+  itself and every player loads the same copy of its game; the turn starts only once every player
+  has loaded it and their game has been checked. A player who still differs is reloaded once more.
+  Contributed by yodha.
+
 ## BetterGameExperience 0.12.0
 
 Multiplayer games need every human player on 0.12.0 for the **[all players]** fixes: a lobby that
