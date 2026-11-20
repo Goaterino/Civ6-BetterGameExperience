@@ -35,7 +35,9 @@ local Debordement_Ok, Debordement_Err = pcall(function()
 	-- (les affichages effacent alors ce qu'un passage précédent aurait laissé).
 	local function Reserve(pCity)
 		if pCity == nil or pCity:GetOwner() ~= Game.GetLocalPlayer() or IndicateursCoupes() then return 0; end
-		local v = BGD_Debordement(pCity:GetOwner(), pCity:GetID());
+		-- Le tour ne sert qu'au diagnostic `diag_production` du proxy.
+		local tour = (Game ~= nil and Game.GetCurrentGameTurn ~= nil) and Game.GetCurrentGameTurn() or -1;
+		local v = BGD_Debordement(pCity:GetOwner(), pCity:GetID(), tour);
 		if type(v) ~= "number" or v < 1 then return 0; end
 		return math.floor(v);
 	end
@@ -110,8 +112,17 @@ local Debordement_Ok, Debordement_Err = pcall(function()
 			end
 		end
 	end
-	-- Pas d'événement à ajouter : bandeau et panneaux se redessinent déjà sur les événements de
-	-- production, que le jeu envoie après la mise à jour du cache où le proxy relève la valeur.
+	-- La réserve est relue en direct dans la file de la ville (debordement.rs) : le cache de la
+	-- file n'est reconstruit que quand elle change, pas quand le tour verse la réserve (BGE-E6DF54 :
+	-- « +8 » resté sur la capitale jusqu'à un changement de production). Les panneaux se redessinent
+	-- à la sélection ; les bandeaux, eux, sont redessinés au début du tour local.
+	if CityBanner ~= nil and type(RefreshPlayerProduction) == "function" and Events ~= nil
+		and Events.LocalPlayerTurnBegin ~= nil then
+		Events.LocalPlayerTurnBegin.Add(function()
+			local id = Game.GetLocalPlayer();
+			if id ~= nil and id >= 0 then RefreshPlayerProduction(id); end
+		end);
+	end
 end);
 if not Debordement_Ok then
 	print("Debordement echec " .. tostring(Debordement_Err));

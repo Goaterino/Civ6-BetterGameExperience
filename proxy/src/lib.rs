@@ -235,6 +235,9 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_debordement=") {
             debordement::set_enabled(v.trim() != "off");
         }
+        if let Some(v) = line.trim().strip_prefix("diag_production=") {
+            debordement::set_diag(v.trim() == "on");
+        }
         if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
             ui::set_merveilles(v.trim() != "off");
         }

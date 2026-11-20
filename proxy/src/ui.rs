@@ -1389,7 +1389,14 @@ fn append_blocks(src: &[u8], blocks: &[&str]) -> Vec<u8> {
 /// (production en réserve), après `ui_production.lua`. None si aucun.
 unsafe fn production_extras(l: *mut c_void, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
     let mut blocks: Vec<&str> = Vec::new();
+    if crate::debordement::diag() {
+        // Réglage `diag_production` : lignes `BGD diag quartiers` du badge dans Lua.log.
+        blocks.push("BGD_DIAG_PRODUCTION = true;");
+        what.push("diagnostic de la production".into());
+    }
     if QUARTIERS.load(Ordering::Relaxed) {
+        // Coût lu en direct dans GameCore : le cache de la ville peut être périmé (BGE-36E0D7).
+        crate::debordement::publier_cout(l);
         blocks.push(QUARTIERS_BLOCK);
         what.push("badge des quartiers en réduction".into());
     }
