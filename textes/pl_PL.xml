@@ -281,6 +281,12 @@
 		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="pl_PL">
 			<Text>Po wczytaniu gry preferencje SI każdego gracza są odtwarzane jak w nowej grze, bez początkowych wartości profilu SI, które nowa gra odrzuca: wyniki SI (polityki, wielcy ludzie) pozostają takie same jak na innych komputerach (mniej desynchronizacji po ponownym wczytaniu). Tylko gdy wszyscy gracze mają tę wersję.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="pl_PL">
+			<Text>Naprawione dane wczytywane dokładnie</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="pl_PL">
+			<Text>Gdy host ponownie wysyła zdesynchronizowane dane, gra wczytuje je dokładnie tak, jak zapisał je host: operacje jednostek i bonusy śledzone przez SI nie są już podwajane, analizy Kongresu Światowego zachowują swoje wartości, drzewa zachowań SI pozostają połączone, a dane zgodne już z danymi hosta pozostają nietknięte (mniej desynchronizacji kończących się pełnym ponownym wczytaniem). Działa nawet wtedy, gdy inni gracze nie mają tej wersji.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="pl_PL">
 			<Text>Ładunki budowniczych na ich fladze</Text>
 		</Row>

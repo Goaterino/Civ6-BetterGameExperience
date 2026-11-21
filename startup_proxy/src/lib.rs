@@ -44,6 +44,7 @@ mod relink;
 mod pings;
 mod snapshots;
 mod reparation_synchro;
+mod relecture_sur_place;
 mod maths_communes;
 mod medias;
 mod rejoin;
@@ -155,6 +156,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             sync_notes::install();
             // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.
             reparation_synchro::install();
+            relecture_sur_place::install();
             let exe_base = win::GetModuleHandleW(std::ptr::null()) as usize;
             assets::install(exe_base);
             ramasse_miettes::install(exe_base);

@@ -26,9 +26,15 @@
 //!   (`1407f69d0`, celui de « doesn't exist on client »). **Pas pour une vraie partie.** Le chemin
 //!   sur place du client désinscrit l'archive, la relit et la réinscrit, sans DeltaDesyncCallbacks.
 //!   Sur une petite carte avec des IA, il a changé des boucles d'IA sans conséquence en rechargements
-//!   complets : 15 points de dégâts sur une unité d'IA, chez le client seulement, donnent 6
+//!   complets : 15 points de dégâts sur une unité d'IA, chez le client seulement, donnent 2 à 6
 //!   rechargements au lieu de 0 (jeu d'origine et `fulldelta`) ; si le client recharge au quatrième
-//!   tour, il y en a 5 au lieu de 2. Gardé pour le banc du chemin sur place ;
+//!   tour, il y en a 5 au lieu de 2. Deux causes, côté client : quatre lectures de variables en
+//!   service ne rendent pas ce que l'hôte a écrit (`relecture`, proxy GameCore), et relire une
+//!   variable qui a déjà la valeur de l'hôte change ensuite les décisions de l'IA
+//!   (`relecture_sur_place`). Avec les deux chez le client (`relecture_fidele=on`), plus aucun
+//!   rechargement en trop : 0 dans le premier cas, 1 (celui qu'il a demandé) dans le second. Reste
+//!   désactivé par défaut : l'hôte ne sait pas si ses clients ont ce correctif. Gardé pour le banc du
+//!   chemin sur place ;
 //! - `ladder` : `fulldelta` d'abord, `create` si l'archive est encore désynchronisée ensuite (même
 //!   mise en garde que `create`) ;
 //! - `count` : ne change rien, note ce que le mode par défaut (`fulldelta`) aurait envoyé.

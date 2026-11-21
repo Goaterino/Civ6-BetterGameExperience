@@ -281,6 +281,12 @@
 		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="it_IT">
 			<Text>Dopo il caricamento di una partita, le preferenze IA di ogni giocatore vengono ricostruite come in una nuova partita, senza i valori iniziali del profilo IA che una nuova partita scarta: i punteggi IA (politiche, grandi personaggi) restano gli stessi delle altre macchine (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="it_IT">
+			<Text>Dati riparati riletti fedelmente</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="it_IT">
+			<Text>Quando l'host reinvia dati desincronizzati, il gioco li rilegge esattamente come l'host li ha scritti: le operazioni delle unità e i potenziamenti seguiti dall'IA non vengono più raddoppiati, le analisi del Congresso Mondiale conservano i loro valori, gli alberi di comportamento dell'IA restano collegati e i dati già uguali a quelli dell'host restano intatti (meno desincronizzazioni che finiscono con un ricaricamento completo). Funziona anche se gli altri giocatori non hanno questa versione.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="it_IT">
 			<Text>Cariche dei costruttori sulla loro bandiera</Text>
 		</Row>

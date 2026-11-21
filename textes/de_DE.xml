@@ -281,6 +281,12 @@
 		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="de_DE">
 			<Text>Nach dem Laden eines Spiels werden die KI-Präferenzen jedes Spielers wie in einem neuen Spiel aufgebaut, ohne die Startwerte des KI-Profils, die ein neues Spiel verwirft: Die KI-Werte (Politiken, Große Persönlichkeiten) bleiben dieselben wie auf den anderen Rechnern (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="de_DE">
+			<Text>Reparierte Daten exakt zurücklesen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="de_DE">
+			<Text>Wenn der Host nicht synchrone Daten erneut sendet, liest das Spiel sie genau so, wie der Host sie geschrieben hat: Einheitenoperationen und von der KI verfolgte Boosts werden nicht mehr verdoppelt, Analysen des Weltkongresses behalten ihre Werte, die Verhaltensbäume der KI bleiben verknüpft und Daten, die bereits denen des Hosts entsprechen, bleiben unverändert (weniger Desynchronisationen, die mit einem vollständigen Neuladen enden). Funktioniert auch, wenn andere Spieler diese Version nicht haben.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="de_DE">
 			<Text>Ladungen der Handwerker auf ihrer Flagge</Text>
 		</Row>

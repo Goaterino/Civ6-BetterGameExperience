@@ -281,6 +281,12 @@
 		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="en_US">
 			<Text>After a game is loaded, each player's AI preferences are rebuilt as in a new game, without the starting values of the AI profile that a new game discards: AI scores (policies, great people) stay the same as on the other machines (fewer desyncs after a reload). Only when every player has this version.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="en_US">
+			<Text>Repaired data read back exactly</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="en_US">
+			<Text>When the host resends data that went out of sync, the game reads it back exactly as the host wrote it: unit operations and the boosts the AI tracks are no longer doubled, World Congress analyses keep their values, AI behavior trees stay linked, and data that already matches the host's is left untouched (fewer desyncs that end in a full reload). Works even if other players don't have this version.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="en_US">
 			<Text>Builder charges on their flag</Text>
 		</Row>

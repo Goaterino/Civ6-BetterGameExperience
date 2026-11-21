@@ -281,6 +281,12 @@
 		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="fr_FR">
 			<Text>Après le chargement d'une partie, les préférences d'IA de chaque joueur sont reconstruites comme dans une nouvelle partie, sans les valeurs de départ du profil d'IA qu'une nouvelle partie écarte : les scores d'IA (doctrines, personnages illustres) restent les mêmes que sur les autres machines (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="fr_FR">
+			<Text>Données réparées relues à l'identique</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="fr_FR">
+			<Text>Quand l'hôte renvoie des données désynchronisées, le jeu les relit exactement comme l'hôte les a écrites : les opérations des unités et les boosts suivis par l'IA ne sont plus doublés, les analyses du Congrès mondial gardent leurs valeurs, les arbres de comportement de l'IA restent liés et les données déjà identiques à celles de l'hôte ne sont pas touchées (moins de désynchronisations qui finissent en rechargement complet). Fonctionne même si les autres joueurs n'ont pas cette version.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="fr_FR">
 			<Text>Charges des bâtisseurs sur leur drapeau</Text>
 		</Row>
