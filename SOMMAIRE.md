@@ -128,3 +128,19 @@ depuis la racine), ceux du [relais des rapports](rapport_worker/README.md#tests)
 `textes/gen_textes.py --check --strict`. Les tests Lua qui lisent des fichiers du jeu les cherchent
 dans le dossier Steam par défaut (ou le chemin passé en argument) et sont sautés sans eux
 (« test sauté ») : la CI ne les exécute pas, ils restent à lancer sur une machine qui a le jeu.
+
+## Binaires des versions prises en charge
+
+`binaires_jeu/<version>/` (ignoré par git, à garder en local) : les exe DX11/DX12, les DLL de
+`Base\Binaries\Win64Steam` et `GameCore_XP2_FinalRelease.dll` de chaque version du jeu prise en
+charge, pour vérifier une nouvelle fonctionnalité sur toutes. Au 2026-11-21 : 1.0.12.58 (complet),
+1.0.12.72 (exe DX12 seul), 1.0.12.74 (complet, copié du jeu installé). Les tests Rust des deux
+proxys lisent les exe par `CIV6_EXE_58_DIR`, `CIV6_EXE_72_DIR` et `CIV6_EXE_74_DIR` (par défaut, le
+jeu installé pour la 1.0.12.74) et sautent une version absente ; `check_hooks.py` prend le GameCore
+en argument :
+
+```powershell
+$env:CIV6_EXE_58_DIR = "$PWDinaires_jeu.0.12.58"; $env:CIV6_EXE_72_DIR = "$PWDinaires_jeu.0.12.72"
+cargo test --release --manifest-path startup_proxy\Cargo.toml
+python proxy	ests\check_hooks.py proxy	argetelease\BGD_GameCore_XP2.dll binaires_jeu.0.12.58\GameCore_XP2_FinalRelease.dll $env:TEMP\ch58
+```
