@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="ja_JP">
 			<Text>自分の都市バナーに、住宅の上限まであと 1 になるとオレンジ色の家 (人口増加率 50% 鈍化)、上限に達した時点で赤い家 (75% 鈍化) を表示します。このオプションがない場合、ゲームは上限を超えてからしか赤い家を表示しません。表示のみ。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="ja_JP">
+			<Text>取引画面の Shift+クリックと Ctrl+クリック</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="ja_JP">
+			<Text>取引画面で、提供可能な資源、ゴールド、ターン毎のゴールド、外交的支持を Shift+クリックすると取引に入れられる上限まで、Ctrl+クリックすると通常のクリックの 10 倍 (資源 10、ゴールド 1000、ターン毎のゴールド 100、外交的支持 10) を追加します。このオプションがない場合、それより多い数量は数量欄に入力する必要があります。ローカルのみ：他のプレイヤーには影響しません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ja_JP">
 			<Text>区域の割引: -{1}% (この種類の区域数が平均より少ない)。</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ja_JP">
 			<Text>総督の称号、総督の移動、偉人の後に、市民を動かさなくても上部バーが更新されます。表示のみで、同期ずれは起きません。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="ja_JP">
-			<Text>AIの区域ユニットを固定順に</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="ja_JP">
-			<Text>AIが次の区域で受け取るユニットの表を、固定の順序で保存・同期・再構築します。再読み込みの後もすべてのPCが同じ順序でユニットを作成します（同期ずれが減ります）。計測：何も変更せず、記録のみ。全プレイヤーがこのバージョンの場合のみ。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="ja_JP">
-			<Text>読み込み時に記憶した施設を保持</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="ja_JP">
-			<Text>ゲームを読み込んだ後、各プレイヤーのマップは記憶していた施設を保存時のまま保持し、見えなくなったタイルにその後置かれたもの（部族の村）を追加しません。再読み込みしたゲームが進行中のゲームと一致します（再読み込み後の同期ずれが減ります）。全プレイヤーがこのバージョンの場合のみ。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="ja_JP">
-			<Text>読み込み時にイベントの順序を保持</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="ja_JP">
-			<Text>ゲームを読み込んだ後、ゲームのイベントは新しいゲームと同じく、AIより先に各プレイヤーに届きます。AIが最初の出会いの代表団より前に都市国家を評価することはなくなります（再読み込み後の同期ずれが減ります）。全プレイヤーがこのバージョンの場合のみ。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="ja_JP">
-			<Text>AIの嗜好を新しいゲームと同様に</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="ja_JP">
-			<Text>ゲームを読み込んだ後、各プレイヤーのAIの嗜好は新しいゲームと同じように再構築され、新しいゲームでは破棄されるAIプロファイルの初期値は含まれません。AIのスコア（政策、偉人）は他のマシンと同じままになります（再読み込み後の同期ずれが減ります）。全プレイヤーがこのバージョンの場合のみ。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="ja_JP">
 			<Text>修復データを正確に再読み込み</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ja_JP">
 			<Text>{1} は BetterGameExperience {2} を有効にしています。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="ja_JP">
+			<Text>{1} のゲーム設定がホストと異なります。{1} はゲーム開始前にロビーを退出して再参加してください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ja_JP">
 			<Text>BGE Check: 全プレイヤーが BetterGameExperience {1} を有効にしています ({2})。</Text>

@@ -33,8 +33,8 @@
 //!   variable qui a déjà la valeur de l'hôte change ensuite les décisions de l'IA
 //!   (`relecture_sur_place`). Avec les deux chez le client (`relecture_fidele=on`), plus aucun
 //!   rechargement en trop : 0 dans le premier cas, 1 (celui qu'il a demandé) dans le second. Reste
-//!   désactivé par défaut : l'hôte ne sait pas si ses clients ont ce correctif. Gardé pour le banc du
-//!   chemin sur place ;
+//!   réservé aux builds de diagnostic : l'hôte ne sait pas si ses clients ont ce correctif. Gardé
+//!   pour le banc du chemin sur place ;
 //! - `ladder` : `fulldelta` d'abord, `create` si l'archive est encore désynchronisée ensuite (même
 //!   mise en garde que `create`) ;
 //! - `count` : ne change rien, note ce que le mode par défaut (`fulldelta`) aurait envoyé.
@@ -58,7 +58,8 @@
 //! qu'il reçoit (sans effet sur une archive qui était synchronisée). Les séries des contrôles de test
 //! et des vrais contrôles sont comptées à part.
 //!
-//! Réglages dans `rollover_proxy.cfg` (lus au démarrage, puis au plus toutes les 3 s) :
+//! Pas de réglage joueur : la release fait toujours `fulldelta`. Les builds de diagnostic (feature
+//! `diag`) lisent ces clés dans `rollover_proxy.cfg` (au démarrage, puis au plus toutes les 3 s) :
 //! `reparation_synchro=fulldelta|create|ladder|count|off`, `reparation_synchro_essais=3`,
 //! `reparation_synchro_max=32` (escalades par contrôle et par joueur), `banc_synchro=`,
 //! `banc_synchro_reel=off`, `banc_synchro_max=4`. `actif=off` (l'interrupteur général de BGE) ne pose
@@ -225,7 +226,9 @@ fn config(refresh: bool) -> Config {
     let mut g = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
     let stale = g.as_ref().map_or(true, |(_, t)| refresh && t.elapsed() > Duration::from_secs(3));
     if stale {
-        let text = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
+        // Correctif de stabilité sans réglage joueur : la release garde la configuration par défaut
+        // (fulldelta) ; les autres modes et le banc ne sont lus que par les builds de diagnostic.
+        let text = if cfg!(feature = "diag") { crate::options::read_config().map(|(t, _)| t).unwrap_or_default() } else { String::new() };
         *g = Some((parse_config(&text), Instant::now()));
     }
     g.as_ref().map(|(c, _)| c.clone()).unwrap_or_default()

@@ -2,6 +2,68 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.14.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.14.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.13.0 i 0.14.0, je wyłącza.
+
+### Instalacja i aktualizacje
+- **Podpisane pliki**: instalator i obie biblioteki DLL BetterGameExperience mają teraz certyfikat
+  podpisywania kodu (Certum, programista open source). Windows pokazuje wydawcę we właściwościach
+  pliku i w oknie instalatora, a ostrzeżenia SmartScreen i programów antywirusowych powinny być
+  rzadsze.
+
+### Wersje gry
+- **Civilization VI 1.0.12.58**: BetterGameExperience rozpoznaje teraz tę starszą wersję gry, w DX12 i
+  DX11. Każda wersja gry ma własne adresy, a gra, której pliki nie pasują do jej wersji, nie
+  instaluje żadnej poprawki.
+- **Nieobsługiwana wersja gry**: gracz, którego wersja gry nie jest obsługiwana przez
+  BetterGameExperience, jest ogłaszany na czacie po dołączeniu (komunikat mówił wcześniej, że jego
+  kopia nie jest aktualną wersją ze Steam).
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Mniej desynchronizacji po wczytaniu**: gra wczytana na jednym komputerze liczyła nieco inaczej niż
+  gra toczona na pozostałych. Zapamiętane ulepszenia graczy były przepisywane przy wczytaniu,
+  odbiorniki zdarzeń działały w innej kolejności, SI na stałe zachowywała preferencje swojego
+  przywódcy (Sejong: -75% punktów Wielkiego Proroka), a jednostki dawane przy tworzeniu dzielnicy
+  (bonusy poziomu trudności SI, start w późniejszej erze) powstawały w innej kolejności. Wczytana gra
+  liczy teraz tak samo jak toczona. Wkład OzrielTheLost.
+- **Te same obliczenia na każdym procesorze**: niektóre obliczenia (funkcje wykładnicze, potęgi) mogły
+  zaokrąglać się inaczej na procesorach z instrukcjami FMA3 i bez nich. Wszystkie komputery liczą je
+  teraz tak samo. Wkład OzrielTheLost.
+- **Zamiana jednostek**: zamiana dwóch jednostek mogła zostawić jedną w połowie drogi, na jednym polu
+  z inną jednostką (szermierz na przyczajonym tygrysie). Obie jednostki kończą teraz swój ruch.
+
+### Gra wieloosobowa
+- **Desynchronizacje naprawiane bez wczytywania**: gdy obiekt pozostaje rozsynchronizowany, host
+  wysyła teraz wszystkie jego dane, a gra gracza naprawia go na miejscu, zamiast odpływać aż do
+  pełnego wczytania. Do tego wersji 0.14.0 potrzebuje tylko host. Wkład OzrielTheLost.
+
+### Kongres Światowy
+- **Tura kongresu po wymuszonym końcu tury**: gdy jednoczesny koniec tury wymuszał zakończenie tury
+  gracza, tura kongresu mogła skończyć się dwie sekundy po otwarciu, bez głosowania. Tura kongresu
+  zaczyna się teraz z pełnym zegarem, okno głosowania otwiera się ponownie, jeśli tura skończyła się
+  bez głosu, a przycisk kongresu pokazuje bieżącą sesję.
+
+### Szybsze wczytywanie
+- **Szybsze ponowne wczytywanie**: przy tych samych modach ponowne wczytanie zachowuje etap
+  konfiguracji i zostawia teksty modów bez zmian, ostatnia faza wczytywania nie czeka już między
+  krokami, a czekanie na VSync jest wyłączone także w DX11. Zmierzone na małej mapie: z 13 s do 9 s.
+  Ustawienia w opcjach zaawansowanych, domyślnie włączone. Wkład OzrielTheLost.
+
+### Interfejs
+- **Skróty na ekranie umowy**: w kolumnie „dostępne” Shift+klik dodaje tyle, ile umowa przyjmie, a
+  Ctrl+klik dodaje dziesięć razy tyle co klik, dla surowców, złota, złota na turę i przychylności.
+  Domyślnie włączone. Wkład huchenlei.
+- **Odznaka zniżki dzielnic**: po postawieniu dzielnicy ze zniżką w jednym mieście inne, już oglądane
+  miasto nadal pokazywało zniżkę, choć dzielnica kosztowała pełną cenę.
+- **Nadwyżka produkcji**: „+N” na banerze miasta zostawało po tym, jak tura je wydała.
+
+### Ustawienia
+- **Nowości interfejsu z aktualizacji**: nowe ustawienie na początku sekcji Interfejs. Na
+  „Wyłączone” nowości interfejsu z kolejnych aktualizacji przychodzą wyłączone, a te, które masz,
+  zachowują obecny stan.
+
 ## BetterGameExperience 0.13.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.13.0, aby działały poprawki

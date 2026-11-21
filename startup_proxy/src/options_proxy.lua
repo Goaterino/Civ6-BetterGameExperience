@@ -163,6 +163,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_logement", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
+	{ cle = "ui_accord_quantites", defaut = "on", nouveaute_ui = true,
+		choix = PROXY_ON_OFF },
 	{ cle = "ui_avancement", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 
@@ -171,19 +173,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rendements", defaut = "on",
 		choix = PROXY_ON_OFF },
-	-- Correctifs de désynchronisation : POL, lus par le proxy de GameCore.
-	{ cle = "unites_promises", defaut = "on",
-		choix = {
-			{ "on", "LOC_BGD_OPT_CHOIX_ACTIVE" },
-			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
-			{ "count", "LOC_BGD_OPT_CHOIX_MESURE" },
-		} },
-	{ cle = "visibilite_chargee", defaut = "on",
-		choix = PROXY_ON_OFF },
-	{ cle = "ecouteurs_charges", defaut = "on",
-		choix = PROXY_ON_OFF },
-	{ cle = "preferences_chargees", defaut = "on",
-		choix = PROXY_ON_OFF },
+	-- Correctif de désynchronisation côté client, pas POL : chaque joueur peut le couper sans
+	-- gêner les autres. Lu par le proxy de GameCore et par le proxy de démarrage.
 	{ cle = "relecture_fidele", defaut = "on",
 		choix = PROXY_ON_OFF },
 

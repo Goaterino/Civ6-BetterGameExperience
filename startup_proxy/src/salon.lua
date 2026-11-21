@@ -12,6 +12,8 @@
 --   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
 --   Civ6Proxy_ExeInconnu()             -> 1 if the game version has no address table: the fixes
 --                                         are not installed, said to everyone on arrival
+--   Civ6Proxy_RemapOublier()           -> drops a remap request of a game that is gone
+--                                         (startup_proxy/src/remap.rs), at each lobby opening
 --
 -- Les configurations de joueur sont enregistrées avec la partie : une sauvegarde rechargée rapporte
 -- les annonces et le verdict d'une session précédente, peut-être chez des joueurs qui n'ont plus le
@@ -445,6 +447,9 @@ local function BGD_CheckChat(fromPlayer, toPlayer, text)
 	if type(text) ~= "string" or string.sub(text, 1, 5) ~= ".bgd_" then return; end
 	if fromPlayer == Network.GetLocalPlayerID() or not BGD_SalonEnReseau() then return; end
 	local hote = Network.GetGameHostPlayerID();
+	if BGD.ConfigChat ~= nil and BGD.ConfigChat(fromPlayer, text) then
+		return;  -- the host's settings fingerprint (.bgd_cfg)
+	end
 	if string.sub(text, 1, #BGD_CHECK_DEMANDE) == BGD_CHECK_DEMANDE then
 		local jeton = string.match(string.sub(text, #BGD_CHECK_DEMANDE + 1), "^(%w+)$");
 		if jeton == nil or fromPlayer ~= hote then return; end
@@ -544,6 +549,9 @@ local function BGD_Tic()
 			BGD_CheckBilan();
 		end
 	end
+	if BGD.ConfigTic ~= nil then
+		BGD.ConfigTic();
+	end
 	BGD_CheckBouton();
 	BGD.MiseEnPage();
 end
@@ -567,6 +575,16 @@ end
 local function BGD_Ouverture(migration)
 	BGD.ouvert = true;
 	BGD.openedSession = BGD_Session();
+	-- A remap request left by a game that is gone (startup_proxy/src/remap.rs) must not reach the
+	-- next game created or loaded from this lobby.
+	if Civ6Proxy_RemapOublier ~= nil then
+		Civ6Proxy_RemapOublier();
+	end
+	-- Game settings as this machine has them now: the next GameConfigChanged that brings the same
+	-- settings keeps the "Ready" (see BGD.Empreinte, below).
+	if BGD.ConfigOuverture ~= nil then
+		BGD.ConfigOuverture();
+	end
 	-- Correctifs POL coupés jusqu'au verdict ; disponibilité relue, elle change quand le proxy de
 	-- GameCore se charge (première partie) ou que ses réglages changent.
 	Civ6Proxy_FixerPol(0, "ouverture du salon");
@@ -696,6 +714,249 @@ if type(UpdateReadyButton) == "function" then
 		local r = BGD_UpdateReadyButton(...);
 		diag();
 		return r;
+	end
+end
+
+-- ===========================================================================
+-- Game settings: "Ready" kept when nothing changed, and the host's fingerprint check.
+-- StagingRoom.lua (and MPH's) unreadies the local player at every GameConfigChanged, even when the
+-- configuration received is the one this machine already had. Here the handler of StagingRoom.lua
+-- runs inside an envelope that compares the game settings with those of the last GameConfigChanged:
+-- SetLocalReady(false) called by it is ignored when they are the same.
+-- When the host turns Ready, it sends the configuration to everyone again (BroadcastGameConfig:
+-- nobody loses their "Ready", the settings did not change), then the fingerprint of its settings in
+-- a hidden private message ".bgd_cfg <fingerprint>". A player who joins while the host is Ready gets
+-- the same, BGD_CFG_TICS timer ticks after their arrival (after the configuration the game sends at
+-- the arrival). Each client compares with its own settings, again at each GameConfigChanged and
+-- for BGD_CFG_TICS timer ticks (the configuration may still be on its way); still different after
+-- that, it says so to everyone and asks to leave the lobby and join again. Game of 2026-11-21:
+-- two clients kept the city-state count (12) of the previous game while the host had 9; the map
+-- generated differently on their machines and their first turn never came.
+-- Settings: every Game and Map value named by the Parameters table of the configuration database,
+-- the ruleset, the map script and the enabled mods (but the team pings' media mod, added by the
+-- host just before the launch).
+-- ===========================================================================
+BGD.CFG_TICS = 4;
+BGD.CFG_CHAT = ".bgd_cfg ";
+BGD.CFG_MODS_EXCLUS = { ["863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd"] = true };
+
+-- Keys of the settings, read once per state of the configuration database.
+function BGD.ConfigCles()
+	local base = DB.ConfigurationChanges ~= nil and DB.ConfigurationChanges() or 0;
+	if BGD.cfgCles ~= nil and BGD.cfgClesBase == base then
+		return BGD.cfgCles;
+	end
+	local cles = {};
+	local lignes = DB.ConfigurationQuery("SELECT DISTINCT ConfigurationGroup, ConfigurationId FROM Parameters"
+		.. " WHERE ConfigurationGroup IN ('Game', 'Map') AND ConfigurationId IS NOT NULL"
+		.. " ORDER BY ConfigurationGroup, ConfigurationId");
+	for _, r in ipairs(lignes or {}) do
+		table.insert(cles, { r.ConfigurationGroup, r.ConfigurationId });
+	end
+	BGD.cfgCles, BGD.cfgClesBase = cles, base;
+	return cles;
+end
+
+-- A value as text, tables with sorted keys (a few levels at most).
+function BGD.ConfigTexte(v, out, profondeur)
+	local t = type(v);
+	if t == "table" then
+		if profondeur > 4 then table.insert(out, "{...}"); return; end
+		local cles = {};
+		for k in pairs(v) do table.insert(cles, k); end
+		table.sort(cles, function(a, b) return tostring(a) < tostring(b); end);
+		table.insert(out, "{");
+		for _, k in ipairs(cles) do
+			table.insert(out, tostring(k) .. "=");
+			BGD.ConfigTexte(v[k], out, profondeur + 1);
+			table.insert(out, ",");
+		end
+		table.insert(out, "}");
+	else
+		table.insert(out, string.sub(t, 1, 1) .. tostring(v));
+	end
+end
+
+-- The settings of this machine, as one text; nil if they cannot be read.
+function BGD.Empreinte()
+	local ok, texte = pcall(function()
+		local out = {};
+		for _, c in ipairs(BGD.ConfigCles()) do
+			local v;
+			if c[1] == "Game" then v = GameConfiguration.GetValue(c[2]); else v = MapConfiguration.GetValue(c[2]); end
+			table.insert(out, c[1] .. "." .. c[2] .. "=");
+			BGD.ConfigTexte(v, out, 0);
+			table.insert(out, ";");
+		end
+		table.insert(out, "ruleset=" .. tostring(GameConfiguration.GetRuleSet ~= nil and GameConfiguration.GetRuleSet()) .. ";");
+		table.insert(out, "script=" .. tostring(MapConfiguration.GetScript ~= nil and MapConfiguration.GetScript()) .. ";");
+		local mods = {};
+		if GameConfiguration.GetEnabledMods ~= nil then
+			for _, mod in ipairs(GameConfiguration.GetEnabledMods() or {}) do
+				if not BGD.CFG_MODS_EXCLUS[mod.Id] then table.insert(mods, tostring(mod.Id)); end
+			end
+		end
+		table.sort(mods);
+		table.insert(out, "mods=" .. table.concat(mods, ","));
+		return table.concat(out);
+	end);
+	if not ok then
+		if not BGD.cfgErreurDite then
+			BGD.cfgErreurDite = true;
+			BGD_Journal("config: settings not readable: " .. tostring(texte));
+		end
+		return nil;
+	end
+	return texte;
+end
+
+-- Fingerprint sent in the chat: two Adler-like sums and a third one, and the length; small integers,
+-- the same on every machine.
+function BGD.Hacher(texte)
+	local a, b, c = 1, 0, 0;
+	for i = 1, #texte do
+		local o = string.byte(texte, i);
+		a = (a + o) % 65521;
+		b = (b + a) % 65521;
+		c = (c * 7 + o) % 65519;
+	end
+	return tostring(a) .. "-" .. tostring(b) .. "-" .. tostring(c) .. "-" .. tostring(#texte);
+end
+
+function BGD.ConfigOuverture()
+	BGD.cfgVue = BGD.Empreinte();
+	BGD.cfgAttente = nil;
+	BGD.cfgDit = nil;
+	BGD.cfgRenvoi = nil;
+end
+
+-- Host: the configuration to everyone again, then its fingerprint, privately to each player.
+function BGD.HoteEnvoieConfig(raison)
+	if not BGD_Concerne() or not Network.IsGameHost() then return; end
+	local texte = BGD.Empreinte();
+	if texte == nil then return; end
+	BGD.cfgRenvoi = nil;
+	Network.BroadcastGameConfig();
+	local empreinte = BGD.Hacher(texte);
+	local ids = BGD_AutresHumains();
+	for _, id in ipairs(ids) do
+		BGD_Prive(BGD.CFG_CHAT .. empreinte, id);
+	end
+	BGD_Journal("config: sent again with fingerprint " .. empreinte .. " to " .. #ids .. " player(s) (" .. raison .. ")");
+end
+
+local function BGD_HotePret()
+	local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
+	return cfg ~= nil and cfg:GetReady() == true;
+end
+
+-- Client: still different from the host's fingerprint?
+function BGD.ConfigComparer(final)
+	local attente = BGD.cfgAttente;
+	if attente == nil then return; end
+	local texte = BGD.Empreinte();
+	if texte == nil then
+		BGD.cfgAttente = nil;
+		return;
+	end
+	local locale = BGD.Hacher(texte);
+	if locale == attente.empreinte then
+		BGD.cfgAttente = nil;
+		BGD_Journal("config: same settings as the host (" .. locale .. ")" .. (attente.ecart and ", after a wait" or ""));
+		return;
+	end
+	if not attente.ecart then
+		attente.ecart = true;
+		BGD_Journal("config: settings differ from the host's (" .. locale .. " here, " .. attente.empreinte .. " at the host), waiting for its configuration");
+	end
+	if not final then return; end
+	BGD.cfgAttente = nil;
+	if BGD.cfgDit == attente.empreinte then return; end
+	BGD.cfgDit = attente.empreinte;
+	BGD_Journal("config: still different from the host's; settings here: " .. texte);
+	local nom = BGD_Nom(Network.GetLocalPlayerID());
+	BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_CONFIG_DIFFERENTE", nom) .. "[ENDCOLOR]");
+end
+
+-- ".bgd_cfg <fingerprint>" from the host (BGD_CheckChat). True if the message was this one.
+function BGD.ConfigChat(fromPlayer, text)
+	if string.sub(text, 1, #BGD.CFG_CHAT) ~= BGD.CFG_CHAT then return false; end
+	local empreinte = string.match(string.sub(text, #BGD.CFG_CHAT + 1), "^([%d%.%-]+)$");
+	if empreinte == nil or fromPlayer ~= Network.GetGameHostPlayerID() or Network.IsGameHost()
+		or not BGD_Concerne() then return true; end
+	local minuteur = Controls ~= nil and Controls.BGD_SalonMinuteur ~= nil;
+	BGD.cfgAttente = { empreinte = empreinte, tics = BGD.CFG_TICS };
+	BGD.ConfigComparer(not minuteur);
+	return true;
+end
+
+function BGD.ConfigTic()
+	if BGD.cfgRenvoi ~= nil then
+		BGD.cfgRenvoi = BGD.cfgRenvoi - 1;
+		if BGD.cfgRenvoi <= 0 then
+			BGD.cfgRenvoi = nil;
+			if BGD_HotePret() then
+				BGD.HoteEnvoieConfig("a player joined while the host is ready");
+			end
+		end
+	end
+	local attente = BGD.cfgAttente;
+	if attente ~= nil then
+		attente.tics = attente.tics - 1;
+		BGD.ConfigComparer(attente.tics <= 0);
+	end
+end
+
+do
+	local dansConfig = false;  -- inside StagingRoom.lua's GameConfigChanged handler
+	local change = true;       -- the settings of that GameConfigChanged differ from the last ones
+
+	-- The handler of StagingRoom.lua, registered before this block, runs again inside an envelope.
+	local evenement = Events ~= nil and Events.GameConfigChanged;
+	if type(OnGameConfigChanged) == "function" and evenement ~= nil and type(evenement.Remove) == "function" then
+		local base = OnGameConfigChanged;
+		local ok, err = pcall(function()
+			evenement.Remove(base);
+			evenement.Add(function(...)
+				local texte = BGD.Empreinte();
+				change = texte == nil or BGD.cfgVue == nil or texte ~= BGD.cfgVue;
+				if texte ~= nil then BGD.cfgVue = texte; end
+				dansConfig = true;
+				local ok2, err2 = pcall(base, ...);
+				dansConfig = false;
+				if BGD.cfgAttente ~= nil then
+					BGD_Protege(BGD.ConfigComparer)(false);
+				end
+				if not ok2 then error(err2, 0); end
+			end);
+		end);
+		if not ok then BGD_Journal("config: GameConfigChanged handler not wrapped: " .. tostring(err)); end
+	else
+		BGD_Journal("config: GameConfigChanged handler not found, Ready lost at every configuration received");
+	end
+
+	if type(SetLocalReady) == "function" then
+		local base = SetLocalReady;
+		SetLocalReady = function(pret, ...)
+			if pret == false and dansConfig and not change then
+				BGD_Journal("config: « Prêt » gardé (configuration identique)");
+				return;
+			end
+			local avant = Network.IsGameHost() and pret == true and not BGD_HotePret();
+			local r = base(pret, ...);
+			if avant and BGD_HotePret() then
+				BGD_Protege(BGD.HoteEnvoieConfig)("host ready");
+			end
+			return r;
+		end
+	end
+
+	if Events ~= nil and Events.MultiplayerPlayerConnected ~= nil then
+		Events.MultiplayerPlayerConnected.Add(BGD_Protege(function()
+			if Network.IsGameHost() and BGD_Concerne() and BGD_HotePret() then
+				BGD.cfgRenvoi = BGD.CFG_TICS;
+			end
+		end));
 	end
 end
 

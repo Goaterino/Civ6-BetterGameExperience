@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="fr_FR">
 			<Text>Sur le bandeau de vos villes, une maison orange apparaît quand il ne reste qu'une habitation avant la limite (croissance ralentie de 50 %), et la maison rouge dès que la limite est atteinte (75 %). Sans cette option, le jeu n'affiche la maison rouge qu'une fois la limite dépassée. Affichage seulement.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="fr_FR">
+			<Text>Maj+clic et Ctrl+clic dans l'écran d'accord</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="fr_FR">
+			<Text>Dans l'écran d'accord, sur une ressource, l'or, l'or par tour ou la faveur diplomatique disponibles, Maj+clic en met autant que l'accord en accepte, et Ctrl+clic ajoute dix fois un clic normal : 10 d'une ressource, 1000 d'or, 100 d'or par tour, 10 de faveur diplomatique. Sans cette option, une quantité plus grande doit être saisie dans la zone de quantité. Purement local : sans effet sur les autres joueurs.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
 			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="fr_FR">
 			<Text>Le bandeau du haut se met à jour après un titre de gouverneur, un déplacement de gouverneur ou un personnage illustre, sans changer un citoyen. Affichage seulement : pas de désynchronisation.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="fr_FR">
-			<Text>Unités de quartier de l'IA dans un ordre fixe</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="fr_FR">
-			<Text>La table des unités promises à l'IA pour ses prochains quartiers est enregistrée, synchronisée et reconstruite dans un ordre fixe : après un rechargement, chaque machine les crée dans le même ordre (moins de désynchronisations). Mesure : ne change rien, note. Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="fr_FR">
-			<Text>Aménagements mémorisés gardés au chargement</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="fr_FR">
-			<Text>Après le chargement d'une partie, la carte de chaque joueur garde les aménagements qu'il avait mémorisés, tels qu'enregistrés, au lieu d'y ajouter ceux posés depuis sur des cases qu'il ne voit plus (villages tribaux) : la partie rechargée est celle qui tourne (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="fr_FR">
-			<Text>Ordre des événements gardé au chargement</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="fr_FR">
-			<Text>Après le chargement d'une partie, les événements du jeu parviennent à chaque joueur avant son IA, comme dans une nouvelle partie : l'IA n'évalue plus une cité-État avant l'émissaire de la première rencontre (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="fr_FR">
-			<Text>Préférences d'IA comme en nouvelle partie</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="fr_FR">
-			<Text>Après le chargement d'une partie, les préférences d'IA de chaque joueur sont reconstruites comme dans une nouvelle partie, sans les valeurs de départ du profil d'IA qu'une nouvelle partie écarte : les scores d'IA (doctrines, personnages illustres) restent les mêmes que sur les autres machines (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="fr_FR">
 			<Text>Données réparées relues à l'identique</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="fr_FR">
 			<Text>{1} a BetterGameExperience {2} activé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="fr_FR">
+			<Text>Les réglages de partie de {1} diffèrent de ceux de l'hôte. {1}, quitte le salon et rejoins-le avant le lancement de la partie.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="fr_FR">
 			<Text>BGE Check : tous les joueurs ont BetterGameExperience {1} activé ({2}).</Text>

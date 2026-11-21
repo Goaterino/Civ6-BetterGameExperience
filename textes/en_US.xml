@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="en_US">
 			<Text>On your city banners, an orange house appears when a city is one Housing below its cap (growth slowed by 50%), and the red house as soon as it is at the cap (75%). Without this option, the game only shows the red house once the city is over the cap. Display only.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="en_US">
+			<Text>Shift+click and Ctrl+click in the deal screen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="en_US">
+			<Text>In the deal screen, on an available resource, gold, gold per turn or Diplomatic Favor, Shift+click puts as much in the deal as the deal accepts, and Ctrl+click adds ten times a normal click: 10 of a resource, 1000 gold, 100 gold per turn, 10 Diplomatic Favor. Without this option, a larger amount has to be typed in the amount box. Local only: no effect on other players.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
 			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="en_US">
 			<Text>The top bar updates after a governor title, a governor move or a great person, without changing a citizen. Display only: no desync.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="en_US">
-			<Text>AI district units in a fixed order</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="en_US">
-			<Text>The table of units promised to the AI for its next districts is saved, synced and rebuilt in a fixed order: after a reload every machine creates them in the same order (fewer desyncs). Measure: changes nothing, logs. Only when every player has this version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="en_US">
-			<Text>Remembered improvements kept on load</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="en_US">
-			<Text>After a game is loaded, each player's map keeps the improvements it remembered, as saved, instead of also showing those placed since on plots it no longer sees (goody huts): the reloaded game matches the running one (fewer desyncs after a reload). Only when every player has this version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="en_US">
-			<Text>Event order kept on load</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="en_US">
-			<Text>After a game is loaded, game events reach each player before its AI, as in a new game: the AI no longer evaluates a city-state before the first-meeting envoy (fewer desyncs after a reload). Only when every player has this version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="en_US">
-			<Text>AI preferences as in a new game</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="en_US">
-			<Text>After a game is loaded, each player's AI preferences are rebuilt as in a new game, without the starting values of the AI profile that a new game discards: AI scores (policies, great people) stay the same as on the other machines (fewer desyncs after a reload). Only when every player has this version.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="en_US">
 			<Text>Repaired data read back exactly</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="en_US">
 			<Text>{1} has BetterGameExperience {2} enabled.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="en_US">
+			<Text>{1}'s game settings differ from the host's. {1}, please leave the lobby and join it again before the game starts.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="en_US">
 			<Text>BGE Check: every player has BetterGameExperience {1} enabled ({2}).</Text>

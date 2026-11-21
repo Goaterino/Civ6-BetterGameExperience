@@ -2,6 +2,73 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.14.0
+
+En multijoueur, tous les humains doivent être en 0.14.0 pour les correctifs **[tous les
+joueurs]** : un salon qui mélange 0.13.0 et 0.14.0 les coupe.
+
+### Installation et mises à jour
+- **Fichiers signés** : l'installeur et les deux DLL de BetterGameExperience portent désormais un
+  certificat de signature de code (Certum, développeur open source). Windows affiche l'éditeur dans
+  les propriétés du fichier et dans l'invite de l'installeur, et les alertes de SmartScreen et des
+  antivirus devraient se faire plus rares.
+
+### Versions du jeu
+- **Civilization VI 1.0.12.58** : BetterGameExperience reconnaît maintenant cette ancienne version du
+  jeu, en DX12 comme en DX11. Chaque version du jeu a ses propres adresses, et un jeu dont les
+  fichiers ne correspondent pas à sa version n'installe aucun correctif.
+- **Version du jeu non prise en charge** : un joueur dont la version du jeu n'est pas prise en charge
+  par BetterGameExperience est signalé dans le chat à son arrivée (le message disait que sa copie
+  n'était pas la version Steam actuelle).
+
+### Correctifs multijoueur [tous les joueurs]
+- **Moins de désynchros après un rechargement** : une partie chargée sur une machine calculait un
+  peu autrement que la partie en cours sur les autres. Les améliorations mémorisées des joueurs
+  étaient réécrites au chargement, les écouteurs d'événements tournaient dans un autre ordre, l'IA
+  gardait pour de bon les préférences de son dirigeant (Sejong : -75 % de points de prophète) et les
+  unités données à la création d'un quartier (bonus de difficulté de l'IA, départs en ère avancée)
+  étaient créées dans un autre ordre. Une partie chargée calcule maintenant comme une partie en
+  cours. Contribution d'OzrielTheLost.
+- **Mêmes calculs sur tous les processeurs** : certains calculs (exponentielles, puissances)
+  pouvaient arrondir différemment sur les processeurs avec et sans instructions FMA3. Toutes les
+  machines les calculent maintenant de la même façon. Contribution d'OzrielTheLost.
+- **Échange d'unités** : échanger deux unités pouvait en laisser une à mi-chemin, empilée sur une
+  case avec une autre unité (un épéiste sur un tigre accroupi). Les deux unités vont maintenant au
+  bout de leur déplacement.
+
+### Multijoueur
+- **Désynchros réparées sans rechargement** : quand un objet reste désynchronisé, l'hôte envoie
+  maintenant toutes ses données, et la partie du joueur le répare sur place au lieu de dériver
+  jusqu'à un rechargement complet. Seul l'hôte a besoin de la 0.14.0 pour cela. Contribution
+  d'OzrielTheLost.
+
+### Congrès mondial
+- **Tour du congrès après une fin de tour forcée** : quand la fin de tour simultanée forçait la fin
+  du tour d'un joueur, le tour du congrès pouvait se terminer deux secondes après s'être ouvert, sans
+  vote. Le tour du congrès démarre maintenant avec un minuteur plein, la fenêtre de vote se rouvre
+  quand le tour s'est terminé sans vote, et le bouton du congrès montre la session en cours.
+
+### Chargements plus rapides
+- **Rechargements plus rapides** : quand les mods sont les mêmes, un rechargement garde l'étape de
+  configuration et laisse les textes des mods tels quels, la dernière phase du chargement n'attend
+  plus entre ses étapes, et l'attente de la VSync est levée aussi en DX11. Mesuré sur une petite
+  carte : de 13 s à 9 s. Réglages dans les options avancées, activés par défaut. Contribution
+  d'OzrielTheLost.
+
+### Interface
+- **Raccourcis de l'écran d'accord** : dans la colonne « disponible », Maj+clic ajoute autant que
+  l'accord l'accepte et Ctrl+clic ajoute dix fois un clic, pour les ressources, l'or, l'or par tour et
+  la faveur. Activé par défaut. Contribution de huchenlei.
+- **Badge de réduction des quartiers** : après la pose d'un quartier en réduction dans une ville, une
+  autre ville déjà consultée affichait encore la réduction alors qu'il coûtait le prix plein.
+- **Production en réserve** : le « +N » du bandeau de ville restait affiché après que le tour l'avait
+  dépensé.
+
+### Réglages
+- **Nouveautés d'interface des mises à jour** : un nouveau réglage en tête de la section Interface.
+  Sur « Désactivé », les ajouts d'interface des mises à jour suivantes arrivent coupés, et ceux que
+  vous avez gardent leur état actuel.
+
 ## BetterGameExperience 0.13.0
 
 En multijoueur, tous les humains doivent être en 0.13.0 pour les correctifs **[tous les

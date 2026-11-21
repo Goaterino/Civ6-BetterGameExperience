@@ -65,7 +65,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   conception) ;
 - [chargement](analyses/chargement/README.md) : temps de chargement d'une partie (salon, reprise,
   remap de MPH), ventilé par phases et par piles CPU (capture du 2026-11-16) : reconstruction de la
-  base, test d'existence des assets, génération de carte, terrain 3D ; leviers classés, aucun essayé ;
+  base, test d'existence des assets, génération de carte, terrain 3D ; leviers classés ; étape de
+  configuration gardée et fin de chargement sans pause aux rechargements (`config_gardee`,
+  `fin_chargement`, voir [startup_proxy](startup_proxy/README.md)) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
@@ -97,7 +99,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   (un fichier XML par langue, au format de Civ6), et messages du chat affichés dans la langue de
   chacun ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
-  [docs/netcode](docs/netcode/README.md) ;
+  [docs/netcode](docs/netcode/README.md) ; archives désynchronisées réparées sur place par l'hôte
+  (`reparation_synchro`), partie rechargée identique à la partie en cours (`unites_promises`,
+  `partie_chargee`, correctifs POL) ;
 - [macos](analyses/macos/README.md) : portage macOS, binaires du jeu inspectés (Mach-O universels,
   hardened runtime, GameCore chargé par `dlopen`) et essai de patch du code sur les machines macOS
   de la CI (passe, mais SIP y est désactivé : à refaire sur un Mac ordinaire) ;
@@ -124,3 +128,19 @@ depuis la racine), ceux du [relais des rapports](rapport_worker/README.md#tests)
 `textes/gen_textes.py --check --strict`. Les tests Lua qui lisent des fichiers du jeu les cherchent
 dans le dossier Steam par défaut (ou le chemin passé en argument) et sont sautés sans eux
 (« test sauté ») : la CI ne les exécute pas, ils restent à lancer sur une machine qui a le jeu.
+
+## Binaires des versions prises en charge
+
+`binaires_jeu/<version>/` (ignoré par git, à garder en local) : les exe DX11/DX12, les DLL de
+`Base\Binaries\Win64Steam` et `GameCore_XP2_FinalRelease.dll` de chaque version du jeu prise en
+charge, pour vérifier une nouvelle fonctionnalité sur toutes. Au 2026-11-21 : 1.0.12.58 (complet),
+1.0.12.72 (exe DX12 seul), 1.0.12.74 (complet, copié du jeu installé). Les tests Rust des deux
+proxys lisent les exe par `CIV6_EXE_58_DIR`, `CIV6_EXE_72_DIR` et `CIV6_EXE_74_DIR` (par défaut, le
+jeu installé pour la 1.0.12.74) et sautent une version absente ; `check_hooks.py` prend le GameCore
+en argument :
+
+```powershell
+$env:CIV6_EXE_58_DIR = "$PWD\binaires_jeu\1.0.12.58"; $env:CIV6_EXE_72_DIR = "$PWD\binaires_jeu\1.0.12.72"
+cargo test --release --manifest-path startup_proxy\Cargo.toml
+python proxy\tests\check_hooks.py proxy\target\release\BGD_GameCore_XP2.dll binaires_jeu\1.0.12.58\GameCore_XP2_FinalRelease.dll $env:TEMP\ch58
+```

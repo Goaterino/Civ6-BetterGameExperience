@@ -6,12 +6,13 @@
 -- ===========================================================================
 do
 	local WAIT = 10;
-	local MAX_AGE = 600;
 	local RETRIES = 3;
 	local pending = nil;   -- os.clock() when this interface asked for the host's own load
 	local retries = 0;     -- new requests for the host's own load, in a game started without terrain
 	local full = false;    -- the next restart builds the terrain (last resort)
 	local closed = false;  -- the loading screen of this interface has closed
+	local restarting = nil; -- os.clock() when this interface called Network.RestartGame()
+	local RESTART_WINDOW = 30;
 
 	local function Log(text)
 		if Civ6Proxy_Journal ~= nil then
@@ -45,6 +46,7 @@ do
 		if OnLocalHostRestart ~= nil then
 			OnLocalHostRestart();
 		else
+			restarting = os.clock();
 			Network.RestartGame();
 		end
 	end
@@ -53,6 +55,18 @@ do
 	function BGD_RemapSnap()
 		if Civ6Proxy_RemapMark == nil or Civ6Proxy_RemapTake == nil then
 			Snap();
+			return;
+		end
+		-- MPH's OnRefresh may still run in this interface between its Network.RestartGame() and the
+		-- restart (game unpaused, mid-turn): it has just reset GAME_HOST_IS_JUST_RELOADING for the
+		-- game being thrown away. A snapshot asked now is lost with the restart and leaves the new
+		-- game waiting for it: give the flag back to the restarted game, which asks itself.
+		if restarting ~= nil and os.clock() - restarting <= RESTART_WINDOW then
+			Log("snapshot request between the restart and its load ignored; the restarted game asks for it");
+			pcall(function()
+				GameConfiguration.SetValue("GAME_HOST_IS_JUST_RELOADING", "Y");
+				Network.BroadcastGameConfig();
+			end);
 			return;
 		end
 		local ok, err = pcall(function()
@@ -77,6 +91,7 @@ do
 	-- host reloads its own save at once (startup_proxy/src/remap_leger.rs). Host of a network game
 	-- only: `.mph_ui_remap_execute` runs on every machine.
 	function BGD_RemapLeger()
+		restarting = os.clock();
 		if full or Civ6Proxy_RemapLeger == nil or Civ6Proxy_RemapTake == nil then
 			return;
 		end
@@ -129,7 +144,10 @@ do
 			end
 			return;
 		end
-		-- A fresh interface after the host's own load: now the clients load the same game.
+		-- A fresh interface after the host's own load: now the clients load the same game. The
+		-- request is MPH's remap's only (BGD_RemapSnap); any opening of the lobby drops it
+		-- (Civ6Proxy_RemapOublier, salon.lua), so a game created or loaded from the lobby never
+		-- finds one.
 		if Loading(me) then
 			return;
 		end
@@ -137,12 +155,8 @@ do
 		if age == nil or age < 0 then
 			return;
 		end
-		if age <= MAX_AGE then
-			Log("the host has loaded its own game; clients asked to load the same game");
-			Snap();
-		else
-			Log("request older than " .. MAX_AGE .. " s ignored");
-		end
+		Log("the host has loaded its own game (asked " .. tostring(age) .. " s ago); clients asked to load the same game");
+		Snap();
 	end
 
 	local function Safely()

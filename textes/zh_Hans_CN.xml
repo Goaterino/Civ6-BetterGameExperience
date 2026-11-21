@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>在你的城市横幅上，距住房上限只差 1 时显示橙色房屋（人口增速减缓 50%），一达到上限就显示红色房屋（减缓 75%）。不启用此选项时，游戏要到超出上限后才会显示红色房屋。仅影响显示。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="zh_Hans_CN">
+			<Text>交易界面的 Shift+单击和 Ctrl+单击</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="zh_Hans_CN">
+			<Text>在交易界面中，对可用的资源、金币、每回合金币或外交支持，按住 Shift 单击会加入交易所能接受的最大数量，按住 Ctrl 单击则加入普通单击的 10 倍：10 个资源、1000 金币、每回合 100 金币、10 点外交支持。没有此选项时，更大的数量需要在数量框中输入。仅限本地：不影响其他玩家。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
 			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="zh_Hans_CN">
 			<Text>在总督头衔、总督调任或伟人之后，无需调整公民，顶部栏也会更新。仅影响显示：不会不同步。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="zh_Hans_CN">
-			<Text>AI 区域单位固定顺序</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="zh_Hans_CN">
-			<Text>AI 在后续区域中获得的单位表按固定顺序保存、同步和重建：重新载入后，每台电脑都以相同顺序创建这些单位（减少不同步）。测量：不做任何更改，仅记录。仅当所有玩家都使用此版本时生效。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="zh_Hans_CN">
-			<Text>载入时保留记忆的改良设施</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="zh_Hans_CN">
-			<Text>载入游戏后，每位玩家的地图按保存时的样子保留其记忆的改良设施，而不会加上之后放在其已看不到的单元格上的设施（部落村庄）：重新载入的游戏与正在进行的游戏一致（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="zh_Hans_CN">
-			<Text>载入时保留事件顺序</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="zh_Hans_CN">
-			<Text>载入游戏后，游戏事件会像新游戏一样先传达给每位玩家，再传达给其 AI：AI 不再在首次相遇的使者到来之前评估城邦（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="zh_Hans_CN">
-			<Text>AI 偏好与新游戏一致</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="zh_Hans_CN">
-			<Text>载入游戏后，每位玩家的 AI 偏好会像新游戏一样重建，不含新游戏会舍弃的 AI 档案初始值：AI 评分（政策、伟人）与其他机器保持一致（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="zh_Hans_CN">
 			<Text>按原样重读修复的数据</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="zh_Hans_CN">
 			<Text>{1} 已启用 BetterGameExperience {2}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="zh_Hans_CN">
+			<Text>{1} 的游戏设置与主机不同。{1}，请在游戏开始前退出大厅并重新加入。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="zh_Hans_CN">
 			<Text>BGE Check：所有玩家都已启用 BetterGameExperience {1}（{2}）。</Text>

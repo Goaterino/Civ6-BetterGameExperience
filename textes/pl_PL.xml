@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pl_PL">
 			<Text>W banerze twoich miast pojawia się pomarańczowy dom, gdy miastu brakuje 1 obszaru mieszkalnego do limitu (przyrost spowolniony o 50%), a czerwony dom, gdy tylko miasto osiągnie limit (75%). Bez tej opcji gra pokazuje czerwony dom dopiero po przekroczeniu limitu. Tylko wyświetlanie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="pl_PL">
+			<Text>Shift+klik i Ctrl+klik na ekranie umowy</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="pl_PL">
+			<Text>Na ekranie umowy Shift+klik na dostępnym zasobie, złocie, złocie na turę lub dyplomatycznych względach dodaje tyle, ile umowa przyjmie, a Ctrl+klik dodaje dziesięć razy więcej niż zwykły klik: 10 sztuk zasobu, 1000 złota, 100 złota na turę, 10 dyplomatycznych względów. Bez tej opcji większą ilość trzeba wpisać w polu ilości. Działa tylko lokalnie: bez wpływu na innych graczy.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pl_PL">
 			<Text>Zniżka dzielnicy: -{1}% (masz mniej dzielnic tego typu niż twoja średnia).</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="pl_PL">
 			<Text>Górny pasek odświeża się po tytule gubernatora, przeniesieniu gubernatora lub wielkim człowieku, bez przestawiania obywatela. Tylko wyświetlanie: bez desynchronizacji.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="pl_PL">
-			<Text>Jednostki dzielnic SI w stałej kolejności</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="pl_PL">
-			<Text>Tabela jednostek obiecanych SI za kolejne dzielnice jest zapisywana, synchronizowana i odbudowywana w stałej kolejności: po ponownym wczytaniu każdy komputer tworzy je w tej samej kolejności (mniej desynchronizacji). Pomiar: niczego nie zmienia, zapisuje w dzienniku. Tylko gdy wszyscy gracze mają tę wersję.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="pl_PL">
-			<Text>Zapamiętane ulepszenia zachowane przy wczytaniu</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="pl_PL">
-			<Text>Po wczytaniu gry mapa każdego gracza zachowuje zapamiętane ulepszenia w zapisanej postaci, zamiast pokazywać też te umieszczone później na polach, których już nie widzi (wioski plemienne): wczytana gra odpowiada trwającej (mniej desynchronizacji po ponownym wczytaniu). Tylko gdy wszyscy gracze mają tę wersję.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="pl_PL">
-			<Text>Kolejność zdarzeń zachowana przy wczytaniu</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="pl_PL">
-			<Text>Po wczytaniu gry zdarzenia gry docierają do każdego gracza przed jego SI, jak w nowej grze: SI nie ocenia już miasta-państwa przed wysłannikiem z pierwszego spotkania (mniej desynchronizacji po ponownym wczytaniu). Tylko gdy wszyscy gracze mają tę wersję.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="pl_PL">
-			<Text>Preferencje SI jak w nowej grze</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="pl_PL">
-			<Text>Po wczytaniu gry preferencje SI każdego gracza są odtwarzane jak w nowej grze, bez początkowych wartości profilu SI, które nowa gra odrzuca: wyniki SI (polityki, wielcy ludzie) pozostają takie same jak na innych komputerach (mniej desynchronizacji po ponownym wczytaniu). Tylko gdy wszyscy gracze mają tę wersję.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="pl_PL">
 			<Text>Naprawione dane wczytywane dokładnie</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="pl_PL">
 			<Text>{1} ma włączony BetterGameExperience {2}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="pl_PL">
+			<Text>Ustawienia rozgrywki gracza {1} różnią się od ustawień hosta. {1}, opuść poczekalnię i dołącz ponownie przed rozpoczęciem gry.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="pl_PL">
 			<Text>BGE Check: wszyscy gracze mają włączony BetterGameExperience {1} ({2}).</Text>

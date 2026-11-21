@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="es_ES">
 			<Text>En el estandarte de tus ciudades aparece una casa naranja cuando a la ciudad solo le queda 1 alojamiento para llegar al límite (crecimiento ralentizado un 50 %), y la casa roja en cuanto está en el límite (75 %). Sin esta opción, el juego solo muestra la casa roja cuando la ciudad supera el límite. Solo visualización.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="es_ES">
+			<Text>Mayús+clic y Ctrl+clic en la pantalla de acuerdo</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="es_ES">
+			<Text>En la pantalla de acuerdo, sobre un recurso, el oro, el oro por turno o el favor diplomático disponibles, Mayús+clic añade tanto como el acuerdo admite, y Ctrl+clic añade diez veces un clic normal: 10 de un recurso, 1000 de oro, 100 de oro por turno, 10 de favor diplomático. Sin esta opción, una cantidad mayor hay que escribirla en el campo de cantidad. Solo local: sin efecto sobre los demás jugadores.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="es_ES">
 			<Text>Descuento de distrito: -{1} % (tienes menos distritos de este tipo que tu media).</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="es_ES">
 			<Text>La barra superior se actualiza tras un título de gobernador, un traslado de gobernador o un gran personaje, sin mover a ningún ciudadano. Solo visualización: sin desincronización.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="es_ES">
-			<Text>Unidades de distrito de la IA en orden fijo</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="es_ES">
-			<Text>La tabla de unidades prometidas a la IA por sus próximos distritos se guarda, sincroniza y reconstruye en un orden fijo: tras una recarga, todos los equipos las crean en el mismo orden (menos desincronizaciones). Medición: no cambia nada, lo registra. Solo si todos los jugadores tienen esta versión.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="es_ES">
-			<Text>Mejoras recordadas conservadas al cargar</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="es_ES">
-			<Text>Al cargar una partida, el mapa de cada jugador conserva las mejoras que recordaba, tal como se guardaron, en lugar de mostrar también las colocadas desde entonces en casillas que ya no ve (aldeas tribales): la partida recargada coincide con la que está en curso (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="es_ES">
-			<Text>Orden de eventos conservado al cargar</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="es_ES">
-			<Text>Al cargar una partida, los eventos del juego llegan a cada jugador antes que a su IA, como en una partida nueva: la IA ya no evalúa una ciudad-estado antes del enviado del primer encuentro (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="es_ES">
-			<Text>Preferencias de IA como en una partida nueva</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="es_ES">
-			<Text>Al cargar una partida, las preferencias de IA de cada jugador se reconstruyen como en una partida nueva, sin los valores iniciales del perfil de IA que una partida nueva descarta: las puntuaciones de IA (políticas, grandes personajes) siguen siendo las mismas que en las demás máquinas (menos desincronizaciones tras una recarga). Solo si todos los jugadores tienen esta versión.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="es_ES">
 			<Text>Datos reparados releídos tal cual</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="es_ES">
 			<Text>{1} tiene BetterGameExperience {2} activado.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="es_ES">
+			<Text>La configuración de partida de {1} es distinta de la del anfitrión. {1}, sal de la sala y vuelve a unirte antes de que empiece la partida.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="es_ES">
 			<Text>BGE Check: todos los jugadores tienen BetterGameExperience {1} activado ({2}).</Text>

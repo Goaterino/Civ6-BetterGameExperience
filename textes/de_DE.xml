@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="de_DE">
 			<Text>Im Banner eurer Städte erscheint ein orangefarbenes Haus, wenn nur noch 1 Wohnraum bis zur Obergrenze frei ist (Wachstum um 50 % gesenkt), und das rote Haus, sobald die Obergrenze erreicht ist (75 %). Ohne diese Option zeigt das Spiel das rote Haus erst, wenn die Obergrenze überschritten ist. Nur Anzeige.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="de_DE">
+			<Text>Umschalt+Klick und Strg+Klick im Abkommensbildschirm</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="de_DE">
+			<Text>Im Abkommensbildschirm fügt Umschalt+Klick auf eine verfügbare Ressource, Gold, Gold pro Runde oder Diplomatische Gunst so viel hinzu, wie das Abkommen zulässt, und Strg+Klick das Zehnfache eines normalen Klicks: 10 einer Ressource, 1000 Gold, 100 Gold pro Runde, 10 Diplomatische Gunst. Ohne diese Option muss eine größere Menge im Mengenfeld eingegeben werden. Rein lokal: keine Auswirkung auf andere Spieler.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="de_DE">
 			<Text>Bezirksrabatt: -{1} % (weniger Bezirke dieses Typs als euer Durchschnitt).</Text>
 		</Row>
@@ -256,30 +262,6 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="de_DE">
 			<Text>Die obere Leiste aktualisiert sich nach einem Gouverneurstitel, einer Gouverneursversetzung oder einer Großen Persönlichkeit, ohne einen Bürger zu verschieben. Nur Anzeige: keine Desynchronisation.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="de_DE">
-			<Text>KI-Bezirkseinheiten in fester Reihenfolge</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="de_DE">
-			<Text>Die Tabelle der Einheiten, die der KI für ihre nächsten Bezirke versprochen sind, wird in fester Reihenfolge gespeichert, synchronisiert und neu aufgebaut: Nach einem Neuladen erzeugt jeder Rechner sie in derselben Reihenfolge (weniger Desynchronisationen). Messung: ändert nichts, protokolliert. Nur wenn alle Spieler diese Version haben.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="de_DE">
-			<Text>Gemerkte Modernisierungen beim Laden behalten</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="de_DE">
-			<Text>Nach dem Laden eines Spiels behält die Karte jedes Spielers die Modernisierungen, die er sich gemerkt hatte, wie gespeichert, statt auch jene zu zeigen, die seitdem auf Feldern platziert wurden, die er nicht mehr sieht (Stammesdörfer): Das neu geladene Spiel entspricht dem laufenden (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="de_DE">
-			<Text>Ereignisreihenfolge beim Laden behalten</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="de_DE">
-			<Text>Nach dem Laden eines Spiels erreichen Spielereignisse jeden Spieler vor seiner KI, wie in einem neuen Spiel: Die KI bewertet einen Stadtstaat nicht mehr vor dem Gesandten der ersten Begegnung (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="de_DE">
-			<Text>KI-Präferenzen wie in einem neuen Spiel</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="de_DE">
-			<Text>Nach dem Laden eines Spiels werden die KI-Präferenzen jedes Spielers wie in einem neuen Spiel aufgebaut, ohne die Startwerte des KI-Profils, die ein neues Spiel verwirft: Die KI-Werte (Politiken, Große Persönlichkeiten) bleiben dieselben wie auf den anderen Rechnern (weniger Desynchronisationen nach einem Neuladen). Nur wenn alle Spieler diese Version haben.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="de_DE">
 			<Text>Reparierte Daten exakt zurücklesen</Text>
@@ -487,6 +469,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="de_DE">
 			<Text>{1} hat BetterGameExperience {2} aktiviert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="de_DE">
+			<Text>Die Spieleinstellungen von {1} weichen von denen des Hosts ab. {1}, bitte verlasse die Lobby und tritt ihr vor dem Spielstart erneut bei.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="de_DE">
 			<Text>BGE Check: Alle Spieler haben BetterGameExperience {1} aktiviert ({2}).</Text>

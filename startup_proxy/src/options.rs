@@ -691,11 +691,15 @@ mod tests {
         lib += include_str!("fin_chargement.rs");
         lib += include_str!("pool.rs");
         lib += include_str!("remap_leger.rs");
+        lib += include_str!("maths_communes.rs");
+        // Correctifs de stabilité (POL) : pas de réglage joueur. Leurs clés ne sont lues que par les
+        // builds de diagnostic (feature `diag`), pour comparer avec le jeu d'origine.
+        const SANS_ONGLET: [&str; 5] = ["unites_promises", "visibilite_chargee", "ecouteurs_charges", "preferences_chargees", "maths_communes"];
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();
         let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
         assert!(read.len() >= 12, "{read:?}");
         for k in &read {
-            assert!(tab.contains(k), "{k} lu par le proxy, absent de l'onglet");
+            assert!(tab.contains(k) != SANS_ONGLET.contains(k), "{k} lu par le proxy : dans l'onglet si et seulement si ce n'est pas un correctif POL");
         }
         for k in &tab {
             assert!(read.contains(k), "{k} dans l'onglet, inconnu du proxy");

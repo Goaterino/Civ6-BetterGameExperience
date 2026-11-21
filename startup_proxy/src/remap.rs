@@ -31,6 +31,12 @@ const NATIVES: Natives = &[
 
 /// When the host asked for its own load. Kept in this DLL, which stays loaded across that load
 /// (the game's configuration does not keep a value set just before it).
+///
+/// Only MPH's remap sets it (`BGD_RemapSnap`, in place of MPH's `.mph_ui_snap`), and only the load
+/// that remap asks for may use it. Any opening of the lobby drops it (`Civ6Proxy_RemapOublier`, from
+/// salon.lua): a remap that never reached its load (game left, lobby opened again) must not make
+/// the next game, created or loaded from the lobby, ask every client to load it a second time
+/// (game of 2026-11-21, reports BGE-2AC0A0 and BGE-DB00E5).
 static ASKED: Mutex<Option<Instant>> = Mutex::new(None);
 
 fn mark() {
@@ -53,6 +59,15 @@ unsafe extern "C-unwind" fn lua_take(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = crate::options::hks() else { return 0 };
     (h.push_integer)(l, take().map_or(-1, |s| s.min(i32::MAX as u64) as i32));
     1
+}
+
+/// `Civ6Proxy_RemapOublier()`: the lobby opens, a remap request still there belongs to a game that
+/// is gone. Dropped and logged.
+pub(crate) unsafe extern "C-unwind" fn lua_forget(_l: *mut std::ffi::c_void) -> i32 {
+    if let Some(age) = take() {
+        log(&format!("remap : request from {age} s ago dropped at the lobby opening (its load never came)"));
+    }
+    0
 }
 
 /// The `remap_host_load` setting (last occurrence wins; `on` by default).

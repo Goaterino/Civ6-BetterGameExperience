@@ -2,6 +2,73 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.14.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.14.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.13.0 und 0.14.0 mischt, schaltet sie ab.
+
+### Installation und Updates
+- **Signierte Dateien**: Das Installationsprogramm und beide DLLs von BetterGameExperience tragen
+  jetzt ein Codesignaturzertifikat (Certum, Open-Source-Entwickler). Windows zeigt den Herausgeber in
+  den Dateieigenschaften und in der Abfrage des Installationsprogramms an, und Warnungen von
+  SmartScreen und Virenscannern sollten seltener werden.
+
+### Spielversionen
+- **Civilization VI 1.0.12.58**: BetterGameExperience erkennt jetzt diese ältere Version des Spiels,
+  DX12 und DX11. Jede Spielversion hat ihre eigenen Adressen, und ein Spiel, dessen Dateien nicht zu
+  seiner Version passen, installiert keine Korrektur.
+- **Nicht unterstützte Spielversion**: Ein Spieler, dessen Spielversion von BetterGameExperience
+  nicht unterstützt wird, wird beim Betreten im Chat angekündigt (die Meldung sagte bisher, seine
+  Kopie sei nicht die aktuelle Steam-Version).
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Weniger Desyncs nach einem Neuladen**: Ein auf einem Rechner geladenes Spiel rechnete etwas
+  anders als das laufende Spiel auf den anderen. Die gemerkten Verbesserungen der Spieler wurden beim
+  Laden neu geschrieben, Ereignis-Listener liefen in anderer Reihenfolge, die KI behielt die
+  Vorlieben ihres Anführers dauerhaft (Sejong: -75 % Punkte für Große Propheten), und die Einheiten,
+  die beim Bau eines Bezirks entstehen (Schwierigkeitsboni der KI, Start in späteren Zeitaltern),
+  wurden in anderer Reihenfolge erzeugt. Ein geladenes Spiel rechnet jetzt wie ein laufendes.
+  Beitrag von OzrielTheLost.
+- **Gleiche Berechnungen auf jedem Prozessor**: Manche Berechnungen (Exponentialfunktionen, Potenzen)
+  konnten auf Prozessoren mit und ohne FMA3-Befehle unterschiedlich runden. Alle Rechner berechnen
+  sie jetzt gleich. Beitrag von OzrielTheLost.
+- **Einheitentausch**: Der Tausch zweier Einheiten konnte eine davon auf halbem Weg stehen lassen,
+  gestapelt auf einem Feld mit einer anderen Einheit (ein Schwertkämpfer auf einem Hockenden Tiger).
+  Beide Einheiten beenden jetzt ihre Bewegung.
+
+### Mehrspieler
+- **Desyncs ohne Neuladen repariert**: Wenn ein Objekt desynchronisiert bleibt, schickt der Host
+  jetzt alle seine Daten, und das Spiel des Spielers repariert es an Ort und Stelle, statt bis zu
+  einem vollständigen Neuladen abzudriften. Dafür braucht nur der Host 0.14.0. Beitrag von
+  OzrielTheLost.
+
+### Weltkongress
+- **Kongressrunde nach einem erzwungenen Rundenende**: Wenn das gleichzeitige Rundenende die Runde
+  eines Spielers beendete, konnte die Kongressrunde zwei Sekunden nach dem Öffnen ohne Abstimmung
+  enden. Die Kongressrunde beginnt jetzt mit vollem Timer, das Abstimmungsfenster öffnet sich wieder,
+  wenn die Runde ohne Abstimmung endete, und die Kongress-Schaltfläche zeigt die aktuelle Sitzung.
+
+### Schnelleres Laden
+- **Schnelleres Neuladen**: Bei gleichen Mods behält ein Neuladen den Konfigurationsschritt und lässt
+  die Texte der Mods unverändert, die letzte Ladephase wartet nicht mehr zwischen ihren Schritten,
+  und das Warten auf VSync entfällt auch in DX11. Gemessen auf einer kleinen Karte: von 13 s auf 9 s.
+  Einstellungen in den erweiterten Optionen, standardmäßig an. Beitrag von OzrielTheLost.
+
+### Oberfläche
+- **Kürzel im Abkommensbildschirm**: In der Spalte „verfügbar“ fügt Umschalt+Klick so viel hinzu, wie
+  das Abkommen zulässt, und Strg+Klick zehnmal einen Klick, für Ressourcen, Gold, Gold pro Runde und
+  Gunst. Standardmäßig an. Beitrag von huchenlei.
+- **Rabattabzeichen der Bezirke**: Nachdem ein Bezirk mit Rabatt in einer Stadt platziert wurde,
+  zeigte eine andere, bereits angesehene Stadt den Rabatt weiter an, obwohl er den vollen Preis
+  kostete.
+- **Produktionsüberschuss**: Das „+N“ im Stadtbanner blieb stehen, nachdem die Runde es verbraucht
+  hatte.
+
+### Einstellungen
+- **Neue Oberflächenfunktionen aus Updates**: eine neue Einstellung oben im Abschnitt
+  Benutzeroberfläche. Auf „Deaktiviert“ kommen die Oberflächenfunktionen späterer Updates
+  ausgeschaltet an, und die vorhandenen behalten ihren aktuellen Zustand.
+
 ## BetterGameExperience 0.13.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.13.0 für die Korrekturen **[alle

@@ -9,6 +9,7 @@ téléchargé. La clé privée vit hors du dépôt et dans le secret GitHub BGD_
     python release/manifest.py build --version 0.2.0 --out dist/manifest.json dist/
     python release/manifest.py sign dist/manifest.json          (clé dans $BGD_SIGNING_KEY)
     python release/manifest.py verify dist/manifest.json
+    python release/manifest.py rehash dist/manifest.json        (après la signature Authenticode)
 """
 
 import argparse
@@ -71,6 +72,20 @@ def build(args):
     print(Path(args.out).read_text(encoding="utf-8"))
 
 
+def rehash(args):
+    """Recalcule taille et SHA-256 des fichiers d'un manifeste existant, à côté de lui, sans toucher
+    à version, lobby_version ni commit : la signature Authenticode (release/signer.ps1) change les
+    octets des DLL, pas ce qu'elles sont. La signature ed25519 est à refaire ensuite."""
+    path = Path(args.manifest)
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    for f in manifest["files"]:
+        data = (path.parent / f["name"]).read_bytes()
+        f["size"] = len(data)
+        f["sha256"] = hashlib.sha256(data).hexdigest()
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+    print(path.read_text(encoding="utf-8"))
+
+
 def sign(args):
     seed = os.environ.get("BGD_SIGNING_KEY")
     if not seed:
@@ -105,6 +120,9 @@ def main():
     p.add_argument("--out", required=True)
     p.add_argument("dist")
     p.set_defaults(func=build)
+    p = sub.add_parser("rehash")
+    p.add_argument("manifest")
+    p.set_defaults(func=rehash)
     p = sub.add_parser("sign")
     p.add_argument("manifest")
     p.set_defaults(func=sign)
