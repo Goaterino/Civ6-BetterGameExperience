@@ -464,6 +464,9 @@
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ru_RU">
 			<Text>У {1} включён BetterGameExperience {2}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="ru_RU">
+			<Text>Настройки партии у {1} отличаются от настроек хоста. {1}, выйдите из лобби и зайдите снова до начала партии.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ru_RU">
 			<Text>BGE Check: у всех игроков включён BetterGameExperience {1} ({2}).</Text>
 		</Row>

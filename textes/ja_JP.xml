@@ -464,6 +464,9 @@
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ja_JP">
 			<Text>{1} は BetterGameExperience {2} を有効にしています。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="ja_JP">
+			<Text>{1} のゲーム設定がホストと異なります。{1} はゲーム開始前にロビーを退出して再参加してください。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ja_JP">
 			<Text>BGE Check: 全プレイヤーが BetterGameExperience {1} を有効にしています ({2})。</Text>
 		</Row>

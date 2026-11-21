@@ -464,6 +464,9 @@
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="pl_PL">
 			<Text>{1} ma włączony BetterGameExperience {2}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="pl_PL">
+			<Text>Ustawienia rozgrywki gracza {1} różnią się od ustawień hosta. {1}, opuść poczekalnię i dołącz ponownie przed rozpoczęciem gry.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="pl_PL">
 			<Text>BGE Check: wszyscy gracze mają włączony BetterGameExperience {1} ({2}).</Text>
 		</Row>

@@ -464,6 +464,9 @@
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="zh_Hans_CN">
 			<Text>{1} 已启用 BetterGameExperience {2}。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="zh_Hans_CN">
+			<Text>{1} 的游戏设置与主机不同。{1}，请在游戏开始前退出大厅并重新加入。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="zh_Hans_CN">
 			<Text>BGE Check：所有玩家都已启用 BetterGameExperience {1}（{2}）。</Text>
 		</Row>

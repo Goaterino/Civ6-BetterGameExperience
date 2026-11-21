@@ -464,6 +464,9 @@
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="en_US">
 			<Text>{1} has BetterGameExperience {2} enabled.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="en_US">
+			<Text>{1}'s game settings differ from the host's. {1}, please leave the lobby and join it again before the game starts.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="en_US">
 			<Text>BGE Check: every player has BetterGameExperience {1} enabled ({2}).</Text>
 		</Row>
