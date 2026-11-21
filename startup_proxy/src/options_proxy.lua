@@ -94,6 +94,11 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "vsync_chargement", defaut = "on", demarrage = true,
 		choix = PROXY_ON_OFF },
+	-- Vitesse des rechargements : lus par le proxy de démarrage.
+	{ cle = "config_gardee", defaut = "on", demarrage = true,
+		choix = PROXY_ON_OFF },
+	{ cle = "pause_fin_chargement", defaut = "on", demarrage = true,
+		choix = PROXY_ON_OFF },
 	{ cle = "remap_leger", defaut = "on", demarrage = true,
 		choix = PROXY_ON_OFF },
 	{ cle = "pool_cessions", defaut = "16", demarrage = true,
@@ -167,6 +172,19 @@ local PROXY_REGLAGES = {
 	{ cle = "ui_merveilles", defaut = "on",
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_rendements", defaut = "on",
+		choix = PROXY_ON_OFF },
+	-- Correctifs de désynchronisation : POL, lus par le proxy de GameCore.
+	{ cle = "unites_promises", defaut = "on",
+		choix = {
+			{ "on", "LOC_BGD_OPT_CHOIX_ACTIVE" },
+			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+			{ "count", "LOC_BGD_OPT_CHOIX_MESURE" },
+		} },
+	{ cle = "visibilite_chargee", defaut = "on",
+		choix = PROXY_ON_OFF },
+	{ cle = "ecouteurs_charges", defaut = "on",
+		choix = PROXY_ON_OFF },
+	{ cle = "preferences_chargees", defaut = "on",
 		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_MODS" },

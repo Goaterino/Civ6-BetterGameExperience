@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="it_IT">
 			<Text>Con la VSync attiva, il gioco attende ogni aggiornamento dello schermo, il che rallenta anche la creazione del terreno 3D durante un caricamento. Viene sospesa solo durante le schermate di caricamento e in partita resta come impostata (circa 2 s per caricamento). Nessun effetto se la VSync è disattivata. Ha effetto al prossimo avvio del gioco.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="it_IT">
+			<Text>Mantenere la configurazione invariata ai ricaricamenti</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="it_IT">
+			<Text>A ogni ricaricamento, il gioco ricostruisce il database di configurazione e ripristina i suoi testi anche se nulla è cambiato dall'ultimo caricamento. Entrambi vengono mantenuti se invariati; le regole di gioco vengono ricaricate come sempre (circa 3 s per ricaricamento). Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="it_IT">
+			<Text>Nessuna pausa alla fine di un caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="it_IT">
+			<Text>Alla fine di un caricamento, il gioco prepara il terreno 3D poche caselle alla volta e fa una pausa tra un passo e l'altro (LoadGameTickIntervalInMS, 16 ms di default). La pausa viene tolta solo durante quest'ultima fase (circa 1,5 s per caricamento). Ha effetto al prossimo avvio del gioco.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="it_IT">
 			<Text>Primo caricamento del remap dell'host senza terreno</Text>
 		</Row>
@@ -250,6 +262,30 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="it_IT">
 			<Text>La barra superiore si aggiorna dopo un titolo di governatore, uno spostamento di governatore o un grande personaggio, senza spostare un cittadino. Solo visualizzazione: nessuna desincronizzazione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="it_IT">
+			<Text>Unità di distretto dell'IA in ordine fisso</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="it_IT">
+			<Text>La tabella delle unità promesse all'IA per i suoi prossimi distretti viene salvata, sincronizzata e ricostruita in un ordine fisso: dopo un ricaricamento ogni computer le crea nello stesso ordine (meno desincronizzazioni). Misura: non cambia nulla, registra. Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="it_IT">
+			<Text>Miglioramenti ricordati mantenuti al caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="it_IT">
+			<Text>Dopo il caricamento di una partita, la mappa di ogni giocatore mantiene i miglioramenti che ricordava, come salvati, invece di mostrare anche quelli posti da allora su caselle che non vede più (villaggi tribali): la partita ricaricata corrisponde a quella in corso (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="it_IT">
+			<Text>Ordine degli eventi mantenuto al caricamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="it_IT">
+			<Text>Dopo il caricamento di una partita, gli eventi di gioco raggiungono ogni giocatore prima della sua IA, come in una nuova partita: l'IA non valuta più una città-stato prima dell'inviato del primo incontro (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="it_IT">
+			<Text>Preferenze IA come in una nuova partita</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="it_IT">
+			<Text>Dopo il caricamento di una partita, le preferenze IA di ogni giocatore vengono ricostruite come in una nuova partita, senza i valori iniziali del profilo IA che una nuova partita scarta: i punteggi IA (politiche, grandi personaggi) restano gli stessi delle altre macchine (meno desincronizzazioni dopo un ricaricamento). Solo se tutti i giocatori hanno questa versione.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="it_IT">
 			<Text>Cariche dei costruttori sulla loro bandiera</Text>

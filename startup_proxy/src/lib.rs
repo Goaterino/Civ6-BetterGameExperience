@@ -12,7 +12,10 @@
 //! a player disconnects (`messages`), re-links pairs of players relayed through the host
 //! (`relink`), re-sends pings left unanswered, which would otherwise stay frozen at "0 ms" in the
 //! player list (`pings`), and refuses the host's second snapshot when it arrives after the end of
-//! the load, against the double load when entering a game (`snapshots`). It also writes the team
+//! the load, against the double load when entering a game (`snapshots`). As game host, it resends an
+//! AutoArchive that stays out of sync with every variable, so the client repairs it in place instead
+//! of running into a full reload (`reparation_synchro`). While every human runs this build, it makes UCRT
+//! compute `exp`, `pow`... the same way on every CPU (`maths_communes`). It also writes the team
 //! ping artwork and audio next to the game (`medias`), before the game scans its mods. Log shared by both proxies:
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
 
@@ -40,6 +43,8 @@ mod messages;
 mod relink;
 mod pings;
 mod snapshots;
+mod reparation_synchro;
+mod maths_communes;
 mod medias;
 mod rejoin;
 mod flush;
@@ -50,8 +55,10 @@ mod motifs;
 mod assets;
 mod ramasse_miettes;
 mod bdd;
+mod config_gardee;
 mod localisation;
 mod vsync;
+mod fin_chargement;
 mod pool;
 mod remap_leger;
 #[cfg(feature = "diag")]
@@ -146,11 +153,15 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             absent_turn::install();
             flush::install();
             sync_notes::install();
+            // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.
+            reparation_synchro::install();
             let exe_base = win::GetModuleHandleW(std::ptr::null()) as usize;
             assets::install(exe_base);
             ramasse_miettes::install(exe_base);
             bdd::install(exe_base);
+            config_gardee::install(exe_base);
             vsync::install(exe_base);
+            fin_chargement::install(exe_base);
             pool::install(exe_base);
             remap_leger::install(exe_base);
             #[cfg(feature = "diag")]

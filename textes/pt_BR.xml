@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="pt_BR">
 			<Text>Com o VSync ativado, o jogo espera cada atualização da tela, o que também atrasa a criação do terreno 3D durante um carregamento. Ele é suspenso apenas nas telas de carregamento e, na partida, continua como configurado (cerca de 2 s por carregamento). Sem efeito se o VSync estiver desativado. Entra em vigor no próximo início do jogo.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="pt_BR">
+			<Text>Manter a configuração inalterada ao recarregar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="pt_BR">
+			<Text>Ao recarregar, o jogo reconstrói seu banco de dados de configuração e restaura seus textos mesmo que nada tenha mudado desde o último carregamento. Ambos são mantidos quando não mudaram; as regras do jogo são recarregadas normalmente (cerca de 3 s por recarga). Entra em vigor no próximo início do jogo.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="pt_BR">
+			<Text>Sem pausa no fim de um carregamento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="pt_BR">
+			<Text>No fim de um carregamento, o jogo prepara o terreno 3D poucos hexágonos por vez e faz uma pausa entre cada etapa (LoadGameTickIntervalInMS, 16 ms por padrão). A pausa é removida apenas nessa última fase (cerca de 1,5 s por carregamento). Entra em vigor no próximo início do jogo.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="pt_BR">
 			<Text>Primeiro carregamento do remap do anfitrião sem terreno</Text>
 		</Row>
@@ -250,6 +262,30 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="pt_BR">
 			<Text>A barra superior é atualizada após um título de governador, uma transferência de governador ou uma grande personalidade, sem mexer num cidadão. Apenas exibição: sem dessincronização.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="pt_BR">
+			<Text>Unidades de distrito da IA em ordem fixa</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="pt_BR">
+			<Text>A tabela de unidades prometidas à IA pelos seus próximos distritos é salva, sincronizada e reconstruída em uma ordem fixa: após um recarregamento, todos os computadores as criam na mesma ordem (menos dessincronizações). Medição: não muda nada, registra. Somente se todos os jogadores tiverem esta versão.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="pt_BR">
+			<Text>Melhorias lembradas mantidas ao carregar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="pt_BR">
+			<Text>Após carregar uma partida, o mapa de cada jogador mantém as melhorias que ele lembrava, como foram salvas, em vez de mostrar também as colocadas desde então em hexágonos que ele não vê mais (aldeias tribais): a partida recarregada corresponde à que está em andamento (menos dessincronizações após um recarregamento). Somente se todos os jogadores tiverem esta versão.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="pt_BR">
+			<Text>Ordem dos eventos mantida ao carregar</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="pt_BR">
+			<Text>Após carregar uma partida, os eventos do jogo chegam a cada jogador antes da sua IA, como em uma partida nova: a IA não avalia mais uma cidade-estado antes do enviado do primeiro encontro (menos dessincronizações após um recarregamento). Somente se todos os jogadores tiverem esta versão.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="pt_BR">
+			<Text>Preferências de IA como em uma partida nova</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="pt_BR">
+			<Text>Após carregar uma partida, as preferências de IA de cada jogador são reconstruídas como em uma partida nova, sem os valores iniciais do perfil de IA que uma partida nova descarta: as pontuações de IA (políticas, grandes personalidades) continuam as mesmas das outras máquinas (menos dessincronizações após um recarregamento). Somente se todos os jogadores tiverem esta versão.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="pt_BR">
 			<Text>Cargas dos construtores na bandeira</Text>

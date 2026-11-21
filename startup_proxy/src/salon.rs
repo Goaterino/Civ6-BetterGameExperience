@@ -298,6 +298,9 @@ unsafe extern "C-unwind" fn lua_fix_pol(l: *mut std::ffi::c_void) -> i32 {
     if POL.swap(actif, Ordering::Relaxed) != actif {
         let raison = arg_str(l, 2).unwrap_or_default();
         crate::log(&format!("pol : correctifs POL {} ({raison})", if actif { "actifs" } else { "désactivés" }));
+        // Une seule voie de calcul flottant sur toutes les machines tant que les correctifs POL sont
+        // actifs (`maths_communes`).
+        crate::maths_communes::pol_changed(actif);
     }
     0
 }

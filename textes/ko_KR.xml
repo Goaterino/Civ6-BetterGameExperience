@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="ko_KR">
 			<Text>수직 동기화가 켜져 있으면 게임이 화면 갱신마다 기다리며, 이 때문에 로딩 중 3D 지형 생성도 느려집니다. 로딩 화면에서만 해제되고 게임 중에는 설정대로 유지됩니다(로딩당 약 2초). 수직 동기화가 꺼져 있으면 영향이 없습니다. 다음 게임 실행 시 적용됩니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="ko_KR">
+			<Text>다시 불러올 때 변경 없는 구성 유지</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="ko_KR">
+			<Text>다시 불러올 때 게임은 마지막 로딩 이후 바뀐 것이 없어도 구성 데이터베이스를 다시 만들고 텍스트를 되돌립니다. 바뀐 것이 없으면 둘 다 유지하며, 게임 규칙은 평소처럼 다시 불러옵니다(다시 불러오기당 약 3초). 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="ko_KR">
+			<Text>로딩 마지막 단계에서 대기 없음</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="ko_KR">
+			<Text>로딩 마지막에 게임은 3D 지형을 몇 타일씩 준비하며 단계마다 대기합니다(LoadGameTickIntervalInMS, 기본값 16ms). 이 마지막 단계에서만 대기를 없앱니다(로딩당 약 1.5초). 다음 게임 실행 시 적용됩니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="ko_KR">
 			<Text>리맵 시 호스트의 첫 로딩에서 지형 생략</Text>
 		</Row>
@@ -250,6 +262,30 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ko_KR">
 			<Text>총독 칭호, 총독 이동, 위인 이후에 시민을 옮기지 않아도 상단 바가 갱신됩니다. 표시만 바뀌며 동기화 오류는 없습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="ko_KR">
+			<Text>AI 특수지구 유닛 고정 순서</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="ko_KR">
+			<Text>AI가 다음 특수지구에서 받을 유닛 표를 고정된 순서로 저장, 동기화, 재구성합니다. 다시 불러온 후에도 모든 컴퓨터가 같은 순서로 유닛을 생성합니다(동기화 오류 감소). 측정: 아무것도 바꾸지 않고 기록만 합니다. 모든 플레이어가 이 버전일 때만 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="ko_KR">
+			<Text>불러올 때 기억한 시설 유지</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="ko_KR">
+			<Text>게임을 불러온 후 각 플레이어의 지도는 기억한 시설을 저장된 그대로 유지하며, 더 이상 보이지 않는 타일에 그 후 놓인 시설(부족 마을)을 추가하지 않습니다. 다시 불러온 게임이 진행 중인 게임과 일치합니다(다시 불러온 후 동기화 오류 감소). 모든 플레이어가 이 버전일 때만 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="ko_KR">
+			<Text>불러올 때 이벤트 순서 유지</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="ko_KR">
+			<Text>게임을 불러온 후 게임 이벤트가 새 게임처럼 AI보다 먼저 각 플레이어에게 전달됩니다. AI가 첫 만남의 사절보다 먼저 도시 국가를 평가하지 않습니다(다시 불러온 후 동기화 오류 감소). 모든 플레이어가 이 버전일 때만 적용됩니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="ko_KR">
+			<Text>새 게임과 같은 AI 선호도</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="ko_KR">
+			<Text>게임을 불러온 후 각 플레이어의 AI 선호도가 새 게임과 같이 다시 구성되며, 새 게임에서 버려지는 AI 프로필의 초기값은 포함되지 않습니다. AI 점수(정책, 위인)가 다른 컴퓨터와 동일하게 유지됩니다(다시 불러온 후 동기화 오류 감소). 모든 플레이어가 이 버전일 때만 적용됩니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="ko_KR">
 			<Text>깃발에 건설자 건설력 표시</Text>

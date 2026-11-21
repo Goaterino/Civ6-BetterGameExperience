@@ -15,7 +15,9 @@
 //! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_formations`, `ui_logement`, `ui_accord_quantites` et `ui_avancement` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `journal_chokepoints=on|off` (off, voir `journal_chokepoints`),
-//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`). Les réglages de
+//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`),
+//! `unites_promises=on|count|off` (on, voir `unites_promises`), `visibilite_chargee=on|off`,
+//! `ecouteurs_charges=on|off` et `preferences_chargees=on|off` (on, voir `partie_chargee`). Les réglages de
 //! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
 //! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
@@ -33,6 +35,8 @@ mod depart;
 mod drop_slot;
 mod echange;
 mod empilement;
+mod unites_promises;
+mod partie_chargee;
 mod exe;
 mod fin_tour;
 mod forward;
@@ -281,6 +285,22 @@ pub(crate) fn read_config() {
                 _ => delaunay::Mode::On,
             });
         }
+        if let Some(v) = line.trim().strip_prefix("unites_promises=") {
+            unites_promises::set_mode(match v.trim() {
+                "off" => unites_promises::Mode::Off,
+                "count" => unites_promises::Mode::Count,
+                _ => unites_promises::Mode::On,
+            });
+        }
+        if let Some(v) = line.trim().strip_prefix("visibilite_chargee=") {
+            partie_chargee::set_visibility(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("ecouteurs_charges=") {
+            partie_chargee::set_listeners(v.trim() != "off");
+        }
+        if let Some(v) = line.trim().strip_prefix("preferences_chargees=") {
+            partie_chargee::set_preferences(v.trim() != "off");
+        }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");
         }
@@ -353,6 +373,8 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
         win::DLL_PROCESS_DETACH if reserved.is_null() => {
             coalesce::on_proxy_unload();
             citoyens::on_proxy_unload();
+            unites_promises::on_proxy_unload();
+            partie_chargee::on_proxy_unload();
             congres::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();

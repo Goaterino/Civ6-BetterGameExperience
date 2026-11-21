@@ -1,4 +1,5 @@
-//! VSync coupée pendant l'écran de chargement (`vsync_chargement=on`, par défaut ; DX12 seulement).
+//! VSync coupée pendant l'écran de chargement (`vsync_chargement=on`, par défaut ; DX12 et
+//! DX11).
 //!
 //! Avec la VSync, le thread principal reste bloqué dans `Present` jusqu'au rafraîchissement suivant
 //! de l'écran, et il tient pendant ce temps un verrou du pilote graphique. Pendant un chargement, le
@@ -14,6 +15,13 @@
 //! Les drapeaux restent ceux du jeu (0) : pas de `DXGI_PRESENT_ALLOW_TEARING`, que la chaîne de
 //! présentation n'accepte peut-être pas.
 //!
+//! DX11 : la chaîne principale présente en `14095306e`,
+//! `Present(VSync ? 1 : 0, 0)` avec la VSync en `r8b` (`xor edx,edx ; test r8b,r8b ; setne dl ;
+//! xor r8d,r8d ; call [rax+0x40]`). Ces 14 octets deviennent `movzx edx,r8b ; xor r8d,r8d ;
+//! call presenter_dx11 ; nop ; nop`. Les chaînes secondaires (autres fenêtres) restent telles quelles.
+//! Sur le DX11, le gain vient surtout de la phase post-chargement, quand `fin_chargement` ne la cadence
+//! plus à 16 ms : la VSync la ramène sinon au rythme de l'écran.
+//!
 //! Début et fin du chargement : `140083a20` et `140083d30` (DX12), méthodes virtuelles de
 //! LoadGameViewState. Le code de `::Begin()` existe deux fois à l'identique (un autre état du jeu) :
 //! on garde celle qui cite la chaîne `LoadGameViewState::Begin()`.
@@ -28,6 +36,12 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 const SITE_PRESENT: &str = "48 8B 4E 58 44 8B C7 8B D3 48 8B 01 FF 50 40 48 8B 4E 58 8B D8";
 const PRESENT_DEBUT: usize = 4;
 const PRESENT_LONG: usize = 11;
+/// DX11 : `mov rcx,[rip+chaîne] ; test rcx,rcx ; jz ; mov rax,[rcx] ; xor edx,edx ; test r8b,r8b ;
+/// setne dl ; xor r8d,r8d ; call [rax+0x40] ; mov edx,eax ; xor ecx,ecx ; call`. Les 14 octets à
+/// partir de +15 sont réécrits.
+pub(crate) const SITE_PRESENT_DX11: &str = "48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 48 8B 01 33 D2 45 84 C0 0F 95 C2 45 33 C0 FF 50 40 8B D0 33 C9 E8";
+const PRESENT_DX11_DEBUT: usize = 15;
+const PRESENT_DX11_LONG: usize = 14;
 
 /// Prologues de `::Begin()` (14 octets recopiés) et `::End()` (17 octets), sans adressage relatif.
 const DEBUT: &str = "40 55 41 54 41 56 48 8D AC 24 60 E0 FF FF B8 A0 20 00 00 E8 ?? ?? ?? ?? 48 2B E0 48 89 9C 24 D0 20 00 00 48 8D 95 C8 1F 00 00 4C 8B F1";
@@ -66,6 +80,11 @@ unsafe extern "system" fn presenter(chaine: *mut c_void, intervalle: u32, drapea
     let vtable = *(chaine as *const *const usize);
     let present: Present = std::mem::transmute(*vtable.add(8));
     present(chaine, intervalle, drapeaux)
+}
+
+/// DX11 : `vsync` est le booléen du jeu (`r8b`, étendu), pas encore un intervalle.
+unsafe extern "system" fn presenter_dx11(chaine: *mut c_void, vsync: u32, drapeaux: u32) -> i32 {
+    presenter(chaine, (vsync & 0xff != 0) as u32, drapeaux)
 }
 
 /// Seule la VSync demandée par le jeu (intervalle 1) est levée, et seulement pendant le chargement.
@@ -135,8 +154,42 @@ unsafe fn poser_bornes(exe_base: usize) -> Result<(), String> {
     Ok(())
 }
 
+/// DX11 : réécrit l'appel de `Present` de la chaîne principale.
+unsafe fn poser_dx11(exe_base: usize) -> Result<(), String> {
+    let sites = motifs::chercher(exe_base, &motifs::motif(SITE_PRESENT_DX11));
+    let [site] = sites[..] else {
+        return Err(format!("{} DX11 Present sites", sites.len()));
+    };
+    let at = site + PRESENT_DX11_DEBUT;
+    let page = patch::alloc_near(at).ok_or("pas de page proche")?;
+    let mut saut = [0u8; 14];
+    saut[..6].copy_from_slice(&[0xff, 0x25, 0, 0, 0, 0]);
+    saut[6..].copy_from_slice(&(presenter_dx11 as *const () as u64).to_le_bytes());
+    std::ptr::copy_nonoverlapping(saut.as_ptr(), page as *mut u8, saut.len());
+    // movzx edx,r8b ; xor r8d,r8d ; call page ; nop ; nop
+    let rel = patch::rel32(at + 7, page).ok_or("page trop loin")?;
+    let mut code = [0u8; PRESENT_DX11_LONG];
+    code[..7].copy_from_slice(&[0x41, 0x0f, 0xb6, 0xd0, 0x45, 0x33, 0xc0]);
+    code[7] = 0xe8;
+    code[8..12].copy_from_slice(&rel.to_le_bytes());
+    code[12] = 0x90;
+    code[13] = 0x90;
+
+    let mut old = 0u32;
+    if win::VirtualProtect(at as *mut c_void, PRESENT_DX11_LONG, win::PAGE_EXECUTE_READWRITE, &mut old) == 0 {
+        return Err("VirtualProtect a échoué".into());
+    }
+    std::ptr::copy_nonoverlapping(code.as_ptr(), at as *mut u8, PRESENT_DX11_LONG);
+    win::VirtualProtect(at as *mut c_void, PRESENT_DX11_LONG, old, &mut old);
+    win::FlushInstructionCache(win::GetCurrentProcess(), at as *const c_void, PRESENT_DX11_LONG);
+    Ok(())
+}
+
 unsafe fn poser(exe_base: usize) -> Result<(), String> {
     let sites = motifs::chercher(exe_base, &motifs::motif(SITE_PRESENT));
+    if sites.is_empty() {
+        return poser_dx11(exe_base).map_err(|e| format!("no DX12 Present site, {e}"));
+    }
     let [site] = sites[..] else {
         return Err(format!("{} Present sites (DX12 expected)", sites.len()));
     };

@@ -119,6 +119,18 @@
 		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>开启垂直同步时，游戏会等待每次屏幕刷新，这也会拖慢加载时 3D 地形的创建。仅在加载画面期间解除，游戏中仍按设置保持（每次加载约 2 秒）。关闭垂直同步时无影响。下次启动游戏时生效。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="zh_Hans_CN">
+			<Text>重新加载时保留未更改的配置</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="zh_Hans_CN">
+			<Text>重新加载时，即使自上次加载以来没有任何变化，游戏也会重建其配置数据库并还原其文本。两者未变化时将予以保留；游戏规则仍照常重新加载（每次重新加载约 3 秒）。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>加载末尾不暂停</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>加载末尾，游戏每次只准备几个单元格的 3D 地形，并在每步之间暂停（LoadGameTickIntervalInMS，默认 16 毫秒）。仅在这最后阶段取消暂停（每次加载约 1.5 秒）。下次启动游戏时生效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="zh_Hans_CN">
 			<Text>重新生成地图时主机首次加载跳过地形</Text>
 		</Row>
@@ -250,6 +262,30 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="zh_Hans_CN">
 			<Text>在总督头衔、总督调任或伟人之后，无需调整公民，顶部栏也会更新。仅影响显示：不会不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="zh_Hans_CN">
+			<Text>AI 区域单位固定顺序</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="zh_Hans_CN">
+			<Text>AI 在后续区域中获得的单位表按固定顺序保存、同步和重建：重新载入后，每台电脑都以相同顺序创建这些单位（减少不同步）。测量：不做任何更改，仅记录。仅当所有玩家都使用此版本时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="zh_Hans_CN">
+			<Text>载入时保留记忆的改良设施</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="zh_Hans_CN">
+			<Text>载入游戏后，每位玩家的地图按保存时的样子保留其记忆的改良设施，而不会加上之后放在其已看不到的单元格上的设施（部落村庄）：重新载入的游戏与正在进行的游戏一致（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="zh_Hans_CN">
+			<Text>载入时保留事件顺序</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="zh_Hans_CN">
+			<Text>载入游戏后，游戏事件会像新游戏一样先传达给每位玩家，再传达给其 AI：AI 不再在首次相遇的使者到来之前评估城邦（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="zh_Hans_CN">
+			<Text>AI 偏好与新游戏一致</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="zh_Hans_CN">
+			<Text>载入游戏后，每位玩家的 AI 偏好会像新游戏一样重建，不含新游戏会舍弃的 AI 档案初始值：AI 评分（政策、伟人）与其他机器保持一致（减少重新载入后的不同步）。仅当所有玩家都使用此版本时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="zh_Hans_CN">
 			<Text>在旗帜上显示建造者次数</Text>
