@@ -12,6 +12,7 @@ Usage (LOCALAPPDATA redirigé pour ne pas écrire dans le vrai journal) :
 """
 import ctypes
 import os
+import re
 import shutil
 import struct
 import sys
@@ -30,6 +31,43 @@ os.environ["LOCALAPPDATA"] = tmp
 log_file = os.path.join(tmp, "Civ6RolloverProxy", "RolloverProxy.log")
 if os.path.exists(log_file):
     os.remove(log_file)
+
+# Game 1.0.12.74: same code at other addresses. The addresses below are those of the 2026-11-02
+# build; R() gives the RVA in the build under test and K() the bytes read there as that build has
+# them, from the tables of src/patch.rs.
+_src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "patch.rs"), encoding="utf-8").read()
+_num = lambda t: int(t.replace("_", ""), 16)
+_block = lambda name: _src[_src.index("const " + name):_src.index("];", _src.index("const " + name))]
+_moved = sorted((_num(a) - 0x180000000, _num(b) - 0x180000000) for a, b in re.findall(r"\((0x1_80[0-9a-f_]+), (0x1_80[0-9a-f_]+)\)", _block("MOVED")))
+_fixups = {_num(a) - 0x180000000: (int(b, 16), int(c, 16)) for a, b, c in re.findall(r"\((0x1_80[0-9a-f_]+), (0x[0-9a-f]{2}), (0x[0-9a-f]{2})\)", _block("FIXUPS"))}
+with open(original_src, "rb") as _f:
+    _head = _f.read(0x400)
+_link = struct.unpack_from("<I", _head, struct.unpack_from("<I", _head, 0x3C)[0] + 8)[0]
+# Hors du jeu, l'exe est python.exe : la version du jeu que le proxy lirait dans l'exe lui est
+# donnée par BGE_VERSION_JEU, celle dont GameCore est l'original testé (table BUILDS).
+_builds = {_num(t): (v, m == "true") for v, t, m in re.findall(r'\("([0-9.]+)", (0x[0-9a-f_]+), (true|false)\)', _block("BUILDS"))}
+assert _link in _builds, f"GameCore {_link:#x} absent de BUILDS"
+os.environ["BGE_VERSION_JEU"], MOVED_BUILD = _builds[_link]
+print(f"jeu {_builds[_link][0]} (GameCore {_link:#x})")
+
+
+def R(rva):
+    if not MOVED_BUILD:
+        return rva
+    below = [m for m in _moved if m[0] <= rva]
+    return rva + (below[-1][1] - below[-1][0]) if below else rva
+
+
+def K(rva, data):
+    if not MOVED_BUILD:
+        return data
+    out = bytearray(data)
+    for i in range(len(out)):
+        before, now = _fixups.get(rva + i, (None, None))
+        if out[i] == now:
+            out[i] = before
+    return bytes(out)
+
 
 k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 k32.LoadLibraryW.restype = wintypes.HMODULE
@@ -65,6 +103,8 @@ SITES = (  # nom, RVA, prologue d'origine
     ("rendement", 0x37EC60, "44894424185553574154415541564157"),
     ("attente IA", 0x4A16E0, "40534883ec30488d05d34852"),
     ("citoyens", 0x10F050, "4c8bdc45894b204989531049894b08"),
+    ("player connection change", 0x383E0, "4c8bdc5557498dab28ffffff4881ecc8010000"),
+    ("slot status", 0x16B840, "48895c2408574883ec20488bd98bfa"),
     ("modificateur de production", 0x9497A0, "48895c2408574883ec404863da488bf9"),
     ("modificateur de production (ville, ajout)", 0x9444E0, "48895c2420574883ec50837930"),
     ("modificateur de production (ville, retrait)", 0x973C20, "48895c2420574883ec50837930"),
@@ -81,11 +121,11 @@ SITES = (  # nom, RVA, prologue d'origine
     ("envoi des messages (départ simultané)", 0x366B0, "4055535741564157488dac2450faffff"),
 )
 for name, rva, _ in SITES:
-    patch = ctypes.string_at(base + rva, 14)
+    patch = ctypes.string_at(base + R(rva), 14)
     assert patch[:6] == b"\xff\x25\x00\x00\x00\x00", f"{name} : pas de saut au site ({patch.hex()})"
     hook = struct.unpack("<Q", patch[6:])[0]
     assert h <= hook < h + 0x400000, f"{name} : le saut ne mène pas au proxy ({hook:#x})"
-    print(f"{name} : site {base + rva:#x} -> détour {hook:#x} dans le proxy")
+    print(f"{name} : site {base + R(rva):#x} -> détour {hook:#x} dans le proxy")
 
 # Compteur de tours (tours.rs) : appels `call rel32` du cache de l'interface, redirigés vers un relais
 # `jmp [rip+0]` posé près de GameCore, qui mène au proxy.
@@ -96,59 +136,66 @@ CALLS = (  # site, fonction appelée d'origine (RVA)
     (0x6C7B5, 0xFE300),
 )
 for rva, callee in CALLS:
-    code = ctypes.string_at(base + rva, 5)
+    code = ctypes.string_at(base + R(rva), 5)
     assert code[0] == 0xE8, f"tours {rva:#x} : pas de call ({code.hex()})"
-    stub = base + rva + 5 + struct.unpack("<i", code[1:])[0]
-    assert stub != base + callee, f"tours {rva:#x} : appel non redirigé"
+    stub = base + R(rva) + 5 + struct.unpack("<i", code[1:])[0]
+    assert stub != base + R(callee), f"tours {rva:#x} : appel non redirigé"
     jump = ctypes.string_at(stub, 14)
     assert jump[:6] == b"\xff\x25\x00\x00\x00\x00", f"tours {rva:#x} : relais inattendu ({jump.hex()})"
     hook = struct.unpack("<Q", jump[6:])[0]
     assert h <= hook < h + 0x400000, f"tours {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
-    print(f"tours : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+    print(f"tours : call {base + R(rva):#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
 # Départ d'un port (ports.rs) : `call 18005e770` de CanStart (TeleportToCity) redirigé vers un relais
 # `mov rdx,r14 ; jmp [rip+0]`.
 PORT_RVA, PORT_CALLEE = 0x67D315, 0x5E770
-code = ctypes.string_at(base + PORT_RVA, 5)
+code = ctypes.string_at(base + R(PORT_RVA), 5)
 assert code[0] == 0xE8, f"ports : pas de call ({code.hex()})"
-stub = base + PORT_RVA + 5 + struct.unpack("<i", code[1:])[0]
-assert stub != base + PORT_CALLEE, "ports : appel non redirigé"
+stub = base + R(PORT_RVA) + 5 + struct.unpack("<i", code[1:])[0]
+assert stub != base + R(PORT_CALLEE), "ports : appel non redirigé"
 jump = ctypes.string_at(stub, 17)
 assert jump[:9] == bytes.fromhex("4c89f2ff2500000000"), f"ports : relais inattendu ({jump.hex()})"
 hook = struct.unpack("<Q", jump[9:])[0]
 assert h <= hook < h + 0x400000, f"ports : le relais ne mène pas au proxy ({hook:#x})"
-print(f"ports : call {base + PORT_RVA:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+print(f"ports : call {base + R(PORT_RVA):#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
 # Unités empilées (empilement.rs) : `call 1802c4360` du contournement et du soutien redirigés vers un
 # relais `mov r8,rsi ; mov r9,r14 ; jmp [rip+0]`.
 PILE_RVAS, PILE_CALLEE = (0x36C3E1, 0x36D301), 0x2C4360
 for rva in PILE_RVAS:
-    assert ctypes.string_at(base + rva - 10, 10).hex() == "8b5704488b88c8060000", f"empilement {rva:#x} : contexte inattendu"
-    assert ctypes.string_at(base + rva + 5, 6).hex() == "488bd84885c0", f"empilement {rva:#x} : suite inattendue"
-    code = ctypes.string_at(base + rva, 5)
+    assert ctypes.string_at(base + R(rva) - 10, 10).hex() == "8b5704488b88c8060000", f"empilement {rva:#x} : contexte inattendu"
+    assert ctypes.string_at(base + R(rva) + 5, 6).hex() == "488bd84885c0", f"empilement {rva:#x} : suite inattendue"
+    code = ctypes.string_at(base + R(rva), 5)
     assert code[0] == 0xE8, f"empilement {rva:#x} : pas de call ({code.hex()})"
-    stub = base + rva + 5 + struct.unpack("<i", code[1:])[0]
-    assert stub != base + PILE_CALLEE, f"empilement {rva:#x} : appel non redirigé"
+    stub = base + R(rva) + 5 + struct.unpack("<i", code[1:])[0]
+    assert stub != base + R(PILE_CALLEE), f"empilement {rva:#x} : appel non redirigé"
     jump = ctypes.string_at(stub, 20)
     assert jump[:12] == bytes.fromhex("4989f04d89f1ff2500000000"), f"empilement {rva:#x} : relais inattendu ({jump.hex()})"
     hook = struct.unpack("<Q", jump[12:])[0]
     assert h <= hook < h + 0x400000, f"empilement {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
-    print(f"empilement : call {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+    print(f"empilement : call {base + R(rva):#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+
+# Échange d'unités (echange.rs) : l'entrée de l'exécution de SWAP_UNITS dans sa vtable (`.rdata`)
+# mène au proxy.
+SWAP_SLOT, SWAP_EXEC = 0xA2CE28, 0x67C860
+hook = struct.unpack("<Q", ctypes.string_at(base + R(SWAP_SLOT), 8))[0]
+assert h <= hook < h + 0x400000, f"echange : entrée de vtable non détournée ({hook:#x})"
+print(f"echange : vtable {base + R(SWAP_SLOT):#x} -> {hook:#x} dans le proxy")
 
 # Passage de tour (fin_tour.rs) : l'étape de mise à jour `18063e2e0` en fin de DiplomacyAction,
 # DiplomacyDeal (jmp terminal) et DiplomacySession (call) redirigée vers un relais
 # `mov edx,quel ; jmp [rip+0]`.
 FIN_APPELS, FIN_CALLEE = ((0x3514F, 0xE9), (0x353B8, 0xE9), (0x358F2, 0xE8)), 0x63E2E0
 for i, (rva, opcode) in enumerate(FIN_APPELS):
-    code = ctypes.string_at(base + rva, 5)
+    code = ctypes.string_at(base + R(rva), 5)
     assert code[0] == opcode, f"fin de tour {rva:#x} : pas de jmp/call ({code.hex()})"
-    stub = base + rva + 5 + struct.unpack("<i", code[1:])[0]
-    assert stub != base + FIN_CALLEE, f"fin de tour {rva:#x} : appel non redirigé"
+    stub = base + R(rva) + 5 + struct.unpack("<i", code[1:])[0]
+    assert stub != base + R(FIN_CALLEE), f"fin de tour {rva:#x} : appel non redirigé"
     jump = ctypes.string_at(stub, 19)
     assert jump[:11] == bytes([0xBA]) + struct.pack("<I", i) + bytes.fromhex("ff2500000000"), f"fin de tour {rva:#x} : relais inattendu ({jump.hex()})"
     hook = struct.unpack("<Q", jump[11:])[0]
     assert h <= hook < h + 0x400000, f"fin de tour {rva:#x} : le relais ne mène pas au proxy ({hook:#x})"
-    print(f"fin de tour : {code[:1].hex()} {base + rva:#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
+    print(f"fin de tour : {code[:1].hex()} {base + R(rva):#x} -> relais {stub:#x} -> {hook:#x} dans le proxy")
 
 # Le proxy n'exporte que les noms de l'originale, plus DllMain, les deux exports de diagnostic et sa
 # version (BgdVersion, lue par le proxy de démarrage).
@@ -173,22 +220,24 @@ k32.GetModuleHandleW.restype = wintypes.HMODULE
 while k32.GetModuleHandleW(proxy):
     k32.FreeLibrary(lib._handle)
 for name, rva, prologue in SITES:
-    now = ctypes.string_at(base + rva, len(prologue) // 2).hex()
+    now = K(rva, ctypes.string_at(base + R(rva), len(prologue) // 2)).hex()
     assert now == prologue, f"{name} : octets non restaurés après déchargement ({now})"
     print(f"{name} : octets d'origine restaurés après déchargement du proxy")
 for rva, callee in CALLS:
-    code = ctypes.string_at(base + rva, 5)
-    assert base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + callee, f"tours {rva:#x} : appel non restauré"
+    code = ctypes.string_at(base + R(rva), 5)
+    assert base + R(rva) + 5 + struct.unpack("<i", code[1:])[0] == base + R(callee), f"tours {rva:#x} : appel non restauré"
 print("tours : appels d'origine restaurés après déchargement du proxy")
-code = ctypes.string_at(base + PORT_RVA, 5)
-assert base + PORT_RVA + 5 + struct.unpack("<i", code[1:])[0] == base + PORT_CALLEE, "ports : appel non restauré"
+code = ctypes.string_at(base + R(PORT_RVA), 5)
+assert base + R(PORT_RVA) + 5 + struct.unpack("<i", code[1:])[0] == base + R(PORT_CALLEE), "ports : appel non restauré"
 print("ports : appel d'origine restauré après déchargement du proxy")
 for rva in PILE_RVAS:
-    code = ctypes.string_at(base + rva, 5)
-    assert base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + PILE_CALLEE, f"empilement {rva:#x} : appel non restauré"
+    code = ctypes.string_at(base + R(rva), 5)
+    assert base + R(rva) + 5 + struct.unpack("<i", code[1:])[0] == base + R(PILE_CALLEE), f"empilement {rva:#x} : appel non restauré"
 print("empilement : appels d'origine restaurés après déchargement du proxy")
 for rva, opcode in FIN_APPELS:
-    code = ctypes.string_at(base + rva, 5)
-    assert code[0] == opcode and base + rva + 5 + struct.unpack("<i", code[1:])[0] == base + FIN_CALLEE, f"fin de tour {rva:#x} : appel non restauré"
+    code = ctypes.string_at(base + R(rva), 5)
+    assert code[0] == opcode and base + R(rva) + 5 + struct.unpack("<i", code[1:])[0] == base + R(FIN_CALLEE), f"fin de tour {rva:#x} : appel non restauré"
 print("fin de tour : appels d'origine restaurés après déchargement du proxy")
+assert struct.unpack("<Q", ctypes.string_at(base + R(SWAP_SLOT), 8))[0] == base + R(SWAP_EXEC), "echange : entrée de vtable non restaurée"
+print("echange : entrée de vtable d'origine restaurée après déchargement du proxy")
 print("OK")

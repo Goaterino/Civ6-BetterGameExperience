@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
-import worker, { lireMeta, brut, steamId, faireDeLaPlace, quotaDepasse, CLE_CLIENT, MAX_OCTETS, PLAFOND_OCTETS, QUOTA_RAPPORTS, QUOTA_OCTETS, MAX_META } from "../src/index.js";
+import worker, { lireMeta, brut, steamId, faireDeLaPlace, quotaDepasse, resumeAdmin, CLE_CLIENT, MAX_OCTETS, PLAFOND_OCTETS, QUOTA_RAPPORTS, QUOTA_OCTETS, MAX_META, MAX_RESUME } from "../src/index.js";
 
 // Un zip comme celui du proxy : meta.json en premier, en deflate (ou brut, méthode 0). `texte`
 // remplace le JSON de `meta`, `nom` le nom de l'entrée.
@@ -48,7 +48,7 @@ function env(options = {}) {
 			delete: async (ks) => { for (const k of [].concat(ks)) objets.delete(k); },
 			// Pages de 2 objets, pour essayer la pagination.
 			list: async ({ prefix, cursor }) => {
-				const tout = [...objets].filter(([k]) => k.startsWith(prefix)).map(([key, o]) => ({ key, size: o.size, uploaded: o.uploaded }));
+				const tout = [...objets].filter(([k]) => k.startsWith(prefix)).map(([key, o]) => ({ key, size: o.size, uploaded: o.uploaded, customMetadata: o.customMetadata }));
 				const debut = Number(cursor ?? 0);
 				const page = tout.slice(debut, debut + 2);
 				return { objects: page, truncated: debut + 2 < tout.length, cursor: String(debut + 2) };
@@ -280,4 +280,72 @@ test("Steam ID : celui du jeu, sinon celui de Windows, sinon inconnu", () => {
 	assert.equal(steamId({ steam_id: "", steam_id_windows: "76561198000000099" }), "76561198000000099");
 	assert.equal(steamId({ steam_id: "1234", steam_id_windows: "<@1>" }), null);
 	assert.equal(steamId({}), null);
+});
+
+const CLE_ADMIN = "a".repeat(32);
+const admin = (chemin, cle = CLE_ADMIN) => new Request(`https://x${chemin}`, { headers: cle == null ? {} : { authorization: `Bearer ${cle}` } });
+
+test("routes de l'équipe : liste et téléchargement avec CLE_ADMIN", async () => {
+	const e = { ...env(), CLE_ADMIN };
+	const ids = [];
+	for (const joueur of ["Ana", "Борис", "Chen"]) {
+		const r = await worker.fetch(envoi(zip({ ...META, joueur, description: `desync ${joueur}\nT1` }), { "x-bge-version": "0.13.0", "x-bge-cle": CLE_CLIENT }), e);
+		ids.push((await r.json()).id);
+	}
+	// Un ancien rapport, rangé avant le résumé.
+	e.objets.set("rapports/BGE-000001.zip", { data: new Uint8Array([1]), size: 1, uploaded: new Date(0), customMetadata: { cle: "x" } });
+	const r = await worker.fetch(admin("/admin/rapports?n=3"), e);
+	assert.equal(r.status, 200);
+	const l = await r.json();
+	assert.equal(l.total, 4);
+	assert.deepEqual(l.rapports.map((x) => x.id), [...ids].reverse(), "du plus récent au plus ancien");
+	assert.equal(l.rapports[1].joueur, "Борис");
+	assert.equal(l.rapports[1].description, "desync Борис T1");
+	assert.equal(l.rapports[1].tour, "87");
+	assert.equal(l.rapports[1].hote, "1");
+	assert.equal(l.rapports[1].version, "0.13.0");
+	assert.ok(!("cle" in l.rapports[1]), "la clé du fil n'est pas donnée");
+	const ancien = (await (await worker.fetch(admin("/admin/rapports?n=10"), e)).json()).rapports.at(-1);
+	assert.deepEqual(ancien, { id: "BGE-000001", octets: 1, recu: new Date(0).toISOString(), version: "" });
+	// Téléchargement sans la clé du fil.
+	const d = await worker.fetch(admin(`/admin/rapport/${ids[0]}`), e);
+	assert.equal(d.status, 200);
+	assert.deepEqual(new Uint8Array(await d.arrayBuffer()), e.objets.get(`rapports/${ids[0]}.zip`).data);
+	assert.equal((await worker.fetch(admin("/admin/rapport/BGE-FFFFFF"), e)).status, 404);
+	assert.equal((await worker.fetch(admin("/admin/rapport/../etat"), e)).status, 404);
+});
+
+test("routes de l'équipe : 404 sans la bonne clé ou sans CLE_ADMIN", async () => {
+	const e = { ...env(), CLE_ADMIN };
+	await worker.fetch(envoi(zip(META)), e);
+	for (const cle of [null, "", "b".repeat(32), CLE_ADMIN + "x", CLE_CLIENT]) {
+		assert.equal((await worker.fetch(admin("/admin/rapports", cle), e)).status, 404, String(cle));
+	}
+	// Sans le secret, ou avec un secret trop court, les routes n'existent pas.
+	assert.equal((await worker.fetch(admin("/admin/rapports", ""), env())).status, 404);
+	assert.equal((await worker.fetch(admin("/admin/rapports", "court"), { ...env(), CLE_ADMIN: "court" })).status, 404);
+	// Retour à la ligne du secret ignoré.
+	assert.equal((await worker.fetch(admin("/admin/rapports"), { ...env(), CLE_ADMIN: CLE_ADMIN + "\r\n" })).status, 200);
+});
+
+test("résumé des métadonnées : ASCII, borné, et jamais au prix du rapport", async () => {
+	const r = resumeAdmin({ ...META, description: "😀".repeat(5000), joueur: "й".repeat(500) });
+	assert.ok(r.length <= MAX_RESUME, String(r.length));
+	assert.match(r, /^[\x20-\x7e]*$/);
+	assert.ok(JSON.parse(decodeURIComponent(r)).description.length > 0);
+	assert.equal(JSON.parse(decodeURIComponent(resumeAdmin(null))).joueur, "");
+	// R2 refuse les métadonnées : le rapport est rangé sans le résumé.
+	const e = env();
+	const put = e.RAPPORTS.put;
+	e.RAPPORTS.put = async (k, v, o) => {
+		if (o.customMetadata.resume != null) throw new Error("métadonnées trop grosses");
+		return put(k, v, o);
+	};
+	const erreurs = console.error;
+	console.error = () => {};
+	const reponse = await worker.fetch(envoi(zip(META)), e);
+	console.error = erreurs;
+	assert.equal(reponse.status, 200);
+	const { id } = await reponse.json();
+	assert.ok(e.objets.get(`rapports/${id}.zip`).customMetadata.cle);
 });

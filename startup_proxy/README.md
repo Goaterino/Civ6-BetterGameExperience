@@ -51,6 +51,14 @@ remis les originaux des deux anciens proxys.
   elle. Un export absent de la winmm de cette version de Windows rend 0, et le journal le compte.
 - Des renvois PE (*forwarders*) n'ont pas suffi : leur cible est un nom de module ou un chemin figé
   dans la DLL (`C:\Windows\System32\winmm`), faux si Windows est installé ailleurs.
+- **Versions du jeu.** Les modules qui visent des adresses fixes de l'exe (absent_turn, flush,
+  messages, pings, rejoin, relink, reload_all, snapshots, sync_notes) ont une table `EXES` dont
+  chaque entrée porte le nom de sa version : `DX12 1.0.12.74`. La version du jeu est lue dans la
+  ressource de version de l'exe (`exe::game_version`, commun aux deux proxys). Seules les entrées
+  de cette version sont essayées ; leurs empreintes départagent DX12 et DX11 et refusent un exe
+  différent sous le même numéro. Versions connues : 1.0.12.58, 1.0.12.72 et 1.0.12.74. Avec une
+  autre, le journal dit `unknown exe (no table for game …)` et le module ne pose rien. Les
+  modules par signature (assets, bdd, pool, vsync…) n'ont pas de table et n'en dépendent pas.
 - Au chargement, le proxy écrit `démarrage : proxy winmm chargé dans <exe>` puis
   `démarrage : exports relayés vers <winmm de System32>` dans le journal commun,
   `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
@@ -518,14 +526,15 @@ appliqué non plus, et compte comme une correction.
   gel (0x61746143) injecté…` puis `… remplacé par 0 (1 corrections)`, la ligne `BGE - Blocked…`
   doit arriver dans le chat à l'arrivée en jeu, et la partie continue (la carte visée est vidée,
   sans effet visible). En solo, il n'y a pas de chat : le journal seulement. Remettre `on` ensuite.
-- Addresses of both exes of 2026-11-05, `CivilizationVI_DX12.exe` and `CivilizationVI.exe` (DX11),
-  one table each (`EXES`). The loaded exe is checked byte by byte against each table (prologue of
+- Addresses of both exes, `CivilizationVI_DX12.exe` and `CivilizationVI.exe` (DX11), one table
+  each per game version (`EXES`). The loaded exe is checked byte by byte against each table of its
+  version (prologue of
   the read, start of the five functions, `call [rax+30h]` before each return, the five entries of
   both vtables, the configuration singleton and the displacement leading to it, the start of the
   `NetPlayerInfo` handler); the vtables and the singleton are touched only if everything matches.
-  The log says which table was used: `messages: guard installed (DX11, …)`. On another exe (another
-  build), nothing is installed and the log says `messages: unknown exe (DX12: …; DX11: …), guard
-  not installed`. `cargo test` checks that each table matches its own installed exe, and only that
+  The log says which table was used: `messages: guard installed (DX11, …)`. On another exe, nothing is
+  installed and the log says `messages: unknown exe (game …: DX12 …: …; DX11 …: …), guard not
+  installed`, or `(no table for game …)` for an unknown version. `cargo test` checks that each table matches its own installed exe, and only that
   one.
 - The DX11 table (added on 2026-11-10): before it, a player on DX11 had no guard, and that player
   froze, then crashed, at the disconnection of 2026-11-10 (20:09), while the players on DX12 were

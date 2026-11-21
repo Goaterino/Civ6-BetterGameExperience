@@ -2,6 +2,120 @@
 
 [English](../CHANGELOG.md) · altre lingue: vedi il [registro in inglese](../CHANGELOG.md).
 
+## BetterGameExperience 0.13.0
+
+In multigiocatore, tutti i giocatori umani devono avere la 0.13.0 per le correzioni **[tutti i
+giocatori]**: una sala d'attesa che mescola 0.12.0 e 0.13.0 le disattiva.
+
+### Aggiornamento del gioco 1.0.12.74
+- **Aggiornamento di Civilization VI del 19 novembre (1.0.12.74)**: BetterGameExperience ora
+  riconosce il gioco aggiornato, in DX12 e DX11. Le versioni precedenti non vi installano nessuna
+  delle loro correzioni. Contributo di yodha.
+
+### Correzioni multigiocatore [tutti i giocatori]
+- **Giocatore che si disconnette**: il gioco affidava all'IA un giocatore disconnesso su ogni
+  macchina separatamente, senza alcun messaggio tra di esse, quindi le macchine potevano giocare quel
+  turno in modo diverso e desincronizzarsi. Ora lo slot resta umano, e l'host termina il turno del
+  giocatore assente quando tutti gli umani connessi hanno terminato il proprio. Un giocatore espulso
+  passa ancora all'IA. Contributo di yodha.
+- **Ricaricamento di tutti**: quando la partita di un giocatore non corrisponde più, ora è l'host ad
+  avviare il ricaricamento e tutti i giocatori caricano la stessa copia della sua partita; il turno
+  inizia solo quando ogni giocatore l'ha caricata e la sua partita è stata controllata. Un giocatore
+  ancora diverso viene ricaricato un'altra volta. Contributo di yodha.
+
+## BetterGameExperience 0.12.0
+
+In multigiocatore, tutti i giocatori umani devono avere la 0.12.0 per le correzioni **[tutti i
+giocatori]**: una sala d'attesa che mescola 0.11.0 e 0.12.0 le disattiva.
+
+### Correzioni multigiocatore [tutti i giocatori]
+- **Desincronizzazione dopo una riconnessione**: un giocatore che si riconnetteva, o che veniva
+  ricaricato da solo, eseguiva una partita appena caricata contro le partite in corso degli altri.
+  Le due differiscono in dati che il controllo di sincronizzazione non copre, quindi la partita
+  tornava a divergere e ricaricava quel giocatore più e più volte. Ora, quando la partita di un
+  giocatore non corrisponde più, l'host ne spiega il motivo nella chat e tutti ricaricano subito la
+  partita dell'host; l'host attende il controllo di ogni giocatore sulla partita ricaricata, poi il
+  turno inizia per tutti. Contributo di yodha.
+- **Riconnessione a fine turno**: un giocatore che si riconnetteva durante una fine del turno veniva
+  confrontato con il turno successivo, il che causava una riparazione inutile e poi un
+  ricaricamento ogni due turni. Contributo di yodha.
+- **Remap di Multiplayer Helper**: dopo un remap, l'host eseguiva la partita appena generata e tutti
+  gli altri giocatori la stessa partita caricata dal salvataggio dell'host, e l'IA faceva scelte
+  leggermente diverse da ciascun lato (riparazioni di diversi MB per turno in una partita da 8
+  giocatori). Ora anche l'host carica il proprio salvataggio, così tutte le macchine eseguono la
+  stessa partita. Costo: una schermata di caricamento in più per l'host, una volta per remap.
+  Contributo di yodha.
+- **Ogni partita riparte pulita**: alcuni contatori del gioco passavano da una partita alla
+  successiva nella stessa sessione, e gli oggetti venivano numerati diversamente rispetto agli
+  altri giocatori. Contributo di yodha.
+
+### Multigiocatore
+- **Doppio caricamento all'avvio di un salvataggio**: l'host non invia più una seconda copia della
+  partita ai giocatori che stanno ancora caricando, che ne faceva caricare alcuni due volte. Quando
+  una copia viene ancora rifiutata, la chat mostra «Doppio caricamento evitato». Contributo di yodha.
+- **Messaggi di rete danneggiati**: anche un messaggio che cancellerebbe le impostazioni della
+  partita ora viene rifiutato. La chat indica il giocatore e cosa è stato evitato («Blocco della
+  partita evitato», «Cancellazione delle impostazioni della partita evitata»). Contributo di yodha.
+- **Messaggi tagliati a fine caricamento**: un messaggio messo in attesa durante un caricamento non
+  viene più attaccato a un messaggio che sta ancora arrivando a pezzi. Contributo di yodha.
+- **Correzioni di BetterGameExperience decise al caricamento**: la decisione di attivare le
+  correzioni **[tutti i giocatori]** viene ricontrollata al caricamento e alla chiusura della
+  schermata di caricamento, un nuovo host dopo una migrazione la riprende (i giocatori entrati dopo
+  una migrazione giocavano senza), e i giocatori ignorati restano ignorati dopo un ricaricamento.
+  Contributo di yodha.
+- **Copia del gioco non aggiornata**: un giocatore il cui gioco non è la versione Steam attuale
+  viene annunciato nella chat al suo arrivo, perché le correzioni di rete di BetterGameExperience
+  non possono funzionare sul suo PC.
+- **Finestra «Partita in pausa»**: non si accumula più durante i caricamenti e non compare più sopra
+  la schermata di caricamento.
+- **Impostazione della partita**: i segnali di squadra non si possono più attivare o disattivare una
+  volta iniziata la partita (la modifica non faceva nulla o lasciava i segnali attivi), salvataggi
+  compresi. No First/Last moves e i segnali di squadra non si possono più attivare in una sala
+  d'attesa dove un giocatore non ha BetterGameExperience o la versione giusta, ma si possono ancora
+  disattivare. Contributo di mariusbw.
+
+### No First/Last moves
+- L'opzione resta attiva una volta attivata. L'host non aspetta più un giocatore che non è stato
+  pronto per due turni di fila, e lo dice nella chat. Un giocatore che non riceve il segnale di
+  inizio dall'host per 75 s inizia il proprio turno da solo. Contributo di yodha.
+- **Chat più discreta**: il messaggio di attivazione si riduce a «No First/Last moves attivo.», e le
+  righe degli ordini trattenuti e della partenza compaiono una volta per partita invece che a ogni
+  turno. L'annuncio che BetterGameExperience è attivo viene inviato una volta per sala d'attesa, non
+  a ogni riapertura della schermata della sala.
+
+### Caricamenti più rapidi
+- Nuove impostazioni nella scheda BetterGameExperience, tutte attive per impostazione predefinita,
+  che accorciano i caricamenti senza cambiare la partita: ricerca più rapida dei file grafici (diversi
+  secondi dal menu principale), database di gioco e testi delle mod conservati tra un caricamento e
+  l'altro quando le mod sono le stesse (circa 1,5 s ciascuno), nessuna attesa del VSync nelle
+  schermate di caricamento (circa 2 s, solo con il VSync attivo), una sola pulizia Lua alla chiusura
+  dell'interfaccia (circa 2 s prima di un remap), un primo caricamento più leggero per l'host al
+  remap (circa 10 s) e un'analisi dei colli di bottiglia più rapida alla generazione della mappa
+  (circa 2 s, stesso risultato). Il registro dei colli di bottiglia dell'IA (AI_ChokePoint.csv,
+  12 MB) non viene più scritto per impostazione predefinita.
+- **Thread dei compiti**: i thread inattivi sprecano meno tempo di processore mentre aspettano
+  (impostazioni nella stessa scheda).
+
+### Interfaccia
+- **Formazione più alta per prima**: nella lista di produzione, il pulsante principale di un'unità
+  addestra la formazione più alta che la città può addestrare (armata, altrimenti corpo; in mare
+  flotta da guerra, altrimenti flotta), e l'unità singola passa nel menu a tendina sotto. Gli
+  acquisti con oro e fede non cambiano. Attiva per impostazione predefinita. Contributo di huchenlei.
+- **Avviso anticipato sulle abitazioni**: gli stendardi delle tue città mostrano una casa arancione
+  quando a una città manca un'abitazione al limite (crescita -50 %) e la casa rossa appena lo
+  raggiunge (-75 %); il gioco mostrava la casa rossa solo oltre il limite. Attivo per impostazione
+  predefinita. Contributo di huchenlei.
+- **Carte politica**: i loro effetti non scompaiono più per il resto della partita quando la
+  schermata del governo viene disegnata per la prima volta nel momento sbagliato (visto dopo aver
+  ricaricato una partita); tornavano solo dopo un altro ricaricamento.
+- **Stendardi delle unità**: le unità da combattimento con cariche (legione romana, toa, nau…)
+  mostrano di nuovo le loro promozioni invece delle cariche; i costruttori, gli ingegneri militari e
+  le altre unità civili e di supporto mostrano sempre le loro cariche.
+
+### Segnalazione di bug
+- I registri che contengono token di accesso (FiraxisLive.log, EOS.log) vengono esclusi, e i
+  registri lunghi conservano l'inizio e la fine. Contributo di yodha.
+
 ## BetterGameExperience 0.11.0
 
 In multigiocatore, tutti i giocatori umani devono avere la 0.11.0 per le correzioni **[tutti i

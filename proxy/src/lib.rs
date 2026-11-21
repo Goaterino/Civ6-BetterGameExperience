@@ -32,6 +32,8 @@ mod congres;
 mod debordement;
 mod delaunay;
 mod depart;
+mod drop_slot;
+mod echange;
 mod empilement;
 mod unites_promises;
 mod partie_chargee;
@@ -238,6 +240,10 @@ pub(crate) fn read_config() {
         if let Some(v) = line.trim().strip_prefix("ui_debordement=") {
             debordement::set_enabled(v.trim() != "off");
         }
+        #[cfg(feature = "diag")]
+        if let Some(v) = line.trim().strip_prefix("diag_production=") {
+            debordement::set_diag(v.trim() == "on");
+        }
         if let Some(v) = line.trim().strip_prefix("ui_merveilles=") {
             ui::set_merveilles(v.trim() != "off");
         }
@@ -296,6 +302,58 @@ pub(crate) fn read_config() {
             depart::set_signaux(v.trim() == "on");
         }
     }
+    let coupees = nouveautes_coupees(&text);
+    if !coupees.is_empty() {
+        for (_, couper) in &coupees {
+            couper();
+        }
+        let cles: Vec<&str> = coupees.iter().map(|(k, _)| *k).collect();
+        log(&format!("ui_nouveautes=off : nouveautés coupées ({})", cles.join(", ")));
+    }
+}
+
+/// Ajouts d'interface, marqués `nouveaute_ui` dans l'onglet (startup_proxy/src/options_proxy.lua),
+/// et ce qui coupe chacun. La valeur « off » de chacun doit être le jeu sans l'ajout. Un test
+/// (startup_proxy, `nouveautes_ui_communes_avec_le_proxy`) vérifie que les deux listes concordent.
+/// Chaque nouvel ajout d'interface réglable va ici et porte `nouveaute_ui = true` dans l'onglet.
+#[rustfmt::skip]
+const NOUVEAUTES_UI: &[(&str, fn())] = &[
+    ("wmd_accel", || wmd::set_factor(1.0)),
+    ("ui_boutons", || ui::set_boutons(false)),
+    ("ui_carte_entiere", || carte::set_enabled(false)),
+    ("ui_banniere_annuler", || ui::set_banniere_annuler(false)),
+    ("ui_reduction_quartiers", || ui::set_reduction_quartiers(false)),
+    ("ui_formations", || ui::set_formations(false)),
+    ("ui_debordement", || debordement::set_enabled(false)),
+    ("ui_logement", || ui::set_logement(false)),
+    ("ui_avancement", || ui::set_avancement(false)),
+    ("ui_charges", || mods_ui::set_charges(false)),
+    ("ui_routes", || mods_ui::set_routes(false)),
+    ("ui_notifications", || mods_ui::set_notifications(false)),
+    ("ui_bandeau", || mods_ui::set_bandeau(false)),
+    ("ui_politiques", || mods_ui::set_politiques(false)),
+    ("ui_rapports", || mods_ui::set_rapports(false)),
+];
+
+/// `ui_nouveautes=off` : les ajouts d'interface absents du fichier sont coupés. Quand le joueur
+/// choisit ce réglage, l'onglet écrit la valeur de chaque ajout déjà présent ; un ajout absent du
+/// fichier est donc arrivé depuis, avec une mise à jour. Comme pour les autres clés, la dernière
+/// ligne de `ui_nouveautes` l'emporte.
+fn nouveautes_coupees(text: &str) -> Vec<(&'static str, fn())> {
+    let mut coupees = false;
+    let mut lues: Vec<&str> = Vec::new();
+    for line in text.lines() {
+        if let Some(v) = line.trim().strip_prefix("ui_nouveautes=") {
+            coupees = v.trim() == "off";
+        }
+        if let Some((k, _)) = line.split_once('=') {
+            lues.push(k.trim());
+        }
+    }
+    if !coupees {
+        return Vec::new();
+    }
+    NOUVEAUTES_UI.iter().filter(|(k, _)| !lues.contains(k)).copied().collect()
 }
 
 #[no_mangle]
@@ -318,7 +376,9 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             ports::on_proxy_unload();
             production_modifiers::on_proxy_unload();
             fin_tour::on_proxy_unload();
+            drop_slot::on_proxy_unload();
             empilement::on_proxy_unload();
+            echange::on_proxy_unload();
             depart::on_proxy_unload();
             carte::on_proxy_unload();
             improvements::on_proxy_unload();
@@ -346,5 +406,24 @@ mod tests {
         assert_eq!(v.to_str().unwrap(), super::version::VERSION);
         let marque = format!("{}{}\0", super::version::MARQUE, super::version::VERSION);
         assert_eq!(&super::MARQUE_VERSION[..], marque.as_bytes());
+    }
+
+    fn coupees(text: &str) -> Vec<&'static str> {
+        super::nouveautes_coupees(text).into_iter().map(|(k, _)| k).collect()
+    }
+
+    /// Réglage absent ou `on` : rien de coupé. `off` : seuls les ajouts absents du fichier.
+    #[test]
+    fn nouveautes_ui() {
+        assert!(coupees("").is_empty());
+        assert!(coupees("ui_nouveautes=on\nui_boutons=on").is_empty());
+        let toutes = coupees("ui_nouveautes=off");
+        assert_eq!(toutes.len(), super::NOUVEAUTES_UI.len());
+        let c = coupees("ui_boutons=on\r\n ui_logement = off\r\nui_nouveautes=off\r\nwmd_accel=20\r\n");
+        assert!(!c.contains(&"ui_boutons") && !c.contains(&"ui_logement") && !c.contains(&"wmd_accel"));
+        assert!(c.contains(&"ui_formations") && c.contains(&"ui_rapports"));
+        assert_eq!(c.len(), super::NOUVEAUTES_UI.len() - 3);
+        // La dernière ligne l'emporte.
+        assert!(coupees("ui_nouveautes=off\nui_nouveautes=on").is_empty());
     }
 }

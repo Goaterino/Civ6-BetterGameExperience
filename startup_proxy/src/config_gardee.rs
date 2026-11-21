@@ -2,8 +2,9 @@
 //! (`config_gardee=on`, par défaut). Complète `bdd`, qui fait de même pour la base de gameplay à
 //! l'étape suivante.
 //!
-//! Dans le jeu 1.0.12.72 (exes DX11 et DX12), chaque chargement lance l'une après l'autre les deux
-//! étapes de configuration du cadre de mods, depuis l'automate de chargement (`140083c80` en DX11) :
+//! Dans les jeux 1.0.12.72 et 1.0.12.74 (exes DX11 et DX12), chaque chargement lance l'une après
+//! l'autre les deux étapes de configuration du cadre de mods, depuis l'automate de chargement
+//! (`140083c80` en DX11 1.0.12.72) :
 //!
 //! - l'étape de configuration (`140246e60` en DX11) reconstruit la base de configuration, remet la
 //!   base de localisation aux textes du FrontEnd (menus, salon) et importe les fichiers implicites
@@ -385,28 +386,21 @@ mod tests {
         assert!(!keep(3, (Some(5), Some(9)), None));
     }
 
-    /// Les sites dans les exes installés sur cette machine (DX11 et DX12), s'il y en a.
+    const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
+
+    /// Les sites dans chaque exe connu qui est là (DX12 et DX11 de chaque version, dans l'ordre de
+    /// `crate::test_exe`).
     #[test]
     fn locate_in_installed_exes() {
-        let dirs = [
-            std::env::var("CIV6_DIR").unwrap_or_default(),
-            r"D:\SteamLibrary\steamapps\common\Sid Meier's Civilization VI".to_string(),
-            r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI".to_string(),
-        ];
         let mut found = 0;
-        for dir in dirs.iter().filter(|d| !d.is_empty()) {
-            for exe_name in ["CivilizationVI.exe", "CivilizationVI_DX12.exe"] {
-                let path = std::path::Path::new(dir).join(r"Base\Binaries\Win64Steam").join(exe_name);
-                let Ok(file) = std::fs::read(&path) else { continue };
-                let (image, base, text_rva, text_len) = map(&file);
-                let text = &image[text_rva..text_rva + text_len];
-                let sites = locate(&image, base, text, base + text_rva).unwrap_or_else(|e| panic!("{exe_name}: {e}"));
-                assert_ne!(sites.config_fn, sites.gameplay_fn);
-                found += 1;
-            }
-            if found > 0 {
-                break;
-            }
+        for (i, exe_name) in ["CivilizationVI_DX12.exe", "CivilizationVI.exe"].iter().cycle().take(6).enumerate() {
+            let path = crate::test_exe(EXE_DIR, i, exe_name);
+            let Ok(file) = std::fs::read(&path) else { continue };
+            let (image, base, text_rva, text_len) = map(&file);
+            let text = &image[text_rva..text_rva + text_len];
+            let sites = locate(&image, base, text, base + text_rva).unwrap_or_else(|e| panic!("{path}: {e}"));
+            assert_ne!(sites.config_fn, sites.gameplay_fn);
+            found += 1;
         }
         if found == 0 {
             eprintln!("no Civilization VI exe found, test skipped");

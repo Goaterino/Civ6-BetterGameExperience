@@ -32,6 +32,7 @@ mod win;
 #[path = "../../proxy/src/noms.rs"]
 mod noms;
 
+mod absent_turn;
 mod chargeur;
 mod relais;
 mod options;
@@ -85,6 +86,20 @@ pub extern "system" fn BgdPolActifs() -> u32 {
     salon::pol_actifs() as u32
 }
 
+/// Tests: path of the exe a table index stands for. 0 and 1 are the 1.0.12.72 build
+/// (`CIV6_EXE_72_DIR`), 2 and 3 the 1.0.12.74 build (`CIV6_EXE_74_DIR`, or the installed game when
+/// unset), 4 and 5 the 1.0.12.58 build (`CIV6_EXE_58_DIR`). A build whose folder is not set or
+/// lacks the file is skipped.
+#[cfg(test)]
+pub(crate) fn test_exe(installed: &str, index: usize, name: &str) -> String {
+    let var = ["CIV6_EXE_72_DIR", "CIV6_EXE_74_DIR", "CIV6_EXE_58_DIR"][index / 2];
+    match std::env::var(var) {
+        Ok(dir) => format!(r"{dir}\{name}"),
+        Err(_) if index / 2 == 1 => format!(r"{installed}\{name}"),
+        Err(_) => format!("{var} not set"),
+    }
+}
+
 pub(crate) fn log(msg: &str) {
     let Some(dir) = std::env::var_os("LOCALAPPDATA").map(|d| std::path::Path::new(&d).join("Civ6RolloverProxy")) else {
         return;
@@ -134,6 +149,8 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             pings::install();
             snapshots::install();
             rejoin::install();
+            reload_all::install();
+            absent_turn::install();
             flush::install();
             sync_notes::install();
             // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.

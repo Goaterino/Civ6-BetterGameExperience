@@ -1,5 +1,6 @@
 //! Une partie chargée calcule comme la partie en cours (`visibilite_chargee=on`,
-//! `ecouteurs_charges=on` et `preferences_chargees=on`, par défaut ; GameCore_XP2 1.0.12.72).
+//! `ecouteurs_charges=on` et `preferences_chargees=on`, par défaut ; adresses du GameCore_XP2
+//! 1.0.12.72, traduites pour les autres builds par `patch`).
 //!
 //! Une machine qui charge une sauvegarde (rechargement après une désynchro, retour dans la partie)
 //! doit retrouver la partie que fait tourner l'hôte. La comparaison d'une partie en cours avec une
@@ -54,7 +55,7 @@
 //! défaut tous les trois).
 
 use crate::exe::rd;
-use crate::patch::{self, Site, IMAGE_BASE};
+use crate::patch::{self, Site};
 use crate::{log, pol};
 use std::ffi::c_void;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -195,7 +196,7 @@ fn tramp(i: usize) -> usize {
 }
 
 fn global(address: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (address - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + patch::rva(address)
 }
 
 #[repr(C)]
@@ -531,19 +532,12 @@ pub unsafe fn on_proxy_unload() {
 mod tests {
     use super::*;
 
-    /// Chaque site a ses octets attendus dans le GameCore installé (test sauté sans lui).
-    /// `CIV6_DIR` remplace le dossier du jeu.
+    /// Chaque site a ses octets attendus dans le GameCore installé, quel que soit son build (test
+    /// sauté sans lui).
     #[test]
     fn sites_match_installed_gamecore() {
-        let dirs = [
-            std::env::var("CIV6_DIR").unwrap_or_default(),
-            r"D:\SteamLibrary\steamapps\common\Sid Meier's Civilization VI".to_string(),
-            r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI".to_string(),
-        ];
-        let found = dirs.iter().filter(|d| !d.is_empty()).find_map(|d| {
-            std::fs::read(format!(r"{d}\DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll")).ok()
-        });
-        let Some(file) = found else {
+        let path = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll";
+        let Ok(file) = std::fs::read(path) else {
             eprintln!("GameCore missing, test skipped");
             return;
         };
@@ -552,7 +546,7 @@ mod tests {
         let nt = rd32(0x3c);
         let sections = nt + 24 + rd16(nt + 20);
         for s in &SITES {
-            let rva = (s.address - IMAGE_BASE) as usize;
+            let rva = patch::rva(s.address);
             let o = (0..rd16(nt + 6))
                 .map(|i| sections + 40 * i)
                 .find_map(|h| {
@@ -560,7 +554,7 @@ mod tests {
                     (rva >= va && rva < va + size).then(|| rva - va + raw)
                 })
                 .unwrap_or_else(|| panic!("{}: not in the file", s.name));
-            assert_eq!(&file[o..o + s.expected.len()], s.expected, "{}", s.name);
+            assert_eq!(patch::as_known(s.address, &file[o..o + s.expected.len()]), s.expected, "{}", s.name);
             assert!(s.expected.len() >= 14 && s.copy.1 <= s.expected.len() && s.resume >= s.copy.1, "{}", s.name);
         }
     }

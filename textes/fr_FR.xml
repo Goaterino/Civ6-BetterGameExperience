@@ -167,6 +167,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="fr_FR">
 			<Text>Génération de la carte : la triangulation qui sert à trouver les goulets est calculée par un équivalent plus rapide, au résultat identique (environ 2 s par carte générée). Vérification : calcule les deux, garde le résultat du jeu et note toute différence.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="fr_FR">
+			<Text>Nouveautés d'interface des mises à jour</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="fr_FR">
+			<Text>Désactivé : les ajouts d'interface des prochaines mises à jour de BetterGameExperience arrivent désactivés, et vous les activez ici quand vous voulez. Les options d'interface actuelles gardent leur valeur. Les correctifs ne sont pas concernés. Réactivé : les ajouts arrivés entre-temps que vous n'avez pas réglés vous-même s'activent. Purement local : sans effet sur les autres joueurs.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="fr_FR">
 			<Text>Accélération de l'animation des armes nucléaires</Text>
 		</Row>
@@ -340,6 +346,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="fr_FR">
 			<Text>Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="fr_FR">
+			<Text>Diagnostic de la réserve de production et des quartiers en réduction</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="fr_FR">
+			<Text>Écrit dans le journal du proxy comment la production en réserve (débordement) est lue pour chaque ville, et dans Lua.log comment le badge des quartiers en réduction est calculé, pour analyser les rapports BGE-E6DF54 et BGE-36E0D7.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="fr_FR">
 			<Text>Afficher les signaux du départ et de la fin simultanés</Text>
@@ -738,7 +750,7 @@
 			<Text>Il manque {2} objets à la partie de {1} et elle en a {3} en trop par rapport à celle de l'hôte : tout le monde recharge la partie de l'hôte pour éviter la désynchronisation de {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="fr_FR">
-			<Text>Le jeu de {1} n'est pas la version Steam actuelle : les correctifs réseau de BGE sont inactifs sur son PC.</Text>
+			<Text>La version du jeu de {1} n'est pas prise en charge par BGE : les correctifs de BGE sont inactifs sur son PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="fr_FR">
 			<Text>{1} et {2} passent par l'hôte (0 ms). Tentative de lien direct pendant le changement de tour.</Text>

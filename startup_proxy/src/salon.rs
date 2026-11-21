@@ -276,8 +276,8 @@ unsafe extern "C-unwind" fn lua_medias(l: *mut std::ffi::c_void) -> i32 {
     1
 }
 
-/// `Civ6Proxy_ExeInconnu()` → 1 if the game exe is not a build BGE knows (network fixes not
-/// installed), else 0.
+/// `Civ6Proxy_ExeInconnu()` → 1 if the game version has no address table (fixes not installed),
+/// else 0.
 unsafe extern "C-unwind" fn lua_unknown_exe(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
     (h.push_integer)(l, crate::messages::unknown_exe() as i32);
@@ -381,7 +381,11 @@ const PARTIE_NATIVES: Natives = &[
     (crate::relink::lua_forget, b"Civ6Proxy_RelayForgetPair\0"),
     (crate::sync_notes::lua_notes, b"Civ6Proxy_SyncNotes\0"),
     (crate::reload_all::lua_ready, b"Civ6Proxy_ReloadAllReady\0"),
+    (crate::reload_all::lua_state, b"Civ6Proxy_ReloadAllState\0"),
+    (crate::reload_all::lua_start, b"Civ6Proxy_ReloadAllStart\0"),
+    (crate::reload_all::lua_recheck, b"Civ6Proxy_ReloadAllRecheck\0"),
     (crate::rejoin::lua_keep_check, b"Civ6Proxy_RejoinKeepCheck\0"),
+    (crate::absent_turn::lua_end_turn, b"Civ6Proxy_EndTurnFor\0"),
 ];
 const OPTION_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),

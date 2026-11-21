@@ -167,6 +167,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="es_ES">
 			<Text>Generación del mapa: la triangulación que sirve para encontrar los cuellos de botella se calcula con un equivalente más rápido, con exactamente el mismo resultado (unos 2 s por mapa generado). Verificación: calcula ambos, conserva el resultado del juego y registra cualquier diferencia.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="es_ES">
+			<Text>Novedades de interfaz de las actualizaciones</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="es_ES">
+			<Text>Desactivado: las novedades de interfaz de las próximas actualizaciones de BetterGameExperience llegan desactivadas, y puedes activarlas aquí cuando quieras. Tus opciones de interfaz actuales conservan su valor. Las correcciones no se ven afectadas. Reactivado: las novedades llegadas entretanto que no hayas configurado tú se activan. Solo local: sin efecto sobre los demás jugadores.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="es_ES">
 			<Text>Animación acelerada de los ataques nucleares</Text>
 		</Row>
@@ -340,6 +346,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="es_ES">
 			<Text>Escribe en Lua.log las propuestas de acuerdo enviadas y recibidas, y lo que muestra la pantalla de acuerdo, para entender los acuerdos cruzados entre humanos.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="es_ES">
+			<Text>Diagnóstico de la producción en reserva y los distritos con descuento</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="es_ES">
+			<Text>Escribe en el registro del proxy cómo se lee la producción en reserva (excedente) de cada ciudad, y en Lua.log cómo se calcula la insignia de los distritos con descuento, para analizar los informes BGE-E6DF54 y BGE-36E0D7.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="es_ES">
 			<Text>Mostrar las señales del inicio y del final simultáneos</Text>
@@ -738,7 +750,7 @@
 			<Text>A la partida de {1} le faltan {2} objetos y tiene {3} de más respecto a la del anfitrión: todos recargan la partida del anfitrión para evitar la desincronización de {1}.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="es_ES">
-			<Text>El juego de {1} no es la versión actual de Steam: las correcciones de red de BGE están inactivas en su PC.</Text>
+			<Text>BGE no es compatible con la versión del juego de {1}: las correcciones de BGE están inactivas en su PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="es_ES">
 			<Text>{1} y {2} están conectados a través del anfitrión (0 ms). Intentando conectarlos directamente durante el cambio de turno.</Text>

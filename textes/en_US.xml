@@ -167,6 +167,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="en_US">
 			<Text>Map generation: the triangulation used to find choke points is computed by a faster equivalent, with exactly the same result (about 2 s per generated map). Verification: computes both, keeps the game's result and logs any difference.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="en_US">
+			<Text>New interface additions from updates</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="en_US">
+			<Text>Disabled: interface additions from future BetterGameExperience updates arrive disabled, and you can turn them on here whenever you like. Your current interface options keep their values. Fixes are not affected. Enabled again: additions that arrived in the meantime and that you have not set yourself turn on. Local only: no effect on other players.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="en_US">
 			<Text>Nuclear strike animation speed-up</Text>
 		</Row>
@@ -340,6 +346,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="en_US">
 			<Text>Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="en_US">
+			<Text>Production overflow and district discount diagnostics</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="en_US">
+			<Text>Writes to the proxy log how the production kept in reserve (overflow) is read for each city, and to Lua.log how the district discount badge is computed, to analyze reports BGE-E6DF54 and BGE-36E0D7.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="en_US">
 			<Text>Show simultaneous turn start and end signals</Text>
@@ -738,7 +750,7 @@
 			<Text>{1}'s game is missing {2} objects and has {3} extra compared to the host's: everyone reloads the host's game to prevent {1}'s desync.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="en_US">
-			<Text>{1}'s copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.</Text>
+			<Text>{1}'s game version is not supported by BGE: BGE's fixes are inactive on their PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="en_US">
 			<Text>{1} and {2} are linked through the host (0 ms). Trying to connect them directly during the turn change.</Text>

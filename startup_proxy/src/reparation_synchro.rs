@@ -1,6 +1,6 @@
 //! Réparation convergente des AutoArchives désynchronisées (`reparation_synchro=fulldelta`, par
-//! défaut), et moitié hôte du banc de synchro (`banc_synchro`, diagnostic). Jeu 1.0.12.72, exes
-//! DX11 et DX12.
+//! défaut), et moitié hôte du banc de synchro (`banc_synchro`, diagnostic). Jeux 1.0.12.72 et
+//! 1.0.12.74, exes DX11 et DX12, sites trouvés par motifs.
 //!
 //! **Hôte seulement.** À la fin d'un tour, chaque client envoie `NetGameSyncCheck` (un hachage par
 //! AutoArchive, et les indices des variables qu'il a modifiées). L'hôte compare (`1407f46c0` en
@@ -734,31 +734,34 @@ mod tests {
         (&file[raw..raw + rawsize], 0x1_4000_0000 + va)
     }
 
-    /// Les signatures dans les exes installés : uniques et cohérentes. `CIV6_DIR` remplace le
-    /// dossier du jeu.
+    const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
+    /// Gestionnaire, appel du delta et création du constructeur attendus dans chaque exe, dans
+    /// l'ordre de `crate::test_exe` (1.0.12.72, 1.0.12.74, 1.0.12.58) : ceux des tables de
+    /// `sync_notes`, dont ce module reprend les appels.
+    const EXPECTED: [(&str, usize, usize, usize); 6] = [
+        ("CivilizationVI_DX12.exe", 0x1_407f_65b0, 0x1_407f_717d, 0x1_407f_88c0),
+        ("CivilizationVI.exe", 0x1_407f_46c0, 0x1_407f_528d, 0x1_407f_69d0),
+        ("CivilizationVI_DX12.exe", 0x1_407f_65e0, 0x1_407f_71ad, 0x1_407f_88f0),
+        ("CivilizationVI.exe", 0x1_407f_53d0, 0x1_407f_5f9d, 0x1_407f_76e0),
+        ("CivilizationVI_DX12.exe", 0x1_407f_0b70, 0x1_407f_173d, 0x1_407f_2e80),
+        ("CivilizationVI.exe", 0x1_407f_0630, 0x1_407f_11fd, 0x1_407f_2940),
+    ];
+
+    /// Les signatures dans chaque exe connu qui est là : uniques, et menant aux adresses
+    /// attendues.
     #[test]
     fn sites_in_installed_exes() {
-        let dirs = [
-            std::env::var("CIV6_DIR").unwrap_or_default(),
-            r"D:\SteamLibrary\steamapps\common\Sid Meier's Civilization VI".to_string(),
-            r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI".to_string(),
-        ];
-        let expected = [
-            ("CivilizationVI.exe", 0x1_407f_46c0usize, 0x1_407f_528dusize, 0x1_407f_69d0usize),
-            ("CivilizationVI_DX12.exe", 0x1_407f_65b0, 0x1_407f_717d, 0x1_407f_88c0),
-        ];
         let mut seen = 0;
-        for (name, handler, delta_call, create_builder) in expected {
-            let Some(file) = dirs.iter().filter(|d| !d.is_empty()).find_map(|d| std::fs::read(format!(r"{d}\Base\Binaries\Win64Steam\{name}")).ok()) else {
-                eprintln!("{name} not found, skipped");
+        for (i, &(name, handler, delta_call, create_builder)) in EXPECTED.iter().enumerate() {
+            let path = crate::test_exe(EXE_DIR, i, name);
+            let Ok(file) = std::fs::read(&path) else {
+                eprintln!("{path} missing, skipped");
                 continue;
             };
             seen += 1;
             let (text, va) = text_of(&file);
-            let s = locate(text, va).unwrap_or_else(|e| panic!("{name}: {e}"));
-            // Adresses exactes du jeu 1.0.12.72 (2026-11) : un patch les change, pas les vérifications.
-            eprintln!("{name}: {s:x?}");
-            assert_eq!((s.handler, s.delta_call, s.create_builder), (handler, delta_call, create_builder), "{name}");
+            let s = locate(text, va).unwrap_or_else(|e| panic!("{path}: {e}"));
+            assert_eq!((s.handler, s.delta_call, s.create_builder), (handler, delta_call, create_builder), "{path}");
         }
         if seen == 0 {
             eprintln!("no game exe found, test skipped");

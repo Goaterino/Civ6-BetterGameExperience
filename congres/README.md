@@ -263,6 +263,8 @@ Aucun réglage : ce sont des corrections de bugs.
 | revote | coût des voix déjà comptées rendu avant un second vote sur la même résolution ou proposition, repris si le jeu refuse ce vote ; faveur gagnée (`+0xd8`) inchangée | `src/congres.rs`, appelé par les détours de vote de `src/spectateurs.rs` | POL |
 | H1c, H3d | luxes de `WC_Validate_LuxuryBan` recalculés à chaque session | `ui_congres_cibles.lua` (`WorldCongress.lua`) | POL |
 | effet du retour au vote | l'annulation d'un autre joueur relançait l'intro (`WorldCongressStage1`) chez tous : une seule intro par tour et par session (essayé en partie, 2026-11-06) | `ui_congres_intro.lua` (`WorldCongressIntro.lua`) | local |
+| H2a après une fin forcée (BGE-9E21BE) | fin de tour forcée par l'hôte (`.bgd_fin`) pendant une réactivation, puis segment de vote ouvert avec le temps écoulé du tour (167 s pour 165) : l'exe finissait le congrès 2 s après son ouverture. Au `LocalPlayerTurnBegin` qui suit une fin forcée, chronos remis à zéro au lieu de retirer seulement le temps ajouté | `src/depart.rs` (`fin_lever`) | local |
+| tour du congrès parti sans vote (BGE-9E21BE) | le retour au vote rouvre aussi la fenêtre sans vote envoyé (votes vides) ; l'événement de session relancé par l'annulation ne la referme plus ; le bouton du congrès, pendant le vote et tour actif, repeuple la fenêtre avec la session en cours (l'original remettait en file la dernière population, le congrès précédent) ; le récapitulatif sur des votes perdus revient aux résolutions au lieu d'indexer nil (`PopulateSummary`, T74 du même rapport) | `ui_congres_vote.lua` | local |
 
 Choix faits :
 - **Revote.** Les votes ne sont pas retirés à l'annulation : un joueur qui revient au vote puis ne
@@ -295,7 +297,12 @@ Choix faits :
   joueur N revote …`), pas de désynchro ;
 - l'événement `RemotePlayerTurnUnready` (nom supposé : l'écran d'attente remet l'autre joueur « en
   attente ») ;
-- la fin de tour simultanée de l'hôte (`depart_tour`) pendant le vote.
+- la fin de tour simultanée de l'hôte (`depart_tour`) pendant le vote ;
+- après une fin forcée suivie d'un congrès : `depart : fin forcée levée, minuteur remis à zéro` dans
+  le journal du proxy, et un `Turn Timer Sending TurnComplete` du congrès proche de la limite, pas
+  2 s après l'ouverture ;
+- tour du congrès parti sans vote, puis « Revenir au vote » : `BGE congrès : fin de tour annulée sans
+  vote envoyé` dans `Lua.log`, fenêtre ouverte sur les résolutions du tour.
 
 ## Mesures à faire
 

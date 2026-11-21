@@ -2,6 +2,112 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.13.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.13.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.12.0 i 0.13.0, je wyłącza.
+
+### Aktualizacja gry 1.0.12.74
+- **Aktualizacja Civilization VI z 19 listopada (1.0.12.74)**: BetterGameExperience rozpoznaje teraz
+  zaktualizowaną grę, w DX12 i DX11. Wcześniejsze wersje nie instalują w niej żadnej ze swoich
+  poprawek. Wkład yodha.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Gracz, który się rozłącza**: gra oddawała rozłączonego gracza SI na każdym komputerze osobno, bez
+  żadnej wiadomości między nimi, więc komputery mogły rozegrać tę turę inaczej i się rozsynchronizować.
+  Miejsce pozostaje teraz ludzkie, a host kończy turę nieobecnego gracza, gdy wszyscy połączeni
+  ludzie zakończą swoją. Wyrzucony gracz nadal przechodzi pod SI. Wkład yodha.
+- **Ponowne wczytanie u wszystkich**: gdy gra jednego gracza przestaje się zgadzać, host sam
+  rozpoczyna ponowne wczytanie i wszyscy gracze wczytują tę samą kopię jego gry; tura zaczyna się
+  dopiero, gdy każdy gracz ją wczyta, a jego gra zostanie sprawdzona. Gracz, który nadal się różni,
+  jest wczytywany jeszcze raz. Wkład yodha.
+
+## BetterGameExperience 0.12.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.12.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.11.0 i 0.12.0, je wyłącza.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Desynchronizacja po ponownym dołączeniu**: gracz, który dołączył ponownie albo został wczytany
+  ponownie sam, prowadził świeżo wczytaną grę obok trwających gier pozostałych. Różnią się one
+  danymi, których sprawdzanie synchronizacji nie obejmuje, więc gra znów się rozjeżdżała i wczytywała
+  tego gracza raz za razem. Teraz, gdy gra jednego gracza przestaje się zgadzać, host podaje powód na
+  czacie i wszyscy od razu wczytują grę hosta; host czeka na sprawdzenie wczytanej gry przez każdego
+  gracza, a potem tura zaczyna się dla wszystkich. Wkład yodha.
+- **Ponowne dołączenie pod koniec tury**: gracz, który dołączył ponownie w trakcie końca tury, był
+  porównywany z następną turą, co powodowało zbędną naprawę, a potem ponowne wczytanie co dwie tury.
+  Wkład yodha.
+- **Remap Multiplayer Helper**: po remapie host prowadził świeżo wygenerowaną grę, a wszyscy
+  pozostali gracze tę samą grę wczytaną z zapisu hosta, i SI podejmowała po obu stronach nieco inne
+  decyzje (naprawy po kilka MB na turę w grze 8 graczy). Teraz host także wczytuje własny zapis, więc
+  wszystkie komputery prowadzą tę samą grę. Koszt: jeden dodatkowy ekran wczytywania dla hosta, raz
+  na remap. Wkład yodha.
+- **Każda gra zaczyna się od zera**: niektóre liczniki gry przechodziły z jednej gry do następnej w
+  tej samej sesji, przez co obiekty były numerowane inaczej niż u pozostałych graczy. Wkład yodha.
+
+### Gra wieloosobowa
+- **Podwójne wczytanie przy uruchamianiu zapisu**: host nie wysyła już drugiej kopii gry graczom,
+  którzy jeszcze wczytują, przez co niektórzy wczytywali dwa razy. Gdy kopia nadal zostanie
+  odrzucona, czat pokazuje „Zapobieżono podwójnemu wczytaniu”. Wkład yodha.
+- **Uszkodzone wiadomości sieciowe**: wiadomość, która wyczyściłaby ustawienia gry, jest teraz też
+  odrzucana. Czat podaje gracza i to, czemu zapobieżono („Zapobieżono zawieszeniu gry”,
+  „Zapobieżono wyczyszczeniu ustawień gry”). Wkład yodha.
+- **Wiadomości ucięte pod koniec wczytywania**: wiadomość wstrzymana w trakcie wczytywania nie jest
+  już doklejana do wiadomości, która jeszcze przychodzi w częściach. Wkład yodha.
+- **Poprawki BetterGameExperience ustalane przy wczytywaniu**: decyzja o włączeniu poprawek
+  **[wszyscy gracze]** jest ponownie sprawdzana przy wczytywaniu i przy zamknięciu ekranu
+  wczytywania, nowy host po migracji hosta ją przejmuje (gracze dołączający po migracji grali bez
+  nich), a ignorowani gracze pozostają ignorowani po ponownym wczytaniu. Wkład yodha.
+- **Nieaktualna kopia gry**: gracz, którego gra nie jest aktualną wersją ze Steama, jest ogłaszany
+  na czacie po dołączeniu, bo poprawki sieciowe BetterGameExperience nie mogą działać na jego PC.
+- **Okno „Gra wstrzymana”**: nie piętrzy się już podczas wczytywania i nie pojawia się nad ekranem
+  wczytywania.
+- **Ustawienia gry**: sygnałów drużynowych nie można już włączyć ani wyłączyć po rozpoczęciu gry
+  (zmiana nic nie dawała albo zostawiała sygnały aktywne), także we wczytanych zapisach. No
+  First/Last moves i sygnałów drużynowych nie można już włączyć w poczekalni, w której któryś gracz
+  nie ma BetterGameExperience lub właściwej wersji, ale nadal można je wyłączyć. Wkład mariusbw.
+
+### No First/Last moves
+- Opcja pozostaje włączona po włączeniu. Host nie czeka już na gracza, który dwie tury z rzędu nie
+  był gotowy, i mówi o tym na czacie. Gracz, który przez 75 s nie dostaje od hosta sygnału startu,
+  zaczyna turę sam. Wkład yodha.
+- **Spokojniejszy czat**: komunikat o włączeniu skrócono do „No First/Last moves włączone.”, a
+  wiersze o wstrzymaniu rozkazów i o starcie pojawiają się raz na grę zamiast co turę. Ogłoszenie,
+  że BetterGameExperience jest aktywny, jest wysyłane raz na poczekalnię, a nie przy każdym ponownym
+  otwarciu ekranu poczekalni.
+
+### Szybsze wczytywanie
+- Nowe ustawienia w karcie BetterGameExperience, wszystkie domyślnie włączone, które skracają
+  wczytywanie bez zmiany gry: szybsze wyszukiwanie plików graficznych (kilka sekund z menu
+  głównego), baza danych rozgrywki i teksty modów zachowywane między wczytaniami, gdy mody są te same
+  (po około 1,5 s), brak czekania na VSync na ekranach wczytywania (około 2 s, tylko przy włączonym
+  VSync), jedno czyszczenie Lua przy zamykaniu interfejsu (około 2 s przed remapem), lżejsze
+  pierwsze wczytanie dla hosta przy remapie (około 10 s) i szybsza analiza wąskich przejść przy
+  generowaniu mapy (około 2 s, ten sam wynik). Dziennik wąskich przejść SI (AI_ChokePoint.csv,
+  12 MB) nie jest już domyślnie zapisywany.
+- **Wątki zadań**: bezczynne wątki marnują mniej czasu procesora podczas czekania (ustawienia w tej
+  samej karcie).
+
+### Interfejs
+- **Najwyższa formacja jako pierwsza**: na liście produkcji główny przycisk jednostki szkoli
+  najwyższą formację, jaką miasto może wyszkolić (armię, a jeśli nie, korpus; na morzu armadę, a
+  jeśli nie, flotę), a pojedyncza jednostka trafia do rozwijanego menu pod spodem. Zakupy za złoto i
+  wiarę się nie zmieniają. Domyślnie włączone. Wkład huchenlei.
+- **Wczesne ostrzeżenie o obszarach mieszkalnych**: banery twoich miast pokazują pomarańczowy dom,
+  gdy miastu brakuje jednego obszaru mieszkalnego do limitu (wzrost -50 %), i czerwony dom, gdy tylko
+  go osiągnie (-75 %); gra pokazywała czerwony dom dopiero powyżej limitu. Domyślnie włączone. Wkład
+  huchenlei.
+- **Karty ustrojowe**: ich efekty nie znikają już do końca gry, gdy ekran rządu zostanie po raz
+  pierwszy narysowany w niefortunnym momencie (widziane po ponownym wczytaniu gry); wracały dopiero
+  po kolejnym wczytaniu.
+- **Flagi jednostek**: jednostki bojowe z ładunkami (legion rzymski, toa, nau…) znów pokazują swoje
+  awanse zamiast ładunków; budowniczowie, inżynierowie wojskowi i inne jednostki cywilne i wsparcia
+  nadal pokazują swoje ładunki.
+
+### Zgłoszenie błędu
+- Dzienniki zawierające tokeny logowania (FiraxisLive.log, EOS.log) są pomijane, a długie
+  dzienniki zachowują początek i koniec. Wkład yodha.
+
 ## BetterGameExperience 0.11.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.11.0, aby działały poprawki

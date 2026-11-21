@@ -167,6 +167,12 @@
 		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="ja_JP">
 			<Text>マップ生成：隘路を見つけるための三角形分割を、まったく同じ結果になる高速な同等処理で計算します（生成マップごとに約2秒）。検証：両方を計算し、ゲームの結果を使い、違いがあれば記録します。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="ja_JP">
+			<Text>アップデートによるインターフェースの新機能</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="ja_JP">
+			<Text>無効：今後のBetterGameExperienceのアップデートで追加されるインターフェース機能は無効の状態で届き、ここでいつでも有効にできます。現在のインターフェース設定はそのまま保たれます。修正には影響しません。再び有効にすると、その間に追加され、自分で設定していない機能が有効になります。ローカルのみ：他のプレイヤーには影響しません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="ja_JP">
 			<Text>核攻撃アニメーションの高速化</Text>
 		</Row>
@@ -340,6 +346,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ja_JP">
 			<Text>送受信した取引の提案と取引画面の表示内容を Lua.log に書き込み、人間同士の取引の行き違いを調べます。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="ja_JP">
+			<Text>生産の繰越と割引区域の診断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="ja_JP">
+			<Text>各都市の繰越生産力（オーバーフロー）の読み取りをプロキシのログに、割引区域バッジの計算をLua.logに書き込み、報告 BGE-E6DF54 と BGE-36E0D7 を分析します。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ja_JP">
 			<Text>同時開始・同時終了の信号を表示</Text>
@@ -738,7 +750,7 @@
 			<Text>{1} のゲームにはホストと比べて {2} 個のオブジェクトが不足し、{3} 個が余分です。{1} の非同期を防ぐため、全員がホストのゲームを再読み込みします。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="ja_JP">
-			<Text>{1} のゲームは現在の Steam バージョンではありません。この PC では BGE のネットワーク修正が無効です。</Text>
+			<Text>{1} のゲームのバージョンは BGE に対応していません。この PC では BGE の修正が無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ja_JP">
 			<Text>{1}と{2}はホスト経由で接続されています（0 ms）。ターン切り替え中に直接接続を試みます。</Text>

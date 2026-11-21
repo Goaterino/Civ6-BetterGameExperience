@@ -1389,7 +1389,14 @@ fn append_blocks(src: &[u8], blocks: &[&str]) -> Vec<u8> {
 /// (production en réserve), après `ui_production.lua`. None si aucun.
 unsafe fn production_extras(l: *mut c_void, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
     let mut blocks: Vec<&str> = Vec::new();
+    if crate::debordement::diag() {
+        // Réglage `diag_production` : lignes `BGD diag quartiers` du badge dans Lua.log.
+        blocks.push("BGD_DIAG_PRODUCTION = true;");
+        what.push("diagnostic de la production".into());
+    }
     if QUARTIERS.load(Ordering::Relaxed) {
+        // Coût lu en direct dans GameCore : le cache de la ville peut être périmé (BGE-36E0D7).
+        crate::debordement::publier_cout(l);
         blocks.push(QUARTIERS_BLOCK);
         what.push("badge des quartiers en réduction".into());
     }
@@ -2089,8 +2096,8 @@ mod tests {
 
     #[test]
     fn signature_xml() {
-        // Adresse de chaque build connu : 15296837, puis 26407122 (exe du 2026-11-02).
-        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80])] {
+        // Address in each known build: 15296837, 26407122 (exe of 2026-11-02), 26595377 (1.0.12.74).
+        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700, 0xa2df50]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80, 0xa1f770])] {
             let Some(bytes) = read(format!(r"{GAME}\Base\Binaries\Win64Steam\{exe}")) else { continue };
             // Adresse virtuelle relative de chaque occurrence, par les en-têtes de sections.
             let base = bytes.as_ptr() as usize;

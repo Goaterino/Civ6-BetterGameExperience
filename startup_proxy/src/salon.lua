@@ -10,8 +10,8 @@
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0) : 0 à chaque
 --                                         ouverture du salon, puis notre conclusion du verdict
 --   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
---   Civ6Proxy_ExeInconnu()             -> 1 if the game exe is not a build BGE knows: its network
---                                         fixes are not installed, said to everyone on arrival
+--   Civ6Proxy_ExeInconnu()             -> 1 if the game version has no address table: the fixes
+--                                         are not installed, said to everyone on arrival
 --
 -- Les configurations de joueur sont enregistrées avec la partie : une sauvegarde rechargée rapporte
 -- les annonces et le verdict d'une session précédente, peut-être chez des joueurs qui n'ont plus le

@@ -551,7 +551,7 @@ do
 	check(g.machines[1].pol ~= true, "game in progress: off until the host's verdict names this machine");
 end
 
--- 13d. A game exe BGE does not know: said to everyone on arrival, after the announcement.
+-- 13d. A game version without address table: said to everyone on arrival, after the announcement.
 do
 	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { lang = "en_US", avant = function(env)
 		env.Civ6Proxy_ExeInconnu = function() return env.Network.GetLocalPlayerID() == 1 and 1 or 0; end
@@ -559,9 +559,9 @@ do
 	l.open();
 	local n, text = 0, "";
 	for _, c in ipairs(l.chat) do
-		if c.text:find("not the current Steam version", 1, true) then n = n + 1; text = c.text; end
+		if c.text:find("is not supported by BGE", 1, true) then n = n + 1; text = c.text; end
 	end
-	check(n == 1 and text == "[COLOR_RED]BGE - Bob's copy of the game is not the current Steam version: BGE's network fixes are inactive on their PC.[ENDCOLOR]", "unknown exe said once, by that player: " .. text);
+	check(n == 1 and text == "[COLOR_RED]BGE - Bob's game version is not supported by BGE: BGE's fixes are inactive on their PC.[ENDCOLOR]", "unknown game version said once, by that player: " .. text);
 end
 
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une

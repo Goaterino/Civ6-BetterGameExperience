@@ -6,6 +6,7 @@ use std::ffi::c_void;
 pub type HMODULE = *mut c_void;
 
 pub const PAGE_EXECUTE_READWRITE: u32 = 0x40;
+pub const PAGE_READWRITE: u32 = 0x04;
 pub const MEM_COMMIT: u32 = 0x1000;
 pub const MEM_RESERVE: u32 = 0x2000;
 pub const DLL_PROCESS_DETACH: u32 = 0;

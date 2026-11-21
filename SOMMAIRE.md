@@ -19,7 +19,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour, bouton
   « Signaler un bug » du menu Échap, garde des messages réseau contre le gel à la déconnexion
   d'un joueur ; [rapport_worker](rapport_worker/README.md) : le relais
-  Cloudflare qui reçoit les rapports et les publie dans le forum Discord ;
+  Cloudflare qui reçoit les rapports et les publie dans le forum Discord, et
+  [ANALYSE.md](rapport_worker/ANALYSE.md) : récupérer un rapport (`rapports.ps1`) et l'analyser ;
 - [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe`, et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
@@ -83,7 +84,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   [Entrée](analyses/raccourci_entree/README.md) active une fois retirée des touches,
   [zone de déplacement](analyses/quartier_capture_mouvements/README.md) sur un quartier ennemi ;
 - [unites_superposees](analyses/unites_superposees/README.md) : deux unités sur la même case après
-  un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ;
+  un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ou un échange d'unités
+  (rapport BGE-DAA7E7, correctif POL, pas encore essayé en partie) ;
 - [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
   et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,

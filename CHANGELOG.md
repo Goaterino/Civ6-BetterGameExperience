@@ -4,6 +4,108 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.13.0
+
+Multiplayer games need every human player on 0.13.0 for the **[all players]** fixes: a lobby that
+mixes 0.12.0 and 0.13.0 turns them off.
+
+### Game update 1.0.12.74
+- **Civilization VI update of 19 November (1.0.12.74)**: BetterGameExperience now recognizes the
+  updated game, DX12 and DX11. Earlier versions install none of their fixes on it. Contributed by
+  yodha.
+
+### Multiplayer fixes [all players]
+- **Player who drops**: the game handed a player who dropped to the AI on each machine separately,
+  with no message between them, so the machines could play that turn differently and desync. The
+  slot now stays human, and the host ends the absent player's turn once every connected human has
+  ended theirs. A kicked player is still taken over by the AI. Contributed by yodha.
+- **Reload of everyone**: when a player's game no longer matches, the host now starts the reload
+  itself and every player loads the same copy of its game; the turn starts only once every player
+  has loaded it and their game has been checked. A player who still differs is reloaded once more.
+  Contributed by yodha.
+
+## BetterGameExperience 0.12.0
+
+Multiplayer games need every human player on 0.12.0 for the **[all players]** fixes: a lobby that
+mixes 0.11.0 and 0.12.0 turns them off.
+
+### Multiplayer fixes [all players]
+- **Desync after a rejoin**: a player who rejoined, or was reloaded alone, ran a freshly loaded game
+  against the others' running ones. The two differ in data the sync check does not cover, so the
+  game drifted again and reloaded that player over and over. Now, when a player's game no longer
+  matches, the host says why in the chat and everyone reloads the host's game at once; the host
+  waits for every player's check of the reloaded game, then the turn starts for everyone.
+  Contributed by yodha.
+- **Rejoin at the end of a turn**: a player who rejoined during a turn end was checked against the
+  next turn, which caused a needless repair then a reload every two turns. Contributed by yodha.
+- **Multiplayer Helper remap**: after a remap, the host ran the newly generated game while every
+  other player ran it loaded from the host's save, and the AI made slightly different choices on
+  each side (repairs of several MB per turn in a game of 8 players). The host now loads its own save
+  too, so every machine runs the same game. Cost: one extra loading screen for the host, once per
+  remap. Contributed by yodha.
+- **Each game starts clean**: some of the game's counters carried over from one game to the next in
+  the same session, so objects were numbered differently from the other players'. Contributed by
+  yodha.
+
+### Multiplayer
+- **Double load when a saved game is launched**: the host no longer sends a second copy of the game
+  to players still loading, which made some of them load twice. When one is still turned down, the
+  chat says "Double load prevented". Contributed by yodha.
+- **Damaged network messages**: a message that would wipe the game settings is now refused too. The
+  chat names the player and what was prevented ("Game freeze prevented", "Game settings wipe
+  prevented"). Contributed by yodha.
+- **Messages cut at the end of a load**: a message queued during a load is no longer glued to a
+  message still arriving in pieces. Contributed by yodha.
+- **BetterGameExperience fixes decided at load**: the decision to turn the **[all players]** fixes
+  on is checked again at load and when the loading screen closes, a new host after a host migration
+  takes it over (players joining after a migration used to play without them), and muted players
+  stay muted after a reload. Contributed by yodha.
+- **Outdated copy of the game**: a player whose game is not the current Steam version is announced
+  in the chat on arrival, since BetterGameExperience's network fixes cannot work on their PC.
+- **Game paused popup**: it no longer piles up during loads nor shows over the loading screen.
+- **Game setup**: team pings can no longer be turned on or off once the game has started (the
+  change did nothing, or left pings running), saved games included. No First/Last moves and team
+  pings can no longer be turned on in a lobby where a player lacks BetterGameExperience or the right
+  version, but can still be turned off. Contributed by mariusbw.
+
+### No First/Last moves
+- The option stays on once turned on. The host no longer waits for a player who was not ready two
+  turns in a row, and says so in the chat. A player whose host sends no start signal for 75 s starts
+  their turn alone. Contributed by yodha.
+- **Quieter chat**: the activation message is down to "No First/Last moves enabled.", and the
+  "Orders held" / "go!" lines show once per game instead of every turn. The "has
+  BetterGameExperience enabled" announcement is sent once per lobby, not every time the lobby
+  screen opens again.
+
+### Faster loading
+- New settings in the BetterGameExperience tab, all on by default, that shorten loads without
+  changing the game: faster asset lookup (several seconds from the main menu), gameplay database and
+  mods' texts kept between loads when the mods are the same (about 1.5 s each), no VSync wait on
+  loading screens (about 2 s, only when VSync is on), one Lua cleanup when the interface closes
+  (about 2 s before a remap), a lighter first load for the host at a remap (about 10 s), and a faster
+  choke point analysis when a map is generated (about 2 s, same result). The AI choke point log
+  (AI_ChokePoint.csv, 12 MB) is no longer written by default.
+- **Job threads**: idle threads waste less processor time while waiting (settings in the same tab).
+
+### Interface
+- **Highest unit formation first**: in the production list, a unit's main button trains the highest
+  formation the city can train (army, else corps; armada, else fleet at sea), and the single unit
+  moves to the drop-down under it. Gold and faith purchases are unchanged. On by default.
+  Contributed by huchenlei.
+- **Early housing warning**: your city banners show an orange house one housing below the cap
+  (growth -50%) and the red house as soon as the city reaches it (-75%); the game only showed the
+  red house once over the cap. On by default. Contributed by huchenlei.
+- **Policy cards**: their effects no longer disappear for the rest of the game when the government
+  screen is first drawn at a bad moment (seen after reloading a game); they used to come back only
+  after another reload.
+- **Unit flags**: combat units with charges (Roman legion, toa, nau…) show their promotions again
+  instead of their charges; builders, military engineers and other civilians and support units
+  still show their charges.
+
+### Bug report
+- Logs holding sign-in tokens (FiraxisLive.log, EOS.log) are left out, and long logs keep their
+  beginning and end. Contributed by yodha.
+
 ## BetterGameExperience 0.11.0
 
 Multiplayer games need every human player on 0.11.0 for the **[all players]** fixes: a lobby that

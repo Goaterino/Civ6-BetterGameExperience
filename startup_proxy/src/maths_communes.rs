@@ -2,10 +2,11 @@
 //! actifs (`maths_communes=on`, par défaut).
 //!
 //! GameCore importe `exp`, `expf`, `logf`, `pow` et `powf` du `ucrtbase.dll` du système (par
-//! `api-ms-win-crt-math-l1-1-0.dll` ; jeu 1.0.12.72). Au démarrage, l'UCRT choisit pour elles l'un
-//! de deux chemins : les instructions FMA3 si le CPU les a, sinon du SSE2 simple. Les deux
-//! n'arrondissent pas toujours de la même façon (`exp` diffère sur environ 0,14 % des entrées) :
-//! deux joueurs aux CPU différents peuvent obtenir des résultats différents dans la même partie.
+//! `api-ms-win-crt-math-l1-1-0.dll` ; jeux 1.0.12.72 et 1.0.12.74). Au démarrage, l'UCRT choisit
+//! pour elles l'un de deux chemins : les instructions FMA3 si le CPU les a, sinon du SSE2 simple.
+//! Les deux n'arrondissent pas toujours de la même façon (`exp` diffère sur environ 0,14 % des
+//! entrées) : deux joueurs aux CPU différents peuvent obtenir des résultats différents dans la même
+//! partie.
 //!
 //! Quand les correctifs POL deviennent actifs (tous les humains du salon ont cette version, voir
 //! `salon`), le module fait passer l'UCRT sur son chemin sans FMA par `_set_FMA3_enable(0)` : chaque

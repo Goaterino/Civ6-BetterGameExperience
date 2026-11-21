@@ -1,8 +1,8 @@
 //! Post-chargement sans la pause entre les ticks de l'écran de chargement
 //! (`pause_fin_chargement=on`, par défaut).
 //!
-//! Pendant un écran de chargement, le jeu (1.0.12.72, DX11 et DX12) fait un tick toutes les
-//! `LoadGameTickIntervalInMS` (AppOptions.txt, `[Performance]`, 16 par défaut) :
+//! Pendant un écran de chargement, le jeu (1.0.12.72 et 1.0.12.74, DX11 et DX12) fait un tick
+//! toutes les `LoadGameTickIntervalInMS` (AppOptions.txt, `[Performance]`, 16 par défaut) :
 //! `LoadGameViewState::Begin()` range cette valeur dans la globale de l'intervalle des ticks par une
 //! fonction d'une ligne (`mov [rip+tick], ecx ; ret`, `1406ff130` en DX11), et `::End()` y remet
 //! `TickIntervalInMS` de la même façon. Tant que le chargement tourne sur d'autres threads, cette
@@ -154,35 +154,27 @@ mod tests {
         assert!(enabled("pause_fin_chargement=off\npause_fin_chargement=on\n"));
     }
 
-    /// Les sites dans les exes installés sur cette machine (DX11 et DX12), s'il y en a : une seule
-    /// fonction qui fixe l'intervalle des ticks, une seule fonction qui cite
-    /// `WorldView_PostLoadUpdate`, avec un seul appelant, et le site `Present` DX11 de `vsync` dans
-    /// l'exe DX11 seulement.
+    const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
+
+    /// Les sites dans chaque exe connu qui est là (DX12 et DX11 de chaque version, dans l'ordre de
+    /// `crate::test_exe`) : une seule fonction qui fixe l'intervalle des ticks, une seule fonction
+    /// qui cite `WorldView_PostLoadUpdate`, avec un seul appelant, et le site `Present` DX11 de
+    /// `vsync` dans l'exe DX11 seulement.
     #[test]
     fn sites_in_installed_exes() {
-        let dirs = [
-            std::env::var("CIV6_DIR").unwrap_or_default(),
-            r"D:\SteamLibrary\steamapps\common\Sid Meier's Civilization VI".to_string(),
-            r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI".to_string(),
-        ];
         let mut found = 0;
-        for dir in dirs.iter().filter(|d| !d.is_empty()) {
-            for (exe_name, dx11) in [("CivilizationVI.exe", true), ("CivilizationVI_DX12.exe", false)] {
-                let path = std::path::Path::new(dir).join(r"Base\Binaries\Win64Steam").join(exe_name);
-                let Ok(file) = std::fs::read(&path) else { continue };
-                let image = map(&file);
-                let base = image.as_ptr() as usize;
-                unsafe {
-                    tick_global(base).unwrap_or_else(|e| panic!("{exe_name}: {e}"));
-                    postload_call(base).unwrap_or_else(|e| panic!("{exe_name}: {e}"));
-                    let present = motifs::chercher(base, &motifs::motif(crate::vsync::SITE_PRESENT_DX11)).len();
-                    assert_eq!(present, dx11 as usize, "{exe_name}: DX11 Present sites");
-                }
-                found += 1;
+        for (i, (exe_name, dx11)) in [("CivilizationVI_DX12.exe", false), ("CivilizationVI.exe", true)].iter().cycle().take(6).enumerate() {
+            let path = crate::test_exe(EXE_DIR, i, exe_name);
+            let Ok(file) = std::fs::read(&path) else { continue };
+            let image = map(&file);
+            let base = image.as_ptr() as usize;
+            unsafe {
+                tick_global(base).unwrap_or_else(|e| panic!("{path}: {e}"));
+                postload_call(base).unwrap_or_else(|e| panic!("{path}: {e}"));
+                let present = motifs::chercher(base, &motifs::motif(crate::vsync::SITE_PRESENT_DX11)).len();
+                assert_eq!(present, *dx11 as usize, "{path}: DX11 Present sites");
             }
-            if found > 0 {
-                break;
-            }
+            found += 1;
         }
         if found == 0 {
             eprintln!("no Civilization VI exe found, test skipped");

@@ -26,7 +26,7 @@
 //!
 //! Investigation : empilement_combat/README.md.
 
-use crate::patch::{alloc_near, rel32, write_rel32, IMAGE_BASE};
+use crate::patch::{alloc_near, rel32, write_rel32};
 use crate::{log, pol};
 use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
@@ -62,7 +62,7 @@ static IGNOREES: AtomicU32 = AtomicU32::new(0);
 const MAX_LOGS: u32 = 20;
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -184,7 +184,7 @@ unsafe fn site_attendu(at: usize) -> bool {
 
 pub unsafe fn on_gamecore_loaded(base: usize) {
     BASE.store(base, Ordering::Relaxed);
-    let at = |site: u64| base + (site - IMAGE_BASE) as usize;
+    let at = |site: u64| base + crate::patch::rva(site);
     // Tout ou rien : un seul des deux bonus corrigé serait pire que le jeu d'origine.
     if let Some((site, _)) = SITES.iter().find(|(s, _)| !site_attendu(at(*s))) {
         log(&format!("empilement : version inattendue en {site:#x}, aucun appel redirigé"));
@@ -223,8 +223,8 @@ pub unsafe fn on_proxy_unload() {
         return;
     }
     for (site, _) in SITES {
-        let at = base + (site - IMAGE_BASE) as usize;
-        if let Some(rel) = rel32(at, base + (TROUVER_UNITE - IMAGE_BASE) as usize) {
+        let at = base + crate::patch::rva(site);
+        if let Some(rel) = rel32(at, base + crate::patch::rva(TROUVER_UNITE)) {
             write_rel32(at, rel);
         }
     }

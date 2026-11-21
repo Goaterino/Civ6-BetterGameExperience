@@ -18,7 +18,7 @@
 //!   partagent le seau 0 d'une table à 2 seaux : après un rechargement, les deux unités sont
 //!   créées dans l'ordre inverse et échangent leurs ID.
 //!
-//! Le correctif, sur quatre sites (GameCore_XP2, jeu 1.0.12.72) :
+//! Le correctif, sur quatre sites (adresses du GameCore_XP2 1.0.12.72, traduites par `patch`) :
 //! - `180345a80` / `180345970` (écriture de la table externe / interne) : remplacées par des
 //!   écritures au même format (`u32` nombre, puis `u32` clé + table interne, ou `u32` clé + `i32`
 //!   valeur), triées par clé. Sauvegarde, delta et hash ne dépendent plus de l'ordre des seaux.
@@ -40,7 +40,7 @@
 //! change rien et journalise quand l'ordre d'origine diffère de l'ordre canonique. Le réglage doit
 //! être le même sur toutes les machines d'une partie.
 
-use crate::patch::{self, Site, IMAGE_BASE};
+use crate::patch::{self, Site};
 use crate::{log, pol};
 use std::sync::atomic::{AtomicU32, AtomicU8, AtomicUsize, Ordering};
 
@@ -295,7 +295,7 @@ pub const SITES: [Site; 4] = [WRITE_INNER, WRITE_OUTER, READ_OUTER, ADD_COUNT];
 
 unsafe fn check_layout(base: usize) -> Result<(), String> {
     for (addr, bytes, what) in LAYOUT {
-        let have = std::slice::from_raw_parts((base + (addr - IMAGE_BASE) as usize) as *const u8, bytes.len());
+        let have = patch::as_known(*addr, std::slice::from_raw_parts((base + patch::rva(*addr)) as *const u8, bytes.len()));
         if have != *bytes {
             return Err(format!("{what}: unexpected bytes at {addr:#x} ({have:02x?})"));
         }
@@ -671,14 +671,15 @@ mod tests {
         assert_eq!(TABLE_OFFSET, 0x2d8);
     }
 
-    /// Contre la DLL installée, si elle est là : chaque site et chaque fenêtre de `LAYOUT`
-    /// concordent, et les motifs sont assez uniques pour être retrouvés après une mise à jour du
-    /// jeu.
+    /// Contre la DLL installée, si elle est là, quel que soit son build : chaque site et chaque
+    /// fenêtre de `LAYOUT` concordent.
     #[test]
-    #[ignore]
     fn matches_installed_gamecore() {
-        let path = std::env::var("GAMECORE_XP2").expect("set GAMECORE_XP2 to GameCore_XP2_FinalRelease.dll");
-        let data = std::fs::read(&path).expect("GameCore_XP2 not readable");
+        let path = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll";
+        let Ok(data) = std::fs::read(path) else {
+            eprintln!("GameCore missing, test skipped");
+            return;
+        };
         let file = |rva: u64| -> usize {
             // .text : position dans le fichier = rva - `VirtualAddress` + `PointerToRawData` (lus
             // dans la table des sections).
@@ -698,12 +699,12 @@ mod tests {
             panic!("rva {rva:#x} not in a section");
         };
         for s in &SITES {
-            let at = file(s.address - IMAGE_BASE);
-            assert_eq!(&data[at..at + s.expected.len()], s.expected, "{}", s.name);
+            let at = file(patch::rva(s.address) as u64);
+            assert_eq!(patch::as_known(s.address, &data[at..at + s.expected.len()]), s.expected, "{}", s.name);
         }
         for (addr, bytes, what) in LAYOUT {
-            let at = file(addr - IMAGE_BASE);
-            assert_eq!(&data[at..at + bytes.len()], *bytes, "{what}");
+            let at = file(patch::rva(*addr) as u64);
+            assert_eq!(patch::as_known(*addr, &data[at..at + bytes.len()]), *bytes, "{what}");
         }
     }
 }

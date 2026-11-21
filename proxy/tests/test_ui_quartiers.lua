@@ -149,6 +149,23 @@ do
 	Check("vitesse 50 : 16 réduit", m.Badge("DISTRICT_THANH"));
 end
 
+-- BGE-36E0D7 : campus posé dans une autre ville, la table de GameCore est passée au plein (27) mais
+-- le cache de cette ville donne encore le réduit (16). Le badge suit le coût lu en direct.
+do
+	local m = NewMachine();
+	m.speed = 50;
+	m.costs.DISTRICT_CAMPUS = 16;	-- cache de la ville, périmé
+	local direct = 27;
+	m.env.BGD_CoutQuartier = function(joueur, index)
+		return (joueur == LOCAL and index == m.D.DISTRICT_CAMPUS.Index) and direct or nil;
+	end;
+	Check("coût direct plein, cache réduit périmé : pas de badge", not m.Badge("DISTRICT_CAMPUS"));
+	direct = 16;
+	Check("coût direct réduit : badge", m.Badge("DISTRICT_CAMPUS"));
+	direct = nil;
+	Check("coût direct absent : repli sur le coût du panneau", m.Badge("DISTRICT_CAMPUS"));
+end
+
 -- Départ médiéval (DistrictProductionRate 40) : plein 32, réduit 19.
 do
 	local m = NewMachine();
@@ -170,6 +187,63 @@ do
 	m.handlers.CivicCompleted(LOCAL);
 	m.handlers.CityAddedToMap(LOCAL);
 	Check("quartier posé, dogme, ville fondée : panneau redessiné", m.refreshes == 3);
+end
+
+-- Diagnostic (diag_production) : règle refaite et ligne de Lua.log, rien sans le réglage.
+do
+	local m = NewMachine();
+	m.D.DISTRICT_CAMPUS.RequiresPopulation = true;
+	m.D.DISTRICT_THEATER.RequiresPopulation = true;
+	m.D.DISTRICT_THANH.RequiresPopulation = true;
+	m.D.DISTRICT_THANH.TraitType = "TRAIT_VIETNAM";
+	m.speed = 50;
+	local lignes = {};
+	m.env.print = function(s) lignes[#lignes + 1] = s; end;
+	local quartiers = {};
+	local function Ajoute(t, acheve)
+		quartiers[#quartiers + 1] = { GetType = function() return m.D[t].Index; end, IsComplete = function() return acheve; end };
+	end
+	m.env.Players[LOCAL].GetDistricts = function()
+		return { Members = function()
+			local i = 0;
+			return function() i = i + 1; if quartiers[i] then return i, quartiers[i]; end end;
+		end };
+	end;
+	m.env.Game.GetCurrentGameTurn = function() return 41; end;
+	local ville = m.env.UI.GetHeadSelectedCity;
+	m.env.UI.GetHeadSelectedCity = function()
+		local c = ville();
+		c.GetName = function() return "LOC_CITY_NAME_AKHETATEN"; end;
+		c.GetID = function() return 327683; end;
+		return c;
+	end;
+	Ajoute("DISTRICT_CAMPUS", true);
+	Ajoute("DISTRICT_THEATER", true);
+	Ajoute("DISTRICT_THEATER", true);
+	m.costs.DISTRICT_CAMPUS = 16;
+	m.Line("DISTRICT_CAMPUS");
+	Check("diag coupé : aucune ligne", #lignes == 0);
+	m.env.BGD_DIAG_PRODUCTION = true;
+	m.Line("DISTRICT_CAMPUS");
+	local l = lignes[#lignes] or "";
+	Check("diag : une ligne par ville et par type", #lignes == 1 and l:find("BGD diag quartiers : tour 41, ville LOC_CITY_NAME_AKHETATEN (327683), DISTRICT_CAMPUS", 1, true) == 1);
+	Check("diag : coûts, nombre, moyenne sur 2 types (Thanh d'une autre civilisation exclu), règle réduite",
+		l:find("kItem.Cost 16, GetDistrictCost 16, GameCore nil, plein 27, reduit 16, badge oui", 1, true) ~= nil
+		and l:find("nombre 1 (acheves 1, en construction 0), moyenne 1.500 (3 acheves / 2 types debloques", 1, true) ~= nil
+		and l:find("regle reduit", 1, true) ~= nil);
+	m.Line("DISTRICT_CAMPUS");
+	Check("diag : rien de neuf, pas de nouvelle ligne", #lignes == 1);
+	-- Deuxième campus posé ailleurs, en construction : la règle passe au plein ; le coût lu reste
+	-- celui que le jeu donne (ici encore réduit), et le badge le suit.
+	Ajoute("DISTRICT_CAMPUS", false);
+	m.Line("DISTRICT_CAMPUS");
+	l = lignes[#lignes] or "";
+	Check("diag : campus en construction compté, règle pleine, badge encore affiché",
+		#lignes == 2 and l:find("nombre 2 (acheves 1, en construction 1)", 1, true) ~= nil
+		and l:find("regle plein", 1, true) ~= nil and l:find("badge oui", 1, true) ~= nil);
+	m.hidden = false;
+	m.handlers.DistrictAddedToMap(LOCAL, 7, 3, 0, 0, m.D.DISTRICT_CAMPUS.Index);
+	Check("diag : quartier posé journalisé", (lignes[#lignes] or ""):find("evenement DistrictAddedToMap DISTRICT_CAMPUS ville 3", 1, true) ~= nil);
 end
 
 if failures > 0 then

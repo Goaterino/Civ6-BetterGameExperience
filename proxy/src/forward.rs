@@ -51,6 +51,13 @@ pub(crate) fn real_module() -> usize {
             log("proxy désactivé (actif=off) : aucun détour posé, GameCore d'origine");
             return h;
         }
+        match crate::patch::detect(h) {
+            Ok(v) => log(&format!("jeu {v} : tables d'adresses connues")),
+            Err(e) => {
+                log(&format!("{e} : aucun correctif posé, GameCore d'origine"));
+                return h;
+            }
+        }
         coalesce::on_gamecore_loaded(h);
         crate::improvements::on_gamecore_loaded(h);
         crate::rendements::on_gamecore_loaded(h);
@@ -70,7 +77,9 @@ pub(crate) fn real_module() -> usize {
         crate::ports::on_gamecore_loaded(h);
         crate::production_modifiers::on_gamecore_loaded(h);
         crate::fin_tour::on_gamecore_loaded(h);
+        crate::drop_slot::on_gamecore_loaded(h);
         crate::empilement::on_gamecore_loaded(h);
+        crate::echange::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
         crate::carte::on_gamecore_loaded();
         crate::journal_chokepoints::on_gamecore_loaded(h);
@@ -111,7 +120,9 @@ macro_rules! forward {
                 crate::congres::reset();
                 crate::ports::reset();
                 crate::fin_tour::reset();
+                crate::drop_slot::reset();
                 crate::empilement::reset();
+                crate::echange::reset();
                 crate::depart::reset();
                 crate::rendements_empire::reset();
             }

@@ -38,9 +38,9 @@ struct Exe {
     add_create: u64,
 }
 
-const EXES: [Exe; 2] = [
+const EXES: [Exe; 6] = [
     Exe {
-        name: "DX12",
+        name: "DX12 1.0.12.72",
         check_call: 0x1_407f_9cf6,
         handler: 0x1_407f_65b0,
         repair_call: 0x1_407f_717d,
@@ -51,7 +51,7 @@ const EXES: [Exe; 2] = [
         add_create: 0x1_407f_88c0,
     },
     Exe {
-        name: "DX11",
+        name: "DX11 1.0.12.72",
         check_call: 0x1_407f_7e06,
         handler: 0x1_407f_46c0,
         repair_call: 0x1_407f_528d,
@@ -60,6 +60,50 @@ const EXES: [Exe; 2] = [
         map_insert: 0x1_407f_0680,
         missing_call: 0x1_407f_57af,
         add_create: 0x1_407f_69d0,
+    },
+    Exe {
+        name: "DX12 1.0.12.74",
+        check_call: 0x1_407f_9d26,
+        handler: 0x1_407f_65e0,
+        repair_call: 0x1_407f_71ad,
+        add_repair: 0x1_407f_8a20,
+        extra_call: 0x1_407f_6cb9,
+        map_insert: 0x1_407f_2460,
+        missing_call: 0x1_407f_76cf,
+        add_create: 0x1_407f_88f0,
+    },
+    Exe {
+        name: "DX11 1.0.12.74",
+        check_call: 0x1_407f_8b16,
+        handler: 0x1_407f_53d0,
+        repair_call: 0x1_407f_5f9d,
+        add_repair: 0x1_407f_7810,
+        extra_call: 0x1_407f_5aa9,
+        map_insert: 0x1_407f_1260,
+        missing_call: 0x1_407f_64bf,
+        add_create: 0x1_407f_76e0,
+    },
+    Exe {
+        name: "DX12 1.0.12.58",
+        check_call: 0x1_407f_42b6,
+        handler: 0x1_407f_0b70,
+        repair_call: 0x1_407f_173d,
+        add_repair: 0x1_407f_2fb0,
+        extra_call: 0x1_407f_1249,
+        map_insert: 0x1_407e_ca80,
+        missing_call: 0x1_407f_1c5f,
+        add_create: 0x1_407f_2e80,
+    },
+    Exe {
+        name: "DX11 1.0.12.58",
+        check_call: 0x1_407f_3d76,
+        handler: 0x1_407f_0630,
+        repair_call: 0x1_407f_11fd,
+        add_repair: 0x1_407f_2a70,
+        extra_call: 0x1_407f_0d09,
+        map_insert: 0x1_407e_c4d0,
+        missing_call: 0x1_407f_171f,
+        add_create: 0x1_407f_2940,
     },
 ];
 
@@ -334,11 +378,11 @@ pub unsafe fn install() {
     let image = |address: u64| module + (address - BASE) as usize;
     let mut reasons = Vec::new();
     let Some(exe) = EXES.iter().find(|exe| {
-        fingerprint(exe, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n))
+        crate::exe::for_this_game(exe.name) && fingerprint(exe, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n))
             .map_err(|e| reasons.push(format!("{}: {e}", exe.name)))
             .is_ok()
     }) else {
-        log(&format!("sync notes: unknown exe ({}), not installed", reasons.join("; ")));
+        log(&format!("sync notes: unknown exe ({}), not installed", crate::exe::no_table(&reasons)));
         return;
     };
     let Some(page) = patch::alloc_near(module) else {
@@ -384,7 +428,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {
@@ -403,7 +447,7 @@ mod tests {
     #[test]
     fn bytes_in_installed_exes() {
         for (i, name) in FILES.iter().enumerate() {
-            let Ok(file) = std::fs::read(format!(r"{EXE_DIR}\{name}")) else {
+            let Ok(file) = std::fs::read(crate::test_exe(EXE_DIR, i, name)) else {
                 eprintln!("{name} missing, test skipped");
                 continue;
             };

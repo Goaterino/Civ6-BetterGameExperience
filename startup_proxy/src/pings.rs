@@ -34,7 +34,14 @@ struct Exe {
 }
 
 /// Exes of 2026-11-05: same code in both, at different addresses.
-const EXES: [Exe; 2] = [Exe { name: "DX12", site: 0x1_4086_4ad1 }, Exe { name: "DX11", site: 0x1_4086_2931 }];
+const EXES: [Exe; 6] = [
+    Exe { name: "DX12 1.0.12.72", site: 0x1_4086_4ad1 },
+    Exe { name: "DX11 1.0.12.72", site: 0x1_4086_2931 },
+    Exe { name: "DX12 1.0.12.74", site: 0x1_4086_4e91 },
+    Exe { name: "DX11 1.0.12.74", site: 0x1_4086_2881 },
+    Exe { name: "DX12 1.0.12.58", site: 0x1_4085_e531 },
+    Exe { name: "DX11 1.0.12.58", site: 0x1_4085_e251 },
+];
 
 /// `cmp qword [rdi+30h],0 ; jnz +19h ; mov dl,1 ; mov byte [rbp+291h],'P' ; xor ecx,ecx ; call`
 const EXPECTED: [u8; 19] = [
@@ -84,11 +91,11 @@ pub unsafe fn install() {
     let image = |address: u64| module + (address - BASE) as usize;
     let mut reasons = Vec::new();
     let Some(exe) = EXES.iter().find(|exe| {
-        fingerprint(exe, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n))
+        crate::exe::for_this_game(exe.name) && fingerprint(exe, |address, n| std::slice::from_raw_parts(image(address) as *const u8, n))
             .map_err(|e| reasons.push(format!("{}: {e}", exe.name)))
             .is_ok()
     }) else {
-        log(&format!("pings: unknown exe ({}), fix not installed", reasons.join("; ")));
+        log(&format!("pings: unknown exe ({}), fix not installed", crate::exe::no_table(&reasons)));
         return;
     };
     if write_code(image(exe.site) + JUMP, &NOPS) {
@@ -103,7 +110,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {
@@ -122,7 +129,7 @@ mod tests {
     #[test]
     fn bytes_in_installed_exes() {
         for (i, name) in FILES.iter().enumerate() {
-            let Ok(file) = std::fs::read(format!(r"{EXE_DIR}\{name}")) else {
+            let Ok(file) = std::fs::read(crate::test_exe(EXE_DIR, i, name)) else {
                 eprintln!("{name} missing, test skipped");
                 continue;
             };

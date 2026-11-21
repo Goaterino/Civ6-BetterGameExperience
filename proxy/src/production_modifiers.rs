@@ -112,8 +112,11 @@ type Edit = unsafe extern "system" fn(usize) -> *mut *mut i32;
 type EditObjet = unsafe extern "system" fn(usize) -> usize;
 type Joueur = unsafe extern "system" fn(i32) -> usize;
 type Ville = unsafe extern "system" fn(usize, usize) -> bool;
-const EDIT: usize = 0x72a920;
-const JOUEUR: usize = 0x44f00;
+/// Functions of the game the detours call, with their first bytes (no relative address).
+const EDIT: u64 = 0x1_8072_a920;
+const EDIT_BYTES: [u8; 10] = [0x40, 0x53, 0x48, 0x83, 0xec, 0x30, 0x48, 0x8b, 0x41, 0x08];
+const JOUEUR: u64 = 0x1_8004_4f00;
+const JOUEUR_BYTES: [u8; 5] = [0x8b, 0xd1, 0x48, 0x8b, 0x0d];
 
 // Effet : types d'unités (`+0x08`, i32) et leur nombre (`+0x18`), montants (`+0x20`, i32) et leur
 // nombre (`+0x30`) ; au-delà du nombre de montants, le premier sert pour tous.
@@ -162,7 +165,7 @@ unsafe fn changer(units: usize, index: i32, percent: i32, actif: bool) {
         // Même comparaison non signée et même accès en écriture que l'originale :
         // préserver le suivi des modifications de FAutoArchive, pas d'écriture brute à +0x210.
         if (index as u32) < *((units + 0x220) as *const u32) {
-            let edit: Edit = std::mem::transmute(BASE.load(Ordering::Relaxed) + EDIT);
+            let edit: Edit = std::mem::transmute(BASE.load(Ordering::Relaxed) + crate::patch::rva(EDIT));
             let entry = (*edit(units + 0x200)).add(index as usize);
             *entry = (*entry).wrapping_add(delta);
         }
@@ -212,8 +215,8 @@ unsafe fn ville(effet: usize, cite: usize, retire: bool) -> bool {
     }
     // Mêmes appels, dans le même ordre, que l'originale : l'éditeur marque l'objet modifié.
     let base = BASE.load(Ordering::Relaxed);
-    let edit: EditObjet = std::mem::transmute(base + EDIT);
-    let joueur: Joueur = std::mem::transmute(base + JOUEUR);
+    let edit: EditObjet = std::mem::transmute(base + crate::patch::rva(EDIT));
+    let joueur: Joueur = std::mem::transmute(base + crate::patch::rva(JOUEUR));
     let objet = edit(cite + V_OBJET);
     let proprietaire = joueur(rd(cite + V_PROPRIETAIRE));
     boucle(effet, objet, proprietaire, retire);
@@ -233,6 +236,14 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         crate::STATUS.fetch_and(!crate::ST_POL, Ordering::Relaxed);
         log(&format!("production : aucun détour : {e}"));
         return;
+    }
+    for (addr, bytes) in [(EDIT, &EDIT_BYTES[..]), (JOUEUR, &JOUEUR_BYTES[..])] {
+        let have = std::slice::from_raw_parts((base + crate::patch::rva(addr)) as *const u8, bytes.len());
+        if crate::patch::as_known(addr, have) != bytes {
+            crate::STATUS.fetch_and(!crate::ST_POL, Ordering::Relaxed);
+            log(&format!("production: no detour: unexpected bytes in the called function {addr:#x} ({have:02x?})"));
+            return;
+        }
     }
     // Le trampoline et la base sont publiés avant le saut : `install` écrit le saut en dernier.
     BASE.store(base, Ordering::Relaxed);
