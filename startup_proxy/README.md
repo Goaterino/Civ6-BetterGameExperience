@@ -712,6 +712,13 @@ diagnostic) :
   S'enchaîne au relais de `sync_notes`.
 - [maths_communes](src/maths_communes.rs), POL : l'UCRT calcule `exp`, `pow`… par la voie sans FMA3
   sur toutes les machines ; remis à sa valeur de départ quand POL se désactive.
+- [relecture_sur_place](src/relecture_sur_place.rs), client seulement, avec un réglage
+  (`relecture_fidele`, section Correctifs, comme `relecture` dans le proxy de GameCore ; pas POL) :
+  quand l'hôte renvoie en données de création une archive que le client a déjà, le client ne relit
+  que les variables dont les octets diffèrent de ceux de l'hôte, comme le chemin de delta d'origine,
+  puis lance leurs DeltaDesyncCallbacks. Le chemin sur place d'origine relisait tout et n'en lançait
+  aucune : relire une variable déjà égale changeait ensuite les décisions de l'IA, et un arbre de
+  comportement y restait sans liens.
 
 Rechargements (options avancées, section Performances) :
 
