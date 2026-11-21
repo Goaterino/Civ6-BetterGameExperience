@@ -699,6 +699,34 @@ Only the machine with BGE is protected; the others notice nothing.
 - Not tried in a game yet: it needs a client that finishes loading after the host by less than the
   snapshot's transfer time (a late game, a slow link).
 
+## Désynchros réparées sur place, rechargements plus rapides (contribution d'OzrielTheLost)
+
+Correctifs de stabilité, sans réglage joueur (les clés ne sont lues que par les builds de
+diagnostic) :
+
+- [reparation_synchro](src/reparation_synchro.rs), hôte seulement : quand une AutoArchive reste
+  désynchronisée (delta d'origine vide, ou déjà désynchronisée au contrôle précédent), l'hôte envoie
+  un delta qui liste toutes ses variables. Le client, avec le code d'origine, répare ainsi une
+  variable que personne n'a modifiée, que le delta d'origine n'envoie jamais, au lieu d'aller
+  jusqu'au rechargement. Après trois essais de suite sur une archive, retour au delta d'origine.
+  S'enchaîne au relais de `sync_notes`.
+- [maths_communes](src/maths_communes.rs), POL : l'UCRT calcule `exp`, `pow`… par la voie sans FMA3
+  sur toutes les machines ; remis à sa valeur de départ quand POL se désactive.
+
+Rechargements (options avancées, section Performances) :
+
+- [config_gardee](src/config_gardee.rs) (`config_gardee`) : à un rechargement avec les mêmes mods,
+  l'étape de configuration prend son chemin « matches » ; l'étape de gameplay garde son chemin
+  complet, donc GameCore est toujours rechargé (la contrainte de
+  [analyses/chargement](../analyses/chargement/README.md)). `bdd` laisse alors la localisation
+  intacte (avec `textes_gardes`).
+- [fin_chargement](src/fin_chargement.rs) (`pause_fin_chargement`) : la phase d'après chargement
+  (cache du terrain) n'attend plus 16 ms entre ses ticks.
+- [vsync](src/vsync.rs) (`vsync_chargement`) : aussi en DX11.
+
+Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
+vérifiés que par les tests sur l'exe.
+
 ## Compiler, tester, installer
 
 ```bash

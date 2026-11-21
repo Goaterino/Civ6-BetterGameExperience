@@ -52,7 +52,8 @@
 //! qu'il reçoit (sans effet sur une archive qui était synchronisée). Les séries des contrôles de test
 //! et des vrais contrôles sont comptées à part.
 //!
-//! Réglages dans `rollover_proxy.cfg` (lus au démarrage, puis au plus toutes les 3 s) :
+//! Pas de réglage joueur : la release fait toujours `fulldelta`. Les builds de diagnostic (feature
+//! `diag`) lisent ces clés dans `rollover_proxy.cfg` (au démarrage, puis au plus toutes les 3 s) :
 //! `reparation_synchro=fulldelta|create|ladder|count|off`, `reparation_synchro_essais=3`,
 //! `reparation_synchro_max=32` (escalades par contrôle et par joueur), `banc_synchro=`,
 //! `banc_synchro_reel=off`, `banc_synchro_max=4`. `actif=off` (l'interrupteur général de BGE) ne pose
@@ -219,7 +220,9 @@ fn config(refresh: bool) -> Config {
     let mut g = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
     let stale = g.as_ref().map_or(true, |(_, t)| refresh && t.elapsed() > Duration::from_secs(3));
     if stale {
-        let text = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
+        // Correctif de stabilité sans réglage joueur : la release garde la configuration par défaut
+        // (fulldelta) ; les autres modes et le banc ne sont lus que par les builds de diagnostic.
+        let text = if cfg!(feature = "diag") { crate::options::read_config().map(|(t, _)| t).unwrap_or_default() } else { String::new() };
         *g = Some((parse_config(&text), Instant::now()));
     }
     g.as_ref().map(|(c, _)| c.clone()).unwrap_or_default()

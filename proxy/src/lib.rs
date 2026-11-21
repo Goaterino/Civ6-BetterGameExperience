@@ -15,11 +15,11 @@
 //! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_formations`, `ui_logement`, `ui_accord_quantites` et `ui_avancement` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `journal_chokepoints=on|off` (off, voir `journal_chokepoints`),
-//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`),
-//! `unites_promises=on|count|off` (on, voir `unites_promises`), `visibilite_chargee=on|off`,
-//! `ecouteurs_charges=on|off` et `preferences_chargees=on|off` (on, voir `partie_chargee`). Les réglages de
-//! diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus qu'avec la
-//! feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. Journal :
+//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`).
+//! Les réglages de diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus
+//! qu'avec la feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. De même pour
+//! `unites_promises=on|count|off`, `visibilite_chargee`, `ecouteurs_charges` et
+//! `preferences_chargees` (correctifs POL, toujours actifs en release, sans réglage joueur). Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
 
 #![allow(non_snake_case)] // le nom de la DLL produite, BGD_GameCore_XP2.
@@ -285,21 +285,25 @@ pub(crate) fn read_config() {
                 _ => delaunay::Mode::On,
             });
         }
-        if let Some(v) = line.trim().strip_prefix("unites_promises=") {
-            unites_promises::set_mode(match v.trim() {
-                "off" => unites_promises::Mode::Off,
-                "count" => unites_promises::Mode::Count,
-                _ => unites_promises::Mode::On,
-            });
-        }
-        if let Some(v) = line.trim().strip_prefix("visibilite_chargee=") {
-            partie_chargee::set_visibility(v.trim() != "off");
-        }
-        if let Some(v) = line.trim().strip_prefix("ecouteurs_charges=") {
-            partie_chargee::set_listeners(v.trim() != "off");
-        }
-        if let Some(v) = line.trim().strip_prefix("preferences_chargees=") {
-            partie_chargee::set_preferences(v.trim() != "off");
+        // Correctifs POL : pas de réglage joueur. Les clés ne servent qu'aux builds de diagnostic,
+        // pour comparer avec le jeu d'origine (off) ou mesurer (count) ; la release les ignore.
+        if cfg!(feature = "diag") {
+            if let Some(v) = line.trim().strip_prefix("unites_promises=") {
+                unites_promises::set_mode(match v.trim() {
+                    "off" => unites_promises::Mode::Off,
+                    "count" => unites_promises::Mode::Count,
+                    _ => unites_promises::Mode::On,
+                });
+            }
+            if let Some(v) = line.trim().strip_prefix("visibilite_chargee=") {
+                partie_chargee::set_visibility(v.trim() != "off");
+            }
+            if let Some(v) = line.trim().strip_prefix("ecouteurs_charges=") {
+                partie_chargee::set_listeners(v.trim() != "off");
+            }
+            if let Some(v) = line.trim().strip_prefix("preferences_chargees=") {
+                partie_chargee::set_preferences(v.trim() != "off");
+            }
         }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");

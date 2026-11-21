@@ -50,9 +50,9 @@
 //! Les trois changent ce que calcule une machine qui charge : ce sont des correctifs POL, appliqués
 //! seulement quand `pol::actifs()` (tous les humains ont ce proxy à la même version, ou partie
 //! locale), et seulement si les six sites ont les octets attendus. Chaque chargement de la partie,
-//! le premier compris, suit la même règle sur toutes les machines. Réglages :
-//! `visibilite_chargee=on|off`, `ecouteurs_charges=on|off`, `preferences_chargees=on|off` (on par
-//! défaut tous les trois).
+//! le premier compris, suit la même règle sur toutes les machines. Pas de réglage joueur : seuls les
+//! builds de diagnostic (feature `diag`) lisent `visibilite_chargee=on|off`,
+//! `ecouteurs_charges=on|off` et `preferences_chargees=on|off` (on par défaut tous les trois).
 
 use crate::exe::rd;
 use crate::patch::{self, Site};

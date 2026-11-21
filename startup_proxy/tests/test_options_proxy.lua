@@ -187,7 +187,7 @@ do
 		if not stacks[b.parent] then rows = -100; end
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; else titles = titles + 1; end
 	end
-	Check("53 réglages et 7 titres (crédits compris), dans le panneau", rows == 53 and titles == 7);
+	Check("49 réglages et 7 titres (crédits compris), dans le panneau", rows == 49 and titles == 7);
 
 	-- Options avancées : performances et diagnostic, cachées par défaut derrière un bouton.
 	local function StackOf(name)
@@ -257,7 +257,7 @@ do
 	for _, b in ipairs(m.built) do
 		if b.name == "PullDownParameterInstance" then rows = rows + 1; end
 	end
-	Check("release : 47 réglages", rows == 47);
+	Check("release : 43 réglages", rows == 43);
 	Check("release : réglages de diagnostic absents", m.Row("Journal des scripts et XML chargés") == nil
 		and m.Row("Mesure du coût des épingles") == nil and m.Row("Diagnostic des accords entre joueurs") == nil
 		and m.Row("Profil des zones de l'exe") == nil);

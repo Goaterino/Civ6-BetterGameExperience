@@ -263,30 +263,6 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="en_US">
 			<Text>The top bar updates after a governor title, a governor move or a great person, without changing a citizen. Display only: no desync.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="en_US">
-			<Text>AI district units in a fixed order</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="en_US">
-			<Text>The table of units promised to the AI for its next districts is saved, synced and rebuilt in a fixed order: after a reload every machine creates them in the same order (fewer desyncs). Measure: changes nothing, logs. Only when every player has this version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="en_US">
-			<Text>Remembered improvements kept on load</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="en_US">
-			<Text>After a game is loaded, each player's map keeps the improvements it remembered, as saved, instead of also showing those placed since on plots it no longer sees (goody huts): the reloaded game matches the running one (fewer desyncs after a reload). Only when every player has this version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="en_US">
-			<Text>Event order kept on load</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="en_US">
-			<Text>After a game is loaded, game events reach each player before its AI, as in a new game: the AI no longer evaluates a city-state before the first-meeting envoy (fewer desyncs after a reload). Only when every player has this version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="en_US">
-			<Text>AI preferences as in a new game</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="en_US">
-			<Text>After a game is loaded, each player's AI preferences are rebuilt as in a new game, without the starting values of the AI profile that a new game discards: AI scores (policies, great people) stay the same as on the other machines (fewer desyncs after a reload). Only when every player has this version.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="en_US">
 			<Text>Builder charges on their flag</Text>
 		</Row>

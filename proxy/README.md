@@ -854,6 +854,25 @@ raccourcis et lentille du colon : encore à confirmer.
   `LOC_OPTIONS_KEY_RETURN` (sinon Entrée serait coupée pour tous, la ligne du journal le dira) ; que
   `Plot:GetArea()` existe côté interface (sinon repli sur le continent).
 
+## Partie rechargée identique à la partie en cours (correctifs POL, contribution d'OzrielTheLost)
+
+Deux modules, actifs seulement quand POL l'est, sans réglage joueur (les clés ne sont lues que par
+les builds de diagnostic, pour comparer avec le jeu d'origine) :
+
+- [unites_promises](src/unites_promises.rs) : la table des unités promises à la création d'un
+  quartier (`MajorStartingUnits` avec `OnDistrictCreated` : bonus de difficulté de l'IA, départs en
+  ère avancée) est écrite et parcourue dans l'ordre des clés. Avant, son ordre dépendait de
+  l'histoire de chaque machine : après un rechargement, le hash de synchro différait sans réparation
+  possible, et le colon et le bâtisseur étaient créés dans l'ordre inverse (identifiants échangés).
+  Les unités données ne changent pas, seul leur ordre de création est fixé.
+- [partie_chargee](src/partie_chargee.rs) : la passe d'après chargement n'écrit plus les
+  améliorations mémorisées des joueurs (seule la machine qui charge le faisait) ; les écouteurs
+  d'événements connectés en fin de lecture d'un joueur le sont à son début, comme sur une machine qui
+  n'a pas rechargé ; les préférences de grande stratégie de l'IA sont remises à zéro après la lecture,
+  comme dans une nouvelle partie (Sejong gardait −75 % de points de prophète).
+
+Voir aussi `reparation_synchro` et `maths_communes` dans [startup_proxy](../startup_proxy/README.md).
+
 ## Limites du prototype
 
 - **Versions du jeu connues seulement.** Le proxy lit la version du jeu dans l'exe (ressource de

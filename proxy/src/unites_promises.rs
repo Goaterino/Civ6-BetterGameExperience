@@ -36,9 +36,10 @@
 //! appliqué que si `pol::actifs()` (tous les humains ont ce proxy à la même version, ou partie
 //! locale). Sinon, chaque détour appelle l'originale.
 //!
-//! Réglage `unites_promises=on|count|off` dans rollover_proxy.cfg : `count` pose les détours, ne
-//! change rien et journalise quand l'ordre d'origine diffère de l'ordre canonique. Le réglage doit
-//! être le même sur toutes les machines d'une partie.
+//! Pas de réglage joueur : seuls les builds de diagnostic (feature `diag`) lisent
+//! `unites_promises=on|count|off` dans rollover_proxy.cfg. `count` pose les détours, ne change rien
+//! et journalise quand l'ordre d'origine diffère de l'ordre canonique ; `off` et `count` doivent être
+//! les mêmes sur toutes les machines d'une partie.
 
 use crate::patch::{self, Site};
 use crate::{log, pol};

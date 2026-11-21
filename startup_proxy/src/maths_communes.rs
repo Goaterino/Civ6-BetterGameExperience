@@ -19,7 +19,8 @@
 //! Non couvert : des joueurs avec des versions différentes de `ucrtbase.dll` (autre piste : nos
 //! propres implémentations de ces fonctions), et macOS/Linux, où BGE ne tourne pas.
 //!
-//! Réglage dans `rollover_proxy.cfg` : `maths_communes=on|off` (`on` par défaut). `off` laisse
+//! Pas de réglage joueur. Les builds de diagnostic (feature `diag`) lisent `maths_communes=on|off`
+//! dans `rollover_proxy.cfg` (`on` par défaut) : `off` laisse
 //! l'UCRT tel quel ; un changement déjà fait est quand même défait quand les correctifs POL
 //! deviennent inactifs.
 
@@ -70,7 +71,8 @@ unsafe fn ucrt() -> Option<(SetFma3, GetFma3)> {
 /// Appelé par `salon` quand l'état POL change (verdict du salon, partie locale, retour au salon).
 pub fn pol_changed(pol: bool) {
     let switched = STARTUP.load(Ordering::Relaxed) >= 0;
-    let on = enabled(&crate::options::read_config().map(|(t, _)| t).unwrap_or_default());
+    // Correctif POL sans réglage joueur : `maths_communes=off` n'est lu que par les builds de diagnostic.
+    let on = !cfg!(feature = "diag") || enabled(&crate::options::read_config().map(|(t, _)| t).unwrap_or_default());
     // Rien à défaire, rien à faire.
     if !switched && (!pol || !on) {
         return;

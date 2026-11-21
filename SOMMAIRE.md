@@ -65,7 +65,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   conception) ;
 - [chargement](analyses/chargement/README.md) : temps de chargement d'une partie (salon, reprise,
   remap de MPH), ventilé par phases et par piles CPU (capture du 2026-11-16) : reconstruction de la
-  base, test d'existence des assets, génération de carte, terrain 3D ; leviers classés, aucun essayé ;
+  base, test d'existence des assets, génération de carte, terrain 3D ; leviers classés ; étape de
+  configuration gardée et fin de chargement sans pause aux rechargements (`config_gardee`,
+  `fin_chargement`, voir [startup_proxy](startup_proxy/README.md)) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
@@ -97,7 +99,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   (un fichier XML par langue, au format de Civ6), et messages du chat affichés dans la langue de
   chacun ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
-  [docs/netcode](docs/netcode/README.md) ;
+  [docs/netcode](docs/netcode/README.md) ; archives désynchronisées réparées sur place par l'hôte
+  (`reparation_synchro`), partie rechargée identique à la partie en cours (`unites_promises`,
+  `partie_chargee`, correctifs POL) ;
 - [macos](analyses/macos/README.md) : portage macOS, binaires du jeu inspectés (Mach-O universels,
   hardened runtime, GameCore chargé par `dlopen`) et essai de patch du code sur les machines macOS
   de la CI (passe, mais SIP y est désactivé : à refaire sur un Mac ordinaire) ;

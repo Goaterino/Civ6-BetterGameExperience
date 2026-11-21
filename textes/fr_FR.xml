@@ -263,30 +263,6 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="fr_FR">
 			<Text>Le bandeau du haut se met à jour après un titre de gouverneur, un déplacement de gouverneur ou un personnage illustre, sans changer un citoyen. Affichage seulement : pas de désynchronisation.</Text>
 		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_NOM" Language="fr_FR">
-			<Text>Unités de quartier de l'IA dans un ordre fixe</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_UNITES_PROMISES_AIDE" Language="fr_FR">
-			<Text>La table des unités promises à l'IA pour ses prochains quartiers est enregistrée, synchronisée et reconstruite dans un ordre fixe : après un rechargement, chaque machine les crée dans le même ordre (moins de désynchronisations). Mesure : ne change rien, note. Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_NOM" Language="fr_FR">
-			<Text>Aménagements mémorisés gardés au chargement</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_VISIBILITE_CHARGEE_AIDE" Language="fr_FR">
-			<Text>Après le chargement d'une partie, la carte de chaque joueur garde les aménagements qu'il avait mémorisés, tels qu'enregistrés, au lieu d'y ajouter ceux posés depuis sur des cases qu'il ne voit plus (villages tribaux) : la partie rechargée est celle qui tourne (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_NOM" Language="fr_FR">
-			<Text>Ordre des événements gardé au chargement</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_ECOUTEURS_CHARGES_AIDE" Language="fr_FR">
-			<Text>Après le chargement d'une partie, les événements du jeu parviennent à chaque joueur avant son IA, comme dans une nouvelle partie : l'IA n'évalue plus une cité-État avant l'émissaire de la première rencontre (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_NOM" Language="fr_FR">
-			<Text>Préférences d'IA comme en nouvelle partie</Text>
-		</Row>
-		<Row Tag="LOC_BGD_OPT_PREFERENCES_CHARGEES_AIDE" Language="fr_FR">
-			<Text>Après le chargement d'une partie, les préférences d'IA de chaque joueur sont reconstruites comme dans une nouvelle partie, sans les valeurs de départ du profil d'IA qu'une nouvelle partie écarte : les scores d'IA (doctrines, personnages illustres) restent les mêmes que sur les autres machines (moins de désynchronisations après un rechargement). Seulement si tous les joueurs ont cette version.</Text>
-		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="fr_FR">
 			<Text>Charges des bâtisseurs sur leur drapeau</Text>
 		</Row>
