@@ -251,6 +251,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="pl_PL">
 			<Text>Na ekranie umowy Shift+klik na dostępnym zasobie, złocie, złocie na turę lub dyplomatycznych względach dodaje tyle, ile umowa przyjmie, a Ctrl+klik dodaje dziesięć razy więcej niż zwykły klik: 10 sztuk zasobu, 1000 złota, 100 złota na turę, 10 dyplomatycznych względów. Bez tej opcji większą ilość trzeba wpisać w polu ilości. Działa tylko lokalnie: bez wpływu na innych graczy.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="pl_PL">
+			<Text>Niewymienialne zasoby luksusowe na ekranie umowy</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="pl_PL">
+			<Text>Na ekranie umowy po dostępnych zasobach luksusowych każdego gracza pojawiają się wyszarzone ikony zasobów luksusowych, które gracz posiada, ale nie może ich wymienić: sztuk otrzymanych z innej umowy, od miasta-państwa lub z innego źródła. Kolumna pokazuje wtedy wszystkie zasoby luksusowe swojego gracza: widać, czy druga strona ma już ten, który oferujesz, i czy oddawana sztuka jest twoją ostatnią. Bez tej opcji gra pokazuje tylko to, co można wymienić. Tylko wyświetlanie: bez wpływu na innych graczy.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pl_PL">
 			<Text>Zniżka dzielnicy: -{1}% (masz mniej dzielnic tego typu niż twoja średnia).</Text>
 		</Row>
@@ -496,6 +502,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="pl_PL">
 			<Text>umowa nie została wysłana: tura dobiega końca. Wyślij ją ponownie w następnej turze.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="pl_PL">
+			<Text>Nie można wymienić. Źródło:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="pl_PL">
+			<Text>Inne źródło</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="pl_PL">
 			<Text>+{1} {2} {3} dzięki {4}, otrzymuje {5}</Text>

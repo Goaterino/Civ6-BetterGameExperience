@@ -251,6 +251,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="zh_Hans_CN">
 			<Text>在交易界面中，对可用的资源、金币、每回合金币或外交支持，按住 Shift 单击会加入交易所能接受的最大数量，按住 Ctrl 单击则加入普通单击的 10 倍：10 个资源、1000 金币、每回合 100 金币、10 点外交支持。没有此选项时，更大的数量需要在数量框中输入。仅限本地：不影响其他玩家。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="zh_Hans_CN">
+			<Text>交易界面显示不可交易的奢侈品资源</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="zh_Hans_CN">
+			<Text>在交易界面中，每位玩家可用的奢侈品资源之后，会以灰色图标显示该玩家拥有但无法交易的奢侈品资源：来自其他交易、城邦或其他来源的份额。这样每一栏都会显示该玩家拥有的全部奢侈品资源：可以看出对方是否已有你要提供的奢侈品，以及你给出的是否是最后一份。不启用此选项时，游戏只列出可交易的内容。仅影响显示：不影响其他玩家。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
 			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
 		</Row>
@@ -496,6 +502,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="zh_Hans_CN">
 			<Text>交易未发送：回合即将结束。请在下个回合重新发送。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="zh_Hans_CN">
+			<Text>无法交易。来源：</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="zh_Hans_CN">
+			<Text>其他来源</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="zh_Hans_CN">
 			<Text>{4}：+{1} {2} {3}，由{5}获得</Text>

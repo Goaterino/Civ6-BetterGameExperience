@@ -251,6 +251,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="de_DE">
 			<Text>Im Abkommensbildschirm fügt Umschalt+Klick auf eine verfügbare Ressource, Gold, Gold pro Runde oder Diplomatische Gunst so viel hinzu, wie das Abkommen zulässt, und Strg+Klick das Zehnfache eines normalen Klicks: 10 einer Ressource, 1000 Gold, 100 Gold pro Runde, 10 Diplomatische Gunst. Ohne diese Option muss eine größere Menge im Mengenfeld eingegeben werden. Rein lokal: keine Auswirkung auf andere Spieler.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="de_DE">
+			<Text>Nicht handelbare Luxusgüter im Abkommensbildschirm</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="de_DE">
+			<Text>Im Abkommensbildschirm folgen auf die verfügbaren Luxusgüter jedes Spielers ausgegraute Symbole für die Luxusgüter, die dieser Spieler besitzt, aber nicht handeln kann: Exemplare aus einem anderen Abkommen, von einem Stadtstaat oder aus einer anderen Quelle. Eine Spalte zeigt damit alle Luxusgüter ihres Spielers: Ihr seht, ob die Gegenseite das angebotene Luxusgut schon hat und ob das abgegebene Exemplar euer letztes ist. Ohne diese Option listet das Spiel nur auf, was gehandelt werden kann. Nur Anzeige: keine Auswirkung auf andere Spieler.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="de_DE">
 			<Text>Bezirksrabatt: -{1} % (weniger Bezirke dieses Typs als euer Durchschnitt).</Text>
 		</Row>
@@ -496,6 +502,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="de_DE">
 			<Text>Abkommen nicht gesendet: Die Runde endet. Bitte in der nächsten Runde erneut senden.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="de_DE">
+			<Text>Nicht handelbar. Quelle:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="de_DE">
+			<Text>Andere Quelle</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="de_DE">
 			<Text>+{1} {2} {3} durch {4}, erhalten von {5}</Text>

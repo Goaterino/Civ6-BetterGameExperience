@@ -251,6 +251,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="ja_JP">
 			<Text>取引画面で、提供可能な資源、ゴールド、ターン毎のゴールド、外交的支持を Shift+クリックすると取引に入れられる上限まで、Ctrl+クリックすると通常のクリックの 10 倍 (資源 10、ゴールド 1000、ターン毎のゴールド 100、外交的支持 10) を追加します。このオプションがない場合、それより多い数量は数量欄に入力する必要があります。ローカルのみ：他のプレイヤーには影響しません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="ja_JP">
+			<Text>取引画面に取引できない高級資源を表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="ja_JP">
+			<Text>取引画面で、各プレイヤーの提供可能な高級資源の後に、所有しているが取引できない高級資源 (他の取引、都市国家、その他の入手元から得たもの) をグレーのアイコンで表示します。これにより、各列にそのプレイヤーが持つ高級資源がすべて表示され、提案する高級資源を相手がすでに持っているか、渡す分が最後の 1 つかどうかが分かります。このオプションがない場合、ゲームは取引できるものしか表示しません。表示のみ：他のプレイヤーには影響しません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ja_JP">
 			<Text>区域の割引: -{1}% (この種類の区域数が平均より少ない)。</Text>
 		</Row>
@@ -496,6 +502,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="ja_JP">
 			<Text>取引は送信されませんでした: ターンが終了しようとしています。次のターンにもう一度送ってください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="ja_JP">
+			<Text>取引不可。入手元：</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="ja_JP">
+			<Text>その他の入手元</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="ja_JP">
 			<Text>{4}により+{1} {2} {3}（{5}が受け取る）</Text>
