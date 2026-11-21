@@ -4,6 +4,67 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.14.0
+
+Multiplayer games need every human player on 0.14.0 for the **[all players]** fixes: a lobby that
+mixes 0.13.0 and 0.14.0 turns them off.
+
+### Installation and updates
+- **Signed files**: the installer and both BetterGameExperience DLLs now carry a code signing
+  certificate (Certum, open source developer). Windows shows the publisher in the file properties and
+  in the installer prompt, and SmartScreen and antivirus warnings should become rarer.
+
+### Game versions
+- **Civilization VI 1.0.12.58**: BetterGameExperience now recognizes this older version of the game,
+  DX12 and DX11. Each game version uses its own addresses, and a game whose files do not match its
+  version installs no fix at all.
+- **Unsupported game version**: a player whose game version is not supported by BetterGameExperience
+  is announced in the chat on arrival (the message used to say the copy was not the current Steam
+  version).
+
+### Multiplayer fixes [all players]
+- **Fewer desyncs after a reload**: a game loaded on one machine computed slightly differently from
+  the game running on the others. Players' remembered improvements were rewritten at load, event
+  listeners ran in another order, the AI kept its leader's preferences for good (Sejong: -75% Great
+  Prophet points), and the units given when a district is created (AI difficulty bonuses, later era
+  starts) were created in another order. A loaded game now computes like a running one. Contributed
+  by OzrielTheLost.
+- **Same math on every processor**: some calculations (exponentials, powers) could round differently
+  on processors with and without FMA3 instructions. Every machine now computes them the same way.
+  Contributed by OzrielTheLost.
+- **Unit swap**: swapping two units could leave one of them halfway, stacked on a tile with another
+  unit (a swordsman on a crouching tiger). Both units now finish their move.
+
+### Multiplayer
+- **Desyncs repaired without a reload**: when an object stays out of sync, the host now sends all of
+  its data, and the player's game repairs it in place instead of drifting until a full reload. Only
+  the host needs 0.14.0 for this. Contributed by OzrielTheLost.
+
+### World Congress
+- **Congress turn after a forced turn end**: when the simultaneous turn end forced a player's turn to
+  end, the congress turn could end two seconds after it opened, without a vote. The congress turn now
+  starts with a full timer, the vote window reopens when the turn ended without a vote, and the
+  congress button shows the current session.
+
+### Faster loading
+- **Faster reloads**: when the mods are the same, a reload keeps the configuration step and leaves the
+  mods' texts as they are, the last loading phase no longer waits between steps, and the VSync wait
+  is lifted on DX11 too. Measured on a small map: 13 s down to 9 s. Settings in the advanced options,
+  on by default. Contributed by OzrielTheLost.
+
+### Interface
+- **Deal screen shortcuts**: in the "available" column, Shift+click adds as much as the deal accepts
+  and Ctrl+click adds ten times a click, on resources, gold, gold per turn and favor. On by default.
+  Contributed by huchenlei.
+- **District discount badge**: after a discounted district was placed in one city, another city
+  already viewed kept showing the discount while it cost the full price.
+- **Production overflow**: the "+N" on the city banner stayed after the turn had spent it.
+
+### Settings
+- **New interface additions from updates**: a new setting at the top of the Interface section. Set
+  to "Disabled", the interface additions brought by later updates arrive turned off, and the ones you
+  have keep their current state.
+
 ## BetterGameExperience 0.13.0
 
 Multiplayer games need every human player on 0.13.0 for the **[all players]** fixes: a lobby that

@@ -2,6 +2,73 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.14.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.14.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.13.0 y 0.14.0 las desactiva.
+
+### Instalación y actualizaciones
+- **Archivos firmados**: el instalador y las dos DLL de BetterGameExperience llevan ahora un
+  certificado de firma de código (Certum, desarrollador de código abierto). Windows muestra el editor
+  en las propiedades del archivo y en el aviso del instalador, y las alertas de SmartScreen y de los
+  antivirus deberían ser menos frecuentes.
+
+### Versiones del juego
+- **Civilization VI 1.0.12.58**: BetterGameExperience reconoce ahora esta versión antigua del juego,
+  en DX12 y DX11. Cada versión del juego usa sus propias direcciones, y un juego cuyos archivos no
+  corresponden a su versión no instala ninguna corrección.
+- **Versión del juego no compatible**: un jugador cuya versión del juego no es compatible con
+  BetterGameExperience se anuncia en el chat al llegar (el mensaje decía que su copia no era la
+  versión actual de Steam).
+
+### Correcciones multijugador [todos los jugadores]
+- **Menos desincronizaciones tras una recarga**: una partida cargada en una máquina calculaba de forma
+  algo distinta a la partida en curso en las demás. Las mejoras recordadas de los jugadores se
+  reescribían al cargar, los oyentes de eventos se ejecutaban en otro orden, la IA conservaba para
+  siempre las preferencias de su líder (Sejong: -75 % de puntos de Gran Profeta) y las unidades que
+  se dan al crear un distrito (bonificaciones de dificultad de la IA, inicios en eras avanzadas) se
+  creaban en otro orden. Una partida cargada calcula ahora como una partida en curso. Contribución de
+  OzrielTheLost.
+- **Los mismos cálculos en todos los procesadores**: algunos cálculos (exponenciales, potencias)
+  podían redondear de forma distinta en procesadores con y sin instrucciones FMA3. Todas las máquinas
+  los calculan ahora igual. Contribución de OzrielTheLost.
+- **Intercambio de unidades**: intercambiar dos unidades podía dejar una a medio camino, apilada en
+  una casilla con otra unidad (un espadachín sobre un tigre agazapado). Las dos unidades terminan
+  ahora su movimiento.
+
+### Multijugador
+- **Desincronizaciones reparadas sin recarga**: cuando un objeto sigue desincronizado, el anfitrión
+  envía ahora todos sus datos, y la partida del jugador lo repara en el sitio en lugar de desviarse
+  hasta una recarga completa. Para esto solo el anfitrión necesita la 0.14.0. Contribución de
+  OzrielTheLost.
+
+### Congreso Mundial
+- **Turno del congreso tras un fin de turno forzado**: cuando el fin de turno simultáneo forzaba el
+  fin del turno de un jugador, el turno del congreso podía terminar dos segundos después de abrirse,
+  sin votación. El turno del congreso empieza ahora con el temporizador completo, la ventana de
+  votación se vuelve a abrir si el turno terminó sin votar y el botón del congreso muestra la sesión
+  actual.
+
+### Cargas más rápidas
+- **Recargas más rápidas**: con los mismos mods, una recarga conserva el paso de configuración y deja
+  los textos de los mods como están, la última fase de la carga ya no espera entre sus pasos y la
+  espera de la VSync se quita también en DX11. Medido en un mapa pequeño: de 13 s a 9 s. Ajustes en
+  las opciones avanzadas, activados por defecto. Contribución de OzrielTheLost.
+
+### Interfaz
+- **Atajos de la pantalla de acuerdo**: en la columna «disponible», Mayús+clic añade tanto como acepta
+  el acuerdo y Ctrl+clic añade diez veces un clic, para recursos, oro, oro por turno y favor.
+  Activado por defecto. Contribución de huchenlei.
+- **Insignia de descuento de distritos**: tras colocar un distrito con descuento en una ciudad, otra
+  ciudad ya consultada seguía mostrando el descuento aunque costaba el precio completo.
+- **Producción sobrante**: el «+N» del estandarte de la ciudad seguía visible después de que el turno
+  lo hubiera gastado.
+
+### Ajustes
+- **Novedades de interfaz de las actualizaciones**: un ajuste nuevo al principio de la sección
+  Interfaz. En «Desactivado», las novedades de interfaz de las actualizaciones siguientes llegan
+  desactivadas, y las que ya tienes conservan su estado actual.
+
 ## BetterGameExperience 0.13.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.13.0 para las correcciones
