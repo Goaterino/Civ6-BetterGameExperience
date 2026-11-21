@@ -233,6 +233,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>在你的城市横幅上，距住房上限只差 1 时显示橙色房屋（人口增速减缓 50%），一达到上限就显示红色房屋（减缓 75%）。不启用此选项时，游戏要到超出上限后才会显示红色房屋。仅影响显示。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="zh_Hans_CN">
+			<Text>交易界面的 Shift+单击和 Ctrl+单击</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="zh_Hans_CN">
+			<Text>在交易界面中，对可用的资源、金币、每回合金币或外交支持，按住 Shift 单击会加入交易所能接受的最大数量，按住 Ctrl 单击则加入普通单击的 10 倍：10 个资源、1000 金币、每回合 100 金币、10 点外交支持。没有此选项时，更大的数量需要在数量框中输入。仅限本地：不影响其他玩家。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
 			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
 		</Row>

@@ -40,6 +40,10 @@
 //! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. An orange house on
 //!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
 //!   (-75%), where the game itself only shows it over the cap ;
+//! - `ui_accord_quantites=on|off` (on) : adds `ui_accord_quantites.lua` to DiplomacyDealView.lua.
+//!   On a resource, the gold, the gold per turn or the favor of the "available" column of the deal
+//!   screen, Shift+click puts as much as the deal accepts, Ctrl+click ten times what a click adds
+//!   (10 of a resource, 1000 gold, 100 gold per turn, 10 favor) ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -77,6 +81,8 @@ const INTRO_BLOCK: &str = include_str!("ui_congres_intro.lua");
 const PAUSE_BLOCK: &str = include_str!("ui_pause.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
+/// Block of the `ui_accord_quantites` setting (DiplomacyDealView.lua). It shows no text.
+const ACCORD_QUANTITES_BLOCK: &str = include_str!("ui_accord_quantites.lua");
 /// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
 const ANNULER_BLOCK: &str = include_str!("ui_banniere_annuler.lua");
 const QUARTIERS_BLOCK: &str =
@@ -107,6 +113,7 @@ static QUARTIERS: AtomicBool = AtomicBool::new(true);
 static AVANCEMENT: AtomicBool = AtomicBool::new(true);
 static FORMATIONS: AtomicBool = AtomicBool::new(true);
 static LOGEMENT: AtomicBool = AtomicBool::new(true);
+static ACCORD_QUANTITES: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -162,6 +169,10 @@ pub fn set_logement(on: bool) {
     LOGEMENT.store(on, Ordering::Relaxed);
 }
 
+pub fn set_accord_quantites(on: bool) {
+    ACCORD_QUANTITES.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -184,6 +195,7 @@ fn active() -> bool {
         || AVANCEMENT.load(Ordering::Relaxed)
         || FORMATIONS.load(Ordering::Relaxed)
         || LOGEMENT.load(Ordering::Relaxed)
+        || ACCORD_QUANTITES.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
@@ -846,6 +858,31 @@ pub fn patch_accord_or(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// What `ui_accord_quantites.lua` wraps in DiplomacyDealView.lua.
+const ACCORD_QUANTITES_NAMES: [&str; 5] = [
+    "function OnClickAvailableResource(",
+    "function InputHandler(",
+    "function UpdateDealPanel(",
+    "function UpdateProposedWorkingDeal(",
+    "ContextPtr:SetInputHandler(",
+];
+
+/// DiplomacyDealView.lua followed by `ui_accord_quantites.lua`: Shift+click and Ctrl+click on an
+/// available resource, gold or favor of the deal screen (`ui_accord_quantites` setting).
+pub fn patch_accord_quantites(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ACCORD_QUANTITES_NAMES.iter().find(|n| !has(n)) {
+        return Err(format!("{missing} introuvable"));
+    }
+    if has("Civ6RolloverProxy (src/ui_accord_quantites.lua)") {
+        return Err("déjà ajouté".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ACCORD_QUANTITES_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// DiplomacyDealView.lua suivi de `ui_accord_fin.lua` : pas d'accord envoyé à un humain pendant le
 /// passage de tour (tours passés en boucle chez l'hôte, depart_tour/README.md).
 pub fn patch_accord_fin(src: &[u8]) -> Result<Vec<u8>, String> {
@@ -1272,6 +1309,20 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 None
             }
         };
+        let fixed = if ACCORD_QUANTITES.load(Ordering::Relaxed) {
+            match patch_accord_quantites(fixed.as_deref().unwrap_or(src)) {
+                Ok(text) => {
+                    what.push("Maj+clic et Ctrl+clic sur les ressources, l'or et la faveur disponibles".into());
+                    Some(text)
+                }
+                Err(e) => {
+                    log(&format!("ui : {chunk} : quantités de l'écran d'accord laissées telles quelles : {e}"));
+                    fixed
+                }
+            }
+        } else {
+            fixed
+        };
         let fixed = match patch_accord_fin(fixed.as_deref().unwrap_or(src)) {
             Ok(text) => {
                 what.push("pas d'accord vers un humain pendant le passage de tour".into());
@@ -1613,6 +1664,24 @@ mod tests {
         assert!(new.ends_with(ACCORD_OR_BLOCK.as_bytes()));
         assert!(patch_accord_or(&new).is_err(), "pas deux fois");
         assert!(patch_accord_or(b"function OnShow() end").is_err());
+    }
+
+    #[test]
+    fn quantites_de_ressources_dans_l_ecran_d_accord() {
+        let src = b"function OnClickAvailableResource(player, resourceType) end function InputHandler( pInputStruct ) end \
+            function UpdateDealPanel(player) end function UpdateProposedWorkingDeal() end ContextPtr:SetInputHandler( InputHandler, true );";
+        let out = patch_accord_quantites(src).unwrap();
+        assert!(out.starts_with(src));
+        assert!(out.ends_with(ACCORD_QUANTITES_BLOCK.as_bytes()));
+        assert!(patch_accord_quantites(&out).is_err(), "pas deux fois");
+        assert!(patch_accord_quantites(b"function OnShow() end").is_err());
+        // Bouton d'or, quantités, accords en fin de tour : les trois blocs se suivent.
+        if let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua")) {
+            let or = patch_accord_or(&src).unwrap();
+            let quantites = patch_accord_quantites(&or).unwrap();
+            assert!(quantites.starts_with(&or));
+            assert!(patch_accord_fin(&quantites).is_ok());
+        }
     }
 
     #[test]

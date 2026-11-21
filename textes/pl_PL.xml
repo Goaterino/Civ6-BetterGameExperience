@@ -233,6 +233,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pl_PL">
 			<Text>W banerze twoich miast pojawia się pomarańczowy dom, gdy miastu brakuje 1 obszaru mieszkalnego do limitu (przyrost spowolniony o 50%), a czerwony dom, gdy tylko miasto osiągnie limit (75%). Bez tej opcji gra pokazuje czerwony dom dopiero po przekroczeniu limitu. Tylko wyświetlanie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="pl_PL">
+			<Text>Shift+klik i Ctrl+klik na ekranie umowy</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="pl_PL">
+			<Text>Na ekranie umowy Shift+klik na dostępnym zasobie, złocie, złocie na turę lub dyplomatycznych względach dodaje tyle, ile umowa przyjmie, a Ctrl+klik dodaje dziesięć razy więcej niż zwykły klik: 10 sztuk zasobu, 1000 złota, 100 złota na turę, 10 dyplomatycznych względów. Bez tej opcji większą ilość trzeba wpisać w polu ilości. Działa tylko lokalnie: bez wpływu na innych graczy.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pl_PL">
 			<Text>Zniżka dzielnicy: -{1}% (masz mniej dzielnic tego typu niż twoja średnia).</Text>
 		</Row>
