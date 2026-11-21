@@ -140,7 +140,7 @@ jeu installé pour la 1.0.12.74) et sautent une version absente ; `check_hooks.p
 en argument :
 
 ```powershell
-$env:CIV6_EXE_58_DIR = "$PWDinaires_jeu.0.12.58"; $env:CIV6_EXE_72_DIR = "$PWDinaires_jeu.0.12.72"
+$env:CIV6_EXE_58_DIR = "$PWD\binaires_jeu\1.0.12.58"; $env:CIV6_EXE_72_DIR = "$PWD\binaires_jeu\1.0.12.72"
 cargo test --release --manifest-path startup_proxy\Cargo.toml
-python proxy	ests\check_hooks.py proxy	argetelease\BGD_GameCore_XP2.dll binaires_jeu.0.12.58\GameCore_XP2_FinalRelease.dll $env:TEMP\ch58
+python proxy\tests\check_hooks.py proxy\target\release\BGD_GameCore_XP2.dll binaires_jeu\1.0.12.58\GameCore_XP2_FinalRelease.dll $env:TEMP\ch58
 ```
