@@ -1,7 +1,9 @@
 # Release de BetterGameExperience (voir release/README.md).
-# Un tag vX.Y.Z compile les deux proxys, signe le manifeste et crée une release en brouillon, à relire
-# puis publier à la main : l'updater ne voit que les releases publiées. Lancé à la main
-# (workflow_dispatch), il compile et signe sans créer de release ; les fichiers restent en artefact.
+# Un tag vX.Y.Z compile les deux proxys, signe le manifeste et crée une release en brouillon
+# « (à signer) ». La signature Authenticode se fait ensuite depuis un PC (release/signer.ps1) : la clé
+# du certificat ne peut pas servir ici. Puis le brouillon est relu et publié à la main : l'updater ne
+# voit que les releases publiées. Lancé à la main (workflow_dispatch), il compile et signe le
+# manifeste sans créer de release ; les fichiers restent en artefact.
 name: release
 
 on:
@@ -11,8 +13,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
-  attestations: write
 
 jobs:
   release:
@@ -87,19 +87,15 @@ jobs:
           python release/manifest.py sign dist/manifest.json
           python release/manifest.py verify dist/manifest.json
 
-      # Provenance des binaires (gh attestation verify) : réservée aux dépôts publics hors offre Enterprise.
-      - uses: actions/attest-build-provenance@v4
-        if: ${{ !github.event.repository.private }}
-        with:
-          subject-path: dist/*
-
       - uses: actions/upload-artifact@v7
         with:
           name: BetterGameExperience-${{ env.VERSION }}
           path: dist/
 
+      # « (à signer) » : release/signer.ps1 retire ce suffixe une fois les fichiers signés. Pas
+      # d'attestation de provenance : elle porterait sur les fichiers non signés, que la signature remplace.
       - name: Release en brouillon
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameExperience $VERSION" --notes-file notes.md
+        run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameExperience $VERSION (à signer)" --notes-file notes.md
