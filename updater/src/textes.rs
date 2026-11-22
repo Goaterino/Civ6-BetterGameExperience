@@ -385,6 +385,104 @@ pub const LATEST_VERSION_UNKNOWN: Texts = [
     "最新版本未知",
 ];
 
+pub const LINUX_CHOOSE_A_NUMBER: Texts = [
+    "Choose a number (empty to quit):",
+    "Choisis un numéro (vide pour quitter) :",
+    "Gib eine Nummer ein (leer zum Beenden):",
+    "Elige un número (vacío para salir):",
+    "Scegli un numero (vuoto per uscire):",
+    "番号を選んでください（空で終了）:",
+    "번호를 선택하세요(비우면 종료):",
+    "Wybierz numer (puste, aby wyjść):",
+    "Escolha um número (vazio para sair):",
+    "Выберите номер (пусто — выход):",
+    "请选择编号（留空退出）:",
+];
+
+pub const LINUX_FOLDER_NOT_WRITABLE_X: Texts = [
+    "Cannot write to {1}.\n\nCheck that the folder is not on a read-only drive, is not owned by root, and that the drive's permissions (NTFS, for example) allow writing.",
+    "Impossible d'écrire dans {1}.\n\nVérifie que le dossier n'est pas sur un disque en lecture seule, n'appartient pas à root, et que les permissions du disque (NTFS, par exemple) autorisent l'écriture.",
+    "In {1} kann nicht geschrieben werden.\n\nPrüfe, dass der Ordner nicht auf einem schreibgeschützten Laufwerk liegt, nicht root gehört und dass die Berechtigungen des Laufwerks (z. B. NTFS) Schreiben erlauben.",
+    "No se puede escribir en {1}.\n\nComprueba que la carpeta no está en un disco de solo lectura, que no pertenece a root y que los permisos del disco (NTFS, por ejemplo) permiten escribir.",
+    "Impossibile scrivere in {1}.\n\nControlla che la cartella non sia su un disco di sola lettura, non appartenga a root e che i permessi del disco (NTFS, ad esempio) consentano la scrittura.",
+    "{1} に書き込めません。\n\nフォルダーが読み取り専用のドライブにないこと、root の所有になっていないこと、ドライブの権限（たとえば NTFS）で書き込みが許可されていることを確認してください。",
+    "{1}에 쓸 수 없습니다.\n\n폴더가 읽기 전용 드라이브에 있지 않은지, root 소유가 아닌지, 드라이브의 권한(예: NTFS)이 쓰기를 허용하는지 확인하세요.",
+    "Nie można zapisać w {1}.\n\nSprawdź, czy folder nie jest na dysku tylko do odczytu, nie należy do roota i czy uprawnienia dysku (np. NTFS) pozwalają na zapis.",
+    "Não foi possível gravar em {1}.\n\nVerifique se a pasta não está em um disco somente leitura, se não pertence ao root e se as permissões do disco (NTFS, por exemplo) permitem gravação.",
+    "Не удаётся записать в {1}.\n\nПроверьте, что папка не находится на диске только для чтения, не принадлежит root и что права диска (например, NTFS) разрешают запись.",
+    "无法写入 {1}。\n\n请检查该文件夹不在只读磁盘上、不属于 root，并且磁盘权限（例如 NTFS）允许写入。",
+];
+
+pub const LINUX_GAME_NOT_FOUND_X: Texts = [
+    "Civilization VI was not found in the Steam libraries:\n{1}\n\nThe game must be the Windows version run through Steam Play (Proton). A library marked (?) could not be read: check that its drive is mounted. Otherwise run again with --game-dir \"<game folder>\".",
+    "Civilization VI est introuvable dans les bibliothèques Steam :\n{1}\n\nLe jeu doit être la version Windows, lancée par Steam Play (Proton). Une bibliothèque marquée (?) n'a pas pu être lue : vérifie que son disque est monté. Sinon relance avec --game-dir \"<dossier du jeu>\".",
+    "Civilization VI wurde in den Steam-Bibliotheken nicht gefunden:\n{1}\n\nDas Spiel muss die Windows-Version sein, die über Steam Play (Proton) läuft. Eine mit (?) markierte Bibliothek konnte nicht gelesen werden: Prüfe, ob ihr Laufwerk eingebunden ist. Andernfalls starte erneut mit --game-dir \"<Spielordner>\".",
+    "Civilization VI no se ha encontrado en las bibliotecas de Steam:\n{1}\n\nEl juego debe ser la versión de Windows, ejecutada con Steam Play (Proton). Una biblioteca marcada con (?) no se ha podido leer: comprueba que su disco está montado. Si no, vuelve a ejecutar con --game-dir \"<carpeta del juego>\".",
+    "Civilization VI non è stato trovato nelle librerie di Steam:\n{1}\n\nIl gioco deve essere la versione Windows, eseguita con Steam Play (Proton). Una libreria contrassegnata con (?) non è stata letta: controlla che il suo disco sia montato. Altrimenti riesegui con --game-dir \"<cartella del gioco>\".",
+    "Steam ライブラリに Civilization VI が見つかりません:\n{1}\n\nゲームは Steam Play（Proton）で実行する Windows 版である必要があります。(?) が付いたライブラリは読み取れませんでした。そのドライブがマウントされているか確認してください。それでも見つからない場合は --game-dir \"<ゲームのフォルダー>\" を付けて再実行してください。",
+    "Steam 라이브러리에서 Civilization VI를 찾을 수 없습니다:\n{1}\n\n게임은 Steam Play(Proton)로 실행하는 Windows 버전이어야 합니다. (?)로 표시된 라이브러리는 읽을 수 없었습니다. 해당 드라이브가 마운트되어 있는지 확인하세요. 그래도 안 되면 --game-dir \"<게임 폴더>\"를 붙여 다시 실행하세요.",
+    "Nie znaleziono Civilization VI w bibliotekach Steam:\n{1}\n\nGra musi być wersją Windows uruchamianą przez Steam Play (Proton). Biblioteki oznaczonej (?) nie udało się odczytać: sprawdź, czy jej dysk jest zamontowany. W przeciwnym razie uruchom ponownie z --game-dir \"<folder gry>\".",
+    "Civilization VI não foi encontrado nas bibliotecas do Steam:\n{1}\n\nO jogo deve ser a versão Windows executada pelo Steam Play (Proton). Uma biblioteca marcada com (?) não pôde ser lida: verifique se o disco dela está montado. Caso contrário, execute novamente com --game-dir \"<pasta do jogo>\".",
+    "Civilization VI не найдена в библиотеках Steam:\n{1}\n\nИгра должна быть версией для Windows, запущенной через Steam Play (Proton). Библиотеку с пометкой (?) прочитать не удалось: проверьте, что её диск подключён. Иначе запустите снова с --game-dir \"<папка игры>\".",
+    "在 Steam 库中找不到 Civilization VI:\n{1}\n\n游戏必须是通过 Steam Play（Proton）运行的 Windows 版。标有 (?) 的库无法读取：请检查其磁盘是否已挂载。否则请使用 --game-dir \"<游戏文件夹>\" 重新运行。",
+];
+
+pub const LINUX_LAUNCH_OPTION_MISSING_X: Texts = [
+    "Civilization VI's launch options in Steam do not contain {1} before %command%: without it, BetterGameExperience does not load. If you have just set it, Steam may not have saved it yet (it saves it when it closes).",
+    "Les options de lancement de Civilization VI dans Steam ne contiennent pas {1} avant %command% : sans elle, BetterGameExperience ne se charge pas. Si tu viens de la régler, Steam ne l'a peut-être pas encore enregistrée (il le fait en se fermant).",
+    "Die Startoptionen von Civilization VI in Steam enthalten {1} nicht vor %command%: Ohne diese Option wird BetterGameExperience nicht geladen. Wenn du sie gerade erst gesetzt hast, hat Steam sie vielleicht noch nicht gespeichert (das geschieht beim Beenden von Steam).",
+    "Las opciones de lanzamiento de Civilization VI en Steam no contienen {1} antes de %command%: sin ella, BetterGameExperience no se carga. Si acabas de configurarla, puede que Steam aún no la haya guardado (lo hace al cerrarse).",
+    "Le opzioni di avvio di Civilization VI in Steam non contengono {1} prima di %command%: senza di essa BetterGameExperience non si carica. Se l'hai appena impostata, Steam potrebbe non averla ancora salvata (lo fa alla chiusura).",
+    "Steam の Civilization VI の起動オプションで、%command% の前に {1} がありません。これがないと BetterGameExperience は読み込まれません。設定したばかりの場合は、Steam がまだ保存していない可能性があります（Steam の終了時に保存されます）。",
+    "Steam의 Civilization VI 실행 옵션에서 %command% 앞에 {1}이(가) 없습니다. 이 옵션이 없으면 BetterGameExperience가 로드되지 않습니다. 방금 설정했다면 Steam이 아직 저장하지 않았을 수 있습니다(Steam을 종료할 때 저장됩니다).",
+    "Opcje uruchamiania Civilization VI w Steam nie zawierają {1} przed %command%: bez tego BetterGameExperience się nie wczyta. Jeśli opcja została właśnie ustawiona, Steam mógł jej jeszcze nie zapisać (robi to przy zamykaniu).",
+    "As opções de inicialização do Civilization VI no Steam não contêm {1} antes de %command%: sem isso, o BetterGameExperience não é carregado. Se você acabou de defini-la, o Steam pode ainda não tê-la salvado (ele salva ao fechar).",
+    "В параметрах запуска Civilization VI в Steam нет {1} перед %command%: без этого BetterGameExperience не загружается. Если вы только что их задали, Steam мог ещё не сохранить изменения (он сохраняет их при закрытии).",
+    "Steam 中 Civilization VI 的启动选项在 %command% 之前没有 {1}：没有它，BetterGameExperience 不会加载。如果你刚刚设置，Steam 可能还没有保存（它在关闭时保存）。",
+];
+
+pub const LINUX_LAUNCH_OPTION_STEPS_X: Texts = [
+    "To load BetterGameExperience in Proton, set the launch options in Steam yourself:\n\n1. In your Steam library, right-click Civilization VI, then Properties.\n2. In General, type this in Launch Options:\n   {1}\n3. In Compatibility, check that a Proton version is forced for the game (BetterGameExperience needs the Windows version).\n\nIf Launch Options already has text, add WINEDLLOVERRIDES=\"winmm=n,b\" at the very start and keep %command%.",
+    "Pour charger BetterGameExperience dans Proton, règle toi-même les options de lancement dans Steam :\n\n1. Dans ta bibliothèque Steam, clic droit sur Civilization VI, puis Propriétés.\n2. Dans Général, saisis ceci dans Options de lancement :\n   {1}\n3. Dans Compatibilité, vérifie qu'une version de Proton est imposée pour le jeu (BetterGameExperience a besoin de la version Windows).\n\nSi les options de lancement contiennent déjà du texte, ajoute WINEDLLOVERRIDES=\"winmm=n,b\" tout au début et garde %command%.",
+    "Damit BetterGameExperience in Proton geladen wird, setze die Startoptionen in Steam selbst:\n\n1. Klicke in deiner Steam-Bibliothek mit der rechten Maustaste auf Civilization VI und wähle Eigenschaften.\n2. Gib unter Allgemein bei Startoptionen Folgendes ein:\n   {1}\n3. Prüfe unter Kompatibilität, dass für das Spiel eine Proton-Version erzwungen wird (BetterGameExperience benötigt die Windows-Version).\n\nStehen in den Startoptionen schon Einträge, füge WINEDLLOVERRIDES=\"winmm=n,b\" ganz am Anfang hinzu und behalte %command%.",
+    "Para cargar BetterGameExperience en Proton, configura tú mismo las opciones de lanzamiento en Steam:\n\n1. En tu biblioteca de Steam, haz clic derecho en Civilization VI y elige Propiedades.\n2. En General, escribe esto en Opciones de lanzamiento:\n   {1}\n3. En Compatibilidad, comprueba que se fuerza una versión de Proton para el juego (BetterGameExperience necesita la versión de Windows).\n\nSi las opciones de lanzamiento ya tienen texto, añade WINEDLLOVERRIDES=\"winmm=n,b\" al principio y conserva %command%.",
+    "Per caricare BetterGameExperience in Proton, imposta tu stesso le opzioni di avvio in Steam:\n\n1. Nella tua libreria Steam, clic destro su Civilization VI, poi Proprietà.\n2. In Generale, scrivi questo in Opzioni di avvio:\n   {1}\n3. In Compatibilità, controlla che sia forzata una versione di Proton per il gioco (BetterGameExperience richiede la versione Windows).\n\nSe le opzioni di avvio contengono già del testo, aggiungi WINEDLLOVERRIDES=\"winmm=n,b\" all'inizio e mantieni %command%.",
+    "BetterGameExperience を Proton で読み込むには、Steam の起動オプションを自分で設定してください:\n\n1. Steam ライブラリで Civilization VI を右クリックし、プロパティを選びます。\n2. 「一般」の起動オプションに次を入力します:\n   {1}\n3. 「互換性」で、このゲームに Proton のバージョンが強制されていることを確認します（BetterGameExperience には Windows 版が必要です）。\n\n起動オプションにすでに文字列がある場合は、先頭に WINEDLLOVERRIDES=\"winmm=n,b\" を追加し、%command% はそのまま残してください。",
+    "BetterGameExperience를 Proton에서 불러오려면 Steam 실행 옵션을 직접 설정하세요:\n\n1. Steam 라이브러리에서 Civilization VI를 마우스 오른쪽 버튼으로 클릭한 뒤 속성을 선택합니다.\n2. 일반의 실행 옵션에 다음을 입력합니다:\n   {1}\n3. 호환성에서 이 게임에 Proton 버전이 강제로 지정되어 있는지 확인합니다(BetterGameExperience에는 Windows 버전이 필요합니다).\n\n실행 옵션에 이미 내용이 있으면 맨 앞에 WINEDLLOVERRIDES=\"winmm=n,b\"를 추가하고 %command%는 그대로 두세요.",
+    "Aby wczytać BetterGameExperience w Protonie, ustaw samodzielnie opcje uruchamiania w Steam:\n\n1. W bibliotece Steam kliknij prawym przyciskiem Civilization VI i wybierz Właściwości.\n2. W Ogólne wpisz w Opcjach uruchamiania:\n   {1}\n3. W Zgodności sprawdź, czy dla gry wymuszona jest wersja Protona (BetterGameExperience wymaga wersji Windows).\n\nJeśli w opcjach uruchamiania jest już tekst, dopisz WINEDLLOVERRIDES=\"winmm=n,b\" na samym początku i zachowaj %command%.",
+    "Para carregar o BetterGameExperience no Proton, defina você mesmo as opções de inicialização no Steam:\n\n1. Na sua biblioteca Steam, clique com o botão direito em Civilization VI e escolha Propriedades.\n2. Em Geral, digite isto em Opções de inicialização:\n   {1}\n3. Em Compatibilidade, verifique se uma versão do Proton está forçada para o jogo (o BetterGameExperience precisa da versão Windows).\n\nSe as opções de inicialização já tiverem texto, adicione WINEDLLOVERRIDES=\"winmm=n,b\" no começo e mantenha %command%.",
+    "Чтобы BetterGameExperience загружался в Proton, задайте параметры запуска в Steam самостоятельно:\n\n1. В библиотеке Steam щёлкните Civilization VI правой кнопкой мыши и выберите «Свойства».\n2. На вкладке «Общие» введите в «Параметры запуска»:\n   {1}\n3. На вкладке «Совместимость» убедитесь, что для игры принудительно выбрана версия Proton (BetterGameExperience требуется версия для Windows).\n\nЕсли в параметрах запуска уже есть текст, добавьте WINEDLLOVERRIDES=\"winmm=n,b\" в самое начало и оставьте %command%.",
+    "要让 BetterGameExperience 在 Proton 中加载，请自行在 Steam 中设置启动选项:\n\n1. 在 Steam 库中右键单击 Civilization VI，然后选择“属性”。\n2. 在“通用”的“启动选项”中输入:\n   {1}\n3. 在“兼容性”中，检查该游戏已强制使用某个 Proton 版本（BetterGameExperience 需要 Windows 版）。\n\n如果启动选项中已有内容，请在最开头添加 WINEDLLOVERRIDES=\"winmm=n,b\"，并保留 %command%。",
+];
+
+pub const LINUX_RUN_FROM_A_TERMINAL: Texts = [
+    "Run BetterGameExperience from a terminal.\n\nCommands: status, install, uninstall, launch-option, channel release|prerelease, lang <code>\nOptions: --game-dir <folder>, --yes",
+    "Lance BetterGameExperience depuis un terminal.\n\nCommandes : status, install, uninstall, launch-option, channel release|prerelease, lang <code>\nOptions : --game-dir <dossier>, --yes",
+    "Starte BetterGameExperience in einem Terminal.\n\nBefehle: status, install, uninstall, launch-option, channel release|prerelease, lang <Code>\nOptionen: --game-dir <Ordner>, --yes",
+    "Ejecuta BetterGameExperience desde un terminal.\n\nComandos: status, install, uninstall, launch-option, channel release|prerelease, lang <código>\nOpciones: --game-dir <carpeta>, --yes",
+    "Esegui BetterGameExperience da un terminale.\n\nComandi: status, install, uninstall, launch-option, channel release|prerelease, lang <codice>\nOpzioni: --game-dir <cartella>, --yes",
+    "BetterGameExperience をターミナルから実行してください。\n\nコマンド: status, install, uninstall, launch-option, channel release|prerelease, lang <コード>\nオプション: --game-dir <フォルダー>, --yes",
+    "BetterGameExperience를 터미널에서 실행하세요.\n\n명령: status, install, uninstall, launch-option, channel release|prerelease, lang <코드>\n옵션: --game-dir <폴더>, --yes",
+    "Uruchom BetterGameExperience z terminala.\n\nPolecenia: status, install, uninstall, launch-option, channel release|prerelease, lang <kod>\nOpcje: --game-dir <folder>, --yes",
+    "Execute o BetterGameExperience em um terminal.\n\nComandos: status, install, uninstall, launch-option, channel release|prerelease, lang <código>\nOpções: --game-dir <pasta>, --yes",
+    "Запустите BetterGameExperience из терминала.\n\nКоманды: status, install, uninstall, launch-option, channel release|prerelease, lang <код>\nПараметры: --game-dir <папка>, --yes",
+    "请在终端中运行 BetterGameExperience。\n\n命令: status, install, uninstall, launch-option, channel release|prerelease, lang <代码>\n选项: --game-dir <文件夹>, --yes",
+];
+
+pub const LINUX_SHOW_THE_LAUNCH_OPTION: Texts = [
+    "Show the Steam launch option to set",
+    "Afficher l'option de lancement Steam à régler",
+    "Die einzutragende Steam-Startoption anzeigen",
+    "Mostrar la opción de lanzamiento de Steam que hay que configurar",
+    "Mostra l'opzione di avvio di Steam da impostare",
+    "設定する Steam の起動オプションを表示",
+    "설정해야 할 Steam 실행 옵션 표시",
+    "Pokaż opcję uruchamiania Steam do ustawienia",
+    "Mostrar a opção de inicialização do Steam a definir",
+    "Показать параметр запуска Steam, который нужно задать",
+    "显示需要设置的 Steam 启动选项",
+];
+
 pub const LOOKING_FOR_THE_LATEST_VERSION: Texts = [
     "Looking for the latest version…",
     "Recherche de la dernière version…",

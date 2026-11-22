@@ -18,7 +18,7 @@
 //!
 //! L'envoi tourne dans un thread, pour ne pas figer le jeu : il attend la sauvegarde demandée par le
 //! bloc (`BGE_rapport.Civ6Save`), rassemble les journaux, les derniers autosaves et les réglages,
-//! les compresse en un zip, puis l'envoie au relais (`RELAIS`) par le `curl.exe` de Windows. Le
+//! les compresse en un zip, puis l'envoie au relais (`RELAIS`) par WinHTTP (`http`). Le
 //! relais (Cloudflare Worker) garde le zip et ouvre un fil dans le forum Discord des rapports ; il
 //! rend le numéro du rapport. Sans relais, ou s'il échoue, le zip est posé sur le Bureau.
 //!
@@ -33,6 +33,8 @@
 //! Text files over 20 MB keep their first 2 MB (the session's lobby and launch) and their last
 //! 18 MB, cut at line starts, and the Windows user name is removed from paths
 //! (`C:\Users\<utilisateur>`).
+//! Under Wine, the Linux user name is removed too (`/home/<utilisateur>`, `Z:\home\<utilisateur>`,
+//! and the automount folders `/run/media/<utilisateur>`, `/media/<utilisateur>`).
 
 use crate::options::{hks, publish_natives, push_str, Natives};
 use crate::salon::lua_log;
@@ -317,32 +319,66 @@ pub fn holds_tokens(file_name: &str) -> bool {
     TOKEN_LOGS.iter().any(|t| t.eq_ignore_ascii_case(file_name))
 }
 
-/// Le nom d'utilisateur retiré des chemins : `\Users\<nom>` et `/Users/<nom>`, casse ignorée.
+/// Path separators as they appear in the logs: `\`, `/`, and `\\`, the escaped form of a path
+/// written as JSON or with Rust's `{:?}` (`"Z:\\home\\<nom>"`), which the single `\` does not match.
+const SEPARATEURS: [&str; 3] = ["\\", "/", "\\\\"];
+
+/// Le nom d'utilisateur retiré des chemins : `\Users\<nom>`, `/Users/<nom>` et `\\Users\\<nom>`,
+/// casse ignorée.
 pub fn anonymiser(data: &[u8], utilisateur: &str) -> Vec<u8> {
     if utilisateur.is_empty() {
         return data.to_vec();
     }
     let mut out = data.to_vec();
-    for sep in ['\\', '/'] {
+    for sep in SEPARATEURS {
         let motif = format!("{sep}users{sep}{utilisateur}").into_bytes();
         let remplace = format!("{sep}Users{sep}<utilisateur>").into_bytes();
-        let mut res = Vec::with_capacity(out.len());
-        let mut i = 0;
-        while i < out.len() {
-            let suit = i + motif.len() <= out.len() && out[i..i + motif.len()].eq_ignore_ascii_case(&motif);
-            // Le nom doit finir là : `\Users\Jean` ne doit pas prendre `\Users\Jeanne`.
-            let fin_nom = out.get(i + motif.len()).is_none_or(|&b| !(b.is_ascii_alphanumeric() || b == b'_' || b == b'-' || b == b'.' || b >= 0x80));
-            if suit && fin_nom {
-                res.extend_from_slice(&remplace);
-                i += motif.len();
-            } else {
-                res.push(out[i]);
-                i += 1;
-            }
-        }
-        out = res;
+        out = remplacer_nom(&out, &motif, &remplace);
     }
     out
+}
+
+/// Under Wine: the Linux user name removed from paths. `home` is the Unix home (`/home/<name>`, or
+/// another parent such as `/var/home/<name>`), whose last component is the name. It is removed
+/// under the home's parent and under the automount folders, where Steam libraries on another drive
+/// usually are: `/run/media/<name>` (udisks: Fedora, Arch…) and `/media/<name>` (Ubuntu, Debian).
+/// Each is found in its Unix form and in its `Z:` drive form (`Z:\home\<name>`, also escaped:
+/// `Z:\\home\\<name>`), case ignored.
+/// Under Proton, the Windows user is always `steamuser`.
+pub fn anonymiser_unix(data: &[u8], home: &str) -> Vec<u8> {
+    let Some((parent, nom)) = home.trim_end_matches('/').rsplit_once('/') else { return data.to_vec() };
+    if nom.is_empty() {
+        return data.to_vec();
+    }
+    let mut out = data.to_vec();
+    for parent in [parent, "/run/media", "/media"] {
+        for sep in SEPARATEURS {
+            let parent = parent.replace('/', sep);
+            let motif = format!("{parent}{sep}{nom}").into_bytes();
+            let remplace = format!("{parent}{sep}<utilisateur>").into_bytes();
+            out = remplacer_nom(&out, &motif, &remplace);
+        }
+    }
+    out
+}
+
+/// Each `motif` (case ignored) replaced by `remplace`, only where the name ends right after it.
+fn remplacer_nom(data: &[u8], motif: &[u8], remplace: &[u8]) -> Vec<u8> {
+    let mut res = Vec::with_capacity(data.len());
+    let mut i = 0;
+    while i < data.len() {
+        let suit = i + motif.len() <= data.len() && data[i..i + motif.len()].eq_ignore_ascii_case(motif);
+        // Le nom doit finir là : `\Users\Jean` ne doit pas prendre `\Users\Jeanne`.
+        let fin_nom = data.get(i + motif.len()).is_none_or(|&b| !(b.is_ascii_alphanumeric() || b == b'_' || b == b'-' || b == b'.' || b >= 0x80));
+        if suit && fin_nom {
+            res.extend_from_slice(remplace);
+            i += motif.len();
+        } else {
+            res.push(data[i]);
+            i += 1;
+        }
+    }
+    res
 }
 
 /// Numéro de rapport rendu par le relais : `{"id":"BGE-7F3A", …}`.
@@ -411,6 +447,8 @@ pub fn comprimer(nom: &str, data: &[u8]) -> Entree {
     Entree { nom: nom.to_string(), methode, crc: crc32(data), taille: data.len(), corps }
 }
 
+/// Test helper: compresses and assembles in one call.
+#[cfg(test)]
 pub fn zip(entrees: &[(String, Vec<u8>)], secs: u64) -> Vec<u8> {
     let e: Vec<Entree> = entrees.iter().map(|(nom, data)| comprimer(nom, data)).collect();
     assembler(&e.iter().collect::<Vec<_>>(), secs)
@@ -574,10 +612,14 @@ fn est_texte(p: &Path) -> bool {
 }
 
 /// Un fichier pour le zip : texte coupé et anonymisé, binaire laissé de côté s'il est trop gros.
-fn lire_fichier(p: &Path, utilisateur: &str) -> Option<Vec<u8>> {
+fn lire_fichier(p: &Path, utilisateur: &str, home: Option<&str>) -> Option<Vec<u8>> {
     if est_texte(p) {
         let data = std::fs::read(p).ok()?;
-        Some(anonymiser(&couper(data, MAX_TEXTE), utilisateur))
+        let texte = anonymiser(&couper(data, MAX_TEXTE), utilisateur);
+        Some(match home {
+            Some(home) => anonymiser_unix(&texte, home),
+            None => texte,
+        })
     } else {
         if std::fs::metadata(p).ok()?.len() > MAX_BINAIRE {
             log(&format!("rapport : {} laissé de côté (trop gros)", p.display()));
@@ -599,9 +641,11 @@ struct Collecte {
 
 fn collecter(lua: &[(String, String)], depart: SystemTime) -> Collecte {
     let utilisateur = std::env::var("USERNAME").unwrap_or_default();
+    // Under Wine, logs also hold Unix paths (Z:\home\<name>\…), with the Linux user name.
+    let home = if crate::wine::is_wine() { crate::wine::unix_home() } else { None };
     let mut base = Vec::new();
     let mut ajouter = |nom: String, p: &Path| {
-        if let Some(d) = lire_fichier(p, &utilisateur) {
+        if let Some(d) = lire_fichier(p, &utilisateur, home.as_deref()) {
             base.push((nom, d));
         }
     };
@@ -671,6 +715,51 @@ fn steam_id_windows() -> Option<String> {
     steam_id64(lire_active_user(&String::from_utf8_lossy(&out.stdout))?)
 }
 
+/// `Windows 10.0.22631`, from `RtlGetVersion`: unlike `GetVersionEx`, it is not capped by the exe's
+/// manifest. Under Wine, the Windows version the prefix emulates.
+fn version_windows() -> Option<String> {
+    use crate::win::{wide, GetModuleHandleW, GetProcAddress};
+    #[repr(C)]
+    struct OsVersionInfo {
+        size: u32,
+        major: u32,
+        minor: u32,
+        build: u32,
+        platform: u32,
+        csd: [u16; 128],
+    }
+    type RtlGetVersion = unsafe extern "system" fn(*mut OsVersionInfo) -> i32;
+    unsafe {
+        let ntdll = GetModuleHandleW(wide("ntdll.dll").as_ptr());
+        if ntdll.is_null() {
+            return None;
+        }
+        let function = GetProcAddress(ntdll, b"RtlGetVersion\0".as_ptr());
+        if function.is_null() {
+            return None;
+        }
+        let function: RtlGetVersion = std::mem::transmute(function);
+        let mut info = OsVersionInfo { size: std::mem::size_of::<OsVersionInfo>() as u32, major: 0, minor: 0, build: 0, platform: 0, csd: [0; 128] };
+        (function(&mut info) == 0).then(|| format!("Windows {}.{}.{}", info.major, info.minor, info.build))
+    }
+}
+
+/// `systeme` of meta.json: the Windows version, or under Wine the host system first.
+fn systeme() -> String {
+    let windows = version_windows().unwrap_or_else(|| "Windows ?".into());
+    let wine = crate::wine::versions();
+    texte_systeme(&windows, wine.as_ref().map(|(w, h)| (w.as_str(), h.as_str())))
+}
+
+/// `Windows 10.0.22631`, or under Wine `Linux 6.12.1 (Wine 9.0, Windows 10.0.19045)`.
+fn texte_systeme(windows: &str, wine: Option<(&str, &str)>) -> String {
+    match wine {
+        None => windows.to_string(),
+        Some((version, "")) => format!("Wine {version} ({windows})"),
+        Some((version, host)) => format!("{host} (Wine {version}, {windows})"),
+    }
+}
+
 fn infos_proxy() -> Vec<(&'static str, String)> {
     let exe = std::env::current_exe().ok().map(|p| nom_fichier(&p)).unwrap_or_default();
     let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
@@ -678,6 +767,7 @@ fn infos_proxy() -> Vec<(&'static str, String)> {
         ("bge_version", crate::version::VERSION.to_string()),
         ("bge_release", crate::version::RELEASE.unwrap_or("locale").to_string()),
         ("exe", exe),
+        ("systeme", systeme()),
         ("date_unix", secs.to_string()),
         ("steam_id_windows", steam_id_windows().unwrap_or_default()),
     ]
@@ -726,32 +816,17 @@ fn url_relais() -> Option<String> {
     url_du_fichier(&cfg).or_else(|| RELAIS.map(str::to_string)).filter(|u| u.starts_with("https://"))
 }
 
-/// Envoi par `curl.exe`, lancé dans le dossier du zip : les noms passés à `-F` restent simples.
+/// Uploads the zip to the relay as `multipart/form-data` (field `archive`).
 fn envoyer_zip(url: &str, dir: &Path, nom: &str) -> Result<String, String> {
-    let root = std::env::var_os("SystemRoot").unwrap_or("C:\\Windows".into());
-    let out = Command::new(PathBuf::from(root).join("System32\\curl.exe"))
-        .current_dir(dir)
-        .args(["-sS", "--max-time", "300", "-w", "\n%{http_code}", "-H"])
-        .arg(format!("X-BGE-Version: {}", crate::version::RELEASE.unwrap_or(crate::version::VERSION)))
-        .arg("-H")
-        .arg(format!("X-BGE-Cle: {CLE_CLIENT}"))
-        .arg("-F")
-        .arg(format!("archive=@{nom};type=application/zip"))
-        .arg(url)
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| format!("curl.exe : {e}"))?;
-    let texte = String::from_utf8_lossy(&out.stdout).into_owned();
-    let (corps, code) = texte.rsplit_once('\n').unwrap_or(("", texte.as_str()));
-    if !out.status.success() {
-        let err = String::from_utf8_lossy(&out.stderr);
-        return Err(format!("curl.exe : {}", err.trim()));
-    }
-    if code.trim() != "200" {
+    let data = std::fs::read(dir.join(nom)).map_err(|e| format!("lecture de {nom} : {e}"))?;
+    let version = crate::version::RELEASE.unwrap_or(crate::version::VERSION);
+    let headers = [("X-BGE-Version", version), ("X-BGE-Cle", CLE_CLIENT)];
+    let (code, corps) = crate::http::post_file(url, &headers, "archive", nom, "application/zip", &data, 300_000)?;
+    if code != 200 {
         let corps: String = corps.chars().take(200).collect();
-        return Err(format!("le relais a répondu {} ({})", code.trim(), corps.trim()));
+        return Err(format!("le relais a répondu {code} ({})", corps.trim()));
     }
-    lire_id(corps).ok_or_else(|| "réponse du relais sans numéro de rapport".to_string())
+    lire_id(&corps).ok_or_else(|| "réponse du relais sans numéro de rapport".to_string())
 }
 
 fn executer(lua: Vec<(String, String)>, depart: SystemTime) -> Resultat {
@@ -775,18 +850,37 @@ fn executer(lua: Vec<(String, String)>, depart: SystemTime) -> Resultat {
     match envoi {
         Ok(id) => {
             log(&format!("rapport : envoyé, numéro {id}"));
-            Resultat { ok: true, texte: id, archive: chemin.display().to_string() }
+            Resultat { ok: true, texte: id, archive: chemin_affiche(&chemin) }
         }
         Err(e) => {
             log(&format!("rapport : envoi impossible : {e}"));
             // Sur le Bureau : le joueur le trouve sans chercher, pour le poster lui-même.
-            let archive = dossier_connu(&FOLDERID_DESKTOP)
+            let archive = bureau()
                 .map(|d| d.join(&nom))
                 .filter(|p| std::fs::copy(&chemin, p).is_ok())
                 .unwrap_or(chemin);
-            Resultat { ok: false, texte: e, archive: archive.display().to_string() }
+            Resultat { ok: false, texte: e, archive: chemin_affiche(&archive) }
         }
     }
+}
+
+/// Le Bureau du joueur. Under Wine, the Linux desktop: the prefix's Windows desktop is a folder
+/// nobody opens.
+fn bureau() -> Option<PathBuf> {
+    if crate::wine::is_wine() {
+        return crate::wine::desktop_dir();
+    }
+    dossier_connu(&FOLDERID_DESKTOP)
+}
+
+/// Chemin montré au joueur. Under Wine, its Unix form: the one the player's file manager shows.
+fn chemin_affiche(p: &Path) -> String {
+    if crate::wine::is_wine() {
+        if let Some(unix) = crate::wine::to_unix(p) {
+            return unix;
+        }
+    }
+    p.display().to_string()
 }
 
 /// Lance l'envoi dans un thread ; faux s'il y en a déjà un.
@@ -988,6 +1082,37 @@ mod tests {
         let a = anonymiser(br"C:\Users\Jean\AppData et c:\users\JEAN\x, C:\Users\Jeanne\y, /Users/jean/z", "Jean");
         assert_eq!(String::from_utf8(a).unwrap(), r"C:\Users\<utilisateur>\AppData et c:\Users\<utilisateur>\x, C:\Users\Jeanne\y, /Users/<utilisateur>/z");
         assert_eq!(anonymiser(b"x", ""), b"x");
+    }
+
+    #[test]
+    fn linux_user_name_removed() {
+        let a = anonymiser_unix(br"HOME=/home/jean, Z:\home\jean\.steam, z:\HOME\JEAN\x, /home/jeanne/y, /home/jean", "/home/jean");
+        assert_eq!(
+            String::from_utf8(a).unwrap(),
+            r"HOME=/home/<utilisateur>, Z:\home\<utilisateur>\.steam, z:\home\<utilisateur>\x, /home/jeanne/y, /home/<utilisateur>"
+        );
+        // Another parent (Fedora Atomic, Bazzite), and a trailing slash.
+        let a = anonymiser_unix(br"Z:\var\home\deck\a /var/home/deck/b", "/var/home/deck/");
+        assert_eq!(String::from_utf8(a).unwrap(), r"Z:\var\home\<utilisateur>\a /var/home/<utilisateur>/b");
+        // Escaped, as written by `{:?}` or JSON (the report that showed it: `Some("Z:\\home\\…")`).
+        let a = anonymiser_unix(br#"Some("Z:\\home\\jean\\.local") WINEHOMEDIR=Some("\\??\\Z:\\home\\jean")"#, "/home/jean");
+        assert_eq!(String::from_utf8(a).unwrap(), r#"Some("Z:\\home\\<utilisateur>\\.local") WINEHOMEDIR=Some("\\??\\Z:\\home\\<utilisateur>")"#);
+        assert_eq!(anonymiser(br#"{"p":"C:\\Users\\Jean\\AppData"}"#, "jean"), br#"{"p":"C:\\Users\\<utilisateur>\\AppData"}"#);
+        // Steam libraries on automounted drives.
+        let a = anonymiser_unix(br"/run/media/jean/Jeux/steamapps Z:\run\media\jean\Jeux /media/JEAN/x /media/jeanne/y", "/home/jean");
+        assert_eq!(
+            String::from_utf8(a).unwrap(),
+            r"/run/media/<utilisateur>/Jeux/steamapps Z:\run\media\<utilisateur>\Jeux /media/<utilisateur>/x /media/jeanne/y"
+        );
+        assert_eq!(anonymiser_unix(b"x", "/"), b"x");
+        assert_eq!(anonymiser_unix(b"x", ""), b"x");
+    }
+
+    #[test]
+    fn system_text() {
+        assert_eq!(texte_systeme("Windows 10.0.22631", None), "Windows 10.0.22631");
+        assert_eq!(texte_systeme("Windows 10.0.19045", Some(("9.0", "Linux 6.12.1"))), "Linux 6.12.1 (Wine 9.0, Windows 10.0.19045)");
+        assert_eq!(texte_systeme("Windows 10.0.19045", Some(("9.0", ""))), "Wine 9.0 (Windows 10.0.19045)");
     }
 
     #[test]

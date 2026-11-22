@@ -62,3 +62,9 @@ jobs:
       # Fichiers générés à jour, chaque texte dans chaque langue (textes/README.md).
       - name: Textes
         run: python3 textes/gen_textes.py --check --strict
+
+      - name: Linux installer
+        run: cd updater_linux && cargo test --locked
+
+      - name: install.sh syntax
+        run: sh -n install.sh

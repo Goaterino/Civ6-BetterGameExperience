@@ -527,6 +527,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="ko_KR">
 			<Text>Steam 라이브러리에서 Civilization VI를 찾을 수 없습니다.\n\n--game-dir "&lt;게임 폴더&gt;"를 붙여 설치 프로그램을 다시 실행하세요.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="ko_KR">
+			<Text>Steam 라이브러리에서 Civilization VI를 찾을 수 없습니다:\n{1}\n\n게임은 Steam Play(Proton)로 실행하는 Windows 버전이어야 합니다. (?)로 표시된 라이브러리는 읽을 수 없었습니다. 해당 드라이브가 마운트되어 있는지 확인하세요. 그래도 안 되면 --game-dir "&lt;게임 폴더&gt;"를 붙여 다시 실행하세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="ko_KR">
+			<Text>{1}에 쓸 수 없습니다.\n\n폴더가 읽기 전용 드라이브에 있지 않은지, root 소유가 아닌지, 드라이브의 권한(예: NTFS)이 쓰기를 허용하는지 확인하세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="ko_KR">
+			<Text>BetterGameExperience를 Proton에서 불러오려면 Steam 실행 옵션을 직접 설정하세요:\n\n1. Steam 라이브러리에서 Civilization VI를 마우스 오른쪽 버튼으로 클릭한 뒤 속성을 선택합니다.\n2. 일반의 실행 옵션에 다음을 입력합니다:\n   {1}\n3. 호환성에서 이 게임에 Proton 버전이 강제로 지정되어 있는지 확인합니다(BetterGameExperience에는 Windows 버전이 필요합니다).\n\n실행 옵션에 이미 내용이 있으면 맨 앞에 WINEDLLOVERRIDES="winmm=n,b"를 추가하고 %command%는 그대로 두세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="ko_KR">
+			<Text>Steam의 Civilization VI 실행 옵션에서 %command% 앞에 {1}이(가) 없습니다. 이 옵션이 없으면 BetterGameExperience가 로드되지 않습니다. 방금 설정했다면 Steam이 아직 저장하지 않았을 수 있습니다(Steam을 종료할 때 저장됩니다).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="ko_KR">
+			<Text>BetterGameExperience를 터미널에서 실행하세요.\n\n명령: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;코드&gt;\n옵션: --game-dir &lt;폴더&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="ko_KR">
+			<Text>번호를 선택하세요(비우면 종료):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="ko_KR">
+			<Text>설정해야 할 Steam 실행 옵션 표시</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="ko_KR">
 			<Text>최신 버전을 확인하는 중…</Text>
 		</Row>

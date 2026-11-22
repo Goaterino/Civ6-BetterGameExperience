@@ -345,9 +345,9 @@ inattendue`).
 [src/maj.rs](src/maj.rs) et [src/maj.lua](src/maj.lua).
 
 - **La vérification.** Au premier script Lua chargé par l'exe, bien avant le menu principal, un
-  thread lit `releases/latest/download/manifest.json` (le `curl.exe` de Windows, sans fenêtre, 20 s
-  au plus) et compare sa `version` à celle gravée dans ces DLL par le workflow de release
-  (`BGD_RELEASE`, `RELEASE` dans [proxy/src/version.rs](../proxy/src/version.rs)). Une compilation
+  thread lit `releases/latest/download/manifest.json` (WinHTTP, sans processus ni fenêtre, 20 s
+  au plus par étape ; sous Wine aussi, où `curl.exe` n'existe pas) et compare sa `version` à celle
+  gravée dans ces DLL par le workflow de release (`BGD_RELEASE`, `RELEASE` dans [proxy/src/version.rs](../proxy/src/version.rs)). Une compilation
   locale n'a pas de version de release : elle ne vérifie rien. Le manifeste n'est pas vérifié ici :
   il ne sert qu'à prévenir, et l'installeur vérifie sa signature avant d'installer.
 - **Le canal.** Elle suit la case « Pré-release » de l'installeur (`%LOCALAPPDATA%\BetterGameExperience\canal.txt`).
@@ -380,6 +380,15 @@ inattendue`).
     Sans installeur à cet endroit, la page de la release s'ouvre dans le navigateur, et le jeu reste
     ouvert.
   - **Plus tard** (ou Échap) : plus de notification jusqu'au prochain lancement du jeu.
+- **Sous Wine (Proton).** Détecté par `wine_get_version` de `ntdll.dll` ([src/wine.rs](src/wine.rs)).
+  L'installeur Linux ([updater/README.md](../updater/README.md#linux-proton)) remplace celui de
+  Windows : le canal se lit dans son `canal.txt` (`$XDG_DATA_HOME/BetterGameExperience`, par défaut
+  `~/.local/share/BetterGameExperience`, vu par le lecteur `Z:`), et **Mettre à jour** lance son
+  script `bge-launch.sh` avec `--after-game <dossier de l'exe, en chemin Unix>`. Le binaire ELF n'est
+  jamais lancé directement : Wine le prendrait pour un de ses modules. Le script retire de
+  l'environnement ce que Steam y met (`LD_PRELOAD`…) et détache l'installeur du jeu (`setsid`).
+  L'installeur met à jour une fois le jeu fermé, sans relancer le jeu : Steam le compterait encore
+  en cours (voir [updater/README.md](../updater/README.md#linux-proton)).
 - **Le journal** : `maj : version … disponible (installée : …)`, `maj : à jour …`,
   `maj : vérification impossible : …`, `maj : notification de la version …`, `maj : installeur
   lancé (…)`, et toute erreur du bloc, qui n'est jamais propagée au menu.
@@ -435,7 +444,9 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
     multijoueur, hôte, pause, humains, langue, description), la version de BGE, l'exe (DX11 ou
     DX12), le compte Steam connecté sur la machine (`steam_id_windows`, lu dans
     `HKCU\Software\Valve\Steam\ActiveProcess`, utile en solo où le jeu ne donne pas toujours le
-    Steam ID) et la liste des fichiers ;
+    Steam ID), le système (`systeme` : `Windows 10.0.22631` par `RtlGetVersion` ; sous Wine,
+    `Linux 6.12.1 (Wine 9.0, Windows 10.0.19045)`, par `wine_get_host_version` et
+    `wine_get_version`, affiché dans le fil Discord) et la liste des fichiers ;
   - `bge/RolloverProxy.log` et `bge/rollover_proxy.cfg` ;
   - `logs/` : le dossier `Logs` du jeu (`%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VI`),
     `AppOptions.txt` et `Mods.sqlite` ;
@@ -443,16 +454,23 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
     hotseat), dans `Documents\My Games\…\Saves` (dossier Documents de Windows, OneDrive compris).
 
   Les fichiers texte sont coupés à leurs 5 derniers Mo, et le nom d'utilisateur Windows est retiré
-  des chemins (`C:\Users\<utilisateur>`). Au-delà de 40 Mo, les autosaves sont retirés, du plus
+  des chemins (`C:\Users\<utilisateur>`). Sous Wine, où l'utilisateur Windows est `steamuser`, c'est
+  le nom d'utilisateur Linux, dernier élément du dossier personnel (`HOME`, sinon `WINEHOMEDIR`), qui
+  est retiré, sous ses deux formes : `/home/<utilisateur>` et `Z:\home\<utilisateur>` (`/var/home/…`
+  aussi), ainsi que dans les dossiers de montage automatique, où sont souvent les bibliothèques
+  Steam d'un autre disque : `/run/media/<utilisateur>` (udisks) et `/media/<utilisateur>` (Ubuntu).
+  Au-delà de 40 Mo, les autosaves sont retirés, du plus
   ancien au plus récent. Compression deflate ([miniz_oxide](https://crates.io/crates/miniz_oxide)).
   Les 5 derniers zips restent dans `%LOCALAPPDATA%\BetterGameExperience\rapports`.
-- **L'envoi** : `curl.exe` de Windows, sans fenêtre, 300 s au plus, champ `archive` d'un
-  formulaire multipart, vers l'URL du relais gravée à la compilation (`BGE_RAPPORT_URL`, variable
+- **L'envoi** : WinHTTP ([src/http.rs](src/http.rs)), sans processus ni fenêtre, 300 s au plus par
+  étape, champ `archive` d'un formulaire multipart, vers l'URL du relais gravée à la compilation (`BGE_RAPPORT_URL`, variable
   du dépôt GitHub lue par le workflow de release). `rapport_url=https://…` dans
   `rollover_proxy.cfg` la remplace, pour essayer un autre relais. L'en-tête `X-BGE-Cle` porte la
   clé que le relais exige (`CLE_CLIENT`, la même dans le Worker, un test le vérifie) : elle écarte
   les envois qui ne viennent pas de la DLL. Le relais rend `{"id": "BGE-…"}`.
-  Sans relais (compilation locale), ou s'il échoue, le zip est copié sur le Bureau.
+  Sans relais (compilation locale), ou s'il échoue, le zip est copié sur le Bureau. Sous Wine, celui
+  de Linux (`XDG_DESKTOP_DIR` de `user-dirs.dirs`, sinon `~/Desktop`) et non celui du préfixe, et le
+  chemin montré au joueur est le chemin Unix.
 - **Le journal** : `rapport : formulaire ouvert`, `message : …`, `envoi lancé
   (…)`, `<zip> écrit (… octets)`, `envoyé, numéro …` ou `envoi impossible : …`, et toute erreur du
   bloc, qui n'est jamais propagée au menu.

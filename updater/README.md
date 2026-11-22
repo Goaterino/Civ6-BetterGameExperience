@@ -124,3 +124,44 @@ qu'une traduction peut placer dans un autre ordre.
 ```
 $env:BGD_DIST = "C:\...\dist"; .\target\release\BetterGameExperience.exe --game-dir "C:\...\faux_jeu"
 ```
+
+## Linux (Proton)
+
+[updater_linux/](../updater_linux/) : l'installeur pour le jeu Windows lancé par Steam Play (Proton).
+Binaire statique (`x86_64-unknown-linux-musl`), publié avec chaque release sous le nom
+`BetterGameExperience-linux-x86_64`, à côté de [install.sh](../install.sh), qui le télécharge et
+lance `install` (`curl -fsSL …/releases/latest/download/install.sh | sh`). Sa logique de release,
+d'installation et de langue est copiée d'ici (`release.rs`, `install.rs`, `lang.rs`, et `textes.rs`
+généré par [textes/gen_textes.py](../textes/gen_textes.py)) : même manifeste signé, mêmes contrôles,
+mêmes états. Ce qui change :
+
+- **En ligne de commande** : `status`, `install`, `uninstall`, `launch-option`,
+  `channel release|prerelease`, `lang <code>`, avec `--game-dir "<dossier>"` et `--yes`. Sans
+  commande, dans un terminal, un menu numéroté (installer, désinstaller, pré-release, option de
+  lancement).
+- **Dossiers** : données dans `$XDG_DATA_HOME/BetterGameExperience` (`~/.local/share/` par défaut,
+  aussi quand la variable est vide ou relative, comme le veut la spécification XDG et comme le fait
+  le proxy de démarrage) :
+  `langue.txt`, `canal.txt`, `installe.txt`, la copie de l'installeur, `bge-launch.sh` et
+  `update.log`. Téléchargements dans `$XDG_CACHE_HOME/BetterGameExperience`, en mode 0700.
+- **Désinstallation** (`uninstall`, ou `install.sh` suivi de `uninstall` : `… | sh -s -- uninstall`) :
+  retire les proxys comme sous Windows, puis le dossier de téléchargement et, dans le dossier de
+  données, les seuls fichiers de l'installeur ; le dossier lui-même s'il est ensuite vide. L'option
+  de lancement peut rester : `winmm=n,b` reprend la `winmm` de Wine quand la nôtre n'est plus là.
+- **Jeu** : `libraryfolders.vdf` des racines de Steam connues (`~/.local/share/Steam`,
+  `~/.steam/steam` ; ni Flatpak ni Snap), et `installdir` de `appmanifest_289070.acf`. Une
+  bibliothèque listée mais introuvable (disque non monté) est signalée par `(?)`.
+- **Pas d'élévation** : un dossier du jeu non modifiable est une erreur qui le nomme.
+- **Option de lancement** : `WINEDLLOVERRIDES="winmm=n,b" %command%`, sans laquelle Wine charge sa
+  propre `winmm`. Jamais écrite dans `localconfig.vdf` : l'installation et `launch-option` donnent
+  les étapes au joueur.
+- **`--after-game [<dossier>]`** : lancé par la notification du jeu, par `bge-launch.sh`
+  ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)). Sans question :
+  le résultat va dans `update.log`. Une réussite donne une notification du bureau (`notify-send`) ;
+  un échec, une boîte d'erreur (`zenity`, sinon `kdialog`), sinon une notification urgente. La
+  version d'avant reste alors en place. Le jeu n'est **pas** relancé : lancé par le jeu,
+  l'installeur reste sous le `reaper` de Steam, qui compte le jeu en cours tant qu'il tourne, et
+  ignore donc un `steam://rungameid` envoyé de là. Le joueur relance le jeu depuis Steam.
+- **Réseau** : ureq (rustls, certificats racine embarqués) au lieu de WinHTTP.
+
+Tests : `cd updater_linux && cargo test` (aussi dans le workflow ci).

@@ -14,8 +14,36 @@ on:
 permissions:
   contents: write
 
+# One build job per platform, each uploading a `<platform>-dist` artifact; the release job merges
+# them, signs the manifest and creates the draft.
 jobs:
-  release:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Static musl binary: runs on any distribution, including SteamOS.
+      - name: Rust (musl)
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Tests
+        run: cd updater_linux && cargo test --release --locked
+
+      - name: Compilation
+        run: |
+          cd updater_linux && cargo build --release --locked --target x86_64-unknown-linux-musl
+          mkdir -p ../linux-dist
+          cp target/x86_64-unknown-linux-musl/release/BetterGameExperience ../linux-dist/BetterGameExperience-linux-x86_64
+          cp ../install.sh ../linux-dist/install.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-dist
+          path: linux-dist/
+
+  windows:
     runs-on: windows-latest
     defaults:
       run:
@@ -35,17 +63,6 @@ jobs:
         run: |
           rustup toolchain install stable-x86_64-pc-windows-gnu stable-x86_64-pc-windows-msvc --profile minimal
           rustup default stable-x86_64-pc-windows-gnu
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-
-      # Textes traduits (textes/README.md) : fichiers générés à jour, chaque texte dans chaque langue,
-      # mêmes paramètres que l'anglais. Sur un tag, le changelog de la version doit exister.
-      - name: Textes et changelog
-        run: |
-          python textes/gen_textes.py --check --strict
-          if [ "$GITHUB_REF_TYPE" = tag ]; then python release/notes.py "$VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > notes.md; fi
 
       # Avec et sans les outils de diagnostic (feature `diag`, par défaut), que la release omet.
       - name: Tests
@@ -70,12 +87,45 @@ jobs:
           (cd proxy && cargo build --release --no-default-features)
           (cd startup_proxy && cargo build --release --no-default-features)
           (cd updater && cargo +stable-x86_64-pc-windows-msvc build --release)
-          mkdir dist
-          cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll dist/
+          mkdir windows-dist
+          cp proxy/target/release/BGD_GameCore_XP2.dll startup_proxy/target/release/winmm.dll windows-dist/
           # Nom versionné : un joueur voit quelle version il a téléchargée. Lancé, l'installeur retire
           # les plus anciens du même dossier et se copie sous le nom fixe BetterGameExperience.exe
           # (updater/README.md).
-          cp updater/target/release/BetterGameExperience.exe "dist/BetterGameExperience_V$VERSION.exe"
+          cp updater/target/release/BetterGameExperience.exe "windows-dist/BetterGameExperience_V$VERSION.exe"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows-dist
+          path: windows-dist/
+
+  release:
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Version
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      # Textes traduits (textes/README.md) : fichiers générés à jour, chaque texte dans chaque langue,
+      # mêmes paramètres que l'anglais. Sur un tag, le changelog de la version doit exister.
+      - name: Textes et changelog
+        run: |
+          python textes/gen_textes.py --check --strict
+          if [ "$GITHUB_REF_TYPE" = tag ]; then python release/notes.py "$VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > notes.md; fi
+
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: "*-dist"
+          merge-multiple: true
+          path: dist/
 
       - name: Manifeste signé
         env:

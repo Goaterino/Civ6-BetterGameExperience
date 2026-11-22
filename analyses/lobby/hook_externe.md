@@ -215,7 +215,8 @@ As soon as the lobby's `steam://joinlobby/289070/<lobbyId>/<steamId64>` link is 
 sends it:
 - JSON `POST`: `{ "token": <feedback_token>, "steam_url": <link>, "bge": <version> }`;
 - HTTPS required;
-- through `curl.exe`, with no window, like [maj.rs](../../startup_proxy/src/maj.rs); 20 s timeout,
+- through WinHTTP ([http.rs](../../startup_proxy/src/http.rs)), with no process or window, like
+  [maj.rs](../../startup_proxy/src/maj.rs); 20 s timeout,
   two retries, response ignored beyond the HTTP status code;
 - **only if the `feedback_url` host is in the preset's list.** Otherwise the lobby is created,
   nothing is sent, and a message says so. A link forged by some random page therefore does not send

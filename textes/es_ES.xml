@@ -527,6 +527,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="es_ES">
 			<Text>No se ha encontrado Civilization VI en las bibliotecas de Steam.\n\nVuelve a ejecutar el instalador con --game-dir "&lt;carpeta del juego&gt;".</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="es_ES">
+			<Text>Civilization VI no se ha encontrado en las bibliotecas de Steam:\n{1}\n\nEl juego debe ser la versión de Windows, ejecutada con Steam Play (Proton). Una biblioteca marcada con (?) no se ha podido leer: comprueba que su disco está montado. Si no, vuelve a ejecutar con --game-dir "&lt;carpeta del juego&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="es_ES">
+			<Text>No se puede escribir en {1}.\n\nComprueba que la carpeta no está en un disco de solo lectura, que no pertenece a root y que los permisos del disco (NTFS, por ejemplo) permiten escribir.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="es_ES">
+			<Text>Para cargar BetterGameExperience en Proton, configura tú mismo las opciones de lanzamiento en Steam:\n\n1. En tu biblioteca de Steam, haz clic derecho en Civilization VI y elige Propiedades.\n2. En General, escribe esto en Opciones de lanzamiento:\n   {1}\n3. En Compatibilidad, comprueba que se fuerza una versión de Proton para el juego (BetterGameExperience necesita la versión de Windows).\n\nSi las opciones de lanzamiento ya tienen texto, añade WINEDLLOVERRIDES="winmm=n,b" al principio y conserva %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="es_ES">
+			<Text>Las opciones de lanzamiento de Civilization VI en Steam no contienen {1} antes de %command%: sin ella, BetterGameExperience no se carga. Si acabas de configurarla, puede que Steam aún no la haya guardado (lo hace al cerrarse).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="es_ES">
+			<Text>Ejecuta BetterGameExperience desde un terminal.\n\nComandos: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;código&gt;\nOpciones: --game-dir &lt;carpeta&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="es_ES">
+			<Text>Elige un número (vacío para salir):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="es_ES">
+			<Text>Mostrar la opción de lanzamiento de Steam que hay que configurar</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="es_ES">
 			<Text>Buscando la última versión…</Text>
 		</Row>

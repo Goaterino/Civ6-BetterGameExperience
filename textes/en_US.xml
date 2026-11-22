@@ -527,6 +527,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="en_US">
 			<Text>Civilization VI was not found in the Steam libraries.\n\nRun the installer again with --game-dir "&lt;game folder&gt;".</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="en_US">
+			<Text>Civilization VI was not found in the Steam libraries:\n{1}\n\nThe game must be the Windows version run through Steam Play (Proton). A library marked (?) could not be read: check that its drive is mounted. Otherwise run again with --game-dir "&lt;game folder&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="en_US">
+			<Text>Cannot write to {1}.\n\nCheck that the folder is not on a read-only drive, is not owned by root, and that the drive's permissions (NTFS, for example) allow writing.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="en_US">
+			<Text>To load BetterGameExperience in Proton, set the launch options in Steam yourself:\n\n1. In your Steam library, right-click Civilization VI, then Properties.\n2. In General, type this in Launch Options:\n   {1}\n3. In Compatibility, check that a Proton version is forced for the game (BetterGameExperience needs the Windows version).\n\nIf Launch Options already has text, add WINEDLLOVERRIDES="winmm=n,b" at the very start and keep %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="en_US">
+			<Text>Civilization VI's launch options in Steam do not contain {1} before %command%: without it, BetterGameExperience does not load. If you have just set it, Steam may not have saved it yet (it saves it when it closes).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="en_US">
+			<Text>Run BetterGameExperience from a terminal.\n\nCommands: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;code&gt;\nOptions: --game-dir &lt;folder&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="en_US">
+			<Text>Choose a number (empty to quit):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="en_US">
+			<Text>Show the Steam launch option to set</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="en_US">
 			<Text>Looking for the latest version…</Text>
 		</Row>

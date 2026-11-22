@@ -527,6 +527,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="de_DE">
 			<Text>Civilization VI wurde in den Steam-Bibliotheken nicht gefunden.\n\nStarten Sie das Installationsprogramm erneut mit --game-dir "&lt;Spielordner&gt;".</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="de_DE">
+			<Text>Civilization VI wurde in den Steam-Bibliotheken nicht gefunden:\n{1}\n\nDas Spiel muss die Windows-Version sein, die über Steam Play (Proton) läuft. Eine mit (?) markierte Bibliothek konnte nicht gelesen werden: Prüfe, ob ihr Laufwerk eingebunden ist. Andernfalls starte erneut mit --game-dir "&lt;Spielordner&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="de_DE">
+			<Text>In {1} kann nicht geschrieben werden.\n\nPrüfe, dass der Ordner nicht auf einem schreibgeschützten Laufwerk liegt, nicht root gehört und dass die Berechtigungen des Laufwerks (z. B. NTFS) Schreiben erlauben.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="de_DE">
+			<Text>Damit BetterGameExperience in Proton geladen wird, setze die Startoptionen in Steam selbst:\n\n1. Klicke in deiner Steam-Bibliothek mit der rechten Maustaste auf Civilization VI und wähle Eigenschaften.\n2. Gib unter Allgemein bei Startoptionen Folgendes ein:\n   {1}\n3. Prüfe unter Kompatibilität, dass für das Spiel eine Proton-Version erzwungen wird (BetterGameExperience benötigt die Windows-Version).\n\nStehen in den Startoptionen schon Einträge, füge WINEDLLOVERRIDES="winmm=n,b" ganz am Anfang hinzu und behalte %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="de_DE">
+			<Text>Die Startoptionen von Civilization VI in Steam enthalten {1} nicht vor %command%: Ohne diese Option wird BetterGameExperience nicht geladen. Wenn du sie gerade erst gesetzt hast, hat Steam sie vielleicht noch nicht gespeichert (das geschieht beim Beenden von Steam).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="de_DE">
+			<Text>Starte BetterGameExperience in einem Terminal.\n\nBefehle: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;Code&gt;\nOptionen: --game-dir &lt;Ordner&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="de_DE">
+			<Text>Gib eine Nummer ein (leer zum Beenden):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="de_DE">
+			<Text>Die einzutragende Steam-Startoption anzeigen</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="de_DE">
 			<Text>Suche nach der neuesten Version …</Text>
 		</Row>

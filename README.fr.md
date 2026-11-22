@@ -30,6 +30,8 @@ disponible en [English](CHANGELOG.md), [Deutsch](changelog/de.md), [Español](ch
 
 ## Installation
 
+### Windows
+
 1. Fermez Civilization VI.
 2. Téléchargez `BetterGameExperience_V<version>.exe` depuis la [dernière release](https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest)
    et lancez-le.
@@ -46,6 +48,52 @@ tout moment : un installeur plus récent retire les anciens de son dossier.
 
 **Désinstallation.** Lancez l'installeur et cliquez sur **Désinstaller**. Le jeu retrouve ses
 fichiers d'origine.
+
+### Linux (Steam Play / Proton)
+
+BGE fonctionne avec la version Windows du jeu, lancée par Proton. La version Linux native de
+Civilization VI n'est pas prise en charge.
+
+1. Fermez Civilization VI.
+2. Dans un terminal, lancez :
+   ```sh
+   curl -fsSL https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest/download/install.sh | sh
+   ```
+   L'installeur trouve le jeu dans vos bibliothèques Steam, télécharge la release, et vérifie sa
+   signature et le SHA-256 de chaque fichier avant de copier quoi que ce soit. Si l'installeur ne
+   trouve pas le jeu, ajoutez cet argument à la fin de votre commande :
+   `| sh -s -- --game-dir "/chemin/vers/Sid Meier's Civilization VI"`
+3. Dans Steam, clic droit sur Civilization VI, puis **Propriétés** :
+   - Dans **Général**, mettez dans **Options de lancement** :
+     ```
+     WINEDLLOVERRIDES="winmm=n,b" %command%
+     ```
+     Si le champ contient déjà du texte, mettez `WINEDLLOVERRIDES="winmm=n,b"` tout au début, avant
+     les autres variables et avant `%command%`. Les arguments du jeu restent après `%command%`.
+     Par exemple, `MANGOHUD=1 %command% -windowed` devient :
+     ```
+     WINEDLLOVERRIDES="winmm=n,b" MANGOHUD=1 %command% -windowed
+     ```
+     Sans cela, Proton prend sa propre `winmm.dll` et BGE ne se charge pas.
+   - Dans **Compatibilité**, imposez une version de Proton pour le jeu.
+
+C'est tout : lancez le jeu depuis Steam. Un onglet **BetterGameExperience** apparaît dans les Options
+du jeu.
+
+**Mises à jour.** Quand une nouvelle version sort, le menu principal du jeu la propose. **Mettre à
+jour** ferme le jeu et installe la nouvelle version. Le jeu ne redémarre pas tout seul : une fois que
+la notification du bureau indique que la mise à jour est installée, relancez le jeu depuis Steam. Si la
+mise à jour échoue, un message d'erreur en donne la raison, et la version précédente reste en place.
+Vous pouvez aussi relancer la commande d'installation à tout moment.
+
+**Désinstallation.** Lancez la commande d'installation avec `uninstall` à la fin :
+```sh
+curl -fsSL https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest/download/install.sh | sh -s -- uninstall
+```
+Le jeu retrouve ses fichiers d'origine, et l'installeur retire ses propres fichiers.
+
+Pour un menu (état, réinstallation, canal pré-release), lancez
+`~/.local/share/BetterGameExperience/BetterGameExperience` dans un terminal.
 
 ## En multijoueur
 
