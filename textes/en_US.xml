@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="en_US">
 			<Text>On your city banners, an orange house appears when a city is one Housing below its cap (growth slowed by 50%), and the red house as soon as it is at the cap (75%). Without this option, the game only shows the red house once the city is over the cap. Display only.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="en_US">
+			<Text>Spy success chance that counts the escape</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="en_US">
+			<Text>The success chance shown for a spy mission also counts the escape: a success where the spy must escape only counts if the spy gets away, since the loot is only delivered then. Assumes the best escape route and does not count an enemy counterspy. Display only.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="en_US">
 			<Text>Shift+click and Ctrl+click in the deal screen</Text>
 		</Row>

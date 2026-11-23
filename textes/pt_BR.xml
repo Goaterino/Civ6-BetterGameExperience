@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pt_BR">
 			<Text>No estandarte de suas cidades, uma casa laranja aparece quando falta só 1 habitação para o limite (crescimento diminuído em 50%), e a casa vermelha assim que a cidade está no limite (75%). Sem esta opção, o jogo só mostra a casa vermelha depois que a cidade passa do limite. Apenas exibição.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="pt_BR">
+			<Text>Chance de sucesso dos espiões com a fuga</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="pt_BR">
+			<Text>A chance de sucesso exibida para uma missão de espionagem leva em conta a fuga: um sucesso em que o espião precisa fugir só conta se ele escapar, pois o espólio só é entregue nesse momento. Supõe a melhor rota de fuga e não considera um contraespião inimigo. Apenas exibição.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="pt_BR">
 			<Text>Shift+clique e Ctrl+clique na tela de acordo</Text>
 		</Row>

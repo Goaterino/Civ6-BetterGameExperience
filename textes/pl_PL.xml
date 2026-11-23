@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pl_PL">
 			<Text>W banerze twoich miast pojawia się pomarańczowy dom, gdy miastu brakuje 1 obszaru mieszkalnego do limitu (przyrost spowolniony o 50%), a czerwony dom, gdy tylko miasto osiągnie limit (75%). Bez tej opcji gra pokazuje czerwony dom dopiero po przekroczeniu limitu. Tylko wyświetlanie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="pl_PL">
+			<Text>Szansa powodzenia szpiegów z ucieczką</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="pl_PL">
+			<Text>Szansa powodzenia wyświetlana dla misji szpiegowskiej uwzględnia ucieczkę: sukces, po którym szpieg musi uciekać, liczy się tylko wtedy, gdy szpiegowi uda się uciec, bo dopiero wtedy łup zostaje przekazany. Zakłada najlepszą drogę ucieczki i nie uwzględnia wrogiego kontrwywiadu. Tylko wyświetlanie.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="pl_PL">
 			<Text>Shift+klik i Ctrl+klik na ekranie umowy</Text>
 		</Row>

@@ -56,7 +56,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   votes ignorés ; retour au vote après la fin de tour (correctif POL, pas encore essayé en
   partie) ;
 - [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
-  succès avec fuite comptés comme des succès (analyse statique) ; [plan](analyses/espions/plan_affichage.md)
+  succès avec fuite comptés comme des succès (analyse statique) ; [plan](analyses/espions/plan_affichage.md),
+  implémenté par `ui_espions` (chance affichée qui compte l'évasion)
   d'un affichage qui compte la fuite réussie (pas encore implémenté) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
