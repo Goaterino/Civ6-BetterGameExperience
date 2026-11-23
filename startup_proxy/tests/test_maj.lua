@@ -87,6 +87,15 @@ local function NewMenu(options)
 			return m.etat;
 		end
 	end
+	-- `inconnue` : version du jeu non prise en charge ; `vu` : état partagé entre deux menus d'un
+	-- même lancement du jeu.
+	if options.inconnue then
+		local etat = options.vu or { vu = false };
+		env.Civ6Proxy_VersionNonPriseEnCharge = function(action)
+			if action == "vu" then etat.vu = true; return; end
+			return options.inconnue, etat.vu and 1 or 0;
+		end
+	end
 	env.ContextPtr = {
 		SetShowHandler = function(_, h) m.showHandler = h; end,
 		SetUpdate = function(_, u) m.update = u; end,
@@ -155,6 +164,34 @@ do
 	local m = NewMenu({ etat = nil });
 	m.Show(); m.Frame(); m.Frame();
 	check(m.opened == nil and #m.calls == 1, "à jour : rien, une seule question");
+end
+
+-- Version du jeu non prise en charge : indication rouge à la place de la version de BGE, un
+-- avertissement une fois par lancement, avant la notification de mise à jour.
+do
+	local vu = { vu = false };
+	local m = NewMenu({ etat = { "0.1.2", "0.1.1" }, versionLabel = "1.0.12.72", inconnue = "1.0.12.72", vu = vu });
+	check(m.versionLabel.text == "1.0.12.72 - [COLOR_RED]BGE : jeu 1.0.12.72 non pris en charge[ENDCOLOR]", "indicateur : " .. m.versionLabel.text);
+	m.Show(); m.Frame();
+	check(m.opened == 1 and m.popup.title == "Version du jeu non prise en charge", "avertissement : " .. tostring(m.popup.title));
+	check(m.popup.texts[1]:find("version 1.0.12.72 du jeu", 1, true) ~= nil, "version dans le texte");
+	check(#m.popup.buttons == 1 and m.popup.buttons[1].label == "Fermer" and m.popup.buttons[1].cmd == "cancel", "un bouton Fermer");
+	check(#m.calls == 0 and vu.vu, "noté vu, mise à jour pas encore demandée");
+	m.Frame();
+	check(m.opened == 1, "popup ouvert : rien d'autre");
+	m.popup:Click("Fermer");
+	m.Frame();
+	check(m.opened == 2 and m.popup.title == "BetterGameExperience : nouvelle release", "puis la mise à jour : " .. tostring(m.popup.title));
+	local m2 = NewMenu({ etat = nil, inconnue = "1.0.12.72", vu = vu });
+	m2.Show(); m2.Frame(); m2.Frame();
+	check(m2.opened == nil, "retour au menu : pas de second avertissement");
+end
+
+-- Sans notification de mise à jour possible (pas de native), l'avertissement passe quand même.
+do
+	local m = NewMenu({ sansProxy = true, inconnue = "?" });
+	m.Show(); m.Frame();
+	check(m.opened == 1 and m.popup.texts[1]:find("version ? du jeu", 1, true) ~= nil, "avertissement sans mise à jour");
 end
 
 do

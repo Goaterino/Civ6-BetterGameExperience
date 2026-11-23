@@ -745,11 +745,9 @@ mod tests {
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
     /// Gestionnaire, appel du delta et création du constructeur attendus dans chaque exe, dans
-    /// l'ordre de `crate::test_exe` (1.0.12.72, 1.0.12.74, 1.0.12.58) : ceux des tables de
-    /// `sync_notes`, dont ce module reprend les appels.
-    const EXPECTED: [(&str, usize, usize, usize); 6] = [
-        ("CivilizationVI_DX12.exe", 0x1_407f_65b0, 0x1_407f_717d, 0x1_407f_88c0),
-        ("CivilizationVI.exe", 0x1_407f_46c0, 0x1_407f_528d, 0x1_407f_69d0),
+    /// l'ordre de `crate::test_exe` (1.0.12.74, 1.0.12.58) : ceux des tables de `sync_notes`,
+    /// dont ce module reprend les appels.
+    const EXPECTED: [(&str, usize, usize, usize); 4] = [
         ("CivilizationVI_DX12.exe", 0x1_407f_65e0, 0x1_407f_71ad, 0x1_407f_88f0),
         ("CivilizationVI.exe", 0x1_407f_53d0, 0x1_407f_5f9d, 0x1_407f_76e0),
         ("CivilizationVI_DX12.exe", 0x1_407f_0b70, 0x1_407f_173d, 0x1_407f_2e80),

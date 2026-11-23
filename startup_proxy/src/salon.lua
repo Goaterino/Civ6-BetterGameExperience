@@ -19,7 +19,13 @@
 -- les annonces et le verdict d'une session précédente, peut-être chez des joueurs qui n'ont plus le
 -- proxy. D'où deux jetons, tirés à chaque ouverture du salon (et à chaque migration d'hôte) :
 -- - chaque joueur écrit dans sa configuration BGD_VERSION = "<version>@<jeton de l'hôte>#<son
---   jeton>". Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte pas ;
+--   jeton>~<son identité>". Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte pas ;
+-- - l'identité est l'identifiant Steam du joueur (BGD_Identite). Elle compte parce qu'un swap
+--   d'emplacements n'échange que le nom réseau et l'état « prêt » : l'emplacement garde ses autres
+--   valeurs, annonce comprise (analyses/lobby/README.md). Sans elle, un joueur sans le proxy qui
+--   prend l'emplacement d'un joueur équipé hérite de son annonce, valide pour ce salon (rapport
+--   BGE-141E15). Une annonce dont l'identité n'est pas celle de l'occupant actuel ne compte pas, ni
+--   un jeton personnel présent sur deux emplacements (complément, quand l'identité manque) ;
 -- - l'hôte tient à jour BGD_VERDICT = "<version>@<son jeton>:<1|0>:<jetons des joueurs vus>" : 1 si
 --   tous les humains connectés annoncent sa version avec son jeton ; les jetons de tous ceux dont il
 --   a reçu une annonce de ce salon, quelle que soit leur version. Un client ne croit le verdict que
@@ -70,7 +76,8 @@ local BGD = {
 	version = nil,     -- notre version, nil si cette machine n'appliquerait pas les correctifs POL
 	raison = nil,      -- pourquoi, dans ce cas
 	jeton = nil,       -- hôte : son jeton de cette ouverture du salon
-	perso = nil,       -- notre jeton de cette ouverture du salon
+	perso = nil,       -- notre jeton de cette ouverture du salon, avec notre identité
+	persoJeton = nil,  -- sa partie tirée au hasard
 	instantane = {},   -- annonces de chaque joueur à l'ouverture du salon
 	message = nil,     -- dernier message envoyé dans le chat
 	ouvert = false,    -- salon ouvert : de l'ouverture au chargement de la partie (ou au départ)
@@ -104,11 +111,55 @@ local function BGD_Concerne()
 end
 
 -- Annonce "<version>@<jeton de l'hôte>#<jeton du joueur>" -> les trois ; nil si la valeur manque
--- ou n'a pas cette forme. Même lecture dans option_partie.lua (SetupParameters.BGD_PolDisponible) :
--- changer le format aux deux endroits.
+-- ou n'a pas cette forme. Le jeton du joueur porte son identité : "<jeton>~<identité>" (une
+-- annonce d'une version précédente n'en a pas). Mêmes lecture et règle dans option_partie.lua
+-- (SetupParameters.BGD_PolDisponible), partie.lua, proxy/src/ui_depart.lua et
+-- proxy/src/mods/pings/common.lua : changer le format partout.
 local function BGD_LireAnnonce(valeur)
 	if type(valeur) ~= "string" then return nil; end
 	return string.match(valeur, "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+end
+
+-- Identité de l'occupant actuel de l'emplacement : l'identifiant Steam qui suit le nom réseau
+-- (NETWORK_NAME = "<nom>@<identifiant>", échangé avec le joueur par un swap), sinon
+-- GetNetworkIdentifer ; "" si aucun (partie en réseau local, par exemple).
+local function BGD_Identite(id)
+	local cfg = PlayerConfigurations[id];
+	if cfg == nil then return ""; end
+	local nom = cfg:GetValue("NETWORK_NAME");
+	local ident = type(nom) == "string" and string.match(nom, "@(%w+)$") or nil;
+	if ident == nil and cfg.GetNetworkIdentifer ~= nil then
+		local ok, v = pcall(cfg.GetNetworkIdentifer, cfg);
+		ident = ok and v ~= nil and tostring(v) or nil;
+	end
+	return string.sub(string.gsub(ident or "", "[^%w]", ""), 1, 32);
+end
+
+-- Nombre d'emplacements qui annoncent chaque jeton personnel.
+local function BGD_Occurrences()
+	local n = {};
+	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+		local cfg = PlayerConfigurations[id];
+		local _, _, perso = BGD_LireAnnonce(cfg and cfg:GetValue(BGD_CLE_VERSION));
+		if perso ~= nil and perso ~= "" then n[perso] = (n[perso] or 0) + 1; end
+	end
+	return n;
+end
+
+-- L'annonce de l'emplacement `id`, si elle est de son occupant actuel, sinon nil (restée d'un autre
+-- joueur après un swap ou un départ) :
+-- - une identité non vide doit être celle de l'occupant, et suffit : le vrai propriétaire d'une
+--   annonce recopiée sur un autre emplacement reste compté ;
+-- - sans identité (réseau local, ou annonce d'une version précédente), si `occurrences` est
+--   donné, le jeton personnel ne doit être sur aucun autre emplacement.
+local function BGD_AnnonceDe(id, occurrences)
+	local cfg = PlayerConfigurations[id];
+	local version, jeton, perso = BGD_LireAnnonce(cfg and cfg:GetValue(BGD_CLE_VERSION));
+	if version == nil then return nil; end
+	local ident = string.match(perso, "~(%w*)$");
+	if ident ~= nil and ident ~= BGD_Identite(id) then return nil; end
+	if (ident == nil or ident == "") and occurrences ~= nil and (occurrences[perso] or 0) > 1 then return nil; end
+	return version, jeton, perso;
 end
 
 -- Verdict "<version>@<jeton de l'hôte>:<1|0>:<jetons>" -> version, jeton de l'hôte, actif
@@ -155,13 +206,15 @@ local function BGD_AutresHumains()
 	return ids;
 end
 
--- Hôte : ceux sans le proxy (ou sans le jeton de ce salon), ceux d'une autre version avec leur
--- version, et les jetons de tous ceux dont l'annonce porte le jeton de ce salon.
+-- Hôte : ceux sans le proxy (ou sans le jeton de ce salon, ou dont l'annonce est restée d'un autre
+-- joueur), ceux d'une autre version avec leur version, et les jetons de tous ceux dont l'annonce
+-- porte le jeton de ce salon.
 local function BGD_Bilan()
 	local sans, autres, jetons = {}, {}, {};
+	local occurrences = BGD_Occurrences();
 	for _, id in ipairs(BGD_AutresHumains()) do
 		local nom = Locale.Lookup(PlayerConfigurations[id]:GetPlayerName());
-		local version, jeton, perso = BGD_LireAnnonce(BGD_Valeur(id, BGD_CLE_VERSION));
+		local version, jeton, perso = BGD_AnnonceDe(id, occurrences);
 		if version == nil or jeton ~= BGD.jeton then
 			table.insert(sans, nom);
 		else
@@ -212,9 +265,12 @@ local function BGD_Publier()
 	if not BGD_Concerne() then return; end
 	local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
 	if cfg == nil then return; end
-	if BGD.perso == nil then
-		BGD.perso = Civ6Proxy_Jeton();
+	-- Jeton tiré une fois par ouverture du salon ; l'identité relue à chaque fois, au cas où le nom
+	-- réseau arriverait après la première annonce.
+	if BGD.persoJeton == nil then
+		BGD.persoJeton = Civ6Proxy_Jeton();
 	end
+	BGD.perso = BGD.persoJeton .. "~" .. BGD_Identite(Network.GetLocalPlayerID());
 	local jetonHote = BGD_JetonDeLHote();
 	local annonce = BGD.version .. "@" .. jetonHote .. "#" .. BGD.perso;
 	local change = false;
@@ -281,7 +337,7 @@ local function BGD_MessageDUnClient()
 	local hote = Network.GetGameHostPlayerID();
 	for _, id in ipairs(BGD_AutresHumains()) do
 		local valeur = BGD_Valeur(id, BGD_CLE_VERSION);
-		if id < moi and id ~= hote and BGD_LireAnnonce(valeur) ~= nil and valeur ~= BGD.instantane[id] then
+		if id < moi and id ~= hote and BGD_AnnonceDe(id) ~= nil and valeur ~= BGD.instantane[id] then
 			return;  -- un client équipé avant nous s'en charge
 		end
 	end
@@ -352,17 +408,30 @@ local function BGD_Session()
 	return ok and id or nil;
 end
 
+-- Version du jeu sans table d'adresses : aucun correctif ne se pose. La machine ne s'annonce pas
+-- (Civ6Proxy_Version rend nil), mais le dit à tous, pour que personne ne prenne un défaut de son jeu
+-- pour un défaut de BetterGameExperience.
+local function BGD_VersionNonPriseEnCharge()
+	return Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1;
+end
+
 local function BGD_Annoncer()
 	BGD.annonce = false;
-	if not BGD_Concerne() then return; end
+	local inconnue = BGD_VersionNonPriseEnCharge();
+	if not BGD_Concerne() and not (inconnue and BGD.ouvert and GameConfiguration.IsNetworkMultiplayer()
+		and not GameConfiguration.IsHotseat() and not GameConfiguration.IsPlayByCloud()) then
+		return;
+	end
 	local session = BGD_Session();
 	if session ~= nil and session == BGD.session then
 		BGD_Journal("annonce déjà faite dans la session " .. tostring(session));
 		return;
 	end
 	BGD.session = session;
-	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
-	if Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1 then
+	if BGD.version ~= nil then
+		BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+	end
+	if inconnue then
 		BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_EXE", BGD_Nom(Network.GetLocalPlayerID())) .. "[ENDCOLOR]");
 	end
 end
@@ -594,6 +663,7 @@ local function BGD_Ouverture(migration)
 	end
 	BGD.jeton = nil;
 	BGD.perso = nil;
+	BGD.persoJeton = nil;
 	BGD.message = nil;
 	BGD.instantane = {};
 	BGD.check = nil;
@@ -1133,8 +1203,9 @@ do
 		if Civ6Proxy_MediasPings == nil or Civ6Proxy_MediasPings() ~= 1 then
 			table.insert(manquants, "hôte");
 		end
+		local occurrences = BGD_Occurrences();
 		for _, id in ipairs(BGD_AutresHumains()) do
-			local _, _, perso = BGD_LireAnnonce(BGD_Valeur(id, BGD_CLE_VERSION));
+			local _, _, perso = BGD_AnnonceDe(id, occurrences);
 			if perso == nil or BGD_Valeur(id, BGD_CLE_MEDIAS) ~= perso then
 				table.insert(manquants, Locale.Lookup(PlayerConfigurations[id]:GetPlayerName()));
 			end

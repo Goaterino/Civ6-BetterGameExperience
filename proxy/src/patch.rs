@@ -22,25 +22,47 @@ pub struct Site {
 
 pub const IMAGE_BASE: u64 = 0x1_8000_0000;
 /// Versions du jeu connues : (version de l'exe, édition de liens de GameCore, adresses déplacées).
-/// Les adresses des modules sont celles du GameCore du 2026-11-02 (1.0.12.72). Celui de 1.0.12.74
+/// Les adresses des modules sont celles du GameCore du 2026-11-02 (1.0.12.72, plus prise en charge ;
+/// même code que celui de la 1.0.12.58, aux mêmes adresses). Celui de 1.0.12.74
 /// (2026-11-10) a le même code et les mêmes données à d'autres endroits : `MOVED` et `FIXUPS`.
 /// Celui de 1.0.12.58 (build 970508, 2023-11-11) a `.text` et `.data` identiques octet pour octet
 /// à celui du 2026-11-02 ; seuls une empreinte de build et des horodatages de `.rdata` diffèrent.
+/// Celui du 2024-06-26 (`0x667c6f5b`, SHA-256 `324c51e9…c98c`, le GameCore de Steam jusqu'au
+/// 2026-11-05) tourne aussi avec l'exe 1.0.12.58 : `.text`, `.data` et `.pdata` identiques à celui
+/// du 2023-11-11, il est signé (Authenticode) et seuls ses horodatages et l'empreinte de son PDB
+/// diffèrent (`analyses/gamecore_2024`). Une version d'exe peut donc avoir plusieurs lignes.
+/// La 1.0.12.72 n'est plus prise en charge depuis le 2026-11-23 (ses joueurs sont passés à la
+/// 1.0.12.74) : rien n'est posé, et le joueur le voit au menu, dans le salon et au rapport de bug.
 const BUILDS: [(&str, u32, bool); 3] = [
     ("1.0.12.58", 0x654e_cd4e, false),
-    ("1.0.12.72", 0x6ae8_e9d4, false),
+    ("1.0.12.58", 0x667c_6f5b, false),
     ("1.0.12.74", 0x6af3_bcb5, true),
 ];
+
+/// La version du jeu a-t-elle une ligne dans `BUILDS` ?
+pub fn known_version(version: &str) -> bool {
+    BUILDS.iter().any(|b| b.0 == version)
+}
+
+/// Version du jeu sans ligne dans `BUILDS` : celle de l'exe, « ? » si elle est illisible ; None si
+/// elle est prise en charge. Aucun correctif ne se pose alors, dans aucun des deux proxys.
+pub fn unsupported_game() -> Option<String> {
+    match crate::exe::game_version() {
+        Some(v) if known_version(v) => None,
+        Some(v) => Some(v.to_string()),
+        None => Some("?".to_string()),
+    }
+}
 static MOVED_BUILD: AtomicBool = AtomicBool::new(false);
 
 /// Every address the modules use, and where it is in the 1.0.12.74 build.
-const MOVED: [(u64, u64); 153] = [
+const MOVED: [(u64, u64); 156] = [
     (0x1_8003_514f, 0x1_8003_514f), (0x1_8003_53b8, 0x1_8003_53b8), (0x1_8003_58f2, 0x1_8003_58f2),
-    (0x1_8003_66b0, 0x1_8003_66b0), (0x1_8003_72f0, 0x1_8003_72f0), (0x1_8003_83e0, 0x1_8003_83e0),
-    (0x1_8004_1c30, 0x1_8004_1c30),
+    (0x1_8003_66b0, 0x1_8003_66b0), (0x1_8003_72f0, 0x1_8003_72f0), (0x1_8003_7b50, 0x1_8003_7b50),
+    (0x1_8003_83e0, 0x1_8003_83e0), (0x1_8003_9920, 0x1_8003_9920), (0x1_8004_1c30, 0x1_8004_1c30),
     (0x1_8004_4e60, 0x1_8004_4e60), (0x1_8004_4f00, 0x1_8004_4f00), (0x1_8004_ab90, 0x1_8004_aba0),
     (0x1_8004_afc0, 0x1_8004_afd0), (0x1_8005_26c0, 0x1_8005_26d0), (0x1_8005_6a20, 0x1_8005_6a30),
-    (0x1_8005_b640, 0x1_8005_b650), (0x1_8005_b680, 0x1_8005_b690), (0x1_8005_e770, 0x1_8005_e770),
+    (0x1_8005_b640, 0x1_8005_b650), (0x1_8005_b680, 0x1_8005_b690), (0x1_8005_c98a, 0x1_8005_c98a), (0x1_8005_e770, 0x1_8005_e770),
     (0x1_8006_6b80, 0x1_8006_6b80), (0x1_8006_78d0, 0x1_8006_78d0), (0x1_8006_7990, 0x1_8006_7990),
     (0x1_8006_b8d1, 0x1_8006_b8d1), (0x1_8006_b8dc, 0x1_8006_b8dc), (0x1_8006_c6ad, 0x1_8006_c6ad),
     (0x1_8006_c7b5, 0x1_8006_c7b5), (0x1_8006_c8d3, 0x1_8006_c8d3), (0x1_8007_2f80, 0x1_8007_2f80),
@@ -105,14 +127,28 @@ pub unsafe fn detect(base: usize) -> Result<&'static str, String> {
     let nt = base + *((base + 0x3c) as *const u32) as usize;
     let link_time = *((nt + 8) as *const u32);
     let version = crate::exe::game_version().ok_or("version du jeu illisible dans l'exe")?;
-    let Some(&(v, expected, moved)) = BUILDS.iter().find(|b| b.0 == version) else {
-        return Err(format!("jeu {version} inconnu (versions connues : {})", BUILDS.map(|b| b.0).join(", ")));
-    };
-    if link_time != expected {
-        return Err(format!("GameCore {link_time:#x} n'est pas celui du jeu {v} ({expected:#x})"));
-    }
+    let (v, moved) = known_build(version, link_time)?;
     MOVED_BUILD.store(moved, Ordering::Relaxed);
     Ok(v)
+}
+
+/// La ligne de `BUILDS` du jeu `version` dont GameCore a cette date d'édition de liens :
+/// (version, adresses déplacées), ou la raison du refus. Aussi lue par le proxy de démarrage sur le
+/// GameCore du disque, avant que le proxy de GameCore ne soit chargé (`salon::pol_indisponible`).
+pub fn known_build(version: &str, link_time: u32) -> Result<(&'static str, bool), String> {
+    let rows: Vec<_> = BUILDS.iter().filter(|b| b.0 == version).collect();
+    if rows.is_empty() {
+        let mut known: Vec<&str> = BUILDS.iter().map(|b| b.0).collect();
+        known.dedup();
+        return Err(format!("jeu {version} inconnu (versions connues : {})", known.join(", ")));
+    }
+    match rows.iter().find(|b| b.1 == link_time) {
+        Some(b) => Ok((b.0, b.2)),
+        None => {
+            let expected: Vec<String> = rows.iter().map(|b| format!("{:#x}", b.1)).collect();
+            Err(format!("GameCore {link_time:#x} n'est pas celui du jeu {version} ({})", expected.join(" ou ")))
+        }
+    }
 }
 
 /// Tests : adresses du build dont GameCore a cette date d'édition de liens.
@@ -583,6 +619,18 @@ mod tests {
             }
         }
         assert!(missing.is_empty(), "{missing:?}");
+    }
+
+    #[test]
+    fn builds_of_a_game_version() {
+        assert_eq!(known_build("1.0.12.58", 0x654e_cd4e), Ok(("1.0.12.58", false)));
+        assert_eq!(known_build("1.0.12.58", 0x667c_6f5b), Ok(("1.0.12.58", false)), "GameCore du 2024-06-26");
+        assert_eq!(known_build("1.0.12.74", 0x6af3_bcb5), Ok(("1.0.12.74", true)));
+        assert!(known_build("1.0.12.74", 0x654e_cd4e).unwrap_err().contains("(0x6af3bcb5)"));
+        assert!(known_build("1.0.12.58", 0x6af3_bcb5).unwrap_err().contains("0x654ecd4e ou 0x667c6f5b"));
+        assert!(known_build("1.0.12.99", 0x654e_cd4e).unwrap_err().contains("1.0.12.58, 1.0.12.74"));
+        assert!(known_build("1.0.12.72", 0x6ae8_e9d4).is_err(), "1.0.12.72 plus prise en charge");
+        assert!(known_version("1.0.12.58") && known_version("1.0.12.74") && !known_version("1.0.12.72"));
     }
 
     #[test]

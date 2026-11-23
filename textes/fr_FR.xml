@@ -353,6 +353,18 @@
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="fr_FR">
 			<Text>Note la durée de chaque zone chronométrée par le jeu (image, interface, scripts, événements) dans %LOCALAPPDATA%\Civ6RolloverProxy\zones, pour l'analyse des performances. Environ 1 Mo par seconde de jeu. Prend effet au prochain lancement du jeu.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="fr_FR">
+			<Text>Trace réseau Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="fr_FR">
+			<Text>Toutes les 500 ms, écrit les paquets et octets envoyés à chaque joueur et reçus de lui par Steam, les envois que Steam refuse, et la file d'envoi de Steam (octets, paquets, relais ou direct) dans %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. Pour mesurer le débit réseau entre joueurs. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="fr_FR">
+			<Text>Taille des morceaux réseau (essai)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="fr_FR">
+			<Text>Taille des morceaux en lesquels les gros messages réseau sont découpés, 1166 octets dans le jeu. Essai entre deux machines seulement : toutes les machines de la partie doivent avoir la même valeur, sinon la partie se corrompt. Version 1.0.12.58 du jeu seulement. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="fr_FR">
 			<Text>Garde des messages réseau</Text>
 		</Row>
@@ -805,6 +817,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="fr_FR">
 			<Text>{1} réactivé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="fr_FR">
+			<Text>BGE : jeu {1} non pris en charge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="fr_FR">
+			<Text>Version du jeu non prise en charge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="fr_FR">
+			<Text>BetterGameExperience ne prend pas en charge la version {1} du jeu : aucun de ses correctifs n'est actif.[NEWLINE][NEWLINE]Mettez le jeu à jour sur Steam, à sa version actuelle. Merci de ne pas signaler les problèmes vus avec cette version : ils ne viennent pas de BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="fr_FR">
+			<Text>Les rapports de bug sont désactivés : BetterGameExperience ne prend pas en charge la version {1} du jeu, et aucun de ses correctifs n'est actif. Mettez le jeu à jour sur Steam, à sa version actuelle.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

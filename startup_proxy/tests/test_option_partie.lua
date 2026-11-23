@@ -242,5 +242,39 @@ do
 	Check("failed POL native leaves normal controls intact", not Enabled(ping) and Enabled(ui));
 end
 
+-- Annonce restée sur un emplacement après un swap (rapport BGE-141E15) : son identité n'est pas
+-- celle de l'occupant, ou, sans identité, son jeton personnel est aussi sur un autre emplacement.
+do
+	local env = NewScreen("en_US", false, nil, {valeur=1});
+	local S = env.SetupParameters;
+	local values = {};
+	local seats = {
+		[0]={BGD_VERSION="current@lobby#h~100", NETWORK_NAME="Host@100"},
+		[1]={BGD_VERSION="current@lobby#m~111", NETWORK_NAME="Mateo@111"},
+		[2]={BGD_VERSION="current@lobby#m~111", NETWORK_NAME="StulioS@222"},
+	};
+	env.Network = {IsInSession=function() return true; end, GetGameHostPlayerID=function() return 0; end,
+		IsPlayerConnected=function() return true; end};
+	env.GameStateTypes = {GAMESTATE_PREGAME=0};
+	env.SlotStatus = {SS_TAKEN=1, SS_OBSERVER=3};
+	env.GameConfiguration = {GetValue=function(k) return values[k]; end,
+		GetGameState=function() return 0; end, GetMultiplayerPlayerIDs=function() return {0,1,2}; end};
+	env.Civ6Proxy_PolActifs = function() return 1; end;
+	env.Civ6Proxy_Version = function() return "current"; end;
+	env.PlayerConfigurations = {};
+	for id, seat in pairs(seats) do
+		env.PlayerConfigurations[id] = {GetValue=function(_, k) return seat[k]; end,
+			IsHuman=function() return true; end, GetSlotStatus=function() return 1; end};
+	end
+	local depart = "BGD_DEPART_SIMULTANE";
+	values[depart] = false;
+	Check("inherited announcement (other identity) blocks POL settings", not S:Parameter_GetEnabled({ParameterId=depart}));
+	seats[2].BGD_VERSION = "current@lobby#s~222";
+	Check("own announcements on every seat allow POL settings", S:Parameter_GetEnabled({ParameterId=depart}));
+	for _, seat in pairs(seats) do seat.NETWORK_NAME = nil; seat.BGD_VERSION = seat.BGD_VERSION:gsub("~%d+$", ""); end
+	seats[2].BGD_VERSION = seats[1].BGD_VERSION;
+	Check("without identities, a personal token on two seats blocks POL settings", not S:Parameter_GetEnabled({ParameterId=depart}));
+end
+
 print(failures == 0 and "tout est bon" or (failures .. " échec(s)"));
 os.exit(failures == 0 and 0 or 1);

@@ -93,7 +93,7 @@ const fn dispatch_prologue(disp: [u8; 4]) -> [u8; 17] {
 
 /// Un agencement par exe connu, nommé par la version du jeu : parmi ceux de la version en cours,
 /// celui dont tous les octets vérifiés correspondent est pris (DX12 ou DX11).
-const EXES: [Exe; 6] = [
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12 1.0.12.74",
         vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400f_0550, expected: dispatch_prologue([0x27, 0xdc, 0x21, 0x02]) },
@@ -109,24 +109,6 @@ const EXES: [Exe; 6] = [
         vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400e_f690, expected: dispatch_prologue([0x77, 0x74, 0x1e, 0x02]) },
         user_config: 0x1_4011_80c0,
         is_quick_combat: 0x1_4011_8ca0,
-        app: 0x1_412c_3c88,
-        timescale: 0x557c,
-    },
-    Exe {
-        name: "DX12 1.0.12.72",
-        vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400f_0390, expected: dispatch_prologue([0xe7, 0xdd, 0x21, 0x02]) },
-        vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400f_03f0, expected: dispatch_prologue([0x97, 0xdd, 0x21, 0x02]) },
-        user_config: 0x1_4011_8a50,
-        is_quick_combat: 0x1_4011_9630,
-        app: 0x1_412f_b2c8,
-        timescale: 0x559c,
-    },
-    Exe {
-        name: "DX11 1.0.12.72",
-        vis_begin: ExeSite { name: "CombatVisBegin", address: 0x1_400e_f640, expected: dispatch_prologue([0xb7, 0x74, 0x1e, 0x02]) },
-        vis_end: ExeSite { name: "CombatVisEnd", address: 0x1_400e_f6a0, expected: dispatch_prologue([0x67, 0x74, 0x1e, 0x02]) },
-        user_config: 0x1_4011_7b60,
-        is_quick_combat: 0x1_4011_8740,
         app: 0x1_412c_3c88,
         timescale: 0x557c,
     },

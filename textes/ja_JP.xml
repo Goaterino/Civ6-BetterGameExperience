@@ -353,6 +353,18 @@
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="ja_JP">
 			<Text>ゲームが計測する各区間 (フレーム、インターフェース、スクリプト、イベント) の所要時間を、パフォーマンス分析のため %LOCALAPPDATA%\Civ6RolloverProxy\zones に記録します。プレイ1秒あたり約1MB。次回のゲーム起動時から有効です。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="ja_JP">
+			<Text>Steamネットワークのトレース</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="ja_JP">
+			<Text>500ミリ秒ごとに、Steam経由で各プレイヤーに送信・受信したパケットとバイト数、Steamが拒否した送信、Steamの送信キュー（バイト、パケット、リレーまたは直接）を%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.logに書き込みます。プレイヤー間のネットワーク速度を測るためのものです。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="ja_JP">
+			<Text>ネットワーク分割サイズ（テスト）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="ja_JP">
+			<Text>大きなネットワークメッセージを分割する単位のサイズで、ゲームでは1166バイトです。2台のマシン間のテスト専用：ゲームのすべてのマシンで同じ値にする必要があり、そうでないとゲームが壊れます。ゲームのバージョン1.0.12.58のみ。次回のゲーム起動時に有効になります。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="ja_JP">
 			<Text>ネットワークメッセージの保護</Text>
 		</Row>
@@ -805,6 +817,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ja_JP">
 			<Text>{1}のミュートを解除しました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ja_JP">
+			<Text>BGE: ゲーム {1} は非対応</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ja_JP">
+			<Text>非対応のゲームバージョン</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ja_JP">
+			<Text>BetterGameExperience はゲームのバージョン {1} に対応していません。修正はどれも有効になっていません。[NEWLINE][NEWLINE]Steam でゲームを最新バージョンに更新してください。このバージョンで起きた問題は BetterGameExperience によるものではないため、報告しないでください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ja_JP">
+			<Text>バグ報告は無効です。BetterGameExperience はゲームのバージョン {1} に対応しておらず、修正はどれも有効になっていません。Steam でゲームを最新バージョンに更新してください。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

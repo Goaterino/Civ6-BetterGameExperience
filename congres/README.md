@@ -265,6 +265,7 @@ Aucun réglage : ce sont des corrections de bugs.
 | effet du retour au vote | l'annulation d'un autre joueur relançait l'intro (`WorldCongressStage1`) chez tous : une seule intro par tour et par session (essayé en partie, 2026-11-06) | `ui_congres_intro.lua` (`WorldCongressIntro.lua`) | local |
 | H2a après une fin forcée (BGE-9E21BE) | fin de tour forcée par l'hôte (`.bgd_fin`) pendant une réactivation, puis segment de vote ouvert avec le temps écoulé du tour (167 s pour 165) : l'exe finissait le congrès 2 s après son ouverture. Au `LocalPlayerTurnBegin` qui suit une fin forcée, chronos remis à zéro au lieu de retirer seulement le temps ajouté | `src/depart.rs` (`fin_lever`) | local |
 | tour du congrès parti sans vote (BGE-9E21BE) | le retour au vote rouvre aussi la fenêtre sans vote envoyé (votes vides) ; l'événement de session relancé par l'annulation ne la referme plus ; le bouton du congrès, pendant le vote et tour actif, repeuple la fenêtre avec la session en cours (l'original remettait en file la dernière population, le congrès précédent) ; le récapitulatif sur des votes perdus revient aux résolutions au lieu d'indexer nil (`PopulateSummary`, T74 du même rapport) | `ui_congres_vote.lua` | local |
+| deux retours au vote sans nouvel envoi (BGE-61FC66) | les votes envoyés restent gardés jusqu'au prochain `OnAccept` de la session : la seconde annulation ne les prend plus pour « aucun vote envoyé », votes et faveur à rendre sont remis (voir [Deux retours au vote](#deux-retours-au-vote-sans-nouvel-envoi-bge-61fc66)) | `ui_congres_vote.lua` | local |
 
 Choix faits :
 - **Revote.** Les votes ne sont pas retirés à l'annulation : un joueur qui revient au vote puis ne
@@ -303,6 +304,60 @@ Choix faits :
   2 s après l'ouverture ;
 - tour du congrès parti sans vote, puis « Revenir au vote » : `BGE congrès : fin de tour annulée sans
   vote envoyé` dans `Lua.log`, fenêtre ouverte sur les résolutions du tour.
+
+## Deux retours au vote sans nouvel envoi (BGE-61FC66)
+
+Rapport du 2026-11-22, BGE 0.14.0, joueur 1 client, 4 humains, congrès du tour 51 : « can vote only
+1 vote ». Heures locales du joueur (`net_message_debug.log`) :
+
+| heure | événement |
+|---|---|
+| 21:19:25 | premier vote 5/2/2 (3 × `b0cfd998`, `SUBMIT_TURN`, `TurnComplete`) : 48 de faveur dépensée (`2·n·(n−1)` : 40 + 4 + 4), faveur de GameCore à 0 |
+| 21:19:35 | retour au vote : votes remis, « 48 de faveur à rendre » (`Lua.log`) |
+| 21:19:40 | `PlayerTurnComplete` **seul**, sans vote ni `SUBMIT_TURN` |
+| 21:19:43 | second retour au vote : « sans vote envoyé », votes vidés, rien à rendre |
+| 21:20:18 | envoi 1/1/1 ; GameCore rend 48 (proxy : `0 -> 40 -> 44 -> 48`) et facture 0 |
+
+**Cause.** `BGD_OnLocalPlayerTurnUnready` effaçait `m_BGD_Envoi` au premier retour. Sans `OnAccept`
+entre les deux annulations, le second retour concluait à un tour parti sans vote : votes vidés,
+`m_BGD_Rendu = 0`. La fenêtre affichait alors la faveur de GameCore, encore débitée (0) : une voix
+gratuite par résolution, la deuxième coûtant 4. Le joueur n'a pas perdu de faveur (48 rendus, restés
+inutilisés), mais son poids dans le vote : 5/2/2 remplacé par 1/1/1.
+
+**Correctif (2026-11-23, local).** `m_BGD_Envoi` n'est plus effacé au retour au vote : il reste
+jusqu'au prochain `OnAccept`, borné à la session par sa clé `tour:segment`. Test ajouté dans
+`proxy/tests/test_congres.lua` (sauté sans les fichiers du jeu, pas encore passé). Limites :
+- l'état n'existe que dans la mémoire Lua : un rechargement ou une reconnexion entre les deux
+  annulations le perd. Pour couvrir ce cas, lire dans GameCore les voix déjà comptées du joueur
+  (`+0x104 + 4 × joueur` de chaque résolution, `+0x10 + 4 × joueur` de chaque proposition) et en
+  déduire la faveur à rendre ;
+- la fenêtre rouverte travaille sur les tables gardées (même référence) : des voix modifiées puis
+  non validées sont celles qu'affiche un retour suivant, pas celles que GameCore a comptées. Sans
+  conséquence sur la faveur, et un nouvel envoi renvoie tout.
+
+**Non identifié : la fin de tour de 21:19:40.** Ni le minuteur de l'exe (pas de `Turn Timer Sending`),
+ni une fin forcée de l'hôte (rien dans le journal du proxy), ni l'envoi automatique de `SetPhase(1)`
+(pas de `SUBMIT_TURN`) : un `ACTION_ENDTURN` seul (bouton, raccourci ou fin de tour automatique),
+5 s après la réouverture.
+
+### Piste en réserve : remettre le blocage du congrès à l'annulation (POL)
+
+À reprendre si un tour du congrès repart encore seul après un retour au vote.
+
+- **Hypothèse** : `WORLD_CONGRESS_SUBMIT_TURN` écrit le tour courant en `+0x2cc` du congrès du
+  joueur, ce qui lève le blocage `ENDTURN_BLOCKING_WORLD_CONGRESS_SESSION`. L'annulation ne remet
+  pas ce champ : après un retour au vote, rien ne bloque plus la fin de tour, et n'importe quel
+  `ACTION_ENDTURN` fait repartir le tour sans vote.
+- **À vérifier d'abord (Ghidra)** : la condition du blocage lit bien `+0x2cc` (et pas `+0x2c8`,
+  `WORLD_CONGRESS_LOOKED_AT_AVAILABLE`), et le champ fait partie de l'archive synchronisée.
+- **Correctif** : dans le détour d'annulation de `src/congres.rs` (`PlayerTurnUnready` accepté pendant
+  `WORLDCONGRESS_1` / `_2`), remettre `+0x2cc` du joueur à sa valeur d'avant le `SUBMIT_TURN` (tour
+  précédent). Le prochain `OnAccept` renvoie `SUBMIT_TURN` et relève le blocage. Écriture dans l'état
+  synchronisé, faite par toutes les machines : **correctif POL**, passage à la version mineure
+  suivante.
+- **Essai** : voter, revenir au vote, appuyer sur Fin de tour (doit être bloqué), revenir, revoter ;
+  pas de `PlayerTurnComplete` seul après un retour, voix complètes dans `World_Congress.csv`, pas
+  de désynchro `WorldCongress`.
 
 ## Mesures à faire
 

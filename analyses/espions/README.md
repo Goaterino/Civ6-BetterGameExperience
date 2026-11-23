@@ -194,6 +194,9 @@ divise la chance de succès par deux à quatre.
 
 ## Pistes de correctif
 
+Plan d'intégration retenu le 2026-11-23 (succès affiché = succès non détecté + succès avec fuite
+réussie, sans contre-espion) : [plan_affichage.md](plan_affichage.md).
+
 - **Afficher la vraie probabilité.** Détourner `FUN_1800d14f0` pour passer
   `FUN_180373920(case)` au lieu de 0. Ce n'est que de l'interface, sans risque de désynchro, mais cela
   révèle la présence d'un contre-espion. Il faut donc un réglage, et sans doute un correctif POL en

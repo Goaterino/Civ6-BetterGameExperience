@@ -25,6 +25,7 @@
 
 #![allow(non_snake_case)] // le nom de la DLL produite, BGD_GameCore_XP2.
 
+mod absent_reactivation;
 mod avancement;
 mod carte;
 mod citoyens;
@@ -39,6 +40,7 @@ mod empilement;
 mod unites_promises;
 mod partie_chargee;
 mod exe;
+mod executions;
 mod fin_tour;
 mod forward;
 mod improvements;
@@ -46,6 +48,7 @@ mod journal_chokepoints;
 mod mods_ui;
 mod noms;
 mod patch;
+mod pe;
 mod pings;
 mod pol;
 mod ports;
@@ -391,6 +394,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             production_modifiers::on_proxy_unload();
             fin_tour::on_proxy_unload();
             drop_slot::on_proxy_unload();
+            absent_reactivation::on_proxy_unload();
             empilement::on_proxy_unload();
             echange::on_proxy_unload();
             depart::on_proxy_unload();
@@ -405,6 +409,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             ui::on_proxy_unload();
             journal_chokepoints::on_proxy_unload();
             delaunay::on_proxy_unload();
+            executions::on_proxy_unload();
         }
         _ => {}
     }

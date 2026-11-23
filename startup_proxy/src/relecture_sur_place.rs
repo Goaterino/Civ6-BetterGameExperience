@@ -1,6 +1,7 @@
 //! Relecture sur place : le client ne relit que les variables qui diffèrent de celles de l'hôte
 //! (`relecture_fidele=on`, par défaut, le réglage de `relecture` dans le proxy GameCore). Jeux
-//! 1.0.12.72 et 1.0.12.74, exes DX11 et DX12.
+//! 1.0.12.74 et 1.0.12.58, exes DX11 et DX12 : sites trouvés par motif, relevés en 1.0.12.74 (et
+//! dans la 1.0.12.72, dont viennent les adresses citées ici).
 //!
 //! Quand l'hôte envoie à un client une archive que celui-ci possède déjà, en données de création
 //! (« full AutoArchive snapshot, already exists on client) Syncing... », par exemple avec
@@ -542,12 +543,12 @@ mod tests {
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
     /// Appel, fonction et lecture de l'en-tête attendus, dans l'ordre de `crate::test_exe`
-    /// (1.0.12.72 puis 1.0.12.74, DX12 puis DX11).
-    const EXPECTED: [(&str, Sites); 4] = [
-        ("CivilizationVI_DX12.exe", Sites { call: 0x1_407f_4b8b, func: 0x1_40dc_b510, header: 0x1_40dc_b5b0 }),
-        ("CivilizationVI.exe", Sites { call: 0x1_407f_2c9b, func: 0x1_40db_d170, header: 0x1_40db_d210 }),
-        ("CivilizationVI_DX12.exe", Sites { call: 0x1_407f_4bbb, func: 0x1_40dc_b310, header: 0x1_40dc_b3b0 }),
-        ("CivilizationVI.exe", Sites { call: 0x1_407f_39ab, func: 0x1_40db_d1d0, header: 0x1_40db_d270 }),
+    /// (1.0.12.74 puis 1.0.12.58, DX12 puis DX11) ; `None` : non relevés.
+    const EXPECTED: [(&str, Option<Sites>); 4] = [
+        ("CivilizationVI_DX12.exe", Some(Sites { call: 0x1_407f_4bbb, func: 0x1_40dc_b310, header: 0x1_40dc_b3b0 })),
+        ("CivilizationVI.exe", Some(Sites { call: 0x1_407f_39ab, func: 0x1_40db_d1d0, header: 0x1_40db_d270 })),
+        ("CivilizationVI_DX12.exe", None),
+        ("CivilizationVI.exe", None),
     ];
 
     #[test]
@@ -561,7 +562,11 @@ mod tests {
             };
             seen += 1;
             let (text, va) = text_of(&file);
-            assert_eq!(&locate(text, va).unwrap_or_else(|e| panic!("{path}: {e}")), sites, "{path}");
+            let found = locate(text, va).unwrap_or_else(|e| panic!("{path}: {e}"));
+            eprintln!("{path}: {found:x?}");
+            if let Some(sites) = sites {
+                assert_eq!(&found, sites, "{path}");
+            }
         }
         if seen == 0 {
             eprintln!("no game exe found, test skipped");

@@ -62,6 +62,15 @@ pub fn pol_actifs() -> bool {
     POL.load(Ordering::Relaxed)
 }
 
+/// La partie chargée est en réseau, en direct : ni solo, ni hotseat, ni PlayByCloud. Posé par
+/// `chargement.lua` à chaque écran de chargement, sur chaque machine (la configuration de la partie
+/// est la même pour toutes). Non tant que l'interface n'a rien dit.
+static RESEAU: AtomicBool = AtomicBool::new(false);
+
+pub fn partie_reseau() -> bool {
+    RESEAU.load(Ordering::Relaxed)
+}
+
 /// Bits de `RolloverProxyStatus`, l'export d'état du proxy de GameCore (proxy/src/lib.rs).
 const ST_ORIGINAL: u32 = 2;
 const ST_POL: u32 = 16;
@@ -93,10 +102,69 @@ fn pol_indisponible() -> Option<String> {
     match crate::options::read_config() {
         Ok((_, false)) => Some("proxy de GameCore non installé".into()),
         Ok((cfg, true)) if actif_off(&cfg) => Some("proxys désactivés (actif=off)".into()),
-        Ok(_) if !m.is_null() => version_differente(unsafe { version_chargee(m) }.as_deref()),
-        Ok(_) => version_differente(version_du_fichier().as_deref()),
+        Ok(_) => {
+            if let Some(raison) = gamecore_refuse() {
+                return version_differente_raison(raison);
+            }
+            if !m.is_null() {
+                version_differente(unsafe { version_chargee(m) }.as_deref())
+            } else {
+                version_differente(version_du_fichier().as_deref())
+            }
+        }
         Err(e) => Some(e),
     }
+}
+
+/// Raison du refus que le proxy de GameCore opposera au GameCore du disque (`patch::known_build`,
+/// la même table), lue avant qu'il ne soit chargé : sans elle, la première partie après le
+/// lancement annoncerait des correctifs POL que ce proxy ne posera pas (`analyses/gamecore_2024`).
+/// None : reconnu, ou illisible (le proxy de GameCore tranchera, comme avant).
+fn gamecore_refuse() -> Option<String> {
+    let version = crate::exe::game_version()?;
+    let link_time = date_edition_gamecore()?;
+    crate::patch::known_build(version, link_time).err()
+}
+
+/// Date d'édition de liens de `GameCore_XP2_FinalRelease.dll` sur le disque, relue si le fichier
+/// change.
+fn date_edition_gamecore() -> Option<u32> {
+    type Cache = Option<((u64, Option<std::time::SystemTime>), u32)>;
+    static CACHE: Mutex<Cache> = Mutex::new(None);
+    let chemin = crate::options::gamecore_dir()?.join(crate::noms::GAMECORE);
+    let meta = std::fs::metadata(&chemin).ok()?;
+    let cle = (meta.len(), meta.modified().ok());
+    let mut c = CACHE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((k, v)) = c.as_ref() {
+        if *k == cle {
+            return Some(*v);
+        }
+    }
+    let mut tete = [0u8; 0x400];
+    std::io::Read::read_exact(&mut std::fs::File::open(&chemin).ok()?, &mut tete).ok()?;
+    let v = date_edition(&tete)?;
+    *c = Some((cle, v));
+    Some(v)
+}
+
+/// Date d'édition de liens d'un en-tête PE (ses 0x400 premiers octets).
+fn date_edition(tete: &[u8]) -> Option<u32> {
+    let nt = u32::from_le_bytes(tete.get(0x3c..0x40)?.try_into().ok()?) as usize;
+    if tete.get(nt..nt + 4)? != b"PE\0\0" {
+        return None;
+    }
+    Some(u32::from_le_bytes(tete.get(nt + 8..nt + 12)?.try_into().ok()?))
+}
+
+/// Comme `version_differente`, pour une raison déjà formée : journalisée une fois.
+fn version_differente_raison(raison: String) -> Option<String> {
+    static DERNIERE: Mutex<String> = Mutex::new(String::new());
+    let mut d = DERNIERE.lock().unwrap_or_else(|e| e.into_inner());
+    if *d != raison {
+        crate::log(&format!("salon : {raison}"));
+        raison.clone_into(&mut d);
+    }
+    Some(raison)
 }
 
 /// None si le proxy de GameCore a la version de ce proxy ; sinon la raison, journalisée avec les
@@ -276,12 +344,38 @@ unsafe extern "C-unwind" fn lua_medias(l: *mut std::ffi::c_void) -> i32 {
     1
 }
 
-/// `Civ6Proxy_ExeInconnu()` → 1 if the game version has no address table (fixes not installed),
+/// `Civ6Proxy_ExeInconnu()` → 1 if the game version is not supported (fixes not installed),
 /// else 0.
 unsafe extern "C-unwind" fn lua_unknown_exe(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
     (h.push_integer)(l, crate::messages::unknown_exe() as i32);
     1
+}
+
+/// L'avertissement du menu a été montré dans ce lancement du jeu.
+static AVERTI: AtomicBool = AtomicBool::new(false);
+
+/// `Civ6Proxy_VersionNonPriseEnCharge()` → nil si la version du jeu est prise en charge ; sinon la
+/// version (« ? » illisible) et 1 si l'avertissement du menu a déjà été montré dans ce lancement.
+/// `Civ6Proxy_VersionNonPriseEnCharge("vu")` le note montré. Menu principal (`maj.lua`) et rapport
+/// de bug (`rapport.lua`).
+pub unsafe extern "C-unwind" fn lua_version_non_prise_en_charge(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    if arg_str(l, 1).as_deref() == Some("vu") {
+        AVERTI.store(true, Ordering::Relaxed);
+        return 0;
+    }
+    match crate::patch::unsupported_game() {
+        None => {
+            (h.push_nil)(l);
+            1
+        }
+        Some(v) => {
+            push_str(h, l, &v);
+            (h.push_integer)(l, AVERTI.load(Ordering::Relaxed) as i32);
+            2
+        }
+    }
 }
 
 pub(crate) unsafe fn arg_str(l: *mut std::ffi::c_void, i: i32) -> Option<String> {
@@ -301,6 +395,16 @@ unsafe extern "C-unwind" fn lua_fix_pol(l: *mut std::ffi::c_void) -> i32 {
         // Une seule voie de calcul flottant sur toutes les machines tant que les correctifs POL sont
         // actifs (`maths_communes`).
         crate::maths_communes::pol_changed(actif);
+    }
+    0
+}
+
+/// `Civ6Proxy_PartieReseau(actif)`, actif 1 ou 0 : la partie chargée est en réseau, en direct.
+/// Journalisé quand il change.
+unsafe extern "C-unwind" fn lua_partie_reseau(l: *mut std::ffi::c_void) -> i32 {
+    let actif = arg_str(l, 1).is_some_and(|v| v.trim() == "1");
+    if RESEAU.swap(actif, Ordering::Relaxed) != actif {
+        crate::log(&format!("chargement : partie {}", if actif { "en réseau" } else { "locale ou PlayByCloud" }));
     }
     0
 }
@@ -368,7 +472,11 @@ pub const NATIVES: Natives = &[
     (crate::remap::lua_forget, b"Civ6Proxy_RemapOublier\0"),
 ];
 
-const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
+const CHARGEMENT_NATIVES: Natives = &[
+    (lua_log, b"Civ6Proxy_Journal\0"),
+    (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
+    (lua_partie_reseau, b"Civ6Proxy_PartieReseau\0"),
+];
 const PARTIE_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
@@ -449,6 +557,23 @@ pub unsafe fn prepare_option(l: *mut std::ffi::c_void, src: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Les GameCore de `binaires_jeu` présents : leur date d'édition de liens est lue, et la table
+    /// partagée les reconnaît avec leur version d'exe.
+    #[test]
+    fn gamecores_connus() {
+        let racine = concat!(env!("CARGO_MANIFEST_DIR"), "/../binaires_jeu/");
+        for (dossier, version, date) in [
+            ("1.0.12.58", "1.0.12.58", 0x654e_cd4e),
+            ("1.0.12.58_gamecore_2024-06-26", "1.0.12.58", 0x667c_6f5b),
+            ("1.0.12.74", "1.0.12.74", 0x6af3_bcb5),
+        ] {
+            let Ok(data) = std::fs::read(format!("{racine}{dossier}/{}", crate::noms::GAMECORE)) else { continue };
+            assert_eq!(date_edition(&data[..0x400]), Some(date), "{dossier}");
+            assert!(crate::patch::known_build(version, date).is_ok(), "{dossier}");
+        }
+        assert_eq!(date_edition(&[0u8; 0x400]), None, "pas un en-tête PE");
+    }
 
     #[test]
     fn jetons_distincts() {

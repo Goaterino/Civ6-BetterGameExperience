@@ -79,12 +79,14 @@ pub(crate) fn real_module() -> usize {
         crate::production_modifiers::on_gamecore_loaded(h);
         crate::fin_tour::on_gamecore_loaded(h);
         crate::drop_slot::on_gamecore_loaded(h);
+        crate::absent_reactivation::on_gamecore_loaded(h);
         crate::empilement::on_gamecore_loaded(h);
         crate::echange::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
         crate::carte::on_gamecore_loaded();
         crate::journal_chokepoints::on_gamecore_loaded(h);
         crate::delaunay::on_gamecore_loaded(h);
+        crate::executions::on_gamecore_loaded(h);
         h
     })
 }
@@ -122,14 +124,17 @@ macro_rules! forward {
                 crate::ports::reset();
                 crate::fin_tour::reset();
                 crate::drop_slot::reset();
+                crate::absent_reactivation::reset();
                 crate::empilement::reset();
                 crate::echange::reset();
                 crate::depart::reset();
                 crate::rendements_empire::reset();
+                crate::executions::bump();
             }
             if $name == "DllDestroyGameContext" {
                 // End of the game: no turn-start hold outlives it.
                 crate::depart::game_destroyed();
+                crate::executions::bump();
             }
             let p = resolve(&CACHE, concat!($name, "\0").as_bytes());
             if p == 0 {

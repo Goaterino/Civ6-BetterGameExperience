@@ -353,6 +353,18 @@
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="zh_Hans_CN">
 			<Text>将游戏计时的每个区段（帧、界面、脚本、事件）的耗时记录到 %LOCALAPPDATA%\Civ6RolloverProxy\zones，用于性能分析。每秒游戏约 1 MB。下次启动游戏时生效。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="zh_Hans_CN">
+			<Text>Steam 网络追踪</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="zh_Hans_CN">
+			<Text>每 500 毫秒将通过 Steam 发送给每位玩家和从其接收的数据包与字节、被 Steam 拒绝的发送，以及 Steam 的发送队列（字节、数据包、中继或直连）写入 %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log。用于测量玩家之间的网络速度。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="zh_Hans_CN">
+			<Text>网络分块大小（测试）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="zh_Hans_CN">
+			<Text>大型网络消息被切分成的块的大小，游戏中为 1166 字节。仅用于两台电脑之间的测试：游戏中的所有电脑必须使用相同的值，否则游戏会损坏。仅限游戏版本 1.0.12.58。下次启动游戏时生效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="zh_Hans_CN">
 			<Text>网络消息保护</Text>
 		</Row>
@@ -805,6 +817,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="zh_Hans_CN">
 			<Text>已取消屏蔽{1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="zh_Hans_CN">
+			<Text>BGE：不支持游戏 {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="zh_Hans_CN">
+			<Text>不支持的游戏版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="zh_Hans_CN">
+			<Text>BetterGameExperience 不支持游戏版本 {1}：它的修复均未启用。[NEWLINE][NEWLINE]请在 Steam 上将游戏更新到当前版本。请勿报告在此版本中遇到的问题：它们并非由 BetterGameExperience 引起。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="zh_Hans_CN">
+			<Text>错误报告已关闭：BetterGameExperience 不支持游戏版本 {1}，它的修复均未启用。请在 Steam 上将游戏更新到当前版本。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

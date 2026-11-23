@@ -34,6 +34,18 @@ local function announced(seat)
     local session,tokens = tostring((host:GetValue("BGD_VERDICT"))):match("^([^@#:]+@[^@#:]+):1:([^:]*)$")
     local peerSession,token = tostring((peer:GetValue("BGD_VERSION"))):match("^([^@#:]+@[^@#:]+)#([^@#:,]+)$")
     if not session or peerSession ~= session then return false end
+    -- The token carries its owner's identity ("<token>~<id>", startup_proxy/src/salon.lua): an
+    -- announcement left on the seat by another player (swap, substitute) does not count.
+    local ident = token:match("~(%w*)$")
+    if ident then
+        local name = peer:GetValue("NETWORK_NAME")
+        local seatID = type(name) == "string" and name:match("@(%w+)$") or nil
+        if not seatID and peer.GetNetworkIdentifer then
+            local ok, v = pcall(peer.GetNetworkIdentifer, peer)
+            seatID = ok and v ~= nil and tostring(v) or nil
+        end
+        if ident ~= (tostring(seatID or ""):gsub("[^%w]", "")):sub(1, 32) then return false end
+    end
     if seat == hostID then return true end
     return ("," .. tokens .. ","):find("," .. token .. ",", 1, true) ~= nil
 end

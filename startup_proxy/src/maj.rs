@@ -244,7 +244,11 @@ unsafe extern "C-unwind" fn lua_update(l: *mut std::ffi::c_void) -> i32 {
     }
 }
 
-pub const NATIVES: Natives = &[(lua_update, b"Civ6Proxy_MiseAJour\0"), (crate::salon::lua_log, b"Civ6Proxy_Journal\0")];
+pub const NATIVES: Natives = &[
+    (lua_update, b"Civ6Proxy_MiseAJour\0"),
+    (crate::salon::lua_log, b"Civ6Proxy_Journal\0"),
+    (crate::salon::lua_version_non_prise_en_charge, b"Civ6Proxy_VersionNonPriseEnCharge\0"),
+];
 
 pub const XML: &str = "MainMenu.xml";
 

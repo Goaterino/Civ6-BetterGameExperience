@@ -393,7 +393,7 @@ mod tests {
     #[test]
     fn locate_in_installed_exes() {
         let mut found = 0;
-        for (i, exe_name) in ["CivilizationVI_DX12.exe", "CivilizationVI.exe"].iter().cycle().take(6).enumerate() {
+        for (i, exe_name) in ["CivilizationVI_DX12.exe", "CivilizationVI.exe"].iter().cycle().take(4).enumerate() {
             let path = crate::test_exe(EXE_DIR, i, exe_name);
             let Ok(file) = std::fs::read(&path) else { continue };
             let (image, base, text_rva, text_len) = map(&file);

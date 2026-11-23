@@ -353,6 +353,18 @@
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="ru_RU">
 			<Text>Записывает длительность каждой зоны, которую замеряет игра (кадр, интерфейс, скрипты, события), в %LOCALAPPDATA%\Civ6RolloverProxy\zones для анализа производительности. Около 1 МБ на секунду игры. Действует со следующего запуска игры.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="ru_RU">
+			<Text>Трассировка сети Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="ru_RU">
+			<Text>Каждые 500 мс записывает пакеты и байты, отправленные каждому игроку и полученные от него через Steam, отправки, отклонённые Steam, и очередь отправки Steam (байты, пакеты, ретранслятор или напрямую) в %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. Для измерения скорости сети между игроками. Вступает в силу при следующем запуске игры.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="ru_RU">
+			<Text>Размер сетевых фрагментов (тест)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="ru_RU">
+			<Text>Размер фрагментов, на которые делятся большие сетевые сообщения, в игре 1166 байт. Только для теста между двумя компьютерами: у всех компьютеров партии должно быть одинаковое значение, иначе партия будет повреждена. Только версия игры 1.0.12.58. Вступает в силу при следующем запуске игры.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="ru_RU">
 			<Text>Защита сетевых сообщений</Text>
 		</Row>
@@ -805,6 +817,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ru_RU">
 			<Text>Игрок {1} больше не заглушён.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ru_RU">
+			<Text>BGE: игра {1} не поддерживается</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ru_RU">
+			<Text>Версия игры не поддерживается</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ru_RU">
+			<Text>BetterGameExperience не поддерживает версию игры {1}: ни одно из его исправлений не работает.[NEWLINE][NEWLINE]Обновите игру в Steam до текущей версии. Пожалуйста, не сообщайте о проблемах с этой версией: они не связаны с BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ru_RU">
+			<Text>Отчёты об ошибках отключены: BetterGameExperience не поддерживает версию игры {1}, и ни одно из его исправлений не работает. Обновите игру в Steam до текущей версии.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>
