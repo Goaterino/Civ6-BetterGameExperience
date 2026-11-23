@@ -40,6 +40,9 @@
 //! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. An orange house on
 //!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
 //!   (-75%), where the game itself only shows it over the cap ;
+//! - `ui_espions=on|off` (on) : adds `ui_espions.lua` to EspionageSupport.lua (mission chooser
+//!   and mission popup). The displayed success chance counts the escape: success undetected +
+//!   success-must-escape × escape chance, best exit, no counterspy (analyses/espions) ;
 //! - `ui_accord_quantites=on|off` (on) : adds `ui_accord_quantites.lua` to DiplomacyDealView.lua.
 //!   On a resource, the gold, the gold per turn or the favor of the "available" column of the deal
 //!   screen, Shift+click puts as much as the deal accepts, Ctrl+click ten times what a click adds
@@ -100,6 +103,8 @@ const DEBORDEMENT_BLOCK: &str =
 const FORMATIONS_BLOCK: &str = include_str!("ui_formations.lua");
 /// Block of the `ui_logement` setting (CityBannerManager.lua). Its texts are the game's own.
 const LOGEMENT_BLOCK: &str = include_str!("ui_logement.lua");
+/// Block of the `ui_espions` setting (EspionageSupport.lua). No text of ours.
+const ESPIONS_BLOCK: &str = include_str!("ui_espions.lua");
 /// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
 /// WorldTrackerCivic.xml).
 const AVANCEMENT_BLOCK: &str = include_str!("ui_avancement.lua");
@@ -120,6 +125,7 @@ static QUARTIERS: AtomicBool = AtomicBool::new(true);
 static AVANCEMENT: AtomicBool = AtomicBool::new(true);
 static FORMATIONS: AtomicBool = AtomicBool::new(true);
 static LOGEMENT: AtomicBool = AtomicBool::new(true);
+static ESPIONS: AtomicBool = AtomicBool::new(true);
 static ACCORD_QUANTITES: AtomicBool = AtomicBool::new(true);
 static ACCORD_LUXES: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
@@ -177,6 +183,10 @@ pub fn set_logement(on: bool) {
     LOGEMENT.store(on, Ordering::Relaxed);
 }
 
+pub fn set_espions(on: bool) {
+    ESPIONS.store(on, Ordering::Relaxed);
+}
+
 pub fn set_accord_quantites(on: bool) {
     ACCORD_QUANTITES.store(on, Ordering::Relaxed);
 }
@@ -207,6 +217,7 @@ fn active() -> bool {
         || AVANCEMENT.load(Ordering::Relaxed)
         || FORMATIONS.load(Ordering::Relaxed)
         || LOGEMENT.load(Ordering::Relaxed)
+        || ESPIONS.load(Ordering::Relaxed)
         || ACCORD_QUANTITES.load(Ordering::Relaxed)
         || ACCORD_LUXES.load(Ordering::Relaxed)
         || crate::debordement::pose()
@@ -940,6 +951,14 @@ pub fn patch_diag_accords(src: &[u8]) -> Vec<u8> {
     out
 }
 
+/// EspionageSupport.lua suivi de `ui_espions.lua`.
+pub fn patch_espions(src: &[u8]) -> Vec<u8> {
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ESPIONS_BLOCK.as_bytes());
+    out
+}
+
 /// ProductionHelper.lua suivi de `ui_merveilles.lua`.
 pub fn patch_merveilles(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
@@ -1231,6 +1250,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
             .into(),
         );
         return Some(patch_epingles(src, &ctx, opti, mesure));
+    }
+    if ESPIONS.load(Ordering::Relaxed) && ctx == "espionagesupport.lua" {
+        what.push("taux de succès des espions avec l'évasion".into());
+        return Some(patch_espions(src));
     }
     if MERVEILLES.load(Ordering::Relaxed) && ctx == "productionhelper.lua" {
         what.push("rattrapage des merveilles ajouté".into());
@@ -1772,6 +1795,18 @@ mod tests {
         assert!(out.ends_with(DIAG_ACCORDS_BLOCK));
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua", "DiplomacyDealView.lua"));
         assert!(!is_file(r"C:\x\ui\Replacements\diplomacydealview_MPH.lua", "DiplomacyDealView.lua"));
+    }
+
+    #[test]
+    fn espions_ajoutes_a_espionage_support() {
+        assert_eq!(script_name(r"C:\x\Base\Assets\UI\EspionageSupport.lua"), "espionagesupport.lua");
+        let out = String::from_utf8(patch_espions(b"x = 1")).unwrap();
+        assert!(out.starts_with("x = 1\r\n-- ====="));
+        assert!(out.ends_with(ESPIONS_BLOCK));
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\EspionageSupport.lua")) else { return };
+        let src = String::from_utf8_lossy(&src);
+        assert!(src.contains("UnitManager.GetResultProbability(eOperation, spy, targetPlot)"));
+        assert!(src.contains("ESPIONAGE_SUCCESS_MUST_ESCAPE"));
     }
 
     #[test]

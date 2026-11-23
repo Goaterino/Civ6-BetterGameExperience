@@ -38,17 +38,32 @@ Aucune réparation en place de la 0.14.0 n'a eu lieu entre le dernier chargement
 
 L'analyse porte sur `GameCore_XP2_FinalRelease.dll` du 2020-06-10 (horodatage PE `0x5ee10d21`,
 SHA-256 `a4600a61…1d5a`), une build **antérieure** aux versions prises en charge. Les fonctions ont
-été retrouvées par leur comportement. **À revérifier sur 1.0.12.72/74** avant d'écrire le
-correctif.
+été retrouvées par leur comportement, puis **retrouvées et revérifiées le 2026-11-23 sur les
+GameCore 1.0.12.58 (même code que la 1.0.12.72, adresses du proxy) et 1.0.12.74**. Chaque fonction
+de la .74 est identique à celle de la .58, au déplacement des adresses relatives près.
 
-| Rôle | Build 5ee10d21 | 1.0.12.72 (proxy) |
-|---|---|---|
-| Passe post-chargement (4 étapes) | `18004ef70` | `18063def0` |
-| Étape des améliorations | `180248ba0` | `18025cb50` |
-| Setter de la mémoire d'amélioration | `180341ed0` | `18035de10` |
-| Getter de la mémoire d'amélioration | `18033f610` | ? |
-| Amélioration posée sur la carte | `1802489a0` | ? |
-| Changement de visibilité d'une case | `180340000` | ? |
+| Rôle | Build 5ee10d21 | 1.0.12.58 / .72 (proxy) | 1.0.12.74 |
+|---|---|---|---|
+| Passe post-chargement (4 étapes) | `18004ef70` | `18063def0` (appelle l'étape par `180053c40`) | `18063df70` |
+| Étape des améliorations | `180248ba0` | `18025cb50` | `18025cb30` |
+| Setter de la mémoire d'amélioration | `180341ed0` | `18035de10` | `18035d6d0` |
+| Getter de la mémoire d'amélioration | `18033f610` | `18035b4a0` | `18035ad60` |
+| Amélioration posée sur la carte | `1802489a0` | `18025c950` | `18025c930` |
+| Changement de visibilité d'une case | `180340000` | `18035c020` | `18035b8e0` |
+
+Constats sur la .58 :
+- le setter n'a que deux appelants, `18025c950` (deux appels) et l'étape (deux appels), comme en
+  2020 ;
+- dans l'étape, après le second appel au setter, le getter est appelé avec le joueur local
+  (`180044df0`) et l'indice de la case (`18005f2d0`), et comparé à l'amélioration de la case ;
+  `0xf391d7b3` n'est levé (`18025cd62`) que s'ils sont égaux. L'état transmis vaut 2 si la case est
+  visible pour le joueur local (couche de `18035b620`, `+0x120`), sinon 1 si elle est révélée
+  (`+0x138`) ;
+- `18035c020` teste le drapeau 8 (`18035c54f`), puis `case+0x44 != -1`, et lève `0xf391d7b3`
+  (`18035c56b`) sans lire la mémoire.
+
+Ces adresses ne sont pas encore dans `patch::MOVED` : à y ajouter avec leur colonne 1.0.12.74 quand
+le correctif s'en servira.
 
 1. **Setter (`180341ed0`).** Il écrit un `short` dans `Visibility::Instance.m_aExplicitLayers`
    (la couche indexée par `mgr+0x18`) et renvoie vrai si la valeur a changé. Il ne lève aucun

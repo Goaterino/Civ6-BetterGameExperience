@@ -161,47 +161,7 @@ struct Exe {
 
 /// Both exes of 2026-11-05. DX11 was found function by function: the same bytes as DX12 except
 /// relative displacements, the same size (`.pdata` table), and the same context around each read.
-const EXES: [Exe; 6] = [
-    Exe {
-        nom: "DX12 1.0.12.72",
-        lecture: 0x1_4099_f9d0,
-        retours: [0x1_407a_1f44, 0x1_407a_209f, 0x1_407a_dfe3, 0x1_407a_e03a, 0x1_407a_d901, 0x1_407a_34f4, 0x1_4026_619b],
-        fonctions: [0x1_407a_1e20, 0x1_407a_3450, 0x1_407a_df50, 0x1_407a_d890, 0x1_4026_6140],
-        vtables: [
-            (0x1_40fe_0020, [0x1_4026_69c0, 0x1_4026_6ca0, 0x1_4026_7680, 0x1_4026_79d0, 0x1_4026_6e00]),
-            (0x1_40fe_0048, [0x1_4026_6aa0, 0x1_4026_6da0, 0x1_4026_7810, 0x1_4026_7c40, 0x1_4026_7330]),
-        ],
-        configuration: 0x1_4231_00a0,
-        singleton: (0x1_4010_08b0, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0xf7, 0x20, 0x02]),
-        traitement_joueur: (
-            0x1_4026_7340,
-            [
-                0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89,
-                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x53, 0x95, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
-                0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
-            ],
-        ),
-    },
-    Exe {
-        nom: "DX11 1.0.12.72",
-        lecture: 0x1_4099_2530,
-        retours: [0x1_4079_fc34, 0x1_4079_fd8f, 0x1_407a_be73, 0x1_407a_beca, 0x1_407a_b791, 0x1_407a_12b4, 0x1_4026_466b],
-        fonctions: [0x1_4079_fb10, 0x1_407a_1210, 0x1_407a_bde0, 0x1_407a_b720, 0x1_4026_4610],
-        vtables: [
-            (0x1_40fd_0cc0, [0x1_4026_4e90, 0x1_4026_5170, 0x1_4026_5b40, 0x1_4026_5e90, 0x1_4026_52d0]),
-            (0x1_40fd_0ce8, [0x1_4026_4f70, 0x1_4026_5270, 0x1_4026_5cd0, 0x1_4026_6100, 0x1_4026_5800]),
-        ],
-        configuration: 0x1_422d_8a20,
-        singleton: (0x1_400f_fa30, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0x8f, 0x1d, 0x02]),
-        traitement_joueur: (
-            0x1_4026_5810,
-            [
-                0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89,
-                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x03, 0xa2, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
-                0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
-            ],
-        ),
-    },
+const EXES: [Exe; 4] = [
     Exe {
         nom: "DX12 1.0.12.74",
         lecture: 0x1_409a_0240,
@@ -303,11 +263,11 @@ static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
 static WIPES: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
-/// The game version has no table (or cannot be read): BGE knows neither its exe nor its GameCore,
-/// and installs none of the fixes that use their addresses. An exe that only fails the fingerprints
-/// of its version is not counted: the log says it, the chat does not.
+/// The game version is not supported (no line in `patch::BUILDS`, or unreadable): BGE installs
+/// nothing (`DllMain`), and says so. An exe of a supported version that only fails the fingerprints
+/// of a module is not counted: the log says it, the chat does not.
 pub fn unknown_exe() -> bool {
-    !EXES.iter().any(|t| crate::exe::for_this_game(t.nom))
+    crate::patch::unsupported_game().is_some()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -730,7 +690,7 @@ mod tests {
     }
 
     /// The file of each exe, in the order of `EXES`.
-    const FICHIERS: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FICHIERS: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// The table applied to an exe file. In the file, the vtables hold addresses at the preferred
     /// base (0x140000000), without relocation.

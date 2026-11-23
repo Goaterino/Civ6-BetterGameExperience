@@ -192,8 +192,8 @@ l'IP directe. Là, sa fenêtre de 32 Ko de données fiables en vol est un vrai p
   écarts. Il couvre ce que la lecture du code ne peut pas exclure : une écriture de l'état hors
   message, ou un chargement qui relirait des archives sans les désinscrire. C'est le mode par
   défaut, jusqu'à une partie réelle sans aucun écart ; `on` ensuite.
-- **Versions.** Sites vérifiés hors jeu sur 1.0.12.58 seulement (DX12, DX11, GameCore). Ceux de
-  1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, et confirmés seulement par les tests sous
+- **Versions.** Sites vérifiés hors jeu sur 1.0.12.58 et 1.0.12.74 (DX12, DX11, GameCore), les
+  deux versions prises en charge, par les mêmes recherches que le proxy fait en jeu, et par les tests sous
   Windows.
 
 **Encore ouvert.** Le verrou d'accès de l'interface à GameCore (`DAT_1412fe640`, `1400f2c00`)
@@ -232,8 +232,9 @@ la même sauvegarde de fin de tour remet tout le monde au même état. Le chemin
 1. La variable ou le plafond de `1407f7ab0`.
 2. Le tampon de réception de 0x800 octets (`DAT_14238e040`, dans `14085db90`). On peut demander la
    taille avec `IsP2PPacketAvailable`.
-3. La même valeur chez tous les joueurs : le receveur recalcule le nombre de morceaux avec sa propre
-   taille (`1407f7ae0`, à confirmer).
+3. La même valeur chez tous les joueurs, par prudence. `1407f7ae0` (nombre de morceaux, d'après la
+   globale) n'est appelé qu'à l'envoi, par le vidage de la file sortante : ce n'est pas le receveur
+   qui recompte. La lecture des morceaux à la réception reste à relire.
 4. Vérifier que `startup_proxy/src/flush.rs` ne suppose pas 1 166 octets.
 
 **Gain incertain.**
@@ -248,8 +249,8 @@ sauvegarde et d'un contrôle, avec une trace temporaire en ms au thread de trans
 - `trace_steam=on` trace l'envoi et la réception Steam et la file d'envoi de Steam, toutes les
   500 ms. Il ne dépend d'aucune adresse de l'exe.
 - `morceaux_reseau=16384` (même valeur sur les deux machines) porte les morceaux à 16 Ko et le
-  tampon de réception à 128 Ko. Ses adresses sont celles de 1.0.12.58, **à re-identifier sur
-  1.0.12.74** avec le test `chunk_sites_by_pattern`.
+  tampon de réception à 128 Ko. Ses adresses sont relevées sur 1.0.12.58 et 1.0.12.74 (test
+  `chunk_sites_by_pattern`).
 
 ## Piste 4 : nouvelle pile Steam
 

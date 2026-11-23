@@ -56,7 +56,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   votes ignorés ; retour au vote après la fin de tour (correctif POL, pas encore essayé en
   partie) ;
 - [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
-  succès avec fuite comptés comme des succès (analyse statique) ; [plan](analyses/espions/plan_affichage.md)
+  succès avec fuite comptés comme des succès (analyse statique) ; [plan](analyses/espions/plan_affichage.md),
+  implémenté par `ui_espions` (chance affichée qui compte l'évasion)
   d'un affichage qui compte la fuite réussie (pas encore implémenté) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
@@ -96,11 +97,12 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   (rapport BGE-DAA7E7, correctif POL, pas encore essayé en partie) ;
 - [huttes_invisibles](analyses/huttes_invisibles/README.md) : villages tribaux invisibles après un
   rechargement, causés par le correctif « améliorations mémorisées » de la 0.14.0 (rapports
-  BGE-2C7D19, BGE-E8B107, BGE-93D8D4 ; analyse statique, pas encore corrigé) ;
+  BGE-2C7D19, BGE-E8B107, BGE-93D8D4 ; analyse statique, fonctions retrouvées sur .58 et .74, pas
+  encore corrigé) ;
 - [gamecore_2024](analyses/gamecore_2024/README.md) : GameCore du 2024-06-26 refusé avec l'exe
   1.0.12.58 depuis la 0.14.0 (aucun correctif posé, signaux `.bgd_` visibles dans le chat), et
-  correctifs POL annoncés à tort à la première partie ; GameCore du joueur à récupérer, pas encore
-  corrigé ;
+  correctifs POL annoncés à tort à la première partie ; même code que celui de la .58, accepté et
+  prédit par le salon (corrigé en local, pas encore publié) ;
 - [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
   et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
@@ -146,14 +148,17 @@ dans le dossier Steam par défaut (ou le chemin passé en argument) et sont saut
 
 `binaires_jeu/<version>/` (ignoré par git, à garder en local) : les exe DX11/DX12, les DLL de
 `Base\Binaries\Win64Steam` et `GameCore_XP2_FinalRelease.dll` de chaque version du jeu prise en
-charge, pour vérifier une nouvelle fonctionnalité sur toutes. Au 2026-11-21 : 1.0.12.58 (complet),
-1.0.12.72 (exe DX12 seul), 1.0.12.74 (complet, copié du jeu installé). Les tests Rust des deux
-proxys lisent les exe par `CIV6_EXE_58_DIR`, `CIV6_EXE_72_DIR` et `CIV6_EXE_74_DIR` (par défaut, le
+charge, pour vérifier une nouvelle fonctionnalité sur toutes. Au 2026-11-23 : 1.0.12.58 (complet),
+`1.0.12.58_gamecore_2024-06-26` (le GameCore du 2024-06-26, même code que celui de la .58, voir
+[gamecore_2024](analyses/gamecore_2024/README.md)), 1.0.12.72 (exe DX12 seul, gardé pour
+mémoire : version plus prise en charge depuis le 2026-11-23), 1.0.12.74 (complet, copié du jeu
+installé). Les tests Rust des deux
+proxys lisent les exe par `CIV6_EXE_58_DIR` et `CIV6_EXE_74_DIR` (par défaut, le
 jeu installé pour la 1.0.12.74) et sautent une version absente ; `check_hooks.py` prend le GameCore
 en argument :
 
 ```powershell
-$env:CIV6_EXE_58_DIR = "$PWD\binaires_jeu\1.0.12.58"; $env:CIV6_EXE_72_DIR = "$PWD\binaires_jeu\1.0.12.72"
+$env:CIV6_EXE_58_DIR = "$PWD\binaires_jeu\1.0.12.58"
 cargo test --release --manifest-path startup_proxy\Cargo.toml
 python proxy\tests\check_hooks.py proxy\target\release\BGD_GameCore_XP2.dll binaires_jeu\1.0.12.58\GameCore_XP2_FinalRelease.dll $env:TEMP\ch58
 ```

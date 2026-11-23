@@ -408,17 +408,30 @@ local function BGD_Session()
 	return ok and id or nil;
 end
 
+-- Version du jeu sans table d'adresses : aucun correctif ne se pose. La machine ne s'annonce pas
+-- (Civ6Proxy_Version rend nil), mais le dit à tous, pour que personne ne prenne un défaut de son jeu
+-- pour un défaut de BetterGameExperience.
+local function BGD_VersionNonPriseEnCharge()
+	return Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1;
+end
+
 local function BGD_Annoncer()
 	BGD.annonce = false;
-	if not BGD_Concerne() then return; end
+	local inconnue = BGD_VersionNonPriseEnCharge();
+	if not BGD_Concerne() and not (inconnue and BGD.ouvert and GameConfiguration.IsNetworkMultiplayer()
+		and not GameConfiguration.IsHotseat() and not GameConfiguration.IsPlayByCloud()) then
+		return;
+	end
 	local session = BGD_Session();
 	if session ~= nil and session == BGD.session then
 		BGD_Journal("annonce déjà faite dans la session " .. tostring(session));
 		return;
 	end
 	BGD.session = session;
-	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
-	if Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1 then
+	if BGD.version ~= nil then
+		BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+	end
+	if inconnue then
 		BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_EXE", BGD_Nom(Network.GetLocalPlayerID())) .. "[ENDCOLOR]");
 	end
 end
@@ -608,6 +621,9 @@ local function BGD_Tic()
 	if BGD.ConfigTic ~= nil then
 		BGD.ConfigTic();
 	end
+	if BGD.ReconstruireTic ~= nil then
+		BGD.ReconstruireTic();
+	end
 	BGD_CheckBouton();
 	BGD.MiseEnPage();
 end
@@ -745,6 +761,41 @@ local function BGD_DecrireErreur(id, err)
 	end
 	return table.concat(t, " ; ");
 end
+-- Correctif : en rejoignant le salon d'une partie chargée, les paramètres des joueurs sont créés
+-- avant que la base de configuration n'ait les dirigeants des DLC et des mods (22 dirigeants
+-- seulement). Le salon ne les recrée qu'en reconstruisant sa liste de joueurs, et un joueur n'est
+-- rafraîchi qu'à un changement de ses propres infos : les IA gardaient « Opt. joueur invalides. »,
+-- Prêt grisé, jusqu'à un aller-retour par l'écran de configuration (parties du 2026-11-23, chez le
+-- client seulement). Une civilisation majeure dont le dirigeant est hors de la liste : la liste des
+-- joueurs est reconstruite au tic suivant, comme au retour de cet écran (BuildPlayerList), une fois
+-- par état de la base de configuration, pour ne jamais boucler.
+function BGD.ReconstruireSiDirigeantHorsListe(id, err)
+	if type(err) ~= "table" or err.Id ~= "MissingDomainValue" or BGD_PasMajeur(id) then
+		return;
+	end
+	local pp = GetPlayerParameters and GetPlayerParameters(id);
+	if pp == nil or pp.Parameters == nil or pp.Parameters["PlayerLeader"] == nil then
+		return;
+	end
+	local base = DB.ConfigurationChanges ~= nil and DB.ConfigurationChanges() or 0;
+	if BGD.reconstruitBase ~= base then
+		BGD.reconstruire = { base = base, joueur = id };
+	end
+end
+
+function BGD.ReconstruireTic()
+	local r = BGD.reconstruire;
+	if r == nil then return; end
+	BGD.reconstruire = nil;
+	if type(BuildPlayerList) ~= "function" or BGD.reconstruitBase == r.base
+		or (ContextPtr ~= nil and ContextPtr.IsHidden ~= nil and ContextPtr:IsHidden()) then
+		return;
+	end
+	BGD.reconstruitBase = r.base;
+	BGD_Journal("joueur " .. tostring(r.joueur) .. " : dirigeant hors de la liste, liste des joueurs reconstruite (base " .. tostring(r.base) .. ")");
+	BuildPlayerList();
+end
+
 local function BGD_DiagErreurs()
 	if GetPlayerParameterError == nil then
 		return;
@@ -757,6 +808,7 @@ local function BGD_DiagErreurs()
 	end
 	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 		local err = GetPlayerParameterError(id);
+		BGD.ReconstruireSiDirigeantHorsListe(id, err);
 		cle = err and (tostring(err.Id) .. "/" .. tostring(err.Reason));
 		if cle ~= BGD_ErreurVue[id] then
 			BGD_ErreurVue[id] = cle;

@@ -564,6 +564,22 @@ do
 	check(n == 1 and text == "[COLOR_RED]BGE - Bob's game version is not supported by BGE: BGE's fixes are inactive on their PC.[ENDCOLOR]", "unknown game version said once, by that player: " .. text);
 end
 
+-- 13e. The usual case: with an unsupported game version, the machine does not announce itself
+-- (Civ6Proxy_Version gives nil), and still says it to everyone.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob", indispo = "jeu 1.0.12.72 inconnu" } }, { lang = "en_US", avant = function(env)
+		env.Civ6Proxy_ExeInconnu = function() return env.Network.GetLocalPlayerID() == 1 and 1 or 0; end
+	end });
+	l.open();
+	local n = 0;
+	for _, c in ipairs(l.chat) do
+		if c.from == 1 and c.text:find("is not supported by BGE", 1, true) then n = n + 1; end
+	end
+	check(n == 1, "unsupported version said once, without an announcement (" .. n .. ")");
+	check(#l.annonces == 1 and l.annonces[1].from == 0, "only the host announces itself");
+	check(l.machines[1].values[1] == nil or l.machines[1].values[1].BGD_VERSION == nil, "Bob does not announce a version");
+end
+
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une
 -- fois, quand il est prêt.
 do
@@ -680,6 +696,41 @@ do
 	erreur = nil;
 	env.UpdateReadyButton();
 	check(#log == n + 2 and log[n + 2]:find("joueur 1 : erreur levée", 1, true) and appels == 4, "diag : erreur levée");
+end
+
+-- 17b. Partie chargée rejointe : une civilisation majeure dont le dirigeant est hors de la liste
+-- (paramètres créés avant les dirigeants des DLC et des mods) fait reconstruire la liste des
+-- joueurs au tic suivant, une fois par état de la base de configuration ; pas une cité-État.
+do
+	local base, construites, erreurs = 6599, 0, {};
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true, avant = function(env)
+		env.UpdateReadyButton = function() end;
+		env.GetPlayerParameterError = function(id) return erreurs[id]; end;
+		env.GetGameParametersError = function() return nil; end;
+		env.GetPlayerParameters = function() return { Parameters = { PlayerLeader = { Domain = "Players:StandardPlayers", Values = {} } } }; end;
+		env.BuildPlayerList = function() construites = construites + 1; end;
+		env.DB = { ConfigurationChanges = function() return base; end, ConfigurationQuery = function() return {}; end };
+	end });
+	l.open();
+	local bob = l.machines[1];
+	erreurs[1] = { Id = "MissingDomainValue" };
+	bob.env.UpdateReadyButton();
+	check(construites == 0, "reconstruction : pas pendant UpdateReadyButton");
+	l.tic(1);
+	check(construites == 1 and bob.log:find("dirigeant hors de la liste, liste des joueurs reconstruite (base 6599)", 1, true),
+		"reconstruction : au tic suivant (" .. construites .. ")");
+	bob.env.UpdateReadyButton();
+	l.tic(2);
+	check(construites == 1, "reconstruction : une seule fois par état de la base");
+	base = 6600;
+	bob.env.UpdateReadyButton();
+	l.tic(1);
+	check(construites == 2, "reconstruction : à nouveau quand la base a changé");
+	erreurs[1] = { Id = "InvalidDomainValue" };
+	base = 6601;
+	bob.env.UpdateReadyButton();
+	l.tic(1);
+	check(construites == 2, "reconstruction : pas pour une autre erreur");
 end
 
 -- 18. Cité-État d'une partie chargée : son dirigeant hors liste ne bloque plus Prêt ; une

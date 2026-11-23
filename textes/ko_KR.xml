@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="ko_KR">
 			<Text>내 도시 배너에, 주거공간 한도까지 1 남으면 주황색 집(인구 증가 속도 50% 감소), 한도에 도달하는 즉시 빨간색 집(75% 감소)을 표시합니다. 이 옵션이 없으면 게임은 한도를 넘은 뒤에만 빨간색 집을 표시합니다. 표시만 바뀝니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="ko_KR">
+			<Text>탈출을 반영한 스파이 성공 확률</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="ko_KR">
+			<Text>스파이 작전에 표시되는 성공 확률에 탈출을 반영합니다. 탈출해야 하는 성공은 스파이가 빠져나왔을 때만 성공으로 칩니다(전리품은 그때만 지급되기 때문). 가장 좋은 탈출 경로를 가정하며, 적의 방첩은 고려하지 않습니다. 표시만 바뀝니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="ko_KR">
 			<Text>거래 화면의 Shift+클릭 및 Ctrl+클릭</Text>
 		</Row>
@@ -823,6 +829,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ko_KR">
 			<Text>{1} 님의 차단을 해제했습니다.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ko_KR">
+			<Text>BGE: 게임 {1} 미지원</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ko_KR">
+			<Text>지원하지 않는 게임 버전</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ko_KR">
+			<Text>BetterGameExperience는 게임 버전 {1}을(를) 지원하지 않습니다. 어떤 수정도 활성화되지 않았습니다.[NEWLINE][NEWLINE]Steam에서 게임을 최신 버전으로 업데이트하세요. 이 버전에서 생긴 문제는 BetterGameExperience 때문이 아니므로 신고하지 마세요.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ko_KR">
+			<Text>버그 신고가 꺼져 있습니다. BetterGameExperience는 게임 버전 {1}을(를) 지원하지 않으며, 어떤 수정도 활성화되지 않았습니다. Steam에서 게임을 최신 버전으로 업데이트하세요.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="it_IT">
 			<Text>Sullo stendardo delle tue città compare una casa arancione quando alla città manca 1 sola abitazione al limite (crescita rallentata del 50%), e la casa rossa non appena è al limite (75%). Senza questa opzione, il gioco mostra la casa rossa solo quando la città supera il limite. Solo visualizzazione.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="it_IT">
+			<Text>Probabilità di successo delle spie con la fuga</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="it_IT">
+			<Text>La probabilità di successo mostrata per una missione di spionaggio tiene conto della fuga: un successo in cui la spia deve fuggire conta solo se la spia riesce a scappare, perché il bottino viene consegnato solo allora. Presuppone la via di fuga migliore e non considera un controspionaggio nemico. Solo visualizzazione.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="it_IT">
 			<Text>Maiusc+clic e Ctrl+clic nella schermata degli accordi</Text>
 		</Row>
@@ -823,6 +829,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="it_IT">
 			<Text>Audio e chat di {1} riattivati.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="it_IT">
+			<Text>BGE: gioco {1} non supportato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="it_IT">
+			<Text>Versione del gioco non supportata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="it_IT">
+			<Text>BetterGameExperience non supporta la versione {1} del gioco: nessuna delle sue correzioni è attiva.[NEWLINE][NEWLINE]Aggiorna il gioco su Steam alla versione attuale. Per favore, non segnalare problemi visti con questa versione: non dipendono da BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="it_IT">
+			<Text>Le segnalazioni di bug sono disattivate: BetterGameExperience non supporta la versione {1} del gioco e nessuna delle sue correzioni è attiva. Aggiorna il gioco su Steam alla versione attuale.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

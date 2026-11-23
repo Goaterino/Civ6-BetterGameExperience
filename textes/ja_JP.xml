@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="ja_JP">
 			<Text>自分の都市バナーに、住宅の上限まであと 1 になるとオレンジ色の家 (人口増加率 50% 鈍化)、上限に達した時点で赤い家 (75% 鈍化) を表示します。このオプションがない場合、ゲームは上限を超えてからしか赤い家を表示しません。表示のみ。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="ja_JP">
+			<Text>脱出を考慮したスパイの成功率</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="ja_JP">
+			<Text>スパイ任務に表示される成功率に脱出も含めます。脱出が必要な成功は、スパイが逃げ切った場合にのみ成功とみなします (戦利品はその時点でのみ得られるため)。最適な脱出ルートを前提とし、敵の防諜は考慮しません。表示のみ。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="ja_JP">
 			<Text>取引画面の Shift+クリックと Ctrl+クリック</Text>
 		</Row>
@@ -823,6 +829,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ja_JP">
 			<Text>{1}のミュートを解除しました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ja_JP">
+			<Text>BGE: ゲーム {1} は非対応</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ja_JP">
+			<Text>非対応のゲームバージョン</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ja_JP">
+			<Text>BetterGameExperience はゲームのバージョン {1} に対応していません。修正はどれも有効になっていません。[NEWLINE][NEWLINE]Steam でゲームを最新バージョンに更新してください。このバージョンで起きた問題は BetterGameExperience によるものではないため、報告しないでください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ja_JP">
+			<Text>バグ報告は無効です。BetterGameExperience はゲームのバージョン {1} に対応しておらず、修正はどれも有効になっていません。Steam でゲームを最新バージョンに更新してください。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

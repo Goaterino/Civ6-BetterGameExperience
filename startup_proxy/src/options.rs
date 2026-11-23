@@ -280,7 +280,7 @@ fn reset_config_file(keys: &str) -> Result<(), String> {
 // Fonctions natives posées dans le contexte Lua des options.
 
 /// HavokScript n'exporte ni `lua_pushlstring` ni `lua_pushboolean` : les chaînes passent par
-/// `lua_pushfstring("%s")`, les booléens par `lua_pushinteger`.
+/// `lua_pushfstring("%s")` (en morceaux, voir `push_str`), les booléens par `lua_pushinteger`.
 const LUA_GLOBALSINDEX: i32 = -10002;
 pub(crate) type LuaCFn = unsafe extern "C-unwind" fn(*mut c_void) -> i32;
 
@@ -293,6 +293,7 @@ pub(crate) struct Hks {
     set_field: unsafe extern "C-unwind" fn(*mut c_void, i32, *const c_char),
     cpcall: unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, *mut c_void) -> i32,
     set_top: unsafe extern "C-unwind" fn(*mut c_void, i32),
+    concat: unsafe extern "C-unwind" fn(*mut c_void, i32),
 }
 
 static HKS: std::sync::OnceLock<Option<Hks>> = std::sync::OnceLock::new();
@@ -316,14 +317,34 @@ pub(crate) unsafe fn hks() -> Option<&'static Hks> {
             set_field: std::mem::transmute(get(b"?lua_setfield@@YAXPEAUlua_State@@HPEBD@Z\0")?),
             cpcall: std::mem::transmute(get(b"?lua_cpcall@@YAHPEAUlua_State@@P6AH0@ZPEAX@Z\0")?),
             set_top: std::mem::transmute(get(b"?lua_settop@@YAXPEAUlua_State@@H@Z\0")?),
+            concat: std::mem::transmute(get(b"?lua_concat@@YAXPEAUlua_State@@H@Z\0")?),
         })
     })
     .as_ref()
 }
 
+/// `lua_pushfstring` de HavokScript formate dans un tampon de 512 octets sur la pile
+/// (`vsnprintf(buf, 0x200, …)`, 1.0.12.58 et 1.0.12.74) : une chaîne plus longue est coupée à 511
+/// octets. On pousse donc des morceaux plus courts, recollés au fur et à mesure par `lua_concat`
+/// (deux places de pile au plus). Les octets sont gardés tels quels : un morceau peut couper un
+/// caractère UTF-8, le recollage le rétablit.
+const PUSH_CHUNK: usize = 400;
+
+pub(crate) fn chunks(s: &str) -> Vec<std::ffi::CString> {
+    let bytes: Vec<u8> = s.bytes().filter(|&b| b != 0).collect();
+    if bytes.is_empty() {
+        return vec![std::ffi::CString::default()];
+    }
+    bytes.chunks(PUSH_CHUNK).map(|c| std::ffi::CString::new(c).unwrap_or_default()).collect()
+}
+
 pub(crate) unsafe fn push_str(h: &Hks, l: *mut c_void, s: &str) {
-    let c = std::ffi::CString::new(s.replace('\0', "")).unwrap_or_default();
-    (h.push_fstring)(l, b"%s\0".as_ptr() as *const c_char, c.as_ptr());
+    for (i, c) in chunks(s).iter().enumerate() {
+        (h.push_fstring)(l, b"%s\0".as_ptr() as *const c_char, c.as_ptr());
+        if i > 0 {
+            (h.concat)(l, 2);
+        }
+    }
 }
 
 /// `Civ6Proxy_LireReglages()` → texte du fichier (vide s'il n'existe pas), 1|0 selon que le proxy
@@ -649,6 +670,20 @@ mod tests {
         assert_eq!(ms, [0, 49, 32, 21, 16, 12, 10, 9]);
         assert_eq!(new.len() - src.len(), TICK_ENTRIES.iter().map(|(_, e)| e.len()).sum::<usize>());
         assert!(patch_tick_intervals(b"x = 1").is_none());
+    }
+
+    /// Chaque morceau tient dans le tampon de `lua_pushfstring` (511 octets), et leur recollage
+    /// rend la chaîne, NUL retirés, accents coupés compris.
+    #[test]
+    fn morceaux_pousses() {
+        let long: String = (0..300).map(|i| format!("clé_{i}=é\r\n")).collect();
+        for s in ["", "a=1", long.as_str(), "a\0b"] {
+            let parts = chunks(s);
+            assert!(!parts.is_empty() && parts.iter().all(|c| c.as_bytes().len() <= 511));
+            let joined: Vec<u8> = parts.iter().flat_map(|c| c.as_bytes().to_vec()).collect();
+            assert_eq!(joined, s.replace('\0', "").into_bytes());
+        }
+        assert!(chunks(&long).len() > 1);
     }
 
     #[test]

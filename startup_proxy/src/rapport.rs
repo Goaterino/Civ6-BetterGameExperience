@@ -858,6 +858,7 @@ pub const NATIVES: Natives = &[
     (lua_envoyer, b"Civ6Proxy_RapportEnvoyer\0"),
     (lua_etat, b"Civ6Proxy_RapportEtat\0"),
     (lua_log, b"Civ6Proxy_Journal\0"),
+    (crate::salon::lua_version_non_prise_en_charge, b"Civ6Proxy_VersionNonPriseEnCharge\0"),
 ];
 
 const SUIVI_NATIVES: Natives = &[(lua_etat, b"Civ6Proxy_RapportEtat\0"), (lua_log, b"Civ6Proxy_Journal\0")];

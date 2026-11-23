@@ -89,49 +89,7 @@ const PROLOGUES: [(&str, [u8; 12]); 8] = [
 
 /// The DX11 addresses were found function by function as for the network message guard (same bytes
 /// except relative displacements, same size in `.pdata`); tool: `Tools\civ6-dx11-map\relais_map.py`.
-const EXES: [Exe; 6] = [
-    Exe {
-        name: "DX12 1.0.12.72",
-        intro: (0x1_4105_7460, [0x1_4085_1500, 0x1_4085_16d0, 0x1_4085_1ba0, 0x1_4085_1c00, 0x1_4085_1730]),
-        relay: (0x1_4105_0b90, [0x1_4080_a9a0, 0x1_4080_f610, 0x1_4080_af90, 0x1_4080_afe0, 0x1_4081_0c60]),
-        peer_info: (0x1_4105_7438, [0x1_4085_1500, 0x1_4085_1700, 0x1_4085_1ba0, 0x1_4085_1c00, 0x1_4085_1aa0]),
-        repeated: [
-            (0x1_4105_0be0, [0x1_4080_e4c0, 0x1_4080_f5b0, 0x1_4081_14c0, 0x1_4081_1e80, 0x1_4081_0930]),
-            (0x1_4105_0c08, [0x1_4080_a9a0, 0x1_4080_f180, 0x1_4081_15a0, 0x1_4081_1760, 0x1_4080_f850]),
-            (0x1_4105_0c80, [0x1_4080_a9a0, 0x1_4080_f6e0, 0x1_4081_15a0, 0x1_4081_1760, 0x1_4081_1020]),
-        ],
-        net_manager: 0x1_4239_2ef8,
-        net_manager_read_at: 0x52,
-        queue_front: 0x1_4084_d580,
-        queue_pop: 0x1_4084_d5d0,
-        connection: 0x1_4083_7ed0,
-        connection_set_steam: 0x1_4084_ecb0,
-        player_find: 0x1_4081_35d0,
-        map_slot: 0x1_4081_28f0,
-        relay_erase: 0x1_4084_f9d0,
-        relay_contains: 0x1_4084_f3e0,
-    },
-    Exe {
-        name: "DX11 1.0.12.72",
-        intro: (0x1_4104_7fd0, [0x1_4084_f860, 0x1_4084_fa30, 0x1_4084_ff00, 0x1_4084_ff60, 0x1_4084_fa90]),
-        relay: (0x1_4104_1720, [0x1_4080_9350, 0x1_4080_d8a0, 0x1_4080_f780, 0x1_4081_0080, 0x1_4080_eef0]),
-        peer_info: (0x1_4104_7fa8, [0x1_4084_f860, 0x1_4084_fa60, 0x1_4084_ff00, 0x1_4084_ff60, 0x1_4084_fe00]),
-        repeated: [
-            (0x1_4104_1770, [0x1_4080_c750, 0x1_4080_d840, 0x1_4080_f750, 0x1_4081_0050, 0x1_4080_ebc0]),
-            (0x1_4104_1798, [0x1_4080_9350, 0x1_4080_d410, 0x1_4080_f470, 0x1_4081_02c0, 0x1_4080_dae0]),
-            (0x1_4104_1810, [0x1_4080_9350, 0x1_4080_d970, 0x1_4080_f470, 0x1_4081_02c0, 0x1_4080_f2b0]),
-        ],
-        net_manager: 0x1_4235_b878,
-        net_manager_read_at: 0x52,
-        queue_front: 0x1_4084_b990,
-        queue_pop: 0x1_4084_b9e0,
-        connection: 0x1_4083_64e0,
-        connection_set_steam: 0x1_4084_d030,
-        player_find: 0x1_4081_1b80,
-        map_slot: 0x1_4081_0bd0,
-        relay_erase: 0x1_4084_dd50,
-        relay_contains: 0x1_4084_d760,
-    },
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12 1.0.12.74",
         intro: (0x1_4105_7510, [0x1_4085_17e0, 0x1_4085_19b0, 0x1_4085_1e80, 0x1_4085_1ee0, 0x1_4085_1a10]),
@@ -938,7 +896,7 @@ mod tests {
     }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

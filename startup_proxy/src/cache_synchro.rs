@@ -415,12 +415,10 @@ mod tests {
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
     /// (appel du hachage, hachage, table du gestionnaire) attendus, dans l'ordre de `crate::test_exe`
-    /// ; `None` : pas encore relevés (1.0.12.72 et 1.0.12.74, à lire dans le journal du test).
-    const EXPECTED: [(&str, Option<(u32, u32, u32)>); 6] = [
-        ("CivilizationVI_DX12.exe", None),
-        ("CivilizationVI.exe", None),
-        ("CivilizationVI_DX12.exe", None),
-        ("CivilizationVI.exe", None),
+    /// ; `None` : non relevés.
+    const EXPECTED: [(&str, Option<(u32, u32, u32)>); 4] = [
+        ("CivilizationVI_DX12.exe", Some((0x7f_6cd2, 0xdc_a1b0, 0x104_ead0))),
+        ("CivilizationVI.exe", Some((0x7f_5ac2, 0xdb_c070, 0x103_f590))),
         ("CivilizationVI_DX12.exe", Some((0x7f_1262, 0xdc_5390, 0x104_9800))),
         ("CivilizationVI.exe", Some((0x7f_0d22, 0xdb_6e30, 0x103_92d0))),
     ];

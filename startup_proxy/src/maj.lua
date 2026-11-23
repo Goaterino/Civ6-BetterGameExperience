@@ -14,12 +14,32 @@
 -- la nôtre à la suite. Version réécrite par le proxy (maj.rs) ; sans elle, rien.
 local BGD_VERSION = nil;
 
+-- Version du jeu non prise en charge (Civ6Proxy_VersionNonPriseEnCharge) : sa version, et si
+-- l'avertissement a déjà été montré dans ce lancement ; nil si elle est prise en charge.
+local function BGD_VersionNonPriseEnCharge()
+	if Civ6Proxy_VersionNonPriseEnCharge == nil then return nil, true; end
+	local version, vu = Civ6Proxy_VersionNonPriseEnCharge();
+	return version, vu == 1;
+end
+
 local function BGD_Version_Afficher()
 	local label = Controls and Controls.VersionLabel;
 	if BGD_VERSION == nil or label == nil then return; end
 	local texte = tostring(label:GetText() or "");
 	local ajout = "[COLOR_LIGHTBLUE]BGE / " .. BGD_VERSION .. "[ENDCOLOR]";
+	local inconnue = BGD_VersionNonPriseEnCharge();
+	if inconnue ~= nil then
+		ajout = "[COLOR_RED]" .. BGD_Txt("LOC_BGD_VERSION_NON_SUPPORTEE_COURT", inconnue) .. "[ENDCOLOR]";
+	end
 	label:SetText(texte == "" and ajout or (texte .. " - " .. ajout));
+end
+
+-- Avertissement d'une version non prise en charge, une fois par lancement du jeu, avant la
+-- notification de mise à jour.
+local bgd_avertir = false;
+do
+	local inconnue, vu = BGD_VersionNonPriseEnCharge();
+	bgd_avertir = inconnue ~= nil and not vu;
 end
 
 -- Plus rien à faire : pas de proxy, vérification finie, ou notification déjà montrée.
@@ -58,10 +78,29 @@ local function BGD_Maj_Installer()
 	end
 end
 
+local function BGD_Maj_Avertir()
+	local popup = BGD_Maj_Popup();
+	if popup:IsOpen() then return; end
+	local inconnue = BGD_VersionNonPriseEnCharge();
+	bgd_avertir = false;
+	if inconnue == nil then return; end
+	pcall(Civ6Proxy_VersionNonPriseEnCharge, "vu");
+	BGD_Maj_Journal("avertissement : jeu " .. tostring(inconnue) .. " non pris en charge");
+	popup:Reset();
+	popup:AddTitle(BGD_Txt("LOC_BGD_VERSION_NON_SUPPORTEE_TITRE"));
+	popup:AddText(BGD_Txt("LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE", inconnue));
+	popup:AddButton(BGD_Txt("LOC_BGD_RAPPORT_FERMER"), function() end, PopupDialog.COMMAND_CANCEL);
+	popup:Open();
+end
+
 local function BGD_Maj_Verifier()
-	if bgd_majFinie then return; end
 	-- Pas par-dessus un autre message du menu (défis, erreur de lancement) : on attendra sa fermeture.
 	if g_PopupDialog ~= nil and g_PopupDialog:IsOpen() then return; end
+	if bgd_avertir then
+		BGD_Maj_Avertir();
+		return;
+	end
+	if bgd_majFinie then return; end
 	local latest, current, kind = Civ6Proxy_MiseAJour();
 	if latest == "" then return; end
 	bgd_majFinie = true;
@@ -90,13 +129,13 @@ do
 	if not ok then BGD_Maj_Journal("indicateur de version : " .. tostring(err)); end
 end
 
-if not bgd_majFinie and ContextPtr ~= nil then
+if (not bgd_majFinie or bgd_avertir) and ContextPtr ~= nil then
 	local onShow = OnShow;
 	local onUpdate = OnUpdate;
 	ContextPtr:SetShowHandler(function(...)
 		if onShow then onShow(...); end
 		-- OnShow vient de poser OnUpdate : on l'enveloppe tant que la notification reste à montrer.
-		if not bgd_majFinie then
+		if not bgd_majFinie or bgd_avertir then
 			ContextPtr:SetUpdate(function(dt)
 				if onUpdate then onUpdate(dt); end
 				BGD_Maj_Proteger(BGD_Maj_Verifier);

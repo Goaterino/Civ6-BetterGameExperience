@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="ru_RU">
 			<Text>На баннере ваших городов появляется оранжевый дом, когда до предела жилья остаётся 1 (рост замедлен на 50%), и красный дом, как только предел достигнут (75%). Без этой настройки игра показывает красный дом только после превышения предела. Только отображение.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="ru_RU">
+			<Text>Шанс успеха шпионов с учётом побега</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="ru_RU">
+			<Text>Шанс успеха, показываемый для шпионской операции, учитывает побег: успех, после которого шпион должен бежать, засчитывается, только если шпиону удалось уйти, ведь добыча выдаётся только тогда. Предполагается лучший путь отхода, вражеская контрразведка не учитывается. Только отображение.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="ru_RU">
 			<Text>Shift+щелчок и Ctrl+щелчок на экране сделки</Text>
 		</Row>
@@ -823,6 +829,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ru_RU">
 			<Text>Игрок {1} больше не заглушён.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ru_RU">
+			<Text>BGE: игра {1} не поддерживается</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ru_RU">
+			<Text>Версия игры не поддерживается</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ru_RU">
+			<Text>BetterGameExperience не поддерживает версию игры {1}: ни одно из его исправлений не работает.[NEWLINE][NEWLINE]Обновите игру в Steam до текущей версии. Пожалуйста, не сообщайте о проблемах с этой версией: они не связаны с BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ru_RU">
+			<Text>Отчёты об ошибках отключены: BetterGameExperience не поддерживает версию игры {1}, и ни одно из его исправлений не работает. Обновите игру в Steam до текущей версии.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

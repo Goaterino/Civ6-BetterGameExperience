@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>在你的城市横幅上，距住房上限只差 1 时显示橙色房屋（人口增速减缓 50%），一达到上限就显示红色房屋（减缓 75%）。不启用此选项时，游戏要到超出上限后才会显示红色房屋。仅影响显示。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="zh_Hans_CN">
+			<Text>计入撤离的间谍成功率</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="zh_Hans_CN">
+			<Text>间谍任务显示的成功率会计入撤离：需要撤离的成功只有在间谍成功逃脱时才算成功，因为战利品只在那时发放。假定选择最佳撤离路线，不计算敌方反间谍。仅影响显示。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="zh_Hans_CN">
 			<Text>交易界面的 Shift+单击和 Ctrl+单击</Text>
 		</Row>
@@ -823,6 +829,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="zh_Hans_CN">
 			<Text>已取消屏蔽{1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="zh_Hans_CN">
+			<Text>BGE：不支持游戏 {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="zh_Hans_CN">
+			<Text>不支持的游戏版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="zh_Hans_CN">
+			<Text>BetterGameExperience 不支持游戏版本 {1}：它的修复均未启用。[NEWLINE][NEWLINE]请在 Steam 上将游戏更新到当前版本。请勿报告在此版本中遇到的问题：它们并非由 BetterGameExperience 引起。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="zh_Hans_CN">
+			<Text>错误报告已关闭：BetterGameExperience 不支持游戏版本 {1}，它的修复均未启用。请在 Steam 上将游戏更新到当前版本。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

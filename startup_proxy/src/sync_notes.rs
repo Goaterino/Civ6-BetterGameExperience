@@ -38,29 +38,7 @@ struct Exe {
     add_create: u64,
 }
 
-const EXES: [Exe; 6] = [
-    Exe {
-        name: "DX12 1.0.12.72",
-        check_call: 0x1_407f_9cf6,
-        handler: 0x1_407f_65b0,
-        repair_call: 0x1_407f_717d,
-        add_repair: 0x1_407f_89f0,
-        extra_call: 0x1_407f_6c89,
-        map_insert: 0x1_407f_2430,
-        missing_call: 0x1_407f_769f,
-        add_create: 0x1_407f_88c0,
-    },
-    Exe {
-        name: "DX11 1.0.12.72",
-        check_call: 0x1_407f_7e06,
-        handler: 0x1_407f_46c0,
-        repair_call: 0x1_407f_528d,
-        add_repair: 0x1_407f_6b00,
-        extra_call: 0x1_407f_4d99,
-        map_insert: 0x1_407f_0680,
-        missing_call: 0x1_407f_57af,
-        add_create: 0x1_407f_69d0,
-    },
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12 1.0.12.74",
         check_call: 0x1_407f_9d26,
@@ -428,7 +406,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

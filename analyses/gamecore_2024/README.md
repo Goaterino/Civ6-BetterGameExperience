@@ -1,6 +1,7 @@
 # GameCore du 2024-06-26 refusé avec l'exe 1.0.12.58
 
-**Pas encore corrigé** (2026-11-23) : cause identifiée, correctif à écrire.
+**Corrigé en local** (2026-11-23), pas encore publié ni essayé chez le joueur : voir
+[Correctif](#correctif).
 
 Signalement d'un joueur après le passage à la 0.14.0 : BGE est installé et activé, mais en partie
 rien ne fonctionne, et les signaux du départ simultané (`.bgd_depart 1`, `.bgd_depart 2`…)
@@ -54,17 +55,36 @@ désynchro pour toute la partie, pas seulement pour ce joueur. Ce n'est qu'à la
 que le bit `ST_POL` est lu et que l'annonce s'arrête. Aucune désynchro n'apparaît dans les journaux
 réseau reçus, mais ils ne couvrent que la dernière session.
 
+## Comparaison avec le GameCore 1.0.12.58 (2026-11-23)
+
+Le fichier du joueur est rangé dans `binaires_jeu/1.0.12.58_gamecore_2024-06-26/` (ignoré par
+git). SHA-256 `324c51e9ea3531758842e16c69e6cddbefbb226c5b675c3d6e60111646c2e98c`, date d'édition de
+liens `0x667c6f5b` : c'est bien le build de départ du projet.
+
+- `.text`, `.data`, `.pdata`, `.tls`, `.rsrc` et `.reloc` sont **identiques octet pour octet** à
+  ceux du GameCore 1.0.12.58 du 2023-11-11 (mêmes adresses, mêmes tailles).
+- Les seules différences : la date d'édition de liens (en-tête et répertoire de débogage), la somme
+  de contrôle et le répertoire de sécurité de l'en-tête, l'empreinte (GUID) du PDB, un horodatage de
+  `.rdata`, et une signature Authenticode ajoutée en fin de fichier (14 944 octets).
+- `proxy/tests/check_hooks.py` passe dessus (« jeu 1.0.12.58 (GameCore 0x667c6f5b) », OK), avec
+  les mêmes détours posés que sur le GameCore du 2023-11-11.
+
 ## Correctif
 
-1. **`BUILDS` accepte plusieurs GameCore par version d'exe** : ajouter
-   `("1.0.12.58", 0x667c_6f5b, false)`, et faire chercher à `detect` une ligne qui correspond à la
-   fois à la version et à la date d'édition de liens.
-2. **La prédiction du proxy de démarrage lit la date d'édition de liens du GameCore sur le disque**
-   (`DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll`) et la compare à la même table,
-   partagée entre les deux proxys (par exemple dans `proxy/src/noms.rs`). Une machine dont le
-   GameCore ne sera pas reconnu ne s'annonce plus.
+Fait en local le 2026-11-23 :
 
-## Ressources nécessaires
+1. **`BUILDS` accepte plusieurs GameCore par version d'exe** ([patch.rs](../../proxy/src/patch.rs)) :
+   ligne `("1.0.12.58", 0x667c_6f5b, false)`, et `known_build` cherche la ligne qui correspond à
+   la fois à la version et à la date d'édition de liens. Test `builds_of_a_game_version`.
+2. **La prédiction du proxy de démarrage lit la date d'édition de liens du GameCore sur le disque**
+   (`gamecore_refuse` dans [salon.rs](../../startup_proxy/src/salon.rs)) et la passe au même
+   `patch::known_build` (`patch.rs` est commun aux deux proxys). Une machine dont le GameCore ne
+   sera pas reconnu ne s'annonce plus avec les correctifs POL. Test `gamecores_connus`.
+
+Reste : publier, puis vérifier dans le journal du joueur « jeu 1.0.12.58 : tables d'adresses
+connues » et les détours posés.
+
+## Ressources (reçues le 2026-11-23)
 
 - **Le GameCore de ce joueur** : `DLC\Expansion2\Binaries\Win64\GameCore_XP2_FinalRelease.dll`,
   lié le 2024-06-26 (`0x667c6f5b`). Il n'est **pas** dans le dépôt ni sur la machine de

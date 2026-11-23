@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn sites_in_installed_exes() {
         let mut found = 0;
-        for (i, (exe_name, dx11)) in [("CivilizationVI_DX12.exe", false), ("CivilizationVI.exe", true)].iter().cycle().take(6).enumerate() {
+        for (i, (exe_name, dx11)) in [("CivilizationVI_DX12.exe", false), ("CivilizationVI.exe", true)].iter().cycle().take(4).enumerate() {
             let path = crate::test_exe(EXE_DIR, i, exe_name);
             let Ok(file) = std::fs::read(&path) else { continue };
             let image = map(&file);

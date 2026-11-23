@@ -110,16 +110,15 @@ pub extern "system" fn BgdSuiviMessages(on: u32) {
     cache_synchro::messages_tracked(on)
 }
 
-/// Tests: path of the exe a table index stands for. 0 and 1 are the 1.0.12.72 build
-/// (`CIV6_EXE_72_DIR`), 2 and 3 the 1.0.12.74 build (`CIV6_EXE_74_DIR`, or the installed game when
-/// unset), 4 and 5 the 1.0.12.58 build (`CIV6_EXE_58_DIR`). A build whose folder is not set or
-/// lacks the file is skipped.
+/// Tests: path of the exe a table index stands for, in the order of the tables: 0 and 1 the
+/// 1.0.12.74 build (`CIV6_EXE_74_DIR`, or the installed game when unset), 2 and 3 the 1.0.12.58
+/// build (`CIV6_EXE_58_DIR`). A build whose folder is not set or lacks the file is skipped.
 #[cfg(test)]
 pub(crate) fn test_exe(installed: &str, index: usize, name: &str) -> String {
-    let var = ["CIV6_EXE_72_DIR", "CIV6_EXE_74_DIR", "CIV6_EXE_58_DIR"][index / 2];
+    let var = ["CIV6_EXE_74_DIR", "CIV6_EXE_58_DIR"][index / 2];
     match std::env::var(var) {
         Ok(dir) => format!(r"{dir}\{name}"),
-        Err(_) if index / 2 == 1 => format!(r"{installed}\{name}"),
+        Err(_) if index / 2 == 0 => format!(r"{installed}\{name}"),
         Err(_) => format!("{var} not set"),
     }
 }
@@ -164,6 +163,15 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         // Hors de l'exe du jeu (tests), on ne pose rien.
         let name = exe.rsplit(['/', '\\']).next().unwrap_or("").to_ascii_lowercase();
         if name.starts_with("civilizationvi") {
+            if let Some(v) = patch::unsupported_game() {
+                // Version du jeu non prise en charge (1.0.12.72 depuis le 2026-11-23) : aucun
+                // correctif. Restent le chargement du proxy de GameCore, qui refuse lui-même cette
+                // version, et l'accroche du Lua, pour le dire au joueur (menu, salon, rapport de bug).
+                log(&format!("démarrage : jeu {v} non pris en charge par BetterGameExperience, aucun correctif posé"));
+                chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
+                options::install();
+                return 1;
+            }
             // Avant que le jeu ne cherche ses mods (DLC\BGEPings).
             medias::installer();
             chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);

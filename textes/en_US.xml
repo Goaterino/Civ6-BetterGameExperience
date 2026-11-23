@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="en_US">
 			<Text>On your city banners, an orange house appears when a city is one Housing below its cap (growth slowed by 50%), and the red house as soon as it is at the cap (75%). Without this option, the game only shows the red house once the city is over the cap. Display only.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="en_US">
+			<Text>Spy success chance that counts the escape</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="en_US">
+			<Text>The success chance shown for a spy mission also counts the escape: a success where the spy must escape only counts if the spy gets away, since the loot is only delivered then. Assumes the best escape route and does not count an enemy counterspy. Display only.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="en_US">
 			<Text>Shift+click and Ctrl+click in the deal screen</Text>
 		</Row>
@@ -823,6 +829,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="en_US">
 			<Text>Unmuted {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="en_US">
+			<Text>BGE: game {1} not supported</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="en_US">
+			<Text>Game version not supported</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="en_US">
+			<Text>BetterGameExperience does not support version {1} of the game: none of its fixes are active.[NEWLINE][NEWLINE]Update the game on Steam to its current version. Please do not report problems seen with this version: they do not come from BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="en_US">
+			<Text>Bug reports are turned off: BetterGameExperience does not support version {1} of the game, and none of its fixes are active. Update the game on Steam to its current version.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

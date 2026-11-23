@@ -154,14 +154,17 @@ pub unsafe fn on_proxy_unload() {
 mod tests {
     use super::*;
 
-    /// GameCore 1.0.12.58 (`CIV6_EXE_58_DIR`), celui de l'installation, et celui de 2020
-    /// (`binaires/`, Linux) : la recherche y trouve la réception et ses deux appelants.
+    /// GameCore 1.0.12.58 (`CIV6_EXE_58_DIR`, et ceux du 2023-11-11 et du 2024-06-26 dans
+    /// `binaires_jeu`), celui de l'installation (1.0.12.74), et celui de 2020 (`binaires/`, Linux) :
+    /// la recherche y trouve la réception et ses deux appelants.
     #[test]
     fn sites_in_known_gamecores() {
         let installed = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\DLC\Expansion2\Binaries\Win64";
         let mut dirs: Vec<String> = vec![installed.to_string(), concat!(env!("CARGO_MANIFEST_DIR"), "/../binaires").to_string()];
         dirs.extend(std::env::var("CIV6_EXE_58_DIR"));
         dirs.push(concat!(env!("CARGO_MANIFEST_DIR"), "/../binaires_jeu/1.0.12.58").to_string());
+    dirs.push(concat!(env!("CARGO_MANIFEST_DIR"), "/../binaires_jeu/1.0.12.58_gamecore_2024-06-26").to_string());
+    dirs.push(concat!(env!("CARGO_MANIFEST_DIR"), "/../binaires_jeu/1.0.12.74").to_string());
         let mut seen = 0;
         for dir in dirs {
             let path = std::path::Path::new(&dir).join(crate::noms::GAMECORE);
@@ -170,11 +173,13 @@ mod tests {
             let img = Image::file(&file).unwrap();
             let s = locate(&img).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
             eprintln!("{}: {s:x?}", path.display());
-            // Adresses relevées dans Ghidra (relatives) : 2020, et 1.0.12.58 (même code que 1.0.12.72).
+            // Adresses relevées (relatives) : 2020, 1.0.12.58 (même code que le GameCore du
+            // 2024-06-26), 1.0.12.74.
             let nt = u32::from_le_bytes(file[0x3c..0x40].try_into().unwrap()) as usize;
             let known = match u32::from_le_bytes(file[nt + 8..nt + 12].try_into().unwrap()) {
                 0x5ee1_0d21 => Some(Sites { receive: 0x33080, call: 0x32883, jump: 0x57_0415 }),
-                0x654e_cd4e | 0x6ae8_e9d4 => Some(Sites { receive: 0x37b50, call: 0x37353, jump: 0x59_0825 }),
+                0x654e_cd4e | 0x667c_6f5b => Some(Sites { receive: 0x37b50, call: 0x37353, jump: 0x59_0825 }),
+                0x6af3_bcb5 => Some(Sites { receive: 0x37b50, call: 0x37353, jump: 0x59_0865 }),
                 _ => None,
             };
             if let Some(k) = known {

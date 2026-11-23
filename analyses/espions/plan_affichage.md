@@ -1,8 +1,24 @@
 # Plan : afficher le vrai taux de succès des espions
 
-Plan d'intégration du 2026-11-23, rien n'est encore implémenté. Il s'appuie sur l'analyse
-[README.md](README.md). Les fichiers Lua d'espionnage du jeu manquaient sur la machine de rédaction :
-les étapes qui les lisent restent à faire sur une machine qui a le jeu.
+Plan d'intégration du 2026-11-23, **implémenté le même jour** par le réglage `ui_espions`
+([proxy/src/ui_espions.lua](../../proxy/src/ui_espions.lua), test
+[proxy/tests/test_ui_espions.lua](../../proxy/tests/test_ui_espions.lua)). Il s'appuie sur l'analyse
+[README.md](README.md). Reste l'étape 8, la vérification en partie.
+
+Ce que la lecture des scripts du jeu (étape 1) a montré :
+
+- `GetResultProbability` n'est appelé qu'à deux endroits : `RefreshMissionStats` dans
+  `EspionageSupport.lua` (choix de mission) et `RefreshPossibleOutcomes` dans `EspionagePopup.lua`
+  (fenêtre de mission). Les deux contextes incluent `EspionageSupport.lua` ; le remplacement XP1/XP2,
+  `EspionageChooser_Expansion1.lua`, inclut `EspionageChooser`. Aucun mod installé ne remplace ces
+  fichiers.
+- Le bloc est donc ajouté à `EspionageSupport.lua`. Il remplace le nom `UnitManager` du contexte par
+  une table qui renvoie tout à l'original sauf `GetResultProbability`, dont la réponse est copiée
+  avec `ESPIONAGE_SUCCESS_MUST_ESCAPE` multiplié par la chance d'évasion. La fenêtre calcule
+  « capturé ou tué » par différence : la part retirée y passe d'elle-même.
+- La ville vient de `Cities.GetPlotPurchaseCity(case visée)`, et les quartiers de
+  `city:GetDistricts():Members()` avec `IsComplete()` et `GameInfo.DistrictReplaces`, comme le fait
+  déjà `EspionageChooser.lua`.
 
 ## Objectif
 
@@ -169,8 +185,28 @@ reprendre.
 
 ## Ce qu'il faut re-identifier sur la 1.0.12.74
 
-La 1.0.12.74 n'est pas disponible localement. [patch.rs](../../proxy/src/patch.rs) la décrit comme le
-même code et les mêmes données que la 1.0.12.58, à d'autres adresses.
+**Fait le 2026-11-23** sur `binaires_jeu/1.0.12.74/GameCore_XP2_FinalRelease.dll` : chaque fonction
+ci-dessous est identique à celle de la .58, morceaux de la table des exceptions compris, au
+déplacement des adresses relatives près. Les règles n'ont pas changé.
+
+| .58 | .74 |
+|---|---|
+| `180375100` (évasion) | `1803749c0` |
+| `180373ac0` | `180373380` |
+| `180373c30` | `1803734f0` |
+| `180372b40` (seuil E) | `180372400` |
+| `180371b10` (sortie de la police) | `1803713d0` |
+| `18011ee20` (quartier terminé) | `18011ee20` |
+| `180374180` (six issues) | `180373a40` |
+| `180374000` | `1803738c0` |
+| `1800d14f0` (interface) | `1800d14f0` |
+| `1806c2740` (interface) | `1806c2780`, seule sa table de saut diffère (RVA décalées de 0x40) |
+| table 3d6 `180b64c70` | `180b64c70`, mêmes valeurs |
+
+Les décalages `+0x2c0` à `+0x2cc`, `+0x934`, `+0x948` et `+0x3f8` sont donc les mêmes. Il reste à
+relire les fichiers Lua d'espionnage installés avec la .74 si le bloc s'accroche à leur texte.
+
+Texte d'origine du plan, avant ces vérifications :
 
 - **Avec la solution Lua seule (retenue) : aucune adresse.** Il faut seulement confirmer que les
   règles n'ont pas changé, en comparant les fonctions suivantes à la .58, au déplacement près :

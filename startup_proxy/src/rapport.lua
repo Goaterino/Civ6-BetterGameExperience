@@ -239,6 +239,15 @@ local BGD_RapportOk, BGD_RapportErr = pcall(function()
 	end
 
 	local function Ouvrir()
+		-- Version du jeu non prise en charge : aucun correctif n'est actif, un rapport ne parlerait pas
+		-- de BetterGameExperience. Ni formulaire ni message dans le chat.
+		local inconnue = Civ6Proxy_VersionNonPriseEnCharge ~= nil and Civ6Proxy_VersionNonPriseEnCharge() or nil;
+		if inconnue ~= nil then
+			Journal("refusé : jeu " .. tostring(inconnue) .. " non pris en charge");
+			Afficher(BGD_Txt("LOC_BGD_VERSION_NON_SUPPORTEE_TITRE"), BGD_Txt("LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE", inconnue),
+				{ { BGD_Txt("LOC_BGD_RAPPORT_FERMER"), function() end, PopupDialog.COMMAND_CANCEL } });
+			return;
+		end
 		if R.etat == "envoi" then
 			-- Menu rouvert pendant l'envoi : on reprend le suivi.
 			AfficherEnvoi();
