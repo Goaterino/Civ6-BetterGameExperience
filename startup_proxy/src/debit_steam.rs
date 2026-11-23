@@ -20,15 +20,27 @@
 //!   veut dire que Steam limite en octets (fenêtre ÷ ping) : la piste ne rapporte rien. Un débit qui
 //!   grandit avec la taille des paquets veut dire qu'il limite en messages.
 //!
-//! **`morceaux_reseau=<octets>` : essai de morceaux plus gros.** Change le protocole : **même
-//! valeur sur toutes les machines de la partie**, sinon le receveur compte mal les morceaux et la
-//! partie se corrompt. Essai à deux machines seulement, jamais en vraie partie.
-//! - La taille des morceaux est la globale `14128f328` (DX12 .58). Le réglage la fixe à la valeur
-//!   choisie, à la place des 1 166 octets :
+//! **`morceaux_reseau=<octets>` : essai de morceaux plus gros.** Un receveur au tampon d'origine
+//! (2 048 octets) plante sur un morceau plus gros : un joueur sans BGE qui rejoignait un hôte réglé
+//! à 60 000 plantait dans le salon (2026-11-23). Seul l'envoyeur compte les morceaux
+//! (`1407f7ae0`), le receveur n'a besoin que d'un tampon assez grand.
+//! - **Au lancement** : seul le tampon de réception est agrandi (voir plus bas), sans risque : il
+//!   reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets.
+//! - **En partie seulement** (`partie.lua`, native `Civ6Proxy_MorceauxReseau(ids)`) : quand les
+//!   correctifs POL sont actifs (verdict de l'hôte) et que chaque joueur connecté annonce la même
+//!   version de BGE, l'interface donne leurs SteamID. Les morceaux passent alors à la valeur
+//!   choisie. Les builds `diag` annoncent `<version>-diag` (`salon::version_annoncee`) : une machine
+//!   de la version publiée, au tampon d'origine, n'est jamais comptée.
+//! - **Retour aux 1 166 octets** : liste vide (salon, correctifs POL coupés, joueur non équipé), ou
+//!   premier paquet Steam, envoyé ou reçu, d'un pair hors de la liste. Un nouveau venu se manifeste
+//!   avant que l'hôte lui envoie quoi que ce soit : le retour précède toute réponse. Un pair hors
+//!   liste vu dans les 30 dernières secondes empêche aussi le passage aux gros morceaux.
+//! - La taille des morceaux est la globale `14128f328` (DX12 .58). Pour l'appliquer :
 //!   - le réglage de session `1407f7ab0` (plafond 1 166) saute directement à son écriture finale,
 //!     dont la valeur devient celle choisie ;
 //!   - la remise à la valeur par défaut `1407f7780` écrit la valeur choisie ;
-//!   - la globale elle-même est écrite au démarrage.
+//!   - la globale elle-même est écrite.
+//!   Le retour remet les octets d'origine et 1 166 dans la globale.
 //! - Le tampon de réception Steam de 0x800 octets (`14238e040`, une seule référence : le `lea` de
 //!   `14085dc4c` dans `FSteamTransportThread::Update`) est remplacé par un tampon de 128 Ko proche de
 //!   l'exe, et la taille passée à `ReadP2PPacket` (`mov r8d,800h` en `14085dc67`) devient 128 Ko.
@@ -42,9 +54,10 @@ use crate::{exe, log, win};
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr};
 use std::io::Write;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Mutex;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 // ---------------------------------------------------------------------------------------------
 // Réglages
@@ -209,8 +222,12 @@ unsafe fn record(this: *mut c_void, peer: u64, f: impl FnOnce(&mut Window)) {
 }
 
 unsafe extern "system" fn send_hook(this: *mut c_void, peer: u64, data: *const c_void, len: u32, kind: i32, channel: i32) -> u8 {
+    gate_peer(peer);
     let original: SendFn = std::mem::transmute(ORIG_SEND.load(Ordering::Relaxed));
     let ok = original(this, peer, data, len, kind, channel);
+    if !TRACE_ON.load(Ordering::Relaxed) {
+        return ok;
+    }
     record(this, peer, |w| {
         if ok != 0 {
             w.sent += 1;
@@ -228,6 +245,11 @@ unsafe extern "system" fn read_hook(this: *mut c_void, dest: *mut c_void, cap: u
     let ok = original(this, dest, cap, size, peer, channel);
     if ok != 0 && !size.is_null() && !peer.is_null() {
         let (n, id) = (*size, *peer);
+        // Avant que le jeu ne lise le paquet : il ne répond à un nouveau venu qu'après.
+        gate_peer(id);
+        if !TRACE_ON.load(Ordering::Relaxed) {
+            return ok;
+        }
         record(this, id, |w| {
             w.received += 1;
             w.received_bytes += n as u64;
@@ -255,9 +277,10 @@ unsafe fn hook_interface(iface: *mut c_void) {
     ORIG_READ.store(exe::rd::<usize>(read), Ordering::Relaxed);
     STATE.store(exe::rd::<usize>(vtable + 8 * SLOT_STATE), Ordering::Relaxed);
     if exe::write_slot(send, send_hook as SendFn as usize) && exe::write_slot(read, read_hook as ReadFn as usize) {
-        log("debit steam : SendP2PPacket et ReadP2PPacket tracés");
+        HOOKED.store(true, Ordering::Relaxed);
+        log("debit steam : SendP2PPacket et ReadP2PPacket détournés");
     } else {
-        log("debit steam : table de SteamNetworking005 non modifiable, pas de trace");
+        log("debit steam : table de SteamNetworking005 non modifiable, ni trace ni gros morceaux");
     }
 }
 
@@ -270,9 +293,10 @@ unsafe extern "C" fn find_hook(user: i32, version: *const c_char) -> *mut c_void
     iface
 }
 
-unsafe fn install_trace(module: usize) {
+/// Détourne l'obtention de `SteamNetworking005` : trace, et contrôle des pairs des gros morceaux.
+unsafe fn install_hooks(module: usize) {
     let Some(slot) = exe::iat_slot(module, "steam_api64.dll", "SteamInternal_FindOrCreateUserInterface") else {
-        log("debit steam : import SteamInternal_FindOrCreateUserInterface introuvable, pas de trace");
+        log("debit steam : import SteamInternal_FindOrCreateUserInterface introuvable, ni trace ni gros morceaux");
         return;
     };
     ORIG_FIND.store(exe::rd::<usize>(slot), Ordering::Relaxed);
@@ -397,29 +421,162 @@ unsafe fn install_chunks(module: usize, chunk: u32) {
         log("debit steam : tampon hors de portée, essai de morceaux non posé");
         return;
     };
-    // Le tampon et sa taille d'abord : les morceaux plus gros ne partent qu'ensuite.
-    let ok = write(lea + 3, &disp.to_le_bytes())
-        && write(lea + RECV_SIZE as usize, &RECV_BUFFER.to_le_bytes())
-        && write(image(exe.reset + RESET_VALUE), &chunk.to_le_bytes())
-        && write(image(exe.setter + SETTER_VALUE), &chunk.to_le_bytes())
-        && write(image(exe.setter), &SETTER_JUMP)
-        && write(image(exe.global), &chunk.to_le_bytes());
-    if ok {
-        log(&format!(
-            "debit steam : morceaux de {chunk} octets, tampon de réception de {RECV_BUFFER} octets ({}) ; la même valeur est requise sur toutes les machines",
-            exe.name
-        ));
-    } else {
-        log("debit steam : écriture refusée, essai de morceaux incomplet");
+    // Le tampon seul au lancement : les envois gardent la taille du jeu jusqu'à `set_peers`.
+    if !(write(lea + 3, &disp.to_le_bytes()) && write(lea + RECV_SIZE as usize, &RECV_BUFFER.to_le_bytes())) {
+        log("debit steam : écriture refusée, tampon de réception d'origine, pas de gros morceaux");
+        return;
     }
+    let mut g = GATE.lock().unwrap_or_else(|e| e.into_inner());
+    g.sites = Some(Sites {
+        setter: image(exe.setter),
+        setter_value: image(exe.setter + SETTER_VALUE),
+        reset_value: image(exe.reset + RESET_VALUE),
+        global: image(exe.global),
+        setter_head: [*(image(exe.setter) as *const u8), *((image(exe.setter) + 1) as *const u8)],
+    });
+    g.chunk = chunk;
+    log(&format!(
+        "debit steam : tampon de réception de {RECV_BUFFER} octets ({}) ; morceaux de {chunk} octets en partie seulement, quand chaque joueur annonce la même version de BGE",
+        exe.name
+    ));
+}
+
+// ---------------------------------------------------------------------------------------------
+// Gros morceaux en partie, entre machines équipées
+
+/// Taille des morceaux du jeu (0x48e).
+const GAME_CHUNK: u32 = 1166;
+/// Un pair hors liste vu depuis moins longtemps empêche les gros morceaux.
+const STRANGER_MEMORY: Duration = Duration::from_secs(30);
+
+/// Adresses absolues des écritures.
+struct Sites {
+    setter: usize,
+    setter_value: usize,
+    reset_value: usize,
+    global: usize,
+    /// Deux premiers octets d'origine du réglage de session (remplacés par le saut).
+    setter_head: [u8; 2],
+}
+
+struct Gate {
+    sites: Option<Sites>,
+    chunk: u32,
+    active: bool,
+    /// SteamID des pairs annoncés par l'interface (`set_peers`).
+    approved: BTreeSet<u64>,
+    /// Pairs hors liste, et quand ils ont été vus pour la dernière fois.
+    strangers: BTreeMap<u64, Instant>,
+}
+
+static GATE: Mutex<Gate> = Mutex::new(Gate {
+    sites: None,
+    chunk: 0,
+    active: false,
+    approved: BTreeSet::new(),
+    strangers: BTreeMap::new(),
+});
+static TRACE_ON: AtomicBool = AtomicBool::new(false);
+/// `morceaux_reseau` lu au lancement (0 : désactivé), pour la version annoncée.
+static CONFIGURED: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+/// Suffixe de la version annoncée par un build de diagnostic : `-m<taille>` avec `morceaux_reseau`.
+/// Deux machines de réglages différents ne se comptent pas comme de la même version : une machine
+/// sans le réglage garde le tampon de réception d'origine.
+pub fn announced_suffix() -> String {
+    match CONFIGURED.load(Ordering::Relaxed) {
+        0 => String::new(),
+        n => format!("-m{n}"),
+    }
+}
+static HOOKED: AtomicBool = AtomicBool::new(false);
+
+/// Écrit la taille choisie (`on`) ou celle du jeu, et l'état d'origine du réglage de session.
+unsafe fn apply(g: &mut Gate, on: bool, why: &str) {
+    let Some(s) = g.sites.as_ref() else { return };
+    if g.active == on {
+        return;
+    }
+    let size = if on { g.chunk } else { GAME_CHUNK };
+    let head = if on { SETTER_JUMP } else { s.setter_head };
+    let ok = write(s.reset_value, &size.to_le_bytes())
+        && write(s.setter_value, &size.to_le_bytes())
+        && write(s.setter, &head)
+        && write(s.global, &size.to_le_bytes());
+    g.active = on && ok;
+    log(&format!("debit steam : morceaux de {size} octets ({why}){}", if ok { "" } else { ", écriture refusée" }));
+}
+
+/// Chaque paquet Steam, envoyé ou reçu : un pair hors liste ramène aussitôt la taille du jeu.
+unsafe fn gate_peer(peer: u64) {
+    let mut g = GATE.lock().unwrap_or_else(|e| e.into_inner());
+    if g.sites.is_none() || g.approved.contains(&peer) {
+        return;
+    }
+    g.strangers.insert(peer, Instant::now());
+    if g.active {
+        apply(&mut g, false, &format!("pair {} hors de la liste des joueurs équipés", peer & 0xffff_ffff));
+    }
+}
+
+/// Liste `"id,id"` de SteamID ; vide : taille du jeu. Gros morceaux seulement en partie réseau avec
+/// les correctifs POL actifs, et sans pair hors liste vu récemment.
+pub fn decide(ids: &str, pol: bool, network: bool, hooked: bool, approved: &mut BTreeSet<u64>, strangers: &mut BTreeMap<u64, Instant>, now: Instant) -> Result<(), String> {
+    approved.clear();
+    approved.extend(ids.split(',').filter_map(|s| s.trim().parse::<u64>().ok()));
+    strangers.retain(|id, seen| !approved.contains(id) && now.duration_since(*seen) < STRANGER_MEMORY);
+    if approved.is_empty() {
+        return Err("aucun joueur équipé listé".into());
+    }
+    if !pol || !network {
+        return Err("correctifs POL inactifs ou partie locale".into());
+    }
+    if !hooked {
+        return Err("SteamNetworking005 non détourné".into());
+    }
+    if let Some(id) = strangers.keys().next() {
+        return Err(format!("pair {} hors de la liste vu récemment", id & 0xffff_ffff));
+    }
+    Ok(())
+}
+
+/// `Civ6Proxy_MorceauxReseau(ids)` (partie.lua) : les SteamID des autres joueurs connectés, tous
+/// de la même version de BGE, ou une chaîne vide.
+pub unsafe extern "C-unwind" fn lua_set_peers(l: *mut c_void) -> i32 {
+    let ids = crate::salon::arg_str(l, 1).unwrap_or_default();
+    let mut g = GATE.lock().unwrap_or_else(|e| e.into_inner());
+    if g.sites.is_none() {
+        return 0;
+    }
+    let (mut approved, mut strangers) = (std::mem::take(&mut g.approved), std::mem::take(&mut g.strangers));
+    let verdict = decide(&ids, crate::salon::pol_actifs(), crate::salon::partie_reseau(), HOOKED.load(Ordering::Relaxed), &mut approved, &mut strangers, Instant::now());
+    g.approved = approved;
+    g.strangers = strangers;
+    match verdict {
+        Ok(()) => {
+            let why = format!("{} joueur(s) équipé(s)", g.approved.len());
+            apply(&mut g, true, &why)
+        }
+        Err(why) => apply(&mut g, false, &why),
+    }
+    0
+}
+
+/// Correctifs POL coupés (salon ouvert, verdict négatif) : taille du jeu.
+pub fn pol_off() {
+    let mut g = GATE.lock().unwrap_or_else(|e| e.into_inner());
+    g.approved.clear();
+    unsafe { apply(&mut g, false, "correctifs POL coupés") };
 }
 
 /// Appelé par DllMain (builds de diagnostic).
 pub unsafe fn install() {
     let cfg = parse(&crate::options::read_config().map(|(t, _)| t).unwrap_or_default());
     let module = win::GetModuleHandleW(std::ptr::null()) as usize;
-    if cfg.trace {
-        install_trace(module);
+    TRACE_ON.store(cfg.trace, Ordering::Relaxed);
+    CONFIGURED.store(cfg.chunk.unwrap_or(0), Ordering::Relaxed);
+    if cfg.trace || cfg.chunk.is_some() {
+        install_hooks(module);
     }
     if let Some(chunk) = cfg.chunk {
         install_chunks(module, chunk);
@@ -438,6 +595,26 @@ mod tests {
         assert_eq!(parse("morceaux_reseau=1166").chunk, None, "pas en dessous de la taille du jeu");
         assert_eq!(parse("morceaux_reseau=70000").chunk, None, "pas au-delà du tampon");
         assert_eq!(parse("trace_steam=on\ntrace_steam=off").trace, false, "la dernière ligne l'emporte");
+    }
+
+    /// Gros morceaux seulement avec une liste, POL actif, en réseau, et sans pair hors liste récent.
+    #[test]
+    fn chunk_gate() {
+        let now = Instant::now();
+        let (mut a, mut s) = (BTreeSet::new(), BTreeMap::new());
+        assert!(decide("76561198049438351", true, true, true, &mut a, &mut s, now).is_ok());
+        assert!(a.contains(&76561198049438351));
+        assert!(decide("", true, true, true, &mut a, &mut s, now).is_err(), "liste vide");
+        assert!(a.is_empty());
+        assert!(decide("1", false, true, true, &mut a, &mut s, now).is_err(), "POL coupé");
+        assert!(decide("1", true, false, true, &mut a, &mut s, now).is_err(), "partie locale");
+        assert!(decide("1", true, true, false, &mut a, &mut s, now).is_err(), "Steam non détourné");
+        s.insert(2, now);
+        assert!(decide("1", true, true, true, &mut a, &mut s, now).is_err(), "inconnu vu à l'instant");
+        assert!(decide("1,2", true, true, true, &mut a, &mut s, now).is_ok(), "devenu équipé");
+        assert!(s.is_empty());
+        s.insert(3, now);
+        assert!(decide("1", true, true, true, &mut a, &mut s, now + STRANGER_MEMORY).is_ok(), "parti depuis 30 s");
     }
 
     #[test]

@@ -1,8 +1,24 @@
 # Plan : afficher le vrai taux de succès des espions
 
-Plan d'intégration du 2026-11-23, rien n'est encore implémenté. Il s'appuie sur l'analyse
-[README.md](README.md). Les fichiers Lua d'espionnage du jeu manquaient sur la machine de rédaction :
-les étapes qui les lisent restent à faire sur une machine qui a le jeu.
+Plan d'intégration du 2026-11-23, **implémenté le même jour** par le réglage `ui_espions`
+([proxy/src/ui_espions.lua](../../proxy/src/ui_espions.lua), test
+[proxy/tests/test_ui_espions.lua](../../proxy/tests/test_ui_espions.lua)). Il s'appuie sur l'analyse
+[README.md](README.md). Reste l'étape 8, la vérification en partie.
+
+Ce que la lecture des scripts du jeu (étape 1) a montré :
+
+- `GetResultProbability` n'est appelé qu'à deux endroits : `RefreshMissionStats` dans
+  `EspionageSupport.lua` (choix de mission) et `RefreshPossibleOutcomes` dans `EspionagePopup.lua`
+  (fenêtre de mission). Les deux contextes incluent `EspionageSupport.lua` ; le remplacement XP1/XP2,
+  `EspionageChooser_Expansion1.lua`, inclut `EspionageChooser`. Aucun mod installé ne remplace ces
+  fichiers.
+- Le bloc est donc ajouté à `EspionageSupport.lua`. Il remplace le nom `UnitManager` du contexte par
+  une table qui renvoie tout à l'original sauf `GetResultProbability`, dont la réponse est copiée
+  avec `ESPIONAGE_SUCCESS_MUST_ESCAPE` multiplié par la chance d'évasion. La fenêtre calcule
+  « capturé ou tué » par différence : la part retirée y passe d'elle-même.
+- La ville vient de `Cities.GetPlotPurchaseCity(case visée)`, et les quartiers de
+  `city:GetDistricts():Members()` avec `IsComplete()` et `GameInfo.DistrictReplaces`, comme le fait
+  déjà `EspionageChooser.lua`.
 
 ## Objectif
 

@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="fr_FR">
 			<Text>Sur le bandeau de vos villes, une maison orange apparaît quand il ne reste qu'une habitation avant la limite (croissance ralentie de 50 %), et la maison rouge dès que la limite est atteinte (75 %). Sans cette option, le jeu n'affiche la maison rouge qu'une fois la limite dépassée. Affichage seulement.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="fr_FR">
+			<Text>Chance de succès des espions avec l'évasion</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="fr_FR">
+			<Text>La chance de succès affichée pour une mission d'espionnage tient compte de l'évasion : un succès où l'espion doit s'échapper ne compte que s'il s'en sort, car le butin n'est versé qu'à ce moment. Suppose le meilleur itinéraire de fuite et ne compte pas un contre-espion ennemi. Affichage seulement.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="fr_FR">
 			<Text>Maj+clic et Ctrl+clic dans l'écran d'accord</Text>
 		</Row>

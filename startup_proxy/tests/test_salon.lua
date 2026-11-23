@@ -698,6 +698,41 @@ do
 	check(#log == n + 2 and log[n + 2]:find("joueur 1 : erreur levée", 1, true) and appels == 4, "diag : erreur levée");
 end
 
+-- 17b. Partie chargée rejointe : une civilisation majeure dont le dirigeant est hors de la liste
+-- (paramètres créés avant les dirigeants des DLC et des mods) fait reconstruire la liste des
+-- joueurs au tic suivant, une fois par état de la base de configuration ; pas une cité-État.
+do
+	local base, construites, erreurs = 6599, 0, {};
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } }, { controles = true, avant = function(env)
+		env.UpdateReadyButton = function() end;
+		env.GetPlayerParameterError = function(id) return erreurs[id]; end;
+		env.GetGameParametersError = function() return nil; end;
+		env.GetPlayerParameters = function() return { Parameters = { PlayerLeader = { Domain = "Players:StandardPlayers", Values = {} } } }; end;
+		env.BuildPlayerList = function() construites = construites + 1; end;
+		env.DB = { ConfigurationChanges = function() return base; end, ConfigurationQuery = function() return {}; end };
+	end });
+	l.open();
+	local bob = l.machines[1];
+	erreurs[1] = { Id = "MissingDomainValue" };
+	bob.env.UpdateReadyButton();
+	check(construites == 0, "reconstruction : pas pendant UpdateReadyButton");
+	l.tic(1);
+	check(construites == 1 and bob.log:find("dirigeant hors de la liste, liste des joueurs reconstruite (base 6599)", 1, true),
+		"reconstruction : au tic suivant (" .. construites .. ")");
+	bob.env.UpdateReadyButton();
+	l.tic(2);
+	check(construites == 1, "reconstruction : une seule fois par état de la base");
+	base = 6600;
+	bob.env.UpdateReadyButton();
+	l.tic(1);
+	check(construites == 2, "reconstruction : à nouveau quand la base a changé");
+	erreurs[1] = { Id = "InvalidDomainValue" };
+	base = 6601;
+	bob.env.UpdateReadyButton();
+	l.tic(1);
+	check(construites == 2, "reconstruction : pas pour une autre erreur");
+end
+
 -- 18. Cité-État d'une partie chargée : son dirigeant hors liste ne bloque plus Prêt ; une
 -- civilisation majeure dans le même cas, ou une autre erreur de cité-État, si.
 do

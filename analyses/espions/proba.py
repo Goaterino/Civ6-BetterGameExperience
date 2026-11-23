@@ -20,3 +20,14 @@ for B in (13,14,15,16):
     E=10-(L-1)
     loot=[(o0[5]+o0[4]*escape(e)[2]/216) for e in (E,E+4)]
     print(B,L,"|",pct(o0[4]+o0[5]),"|",*[pct(o[4]+o[5]) for o in real],"|",*map(pct,loot))
+
+# Affichage corrigé (plan_affichage.md) : P5 + P4 × P(évasion), meilleure sortie (poids mini m sur W),
+# sans contre-espion. GetResultProbability tronque chaque issue sur 8 bits : on fait de même.
+q8=lambda w: int(w*256/216)/256
+def affiche(B,L,W,m=1,boost=0):
+    o=outcomes(B-(L-1)); E=10-(L-1)-boost; p=m/W
+    esc=p*escape(E+4)[2]/216+(1-p)*escape(E)[2]/216
+    return q8(o[5])+q8(o[4])*esc
+print("\naffichage corrigé, B=14 : L | W=10 W=3 W=1 | As du volant W=1")
+for L in (1,2,3,4):
+    print(L,*[f"{100*affiche(14,L,W):5.1f}" for W in (10,3,1)],f"{100*affiche(14,L,1,boost=4):5.1f}")

@@ -245,6 +245,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="de_DE">
 			<Text>Im Banner eurer Städte erscheint ein orangefarbenes Haus, wenn nur noch 1 Wohnraum bis zur Obergrenze frei ist (Wachstum um 50 % gesenkt), und das rote Haus, sobald die Obergrenze erreicht ist (75 %). Ohne diese Option zeigt das Spiel das rote Haus erst, wenn die Obergrenze überschritten ist. Nur Anzeige.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="de_DE">
+			<Text>Spion-Erfolgschance mit Flucht</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="de_DE">
+			<Text>Die angezeigte Erfolgschance einer Spionagemission berücksichtigt auch die Flucht: Ein Erfolg, bei dem der Spion fliehen muss, zählt nur, wenn er entkommt, denn erst dann wird die Beute ausgezahlt. Geht vom besten Fluchtweg aus und berücksichtigt keinen feindlichen Gegenspion. Nur Anzeige.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="de_DE">
 			<Text>Umschalt+Klick und Strg+Klick im Abkommensbildschirm</Text>
 		</Row>

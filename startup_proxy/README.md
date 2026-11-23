@@ -216,10 +216,19 @@ outils de l'analyse préliminaire de la piste « morceaux plus gros »
   - Fichier : `%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-<pid>.log`. Il n'entre pas dans les
     rapports de bug. Un pair y est noté par un numéro et l'identifiant de compte de son SteamID.
 - **`morceaux_reseau=4096|16384|60000` : essai de morceaux plus gros.**
-  - Il change le protocole : **même valeur sur toutes les machines de la partie**, sinon le
-    receveur compte mal les morceaux et la partie se corrompt. Essai à deux machines seulement.
-  - Il fixe la taille des morceaux (1 166 octets dans le jeu) et remplace le tampon de réception
-    Steam de 2 Ko par un tampon de 128 Ko.
+  - Un receveur au tampon d'origine (2 Ko) plante sur un morceau plus gros. Le 2026-11-23, un
+    joueur sans BGE (`actif=off`) a planté en rejoignant un hôte réglé à 60 000.
+  - **Au lancement**, seul le tampon de réception Steam de 2 Ko est remplacé par un tampon de
+    128 Ko : il reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets.
+  - **En partie seulement**, la taille choisie s'applique quand les correctifs POL sont actifs et
+    que chaque joueur connecté annonce la même version (`partie.lua`, native
+    `Civ6Proxy_MorceauxReseau` : leurs SteamID). Un build de diagnostic annonce
+    `<version>-diag`, plus `-m<taille>` avec ce réglage (`salon::version_annoncee`) : ni la version
+    publiée, ni un build réglé autrement ne comptent comme lui.
+  - **Retour à 1 166 octets** : correctifs POL coupés (salon), joueur non équipé, ou premier
+    paquet Steam, envoyé ou reçu, d'un pair hors de la liste. Un nouveau venu écrit avant que
+    l'hôte lui réponde. Un pair hors liste vu dans les 30 dernières secondes bloque aussi le
+    passage aux gros morceaux. Le journal dit `debit steam : morceaux de … octets (raison)`.
   - **Injections à des adresses fixes, relevées sur 1.0.12.58 et 1.0.12.74** (table `EXES`, DX12 /
     DX11). Chaque site est vérifié octet par octet avant d'écrire.
     Sur une autre version, rien n'est posé et le journal dit `essai de morceaux non posé`.
@@ -237,8 +246,10 @@ outils de l'analyse préliminaire de la piste « morceaux plus gros »
     adresses : les recopier dans `EXES` avec le nom de la version.
   - Le nombre de morceaux d'un message (`1407f7ae0` en DX12 .58 : `(taille − 1) / globale + 1`)
     n'est calculé qu'à l'envoi, par le vidage de la file sortante (`FNetSession`, « Net Flushing
-    Outgoing Message Queue »). La lecture des morceaux à la réception n'est pas encore relue : la
-    règle « même valeur partout » reste.
+    Outgoing Message Queue »). La lecture des morceaux à la réception n'est pas encore relue :
+    par prudence, seuls des builds du même réglage échangent des gros morceaux (voir plus haut).
+    Essai du 2026-11-23, deux machines à 60 000 : contrôle de synchro de 490 Ko en 9 morceaux,
+    sauvegarde de 2,9 Mo reçue en environ 4,5 s, autant de paquets et d'octets reçus qu'envoyés.
 - **Lecture.**
   - Chronométrer l'envoi d'une sauvegarde ou d'un contrôle de synchro avec la taille du jeu, puis
     avec des morceaux plus gros, en regardant la file d'envoi se vider.
