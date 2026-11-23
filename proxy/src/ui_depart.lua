@@ -138,12 +138,29 @@ local BGD_DepartOk, BGD_DepartErr = pcall(function()
 		return pc ~= nil and pc:GetLeaderTypeName() == "LEADER_SPECTATOR";
 	end
 
-	-- Version annoncée dans le salon : "<version>@<jeton de l'hôte>#<jeton>".
+	-- Identité de l'occupant de l'emplacement : l'identifiant Steam du nom réseau, sinon
+	-- GetNetworkIdentifer (règle de startup_proxy/src/salon.lua, BGD_Identite).
+	local function Identite(pc)
+		local nom = pc:GetValue("NETWORK_NAME");
+		local ident = type(nom) == "string" and string.match(nom, "@(%w+)$") or nil;
+		if ident == nil and pc.GetNetworkIdentifer ~= nil then
+			local ok, v = pcall(pc.GetNetworkIdentifer, pc);
+			ident = ok and v ~= nil and tostring(v) or nil;
+		end
+		return string.sub(string.gsub(ident or "", "[^%w]", ""), 1, 32);
+	end
+
+	-- Version annoncée dans le salon : "<version>@<jeton de l'hôte>#<jeton>~<identité>". Une
+	-- annonce restée sur l'emplacement d'un autre joueur (swap, remplaçant) ne compte pas : un
+	-- joueur sans BetterGameExperience n'enverrait jamais son signal.
 	local function Version(id)
 		local pc = PlayerConfigurations[id];
 		if pc == nil then return nil; end
 		local v = pc:GetValue("BGD_VERSION");
-		return string.match(tostring(v), "^([^@#:]+)@");
+		local version, perso = string.match(tostring(v), "^([^@#:]+)@[^@#:]*#([^@#:,]*)$");
+		local ident = perso and string.match(perso, "~(%w*)$");
+		if ident ~= nil and ident ~= Identite(pc) then return nil; end
+		return version;
 	end
 
 	local function Nom(id)

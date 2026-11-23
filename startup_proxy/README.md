@@ -225,9 +225,20 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   joueurs qui n'ont plus le proxy. Chaque ouverture du salon, et chaque migration d'hôte, tire donc
   un jeton pour l'hôte et un pour chaque joueur.
 - **L'annonce.** Chaque joueur écrit dans sa configuration de joueur `BGD_VERSION =
-  <version>@<jeton de l'hôte>#<son jeton>`, puis la diffuse (`Network.BroadcastPlayerInfo`, sans
-  effet sur le statut « prêt »). Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte
-  pas.
+  <version>@<jeton de l'hôte>#<son jeton>~<son identité>`, puis la diffuse
+  (`Network.BroadcastPlayerInfo`, sans effet sur le statut « prêt »). Une annonce qui ne porte pas le
+  jeton actuel de l'hôte ne compte pas.
+- **L'identité.** C'est l'identifiant Steam du joueur, lu dans le nom réseau de son emplacement
+  (`NETWORK_NAME = <nom>@<identifiant>`, sinon `GetNetworkIdentifer`). Un swap d'emplacements
+  n'échange que le nom réseau et l'état « prêt » : l'emplacement garde ses autres valeurs, annonce
+  comprise ([analyses/lobby](../analyses/lobby/README.md)). Sans identité, un joueur sans le proxy
+  qui prenait l'emplacement d'un joueur équipé héritait de son annonce, valide pour ce salon, et le
+  salon le croyait équipé (rapport BGE-141E15 : swap de Mateo et StulioS, verdict passé à 1). Une
+  annonce compte donc seulement si son identité est celle de l'occupant actuel. Sans identité
+  (réseau local, annonce d'une version précédente), un jeton personnel présent sur deux
+  emplacements ne compte pour aucun. La même règle sert à l'hôte en partie (`partie.lua`, un remplaçant sur l'emplacement
+  d'un joueur parti), aux options de partie (`option_partie.lua`), au départ simultané
+  (`proxy/src/ui_depart.lua`) et aux signaux d'équipe (`proxy/src/mods/pings/common.lua`).
 - **Le verdict** est celui de l'hôte, le même pour toutes les machines : `BGD_VERDICT =
   <version>@<jeton de l'hôte>:<1|0>:<jetons>` dans sa configuration de joueur. 1 si tous les
   humains connectés annoncent sa version avec son jeton ; les jetons de tous ceux dont il a reçu une

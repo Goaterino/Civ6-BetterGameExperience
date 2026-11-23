@@ -130,14 +130,41 @@ local BGD_OptionOk, BGD_OptionErr = pcall(function()
 		if Civ6Proxy_PolActifs == nil or Civ6Proxy_PolActifs() ~= 1 or Civ6Proxy_Version == nil then return false; end
 		local version = Civ6Proxy_Version();
 		local hote = Network.GetGameHostPlayerID();
-		-- Format et règle de salon.lua (BGD_LireAnnonce, BGD_AutresHumains) : changer les deux ensemble.
-		local function Annonce(id)
+		-- Format et règle de salon.lua (BGD_LireAnnonce, BGD_AnnonceDe, BGD_AutresHumains) : changer
+		-- les deux ensemble. Une annonce compte si son identité est celle de l'occupant actuel de
+		-- l'emplacement (un swap laisse l'annonce sur l'emplacement) ; sans identité, si son jeton
+		-- personnel n'est sur aucun autre emplacement.
+		local function Brute(id)
 			local pc = PlayerConfigurations[id];
 			local v = pc and pc:GetValue("BGD_VERSION");
 			if type(v) ~= "string" then return nil; end
 			return string.match(v, "^([^@#:]*)@([^@#:]*)#([^@#:,]+)$");
 		end
-		local vh, jeton = Annonce(hote);
+		local function Identite(id)
+			local pc = PlayerConfigurations[id];
+			if pc == nil then return ""; end
+			local nom = pc:GetValue("NETWORK_NAME");
+			local ident = type(nom) == "string" and string.match(nom, "@(%w+)$") or nil;
+			if ident == nil and pc.GetNetworkIdentifer ~= nil then
+				local ok, v = pcall(pc.GetNetworkIdentifer, pc);
+				ident = ok and v ~= nil and tostring(v) or nil;
+			end
+			return string.sub(string.gsub(ident or "", "[^%w]", ""), 1, 32);
+		end
+		local occurrences = {};
+		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+			local _, _, perso = Brute(id);
+			if perso ~= nil then occurrences[perso] = (occurrences[perso] or 0) + 1; end
+		end
+		local function Annonce(id)
+			local v, j, perso = Brute(id);
+			if v == nil then return nil; end
+			local ident = string.match(perso, "~(%w*)$");
+			if ident ~= nil and ident ~= Identite(id) then return nil; end
+			if (ident == nil or ident == "") and occurrences[perso] > 1 then return nil; end
+			return v, j;
+		end
+		local vh, jeton = Brute(hote);
 		if version == nil or vh ~= version or jeton == nil or jeton == "" then return false; end
 		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 			local pc = PlayerConfigurations[id];
