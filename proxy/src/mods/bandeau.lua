@@ -12,7 +12,11 @@
 --   de XP2 qu'il appelle pour les autres joueurs (XP2_RefreshResources) qui est remplacée ;
 -- - textes du mod embarqués (BGD_Lookup) ;
 -- - ajout de BetterGameExperience : le bouton de la population montre aussi les activités moyennes
---   par ville (nettes, arrondies à l'entier inférieur), après la croissance ; même infobulle.
+--   par ville (nettes, arrondies à l'entier inférieur), après la croissance ; même infobulle ;
+-- - addition of BetterGameExperience (`ui_luxes`): the surplus luxuries of the other players, the
+--   ones the tooltip of the luxury button lists, are published to the notification panel
+--   (LuaEvents.BGD_Luxes_Offres, see src/ui_luxes.lua), and recomputed when a partner's luxuries
+--   or the war state change, not only on the local player's own refreshes.
 -- ===========================================================================
 do
 	local f = Civ6Proxy_Charger and Civ6Proxy_Charger("BGD_Commun");
@@ -383,22 +387,44 @@ do
 		return true;
 	end
 
-	-- Luxes en surplus du partenaire que le joueur local n'a pas.
+	-- Luxes en surplus du partenaire que le joueur local n'a pas : le texte de l'infobulle, et les
+	-- Index de ces ressources (pour `ui_luxes`).
 	local function GetMoreLuxuryString(playerID)
 		local leaderType = PlayerConfigurations[playerID]:GetLeaderTypeName();
 		local s = "[NEWLINE][NEWLINE][icon_Bullet]" .. Locale.Lookup(GameInfo.Leaders[leaderType].Name);
 		local pPlayerResources = Players[playerID]:GetResources();
-		local More = false;
+		local luxes = {};
 		for resource in GameInfo.Resources() do
 			if resource.ResourceClassType == "RESOURCECLASS_LUXURY" then
 				local amount = pPlayerResources:GetResourceAmount(resource.ResourceType);
 				if amount > 1 and IsNewLuxury(resource) and PopulateAvailableResources(playerID, resource) then
-					More = true;
+					table.insert(luxes, resource.Index);
 					s = s .. "[NEWLINE][ICON_" .. resource.ResourceType .. "] " .. Locale.Lookup(resource.Name);
 				end
 			end
 		end
-		return More and s or nil;
+		if #luxes == 0 then return nil; end
+		return s, luxes;
+	end
+
+	-- Addition of BetterGameExperience (`ui_luxes`): what the tooltip lists under "surplus luxury
+	-- resources of other players", published for the notification panel (src/ui_luxes.lua) as
+	-- { { joueur = player ID, luxes = { resource Index, ... } }, ... }, in player order. Sent when
+	-- the list changes, and again when the panel asks for it (it may load after the first refresh).
+	local m_Offres = {};
+	local m_OffresSignature = nil;
+
+	local function PublierOffres(offres)
+		local t = { tostring(Game.GetLocalPlayer()) };
+		for _, o in ipairs(offres) do
+			t[#t + 1] = o.joueur .. ":" .. table.concat(o.luxes, ",");
+		end
+		local signature = table.concat(t, ";");
+		m_Offres = offres;
+		if signature ~= m_OffresSignature then
+			m_OffresSignature = signature;
+			LuaEvents.BGD_Luxes_Offres(offres);
+		end
 	end
 
 	local function RefreshLuxuryResourcesType()
@@ -438,18 +464,22 @@ do
 		end
 		local LUXURYtext = L("LOC_TOP_PANEL_TEAM_MORE_LUXURY_NAME");
 		local TeamMore = false;
+		local offres = {};
 		for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
 			if IsPartner(playerID) then
-				local s = GetMoreLuxuryString(playerID);
+				local s, luxes = GetMoreLuxuryString(playerID);
 				if s then
 					TeamMore = true;
 					LUXURYtext = LUXURYtext .. s;
+					table.insert(offres, { joueur = playerID, luxes = luxes });
 				end
 			end
 		end
 		if TeamMore and isLuxuriesTradingAllowed then
 			sToolTip = sToolTip .. LUXURYtext;
 			sYieldPerTurnText = sYieldPerTurnText .. "[icon_PressureHigh]";
+		else
+			offres = {};
 		end
 		m_LuxuryResourcesTypeYieldButton.YieldIconString:SetText("[ICON_RESOURCE_TOYS]");
 		m_LuxuryResourcesTypeYieldButton.YieldPerTurn:SetText(sYieldPerTurnText);
@@ -458,7 +488,42 @@ do
 		m_LuxuryResourcesTypeYieldButton.YieldBacking:SetColorByName("ChatMessage_Whisper");
 		m_LuxuryResourcesTypeYieldButton.YieldButtonStack:CalculateSize();
 		m_Cessibles = {};
+		PublierOffres(offres);
 	end
+
+	-- Addition of BetterGameExperience (`ui_luxes`): the luxury button alone, redrawn outside
+	-- RefreshYields: a partner gained or lost a luxury, war was declared, peace was made, a player
+	-- was met. None of these refreshes the top panel in the game, and the list of surplus
+	-- luxuries (tooltip and notifications) would stay as it was until the next refresh.
+	local function RefreshLuxuriesOnly()
+		local localPlayerID = Game.GetLocalPlayer();
+		if m_LuxuryResourcesTypeYieldButton == nil or localPlayerID == nil or localPlayerID < 0 or Players[localPlayerID] == nil then
+			return;
+		end
+		RefreshLuxuryResourcesType();
+		Controls.YieldStack:CalculateSize();
+		Controls.StaticInfoStack:CalculateSize();
+		Controls.InfoStack:CalculateSize();
+	end
+
+	local function OnOtherPlayerResourceChanged(playerID, resourceTypeID)
+		local localPlayerID = Game.GetLocalPlayer();
+		if localPlayerID == nil or localPlayerID < 0 or Players[localPlayerID] == nil then return; end
+		if playerID == nil or resourceTypeID == nil then return; end
+		local pPlayer = Players[playerID];
+		local resource = GameInfo.Resources[resourceTypeID];
+		if pPlayer == nil or not pPlayer:IsMajor() or resource == nil or resource.ResourceClassType ~= "RESOURCECLASS_LUXURY" then
+			return;
+		end
+		if IsPartner(playerID) then RefreshLuxuriesOnly(); end
+	end
+
+	-- The notification panel asks for the list: recomputed if the button exists, and sent in any case.
+	LuaEvents.BGD_Luxes_Demande.Add(function()
+		m_OffresSignature = nil;
+		RefreshLuxuriesOnly();
+		if m_OffresSignature == nil then PublierOffres(m_Offres); end
+	end);
 
 	-- Ressources stratégiques d'un coéquipier, pour l'infobulle d'une ressource.
 	local function GetMoreStrategicString(playerID, resource)
@@ -640,9 +705,16 @@ do
 		Events.CivicCompleted.Add(GetTeamVisibleResources);
 		-- Un luxe gagné ou perdu en cours de tour change les activités : le jeu ne redessine alors
 		-- que les ressources. OnRefreshYields (TopPanel.lua) regroupe les demandes.
-		Events.PlayerResourceChanged.Add(function(playerID)
-			if playerID == Game.GetLocalPlayer() and OnRefreshYields ~= nil then OnRefreshYields(); end
+		Events.PlayerResourceChanged.Add(function(playerID, resourceTypeID)
+			if playerID == Game.GetLocalPlayer() then
+				if OnRefreshYields ~= nil then OnRefreshYields(); end
+			else
+				OnOtherPlayerResourceChanged(playerID, resourceTypeID);
+			end
 		end);
+		Events.DiplomacyDeclareWar.Add(RefreshLuxuriesOnly);
+		Events.DiplomacyMakePeace.Add(RefreshLuxuriesOnly);
+		Events.DiplomacyMeet.Add(RefreshLuxuriesOnly);
 		for _, playerID in ipairs(PlayerManager.GetAliveMajorIDs()) do
 			-- Sans équipes, l'équipe d'un joueur est son propre identifiant.
 			if Players[playerID]:GetTeam() ~= playerID then IsFFA = false; end

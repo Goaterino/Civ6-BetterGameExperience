@@ -293,6 +293,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="ko_KR">
 			<Text>TopPanel Extension Pro(号码菌 / Azukii) 기반. 식량, 생산력, 인구, 도시당 평균 쾌적도, 사치 자원을 도시별 상세 정보와 함께 상단 바에 표시하고, 팀원의 자원도 보여 줍니다. 모드가 켜져 있으면 모드를 대체합니다. 모드가 없으면 Better Spectator Mod의 상단 바가 유지됩니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="ko_KR">
+			<Text>사치 자원 거래 알림</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="ko_KR">
+			<Text>내가 갖지 못한 사치 자원을 여분으로 가진 플레이어마다 알림을 표시합니다(확장된 상단 바의 사치 자원 버튼에 나열되는 자원입니다). 클릭하면 해당 자원이 이미 거래에 담긴 상태로 거래 화면이 열리고, 우클릭하면 닫힙니다. 거래가 더 이상 불가능해지면 알림이 사라집니다. 확장된 상단 바가 필요합니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="ko_KR">
 			<Text>정책 카드 효과</Text>
 		</Row>
@@ -529,6 +535,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="ko_KR">
 			<Text>직접 닫을 수 있는 알림을 지웁니다(거래와 남은 선택은 그대로 둡니다).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="ko_KR">
+			<Text>사치 자원 거래 가능</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="ko_KR">
+			<Text>{1}에게 내가 갖지 못한 여분의 사치 자원이 있습니다: {2}. 클릭하면 거래를 엽니다.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="ko_KR">
 			<Text>작업에 실패했습니다</Text>

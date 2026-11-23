@@ -293,6 +293,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="de_DE">
 			<Text>Nach TopPanel Extension Pro (号码菌 / Azukii). Nahrung, Produktion, Bevölkerung, durchschnittliche Annehmlichkeiten pro Stadt und Luxusressourcen in der oberen Leiste, mit Details pro Stadt; Ressourcen der Teamkameraden. Ersetzt den Mod, wenn er aktiv ist. Ohne den Mod bleibt die obere Leiste von Better Spectator Mod erhalten.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="de_DE">
+			<Text>Benachrichtigungen zum Handel mit Luxusressourcen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="de_DE">
+			<Text>Eine Benachrichtigung für jeden Spieler, der überschüssige Luxusressourcen besitzt, die Sie nicht haben: jene, die die Luxus-Schaltfläche der erweiterten oberen Leiste auflistet. Ein Klick öffnet den Abkommensbildschirm mit diesen Ressourcen bereits im Abkommen; ein Rechtsklick schließt sie. Sie verschwindet, sobald der Handel nicht mehr möglich ist. Benötigt die erweiterte obere Leiste.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="de_DE">
 			<Text>Wirkung der Politikkarten</Text>
 		</Row>
@@ -529,6 +535,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="de_DE">
 			<Text>Löscht die Benachrichtigungen, die Sie selbst schließen können (Abkommen und offene Entscheidungen bleiben).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="de_DE">
+			<Text>Handel mit Luxusressourcen möglich</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="de_DE">
+			<Text>{1} hat überschüssige Luxusressourcen, die Sie nicht besitzen: {2}. Klicken, um das Abkommen zu öffnen.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="de_DE">
 			<Text>Der Vorgang ist fehlgeschlagen</Text>

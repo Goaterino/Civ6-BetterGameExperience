@@ -293,6 +293,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_BANDEAU_AIDE" Language="fr_FR">
 			<Text>D'après TopPanel Extension Pro (号码菌 / Azukii). Nourriture, production, population, activités moyennes par ville et ressources de luxe dans le bandeau, avec le détail par ville ; ressources des coéquipiers. Remplace le mod s'il est actif. Sans le mod, le bandeau de Better Spectator Mod est gardé.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_NOM" Language="fr_FR">
+			<Text>Notifications d'échange de ressources de luxe</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LUXES_AIDE" Language="fr_FR">
+			<Text>Une notification pour chaque joueur qui a en double des ressources de luxe que vous n'avez pas, celles que liste le bouton des luxes du bandeau du haut étendu. Un clic ouvre l'écran d'accord avec ces ressources déjà dans l'accord ; un clic droit la ferme. Elle disparaît quand l'échange n'est plus possible. Demande le bandeau du haut étendu.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_POLITIQUES_NOM" Language="fr_FR">
 			<Text>Effet des cartes de politique</Text>
 		</Row>
@@ -529,6 +535,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_NOTIF_AIDE" Language="fr_FR">
 			<Text>Efface les notifications qu'on peut fermer soi-même (les accords et les choix à faire restent).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_TITRE" Language="fr_FR">
+			<Text>Échange de ressources de luxe possible</Text>
+		</Row>
+		<Row Tag="LOC_BGD_LUXES_RESUME" Language="fr_FR">
+			<Text>{1} a en double des ressources de luxe que vous n'avez pas : {2}. Cliquez pour ouvrir l'accord.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_THE_OPERATION_FAILED" Language="fr_FR">
 			<Text>L'opération a échoué</Text>
