@@ -7,12 +7,14 @@ use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
 
 /// Export `BgdPolActifs` : 0 pas encore cherché, 1 absent, sinon son adresse.
 static EXPORT: AtomicUsize = AtomicUsize::new(0);
+/// Export `BgdPartieReseau` : 0 pas encore cherché, 1 absent, sinon son adresse.
+static RESEAU: AtomicUsize = AtomicUsize::new(0);
 /// Dernier état journalisé : 2 inconnu, puis 0 ou 1.
 static LAST: AtomicU8 = AtomicU8::new(2);
 
 /// Le proxy de démarrage, `winmm.dll` à côté de l'exe : cherché par son chemin complet, car la winmm
 /// de System32 qu'il relaie porte le même nom.
-unsafe fn startup_module() -> win::HMODULE {
+pub(crate) unsafe fn startup_module() -> win::HMODULE {
     let mut buf = [0u16; 1024];
     let n = win::GetModuleFileNameW(std::ptr::null_mut(), buf.as_mut_ptr(), buf.len() as u32) as usize;
     let exe = std::path::PathBuf::from(String::from_utf16_lossy(&buf[..n]));
@@ -46,4 +48,24 @@ pub fn actifs() -> bool {
         log(&format!("pol : correctifs POL {}", if on { "actifs" } else { "coupés" }));
     }
     on
+}
+
+/// Partie en réseau en direct (ni solo, ni hotseat, ni PlayByCloud), selon l'export
+/// `BgdPartieReseau` du proxy de démarrage, posé à chaque écran de chargement (`chargement.lua`).
+/// Proxy de démarrage absent ou d'une version sans cet export : non.
+pub fn partie_reseau() -> bool {
+    let mut p = RESEAU.load(Ordering::Relaxed);
+    if p == 0 {
+        p = unsafe {
+            let m = startup_module();
+            let f = if m.is_null() { std::ptr::null_mut() } else { win::GetProcAddress(m, b"BgdPartieReseau\0".as_ptr()) };
+            if f.is_null() { 1 } else { f as usize }
+        };
+        RESEAU.store(p, Ordering::Relaxed);
+    }
+    if p == 1 {
+        return false;
+    }
+    let f: extern "system" fn() -> u32 = unsafe { std::mem::transmute(p) };
+    f() != 0
 }

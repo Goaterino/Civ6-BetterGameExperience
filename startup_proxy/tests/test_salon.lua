@@ -610,23 +610,35 @@ do
 	for id = 0, 2 do check(Pol(l, id) == "actifs", "migration en partie, machine " .. id .. " : " .. Pol(l, id)); end
 end
 
--- 16. Écran de chargement : actifs en solo et en hotseat, inchangé en réseau.
+-- 16. Écran de chargement : actifs en solo et en hotseat, inchangé en réseau. Partie en réseau en
+-- direct dite au proxy de GameCore : oui en réseau, non en solo, en hotseat et en PlayByCloud.
 do
-	for _, cas in ipairs({ { reseau = false, attendu = true }, { reseau = true, attendu = false } }) do
-		local etat = false;
+	for _, cas in ipairs({
+		{ reseau = false, attendu = true, direct = 0 },
+		{ reseau = false, hotseat = true, attendu = true, direct = 0 },
+		{ reseau = true, attendu = false, direct = 1 },
+		{ reseau = true, cloud = true, attendu = false, direct = 0 },
+	}) do
+		local etat, direct = false, nil;
 		local ev = NewEvent();
 		local env = setmetatable({
 			Events = { LoadScreenContentReady = ev, LoadScreenClose = NewEvent() },
 			GameConfiguration = {
 				IsNetworkMultiplayer = function() return cas.reseau; end,
-				IsHotseat = function() return false; end,
+				IsHotseat = function() return cas.hotseat == true; end,
+				IsPlayByCloud = function() return cas.cloud == true; end,
 			},
+			Network = { GetLocalPlayerID = function() return 0; end, GetGameHostPlayerID = function() return 0; end },
+			PlayerConfigurations = {},
 			Civ6Proxy_FixerPol = function(a) etat = (a == 1); end,
+			Civ6Proxy_PartieReseau = function(a) direct = a; end,
 			Civ6Proxy_Journal = function() end,
 		}, { __index = _G });
 		assert(load(CHARGEMENT, "=chargement.lua", "t", env))();
 		ev.Fire();
 		check(etat == cas.attendu, "chargement, réseau " .. tostring(cas.reseau));
+		check(direct == cas.direct, "partie en réseau en direct, réseau " .. tostring(cas.reseau) .. ", hotseat "
+			.. tostring(cas.hotseat) .. ", cloud " .. tostring(cas.cloud) .. " : " .. tostring(direct));
 	end
 end
 
@@ -1141,6 +1153,76 @@ do
 	h.cache = false;
 	h.events.MultiplayerPostPlayerDisconnected.Fire(1);
 	check(l.actif() == "1", "visible lobby: disconnect recomputes the verdict");
+end
+
+-- Identité dans l'annonce (rapport BGE-141E15). Un swap n'échange que le nom réseau et l'état
+-- « prêt » : l'emplacement garde l'annonce de son ancien occupant. On la recopie ici sur
+-- l'emplacement d'un joueur sans BetterGameExperience, sur chaque machine, comme après le swap.
+local function Noms(...)
+	local valeurs = {};
+	for i, nom in ipairs({ ... }) do valeurs[i - 1] = { NETWORK_NAME = nom }; end
+	return valeurs;
+end
+local function Heriter(l, de, vers)
+	local source = l.machines[de].values[de];
+	for _, m in pairs(l.machines) do
+		m.values[vers].BGD_VERSION = source.BGD_VERSION;
+		m.values[vers].BGD_MEDIAS = source.BGD_MEDIAS;
+	end
+	l.machines[l.host].events.PlayerInfoChanged.Fire(vers);
+end
+
+-- Identités en place : verdict 1 comme avant, l'annonce porte l'identifiant Steam du joueur.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob" }, { nom = "Zoé" } },
+		{ valeurs = Noms("Hote@76561198000000100", "Bob@76561198000000111", "Zoe@76561198000000222") });
+	l.open();
+	check(l.actif() == "1", "identités : verdict 1 (" .. tostring(l.verdict()) .. ")");
+	check(l.machines[1].values[1].BGD_VERSION:find("~76561198000000111$") ~= nil,
+		"identité dans l'annonce : " .. tostring(l.machines[1].values[1].BGD_VERSION));
+	l.countdown();
+	for id = 0, 2 do check(Pol(l, id) == "actifs", "identités : machine " .. id .. " POL actifs"); end
+end
+
+-- Le cas du rapport : StulioS, sans BetterGameExperience, prend l'emplacement qui porte l'annonce
+-- de Mateo. Elle n'a pas son identité : verdict 0, StulioS nommé.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Mateo" }, { nom = "StulioS", proxy = false } },
+		{ valeurs = Noms("Ldk@76561198201452549", "Mateo@76561198080123253", "StulioS@76561198120607640") });
+	l.open();
+	check(l.actif() == "0", "avant le swap : verdict 0");
+	Heriter(l, 1, 2);
+	check(l.actif() == "0", "annonce héritée d'un autre joueur : verdict 0 (" .. tostring(l.verdict()) .. ")");
+	l.countdown();
+	check(LastChat(l):find("StulioS", 1, true) ~= nil and LastChat(l):find("COLOR_RED", 1, true) ~= nil,
+		"StulioS nommé en rouge : " .. LastChat(l));
+	check(Pol(l, 0) == "désactivés" and Pol(l, 1) == "désactivés", "POL désactivés chez l'hôte et Mateo");
+end
+
+-- Complément, sans identité (réseau local) : un jeton personnel sur deux emplacements ne compte pour
+-- aucun.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Mateo" }, { nom = "StulioS", proxy = false } });
+	l.open();
+	Heriter(l, 1, 2);
+	check(l.actif() == "0", "jeton personnel en double : verdict 0 (" .. tostring(l.verdict()) .. ")");
+end
+
+-- En partie : un remplaçant sans BetterGameExperience sur l'emplacement d'un joueur parti hérite de
+-- son annonce ; l'hôte ne relaie pas son jeton et l'avertit.
+do
+	local joueurs = { { nom = "Hôte" }, { nom = "Bob" }, { nom = "Sub", proxy = false, absent = true } };
+	local l = NewLobby(joueurs, { valeurs = Noms("Hote@100", "Bob@111", "Sub@333") });
+	l.open();
+	l.countdown();
+	check(Pol(l, 0) == "actifs", "remplaçant : POL actifs au lancement");
+	Lancer(l);
+	joueurs[3].absent, joueurs[3].pret = false, true;
+	local avant = l.verdict();
+	Heriter(l, 1, 2);
+	check(l.verdict() == avant, "remplaçant : verdict inchangé");
+	check(LastChat(l):find("Sub", 1, true) ~= nil and LastChat(l):find("COLOR_RED", 1, true) ~= nil,
+		"remplaçant averti en rouge : " .. LastChat(l));
 end
 
 if failures > 0 then

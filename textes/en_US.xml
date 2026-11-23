@@ -353,6 +353,18 @@
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="en_US">
 			<Text>Records the duration of every zone the game times (frame, interface, scripts, events) to %LOCALAPPDATA%\Civ6RolloverProxy\zones, for performance analysis. About 1 MB per second of play. Takes effect the next time the game starts.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="en_US">
+			<Text>Steam network trace</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="en_US">
+			<Text>Every 500 ms, writes the packets and bytes sent to and received from each player through Steam, the sends Steam refuses, and Steam's send queue (bytes, packets, relay or direct) to %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. To measure the network throughput between players. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="en_US">
+			<Text>Network chunk size (test)</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="en_US">
+			<Text>Size of the pieces large network messages are cut into, 1166 bytes in the game. Test between two machines only: every machine of the game must have the same value, otherwise the game is corrupted. Game version 1.0.12.58 only. Takes effect at the next game launch.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="en_US">
 			<Text>Network message guard</Text>
 		</Row>

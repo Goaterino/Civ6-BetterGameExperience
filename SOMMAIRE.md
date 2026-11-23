@@ -56,7 +56,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   votes ignorés ; retour au vote après la fin de tour (correctif POL, pas encore essayé en
   partie) ;
 - [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
-  succès avec fuite comptés comme des succès (analyse statique) ;
+  succès avec fuite comptés comme des succès (analyse statique) ; [plan](analyses/espions/plan_affichage.md)
+  d'un affichage qui compte la fuite réussie (pas encore implémenté) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
   hook Frida et décodeur de config (analyse statique) ; créer et rejoindre un salon depuis un site
@@ -77,6 +78,11 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [garde_messages](analyses/garde_messages/README.md) : revue de la garde des messages réseau contre
   le gel à la déconnexion d'un joueur (branche `yodha-desync-issue`, corrigée et mergée), points
   Ghidra vérifiés (lecture des drapeaux juste), reste à essayer en partie ;
+- [passage_de_tour_reseau](analyses/passage_de_tour_reseau/README.md) : passages de tour longs
+  après le retour d'un joueur qui ne se resynchronise jamais, débit réseau fixé par la couche P2P
+  de Steam (pas de limiteur dans le jeu), et quatre pistes : cache des hachages de l'hôte au
+  contrôle de synchro, resynchro générale au-delà d'un seuil, morceaux plus gros (POL), nouvelle
+  pile Steam (analyse statique et journaux) ;
 - défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
@@ -88,6 +94,13 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [unites_superposees](analyses/unites_superposees/README.md) : deux unités sur la même case après
   un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ou un échange d'unités
   (rapport BGE-DAA7E7, correctif POL, pas encore essayé en partie) ;
+- [huttes_invisibles](analyses/huttes_invisibles/README.md) : villages tribaux invisibles après un
+  rechargement, causés par le correctif « améliorations mémorisées » de la 0.14.0 (rapports
+  BGE-2C7D19, BGE-E8B107, BGE-93D8D4 ; analyse statique, pas encore corrigé) ;
+- [gamecore_2024](analyses/gamecore_2024/README.md) : GameCore du 2024-06-26 refusé avec l'exe
+  1.0.12.58 depuis la 0.14.0 (aucun correctif posé, signaux `.bgd_` visibles dans le chat), et
+  correctifs POL annoncés à tort à la première partie ; GameCore du joueur à récupérer, pas encore
+  corrigé ;
 - [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
   et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,

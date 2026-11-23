@@ -682,6 +682,7 @@ mod tests {
         let mut lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib.rs")).unwrap();
         lib += include_str!("maj.rs");
         lib += include_str!("zones.rs");
+        lib += include_str!("debit_steam.rs");
         lib += include_str!("messages.rs");
         lib += include_str!("assets.rs");
         lib += include_str!("ramasse_miettes.rs");

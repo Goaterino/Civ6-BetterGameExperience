@@ -205,6 +205,16 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "profil_zones", defaut = "off", libre = true, demarrage = true, diag = true,
 		choix = PROXY_ON_OFF },
+	{ cle = "trace_steam", defaut = "off", libre = true, demarrage = true, diag = true,
+		choix = PROXY_ON_OFF },
+	-- Change le protocole : même valeur sur toutes les machines (src/debit_steam.rs).
+	{ cle = "morceaux_reseau", defaut = "off", libre = true, demarrage = true, diag = true,
+		choix = {
+			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
+			{ "4096", "4096" },
+			{ "16384", "16384" },
+			{ "60000", "60000" },
+		} },
 	-- Correctif de bug : sans réglage en release ; ici pour la couper ou voir le mode test.
 	{ cle = "garde_messages", defaut = "on", demarrage = true, diag = true,
 		choix = {

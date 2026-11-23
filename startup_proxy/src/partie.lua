@@ -70,10 +70,37 @@ local function BGD_PartieRelais()
 	for j in string.gmatch(liste, "[^,]+") do jetons[j] = true; end
 	local ajoutes, sans = {}, {};
 	local pings = GameConfiguration.GetValue("BGD_TEAM_PINGS");
+	-- Règle de salon.lua (BGD_AnnonceDe) : l'annonce d'un emplacement ne compte que si elle est de
+	-- son occupant actuel. Un remplaçant sans le proxy qui prend l'emplacement d'un joueur parti
+	-- hérite de son annonce : son identité (le jeton personnel "<jeton>~<identité>") la trahit. Sans
+	-- identité, un jeton personnel présent sur deux emplacements ne compte pour aucun.
+	local function Identite(pc)
+		local nom = pc:GetValue("NETWORK_NAME");
+		local ident = type(nom) == "string" and string.match(nom, "@(%w+)$") or nil;
+		if ident == nil and pc.GetNetworkIdentifer ~= nil then
+			local ok, v = pcall(pc.GetNetworkIdentifer, pc);
+			ident = ok and v ~= nil and tostring(v) or nil;
+		end
+		return string.sub(string.gsub(ident or "", "[^%w]", ""), 1, 32);
+	end
+	local function Annonce(pc)
+		return string.match(tostring((pc:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+	end
+	local occurrences = {};
+	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+		local pc = PlayerConfigurations[id];
+		local perso = pc and select(3, Annonce(pc));
+		if perso ~= nil and perso ~= "" then occurrences[perso] = (occurrences[perso] or 0) + 1; end
+	end
 	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 		local pc = PlayerConfigurations[id];
 		if id ~= localID and pc ~= nil and (pc:IsHuman() or ((pings == true or pings == 1) and pc:GetSlotStatus() == SlotStatus.SS_OBSERVER)) and Network.IsPlayerConnected(id) then
-			local v, jh, perso = string.match(tostring((pc:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+			local v, jh, perso = Annonce(pc);
+			local ident = perso and string.match(perso, "~(%w*)$");
+			if (ident ~= nil and ident ~= Identite(pc))
+				or ((ident == nil or ident == "") and perso ~= nil and (occurrences[perso] or 0) > 1) then
+				v = nil;  -- annonce restée d'un autre joueur
+			end
 			if v == version and jh == jeton then
 				if not jetons[perso] then
 					jetons[perso] = true;

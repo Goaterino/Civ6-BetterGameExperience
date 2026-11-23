@@ -31,6 +31,8 @@ mod patch;
 mod win;
 #[path = "../../proxy/src/noms.rs"]
 mod noms;
+#[path = "../../proxy/src/pe.rs"]
+mod pe;
 
 mod absent_turn;
 mod chargeur;
@@ -44,6 +46,7 @@ mod relink;
 mod pings;
 mod snapshots;
 mod reparation_synchro;
+mod cache_synchro;
 mod maths_communes;
 mod medias;
 mod rejoin;
@@ -63,6 +66,8 @@ mod pool;
 mod remap_leger;
 #[cfg(feature = "diag")]
 mod zones;
+#[cfg(feature = "diag")]
+mod debit_steam;
 #[path = "../../proxy/src/version.rs"]
 mod version;
 
@@ -84,6 +89,25 @@ pub extern "system" fn StartupProxyStatus() -> u32 {
 #[no_mangle]
 pub extern "system" fn BgdPolActifs() -> u32 {
     salon::pol_actifs() as u32
+}
+
+/// Export lu par le proxy de GameCore : 1 si la partie chargée est une partie en réseau en direct
+/// (ni solo, ni hotseat, ni PlayByCloud), posé à chaque écran de chargement (voir `salon`).
+#[no_mangle]
+pub extern "system" fn BgdPartieReseau() -> u32 {
+    salon::partie_reseau() as u32
+}
+
+/// Exports lus par le proxy de GameCore (`executions`) : le compteur des messages qu'il exécute, et
+/// l'état de ses détours (voir `cache_synchro`).
+#[no_mangle]
+pub extern "system" fn BgdMessagesGameCore() -> *const std::sync::atomic::AtomicU64 {
+    cache_synchro::messages_counter()
+}
+
+#[no_mangle]
+pub extern "system" fn BgdSuiviMessages(on: u32) {
+    cache_synchro::messages_tracked(on)
 }
 
 /// Tests: path of the exe a table index stands for. 0 and 1 are the 1.0.12.72 build
@@ -152,6 +176,10 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             reload_all::install();
             absent_turn::install();
             flush::install();
+            // Avant sync_notes et reparation_synchro : il reconnaît le gestionnaire comme ce dernier,
+            // sur des appels encore intacts, même avec `sync_notes=off`. Ses sites ne recouvrent pas
+            // les leurs.
+            cache_synchro::install();
             sync_notes::install();
             // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.
             reparation_synchro::install();
@@ -166,6 +194,8 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             remap_leger::install(exe_base);
             #[cfg(feature = "diag")]
             zones::install();
+            #[cfg(feature = "diag")]
+            debit_steam::install();
         }
     }
     1

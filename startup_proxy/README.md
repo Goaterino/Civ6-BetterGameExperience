@@ -186,6 +186,53 @@ dans les builds locaux : la release est compilée sans la feature `diag`
 `PROXY_REGLAGES` dans `options_proxy.lua`, ou l'inverse. Le libellé, l'aide et les choix se
 donnent en français et en anglais.
 
+## Débit Steam et taille des morceaux réseau (`trace_steam`, `morceaux_reseau`)
+
+Deux réglages de diagnostic, désactivés par défaut : onglet BetterGameExperience, section
+Diagnostic, builds locaux seulement. Ils prennent effet au lancement suivant du jeu. Ce sont les
+outils de l'analyse préliminaire de la piste « morceaux plus gros »
+([analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md), piste 3). Code :
+[src/debit_steam.rs](src/debit_steam.rs).
+
+- **`trace_steam=on` : trace des envois et réceptions Steam. Aucune adresse de l'exe.**
+  - L'entrée de l'import `SteamInternal_FindOrCreateUserInterface` est redirigée. Quand le jeu
+    demande `SteamNetworking005`, `SendP2PPacket` et `ReadP2PPacket` sont détournés dans la table
+    virtuelle de l'interface.
+  - Toutes les 500 ms, une ligne par pair actif : paquets et octets envoyés et reçus, plus grand
+    paquet, envois refusés par Steam (le jeu n'en sait rien), paquets trop grands pour le tampon du
+    jeu. S'y ajoute la file d'envoi de Steam (`GetP2PSessionState` : octets et paquets en attente,
+    relais ou direct).
+  - Fichier : `%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-<pid>.log`. Il n'entre pas dans les
+    rapports de bug. Un pair y est noté par un numéro et l'identifiant de compte de son SteamID.
+- **`morceaux_reseau=4096|16384|60000` : essai de morceaux plus gros.**
+  - Il change le protocole : **même valeur sur toutes les machines de la partie**, sinon le
+    receveur compte mal les morceaux et la partie se corrompt. Essai à deux machines seulement.
+  - Il fixe la taille des morceaux (1 166 octets dans le jeu) et remplace le tampon de réception
+    Steam de 2 Ko par un tampon de 128 Ko.
+  - **Injections à des adresses fixes, relevées sur 1.0.12.58 seulement** (table `EXES`, DX12 /
+    DX11). Chaque site est vérifié octet par octet avant d'écrire. Sur une autre version, rien n'est
+    posé et le journal dit `essai de morceaux non posé`.
+
+    | Site | DX12 .58 | DX11 .58 | Ce qui est écrit |
+    |---|---|---|---|
+    | Réglage de session de la taille (plafond 1 166) | `1407f7ab0` | `1407f7330` | `jmp` vers son écriture finale, dont la valeur devient la taille choisie |
+    | Remise à 1 166 | `1407f7780` | `1407f7000` | la valeur écrite |
+    | Globale de la taille | `14128f328` | `14127c328` | la taille choisie |
+    | `lea rbx,[tampon]` de `FSteamTransportThread::Update` | `14085dc4c` | `14085d96c` | l'adresse du nouveau tampon |
+    | `mov r8d,800h`, 27 octets plus loin | `14085dc67` | `14085d987` | 128 Ko |
+
+    **À re-identifier pour 1.0.12.72 et 1.0.12.74.** Le test `chunk_sites_by_pattern` cherche les
+    mêmes motifs dans chaque exe présent (`CIV6_EXE_72_DIR`, `CIV6_EXE_74_DIR` ou le jeu installé)
+    et affiche les adresses : les recopier dans `EXES` avec le nom de la version.
+- **Lecture.**
+  - Chronométrer l'envoi d'une sauvegarde ou d'un contrôle de synchro avec la taille du jeu, puis
+    avec des morceaux plus gros, en regardant la file d'envoi se vider.
+  - Si le débit en octets ne change pas, Steam limite en octets (fenêtre ÷ ping) : la piste ne
+    rapporte rien.
+  - S'il grandit avec la taille des paquets, Steam limite en messages, et la piste vaut un
+    correctif POL.
+- **Le journal.** `debit steam : …` dans `RolloverProxy.log`.
+
 ## Le salon multijoueur : qui a le proxy ?
 
 [src/salon.rs](src/salon.rs) et [src/salon.lua](src/salon.lua). Certains correctifs changent la
@@ -225,9 +272,20 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   joueurs qui n'ont plus le proxy. Chaque ouverture du salon, et chaque migration d'hôte, tire donc
   un jeton pour l'hôte et un pour chaque joueur.
 - **L'annonce.** Chaque joueur écrit dans sa configuration de joueur `BGD_VERSION =
-  <version>@<jeton de l'hôte>#<son jeton>`, puis la diffuse (`Network.BroadcastPlayerInfo`, sans
-  effet sur le statut « prêt »). Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte
-  pas.
+  <version>@<jeton de l'hôte>#<son jeton>~<son identité>`, puis la diffuse
+  (`Network.BroadcastPlayerInfo`, sans effet sur le statut « prêt »). Une annonce qui ne porte pas le
+  jeton actuel de l'hôte ne compte pas.
+- **L'identité.** C'est l'identifiant Steam du joueur, lu dans le nom réseau de son emplacement
+  (`NETWORK_NAME = <nom>@<identifiant>`, sinon `GetNetworkIdentifer`). Un swap d'emplacements
+  n'échange que le nom réseau et l'état « prêt » : l'emplacement garde ses autres valeurs, annonce
+  comprise ([analyses/lobby](../analyses/lobby/README.md)). Sans identité, un joueur sans le proxy
+  qui prenait l'emplacement d'un joueur équipé héritait de son annonce, valide pour ce salon, et le
+  salon le croyait équipé (rapport BGE-141E15 : swap de Mateo et StulioS, verdict passé à 1). Une
+  annonce compte donc seulement si son identité est celle de l'occupant actuel. Sans identité
+  (réseau local, annonce d'une version précédente), un jeton personnel présent sur deux
+  emplacements ne compte pour aucun. La même règle sert à l'hôte en partie (`partie.lua`, un remplaçant sur l'emplacement
+  d'un joueur parti), aux options de partie (`option_partie.lua`), au départ simultané
+  (`proxy/src/ui_depart.lua`) et aux signaux d'équipe (`proxy/src/mods/pings/common.lua`).
 - **Le verdict** est celui de l'hôte, le même pour toutes les machines : `BGD_VERDICT =
   <version>@<jeton de l'hôte>:<1|0>:<jetons>` dans sa configuration de joueur. 1 si tous les
   humains connectés annoncent sa version avec son jeton ; les jetons de tous ceux dont il a reçu une
@@ -726,6 +784,47 @@ Rechargements (options avancées, section Performances) :
 
 Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
 vérifiés que par les tests sur l'exe.
+
+## Contrôles de synchro plus rapides : cache des hachages de l'hôte
+
+[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `verify` par défaut), **hôte
+seulement**, sans changer le protocole ni ce que reçoivent les clients. Pas un correctif POL.
+L'analyse est dans [analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
+piste 1.
+
+- **Le constat.** Pour chaque contrôle reçu d'un client, l'hôte recalcule le hachage de chacune de
+  ses archives (`140dc5390` en DX12 1.0.12.58), alors que rien n'a changé depuis le contrôle
+  précédent du même tour. Avec dix clients, il fait dix fois le même calcul.
+- **Ce qui est redirigé.** Le seul appel au hachage fait par le gestionnaire du contrôle. Le relais
+  passe aussi le hachage annoncé par le client et la clé de l'archive. Les autres appels du hachage,
+  dont celui du client qui construit son propre contrôle, ne sont pas touchés.
+- **Quand une valeur gardée sert.** Seulement si elle est égale au hachage annoncé par le client,
+  pour la même archive sous la même clé, et dans la même **génération**. Un écart est toujours
+  recalculé : une réparation part d'une valeur fraîche, comme dans le jeu d'origine.
+- **La génération** change, et le cache est vidé, à chaque :
+  - début de contrôle (`StartGameSyncCheck`) ;
+  - inscription ou désinscription d'une archive : création ou destruction d'objets, chargement ;
+  - message exécuté par GameCore, compté avant et après son exécution par le proxy de GameCore
+    (`executions`). C'est le cache **périmé** : un ordre appliqué pendant la barrière le vide, et il
+    repart de valeurs fraîches ;
+  - création ou destruction d'un contexte de partie, pose ou retrait du proxy de GameCore.
+- **Sans le proxy de GameCore** (absent, ancien, `actif=off`, GameCore inattendu), le cache ne sert
+  jamais : chaque hachage est calculé comme dans le jeu d'origine.
+- **Sites, sans table d'adresses.**
+  - L'appel du hachage est trouvé par motif, dans le gestionnaire que reconnaît `reparation_synchro`.
+  - Le hachage doit avoir exactement deux appelants.
+  - Les trois fonctions du gestionnaire sont trouvées dans sa table virtuelle (+0x28, +0x30, +0x40),
+    chacune par une chaîne qu'elle seule écrit (`proxy/src/pe.rs`).
+  - Ces entrées pointent vers un relais qui augmente un compteur puis saute à la fonction du jeu.
+- **`verify`.** Recalcule même quand une valeur gardée servirait, rend la valeur fraîche et note
+  chaque écart. Le journal donne, par génération utilisée, les valeurs réutilisées, calculées,
+  vérifiées et différentes, et ce qui l'a close. Forme de la ligne (nombres pour l'exemple) :
+  `sync hash cache: 0 reused, N computed, verify: M checked, 0 differed; closed by new sync check`.
+  **`verify` est le défaut** : le cache ne fait rien gagner tant qu'une partie réelle, sans aucun
+  écart, n'a pas permis de passer à `on`.
+- **Vérifié hors jeu sur 1.0.12.58 seulement** (DX12 et DX11, et le GameCore .58). Les sites de
+  1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, mais seuls les tests sous Windows
+  (`sites_in_known_exes`, `sites_in_known_gamecores`) les confirment.
 
 ## Compiler, tester, installer
 
