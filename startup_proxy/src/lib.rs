@@ -174,11 +174,13 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             reload_all::install();
             absent_turn::install();
             flush::install();
+            // Avant sync_notes et reparation_synchro : il reconnaît le gestionnaire comme ce dernier,
+            // sur des appels encore intacts, même avec `sync_notes=off`. Ses sites ne recouvrent pas
+            // les leurs.
+            cache_synchro::install();
             sync_notes::install();
             // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.
             reparation_synchro::install();
-            // Après les deux : il reconnaît le gestionnaire comme reparation_synchro.
-            cache_synchro::install();
             let exe_base = win::GetModuleHandleW(std::ptr::null()) as usize;
             assets::install(exe_base);
             ramasse_miettes::install(exe_base);

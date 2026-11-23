@@ -771,8 +771,8 @@ piste 1.
   - Ces entrées pointent vers un relais qui augmente un compteur puis saute à la fonction du jeu.
 - **`verify`.** Recalcule même quand une valeur gardée servirait, rend la valeur fraîche et note
   chaque écart. Le journal donne, par génération utilisée, les valeurs réutilisées, calculées,
-  vérifiées et différentes, et ce qui l'a close :
-  `sync hash cache: 0 reused, 31000 computed, verify: 279000 checked, 0 differed; closed by new sync check`.
+  vérifiées et différentes, et ce qui l'a close. Forme de la ligne (nombres pour l'exemple) :
+  `sync hash cache: 0 reused, N computed, verify: M checked, 0 differed; closed by new sync check`.
   **Une partie réelle en `verify`, sans aucun écart, doit précéder la publication.**
 - **Vérifié hors jeu sur 1.0.12.58 seulement** (DX12 et DX11, et le GameCore .58). Les sites de
   1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, mais seuls les tests sous Windows

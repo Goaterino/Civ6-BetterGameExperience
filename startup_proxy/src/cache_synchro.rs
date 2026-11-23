@@ -305,7 +305,7 @@ fn hash_relay(hook: usize) -> Vec<u8> {
     code
 }
 
-/// Appelé par DllMain, après `reparation_synchro`.
+/// Appelé par DllMain, avant `sync_notes` et `reparation_synchro`.
 pub unsafe fn install() {
     let cfg = crate::options::read_config().map(|(t, _)| t).unwrap_or_default();
     if crate::salon::actif_off(&cfg) {
