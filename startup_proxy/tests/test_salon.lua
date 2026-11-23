@@ -610,23 +610,35 @@ do
 	for id = 0, 2 do check(Pol(l, id) == "actifs", "migration en partie, machine " .. id .. " : " .. Pol(l, id)); end
 end
 
--- 16. Écran de chargement : actifs en solo et en hotseat, inchangé en réseau.
+-- 16. Écran de chargement : actifs en solo et en hotseat, inchangé en réseau. Partie en réseau en
+-- direct dite au proxy de GameCore : oui en réseau, non en solo, en hotseat et en PlayByCloud.
 do
-	for _, cas in ipairs({ { reseau = false, attendu = true }, { reseau = true, attendu = false } }) do
-		local etat = false;
+	for _, cas in ipairs({
+		{ reseau = false, attendu = true, direct = 0 },
+		{ reseau = false, hotseat = true, attendu = true, direct = 0 },
+		{ reseau = true, attendu = false, direct = 1 },
+		{ reseau = true, cloud = true, attendu = false, direct = 0 },
+	}) do
+		local etat, direct = false, nil;
 		local ev = NewEvent();
 		local env = setmetatable({
 			Events = { LoadScreenContentReady = ev, LoadScreenClose = NewEvent() },
 			GameConfiguration = {
 				IsNetworkMultiplayer = function() return cas.reseau; end,
-				IsHotseat = function() return false; end,
+				IsHotseat = function() return cas.hotseat == true; end,
+				IsPlayByCloud = function() return cas.cloud == true; end,
 			},
+			Network = { GetLocalPlayerID = function() return 0; end, GetGameHostPlayerID = function() return 0; end },
+			PlayerConfigurations = {},
 			Civ6Proxy_FixerPol = function(a) etat = (a == 1); end,
+			Civ6Proxy_PartieReseau = function(a) direct = a; end,
 			Civ6Proxy_Journal = function() end,
 		}, { __index = _G });
 		assert(load(CHARGEMENT, "=chargement.lua", "t", env))();
 		ev.Fire();
 		check(etat == cas.attendu, "chargement, réseau " .. tostring(cas.reseau));
+		check(direct == cas.direct, "partie en réseau en direct, réseau " .. tostring(cas.reseau) .. ", hotseat "
+			.. tostring(cas.hotseat) .. ", cloud " .. tostring(cas.cloud) .. " : " .. tostring(direct));
 	end
 end
 
