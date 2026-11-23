@@ -190,8 +190,8 @@ l'IP directe. Là, sa fenêtre de 32 Ko de données fiables en vol est un vrai p
   client. Un écart est toujours recalculé, et la réparation part d'une valeur fraîche.
 - **Preuve en partie réelle.** Le mode `cache_synchro=verify` recalcule à chaque fois et compte les
   écarts. Il couvre ce que la lecture du code ne peut pas exclure : une écriture de l'état hors
-  message, ou un chargement qui relirait des archives sans les désinscrire. **À faire avant toute
-  publication.**
+  message, ou un chargement qui relirait des archives sans les désinscrire. C'est le mode par
+  défaut, jusqu'à une partie réelle sans aucun écart ; `on` ensuite.
 - **Versions.** Sites vérifiés hors jeu sur 1.0.12.58 seulement (DX12, DX11, GameCore). Ceux de
   1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, et confirmés seulement par les tests sous
   Windows.

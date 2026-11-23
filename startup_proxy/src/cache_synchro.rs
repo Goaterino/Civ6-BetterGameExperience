@@ -1,5 +1,5 @@
 //! Cache des hachages d'archives de l'hôte au contrôle de synchro de fin de tour
-//! (`cache_synchro=on`, par défaut). Voir `analyses/passage_de_tour_reseau/README.md`, piste 1.
+//! (`cache_synchro=verify` par défaut, tant qu'une partie réelle n'a pas montré zéro écart). Voir `analyses/passage_de_tour_reseau/README.md`, piste 1.
 //!
 //! **Hôte seulement.** Pour chaque client, le gestionnaire de l'hôte (`1407f0b70` en DX12 .58, celui
 //! de `sync_notes` et `reparation_synchro`) recalcule le hachage de chacune de ses archives
@@ -137,12 +137,12 @@ pub enum Mode {
     Verify,
 }
 
-/// `cache_synchro=on|verify|off`, la dernière ligne l'emporte ; `on` par défaut.
+/// `cache_synchro=on|verify|off`, la dernière ligne l'emporte ; `verify` par défaut.
 pub fn mode(cfg: &str) -> Mode {
     match cfg.lines().filter_map(|l| l.trim().strip_prefix("cache_synchro=")).last().map(str::trim) {
         Some("off") => Mode::Off,
-        Some("verify") => Mode::Verify,
-        _ => Mode::On,
+        Some("on") => Mode::On,
+        _ => Mode::Verify,
     }
 }
 
@@ -373,7 +373,9 @@ mod tests {
 
     #[test]
     fn settings() {
-        assert_eq!(mode(""), Mode::On);
+        assert_eq!(mode(""), Mode::Verify);
+        assert_eq!(mode("cache_synchro=on"), Mode::On);
+        assert_eq!(mode("cache_synchro=nonsense"), Mode::Verify);
         assert_eq!(mode("cache_synchro=off\r\n"), Mode::Off);
         assert_eq!(mode("cache_synchro=verify"), Mode::Verify);
         assert_eq!(mode("cache_synchro=off\ncache_synchro=on"), Mode::On, "la dernière ligne l'emporte");

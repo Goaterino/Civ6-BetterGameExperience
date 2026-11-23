@@ -740,7 +740,7 @@ vérifiés que par les tests sur l'exe.
 
 ## Contrôles de synchro plus rapides : cache des hachages de l'hôte
 
-[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `on` par défaut), **hôte
+[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `verify` par défaut), **hôte
 seulement**, sans changer le protocole ni ce que reçoivent les clients. Pas un correctif POL.
 L'analyse est dans [analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
 piste 1.
@@ -773,7 +773,8 @@ piste 1.
   chaque écart. Le journal donne, par génération utilisée, les valeurs réutilisées, calculées,
   vérifiées et différentes, et ce qui l'a close. Forme de la ligne (nombres pour l'exemple) :
   `sync hash cache: 0 reused, N computed, verify: M checked, 0 differed; closed by new sync check`.
-  **Une partie réelle en `verify`, sans aucun écart, doit précéder la publication.**
+  **`verify` est le défaut** : le cache ne fait rien gagner tant qu'une partie réelle, sans aucun
+  écart, n'a pas permis de passer à `on`.
 - **Vérifié hors jeu sur 1.0.12.58 seulement** (DX12 et DX11, et le GameCore .58). Les sites de
   1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, mais seuls les tests sous Windows
   (`sites_in_known_exes`, `sites_in_known_gamecores`) les confirment.
