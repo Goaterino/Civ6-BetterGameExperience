@@ -14,7 +14,7 @@ static LAST: AtomicU8 = AtomicU8::new(2);
 
 /// Le proxy de démarrage, `winmm.dll` à côté de l'exe : cherché par son chemin complet, car la winmm
 /// de System32 qu'il relaie porte le même nom.
-unsafe fn startup_module() -> win::HMODULE {
+pub(crate) unsafe fn startup_module() -> win::HMODULE {
     let mut buf = [0u16; 1024];
     let n = win::GetModuleFileNameW(std::ptr::null_mut(), buf.as_mut_ptr(), buf.len() as u32) as usize;
     let exe = std::path::PathBuf::from(String::from_utf16_lossy(&buf[..n]));

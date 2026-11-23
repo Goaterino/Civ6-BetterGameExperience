@@ -31,6 +31,8 @@ mod patch;
 mod win;
 #[path = "../../proxy/src/noms.rs"]
 mod noms;
+#[path = "../../proxy/src/pe.rs"]
+mod pe;
 
 mod absent_turn;
 mod chargeur;
@@ -44,6 +46,7 @@ mod relink;
 mod pings;
 mod snapshots;
 mod reparation_synchro;
+mod cache_synchro;
 mod maths_communes;
 mod medias;
 mod rejoin;
@@ -91,6 +94,18 @@ pub extern "system" fn BgdPolActifs() -> u32 {
 #[no_mangle]
 pub extern "system" fn BgdPartieReseau() -> u32 {
     salon::partie_reseau() as u32
+}
+
+/// Exports lus par le proxy de GameCore (`executions`) : le compteur des messages qu'il exécute, et
+/// l'état de ses détours (voir `cache_synchro`).
+#[no_mangle]
+pub extern "system" fn BgdMessagesGameCore() -> *const std::sync::atomic::AtomicU64 {
+    cache_synchro::messages_counter()
+}
+
+#[no_mangle]
+pub extern "system" fn BgdSuiviMessages(on: u32) {
+    cache_synchro::messages_tracked(on)
 }
 
 /// Tests: path of the exe a table index stands for. 0 and 1 are the 1.0.12.72 build
@@ -162,6 +177,8 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             sync_notes::install();
             // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.
             reparation_synchro::install();
+            // Après les deux : il reconnaît le gestionnaire comme reparation_synchro.
+            cache_synchro::install();
             let exe_base = win::GetModuleHandleW(std::ptr::null()) as usize;
             assets::install(exe_base);
             ramasse_miettes::install(exe_base);

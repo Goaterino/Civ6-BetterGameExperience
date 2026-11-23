@@ -39,6 +39,7 @@ mod empilement;
 mod unites_promises;
 mod partie_chargee;
 mod exe;
+mod executions;
 mod fin_tour;
 mod forward;
 mod improvements;
@@ -46,6 +47,7 @@ mod journal_chokepoints;
 mod mods_ui;
 mod noms;
 mod patch;
+mod pe;
 mod pings;
 mod pol;
 mod ports;
@@ -401,6 +403,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             ui::on_proxy_unload();
             journal_chokepoints::on_proxy_unload();
             delaunay::on_proxy_unload();
+            executions::on_proxy_unload();
         }
         _ => {}
     }

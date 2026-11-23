@@ -738,6 +738,46 @@ Rechargements (options avancées, section Performances) :
 Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
 vérifiés que par les tests sur l'exe.
 
+## Contrôles de synchro plus rapides : cache des hachages de l'hôte
+
+[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `on` par défaut), **hôte
+seulement**, sans changer le protocole ni ce que reçoivent les clients. Pas un correctif POL.
+L'analyse est dans [analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
+piste 1.
+
+- **Le constat.** Pour chaque contrôle reçu d'un client, l'hôte recalcule le hachage de chacune de
+  ses archives (`140dc5390` en DX12 1.0.12.58), alors que rien n'a changé depuis le contrôle
+  précédent du même tour. Avec dix clients, il fait dix fois le même calcul.
+- **Ce qui est redirigé.** Le seul appel au hachage fait par le gestionnaire du contrôle. Le relais
+  passe aussi le hachage annoncé par le client et la clé de l'archive. Les autres appels du hachage,
+  dont celui du client qui construit son propre contrôle, ne sont pas touchés.
+- **Quand une valeur gardée sert.** Seulement si elle est égale au hachage annoncé par le client,
+  pour la même archive sous la même clé, et dans la même **génération**. Un écart est toujours
+  recalculé : une réparation part d'une valeur fraîche, comme dans le jeu d'origine.
+- **La génération** change, et le cache est vidé, à chaque :
+  - début de contrôle (`StartGameSyncCheck`) ;
+  - inscription ou désinscription d'une archive : création ou destruction d'objets, chargement ;
+  - message exécuté par GameCore, compté avant et après son exécution par le proxy de GameCore
+    (`executions`). C'est le cache **périmé** : un ordre appliqué pendant la barrière le vide, et il
+    repart de valeurs fraîches ;
+  - création ou destruction d'un contexte de partie, pose ou retrait du proxy de GameCore.
+- **Sans le proxy de GameCore** (absent, ancien, `actif=off`, GameCore inattendu), le cache ne sert
+  jamais : chaque hachage est calculé comme dans le jeu d'origine.
+- **Sites, sans table d'adresses.**
+  - L'appel du hachage est trouvé par motif, dans le gestionnaire que reconnaît `reparation_synchro`.
+  - Le hachage doit avoir exactement deux appelants.
+  - Les trois fonctions du gestionnaire sont trouvées dans sa table virtuelle (+0x28, +0x30, +0x40),
+    chacune par une chaîne qu'elle seule écrit (`proxy/src/pe.rs`).
+  - Ces entrées pointent vers un relais qui augmente un compteur puis saute à la fonction du jeu.
+- **`verify`.** Recalcule même quand une valeur gardée servirait, rend la valeur fraîche et note
+  chaque écart. Le journal donne, par génération utilisée, les valeurs réutilisées, calculées,
+  vérifiées et différentes, et ce qui l'a close :
+  `sync hash cache: 0 reused, 31000 computed, verify: 279000 checked, 0 differed; closed by new sync check`.
+  **Une partie réelle en `verify`, sans aucun écart, doit précéder la publication.**
+- **Vérifié hors jeu sur 1.0.12.58 seulement** (DX12 et DX11, et le GameCore .58). Les sites de
+  1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, mais seuls les tests sous Windows
+  (`sites_in_known_exes`, `sites_in_known_gamecores`) les confirment.
+
 ## Compiler, tester, installer
 
 ```bash

@@ -873,6 +873,29 @@ les builds de diagnostic, pour comparer avec le jeu d'origine) :
 
 Voir aussi `reparation_synchro` et `maths_communes` dans [startup_proxy](../startup_proxy/README.md).
 
+## Messages exécutés comptés, pour le cache des contrôles de synchro
+
+[executions](src/executions.rs) ne change rien au jeu. Il compte les messages que GameCore exécute,
+pour le cache des hachages de l'hôte de [cache_synchro](../startup_proxy/README.md) (proxy de
+démarrage).
+
+- **Le site.** GameCore n'exécute un message que dans sa fonction de réception, celle qui écrit
+  « GameCore RECV (%i): %s ». Elle a deux appelants, en 2020 comme en 1.0.12.58 :
+  - la boucle qui vide la file (`ProcessMessages`), par un `call` ;
+  - la méthode du contexte que l'exe appelle pour un message immédiat, par un `jmp`.
+
+  `BroadcastMessage` (« GameCore SEND ») n'exécute rien : il remet le message à l'exe, qui le
+  renvoie par l'un de ces deux chemins.
+- **La recherche, sans table d'adresses** ([src/pe.rs](src/pe.rs)) :
+  - la chaîne, unique ;
+  - la fonction qui la désigne, d'après la table des exceptions ;
+  - exactement un `call` et un `jmp` vers elle, le `jmp` précédé de `mov ecx,edx ; mov rdx,r8`.
+
+  Le moindre écart, et rien n'est posé.
+- **Le compteur** est augmenté avant et après chaque exécution. C'est celui du proxy de démarrage
+  (exports `BgdMessagesGameCore` et `BgdSuiviMessages`). Le déchargement du proxy coupe le cache
+  avant de remettre les deux appels.
+
 ## Limites du prototype
 
 - **Versions du jeu connues seulement.** Le proxy lit la version du jeu dans l'exe (ressource de

@@ -163,18 +163,41 @@ l'IP directe. Là, sa fenêtre de 32 Ko de données fiables en vol est un vrai p
   Ce test ne voit que les archives en écart chez au moins deux clients, surtout `AI::Religious`.
 
 **Conception retenue.**
-- Le cache est marqué **périmé** dès qu'un message de GameCore est appliqué pendant la barrière. Il
-  est aussi vidé à chaque nouveau contrôle, chargement, départ ou retour de joueur, et migration
-  d'hôte. Les résultats restent alors identiques au jeu d'origine.
-- Le gain disparaît seulement dans les barrières qui reçoivent un ordre tardif (7 sur 81 dans
-  BGE-2890AC).
+- Le cache est marqué **périmé** dès qu'un message de GameCore est exécuté pendant la barrière. Il
+  est aussi vidé à chaque nouveau contrôle, et à chaque inscription ou désinscription d'archive
+  (création, destruction d'objets, chargement). Les résultats restent alors identiques au jeu
+  d'origine.
+- Après un ordre tardif, le cache repart de valeurs fraîches : seuls les contrôles traités avant cet
+  ordre perdent le gain (7 barrières sur 81 en ont reçu un dans BGE-2890AC).
 - **Seul l'appel de `140dc5390` fait par le traitement du contrôle est redirigé.** La même fonction
-  sert au client pour construire son contrôle, et sans doute ailleurs : aucun autre appel n'est
-  touché.
+  sert au client pour construire son contrôle (`1407f2af0`, `SendGameSyncCheck`) : cet appel n'est
+  pas touché.
 
-**À vérifier.**
-- Le verrou d'accès de l'interface à GameCore (`DAT_1412fe640`, `1400f2c00`) pendant le contrôle.
-- Le moment exact où GameCore applique un message remis par l'exe.
+**Mise en œuvre** : `cache_synchro` dans le
+[proxy de démarrage](../../startup_proxy/README.md), et `executions` dans le
+[proxy de GameCore](../../proxy/README.md).
+- **Ce qui écrit l'état du jeu.**
+  - GameCore n'exécute un message que dans sa fonction de réception, celle qui écrit
+    « GameCore RECV » (`180037b50` en 1.0.12.58). Elle a deux appelants : la file
+    (`ProcessMessages`) et l'appel immédiat de l'exe.
+  - `BroadcastMessage` n'exécute rien : il renvoie le message par l'exe.
+  - Les archives sont inscrites et désinscrites par la table virtuelle de `FGameSyncManager`
+    (`141049800` en DX12 1.0.12.58 : +0x28, +0x30, et `StartGameSyncCheck` en +0x40).
+- **Pureté du hachage.** Le hachage d'une variable est `FAutoVariable::calculateDataHash`, une méthode
+  `const` (décoration `UEBAIXZ` dans le .map de GameCore 2020). `140dc5390` n'écrit que dans son
+  tableau temporaire.
+- **Double garde.** Une valeur gardée ne sert que si elle est égale au hachage annoncé par le
+  client. Un écart est toujours recalculé, et la réparation part d'une valeur fraîche.
+- **Preuve en partie réelle.** Le mode `cache_synchro=verify` recalcule à chaque fois et compte les
+  écarts. Il couvre ce que la lecture du code ne peut pas exclure : une écriture de l'état hors
+  message, ou un chargement qui relirait des archives sans les désinscrire. **À faire avant toute
+  publication.**
+- **Versions.** Sites vérifiés hors jeu sur 1.0.12.58 seulement (DX12, DX11, GameCore). Ceux de
+  1.0.12.72 et 1.0.12.74 sont cherchés de la même façon, et confirmés seulement par les tests sous
+  Windows.
+
+**Encore ouvert.** Le verrou d'accès de l'interface à GameCore (`DAT_1412fe640`, `1400f2c00`)
+pendant le contrôle. Il ne change rien au résultat, seulement à la durée.
 
 ## Piste 2 : resynchro générale au-delà d'un seuil
 
