@@ -77,6 +77,11 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [garde_messages](analyses/garde_messages/README.md) : revue de la garde des messages réseau contre
   le gel à la déconnexion d'un joueur (branche `yodha-desync-issue`, corrigée et mergée), points
   Ghidra vérifiés (lecture des drapeaux juste), reste à essayer en partie ;
+- [passage_de_tour_reseau](analyses/passage_de_tour_reseau/README.md) : passages de tour longs
+  après le retour d'un joueur qui ne se resynchronise jamais, débit réseau fixé par la couche P2P
+  de Steam (pas de limiteur dans le jeu), et quatre pistes : cache des hachages de l'hôte au
+  contrôle de synchro, resynchro générale au-delà d'un seuil, morceaux plus gros (POL), nouvelle
+  pile Steam (analyse statique et journaux) ;
 - défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
