@@ -186,6 +186,53 @@ dans les builds locaux : la release est compilée sans la feature `diag`
 `PROXY_REGLAGES` dans `options_proxy.lua`, ou l'inverse. Le libellé, l'aide et les choix se
 donnent en français et en anglais.
 
+## Débit Steam et taille des morceaux réseau (`trace_steam`, `morceaux_reseau`)
+
+Deux réglages de diagnostic, désactivés par défaut : onglet BetterGameExperience, section
+Diagnostic, builds locaux seulement. Ils prennent effet au lancement suivant du jeu. Ce sont les
+outils de l'analyse préliminaire de la piste « morceaux plus gros »
+([analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md), piste 3). Code :
+[src/debit_steam.rs](src/debit_steam.rs).
+
+- **`trace_steam=on` : trace des envois et réceptions Steam. Aucune adresse de l'exe.**
+  - L'entrée de l'import `SteamInternal_FindOrCreateUserInterface` est redirigée. Quand le jeu
+    demande `SteamNetworking005`, `SendP2PPacket` et `ReadP2PPacket` sont détournés dans la table
+    virtuelle de l'interface.
+  - Toutes les 500 ms, une ligne par pair actif : paquets et octets envoyés et reçus, plus grand
+    paquet, envois refusés par Steam (le jeu n'en sait rien), paquets trop grands pour le tampon du
+    jeu. S'y ajoute la file d'envoi de Steam (`GetP2PSessionState` : octets et paquets en attente,
+    relais ou direct).
+  - Fichier : `%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-<pid>.log`. Il n'entre pas dans les
+    rapports de bug. Un pair y est noté par un numéro et l'identifiant de compte de son SteamID.
+- **`morceaux_reseau=4096|16384|60000` : essai de morceaux plus gros.**
+  - Il change le protocole : **même valeur sur toutes les machines de la partie**, sinon le
+    receveur compte mal les morceaux et la partie se corrompt. Essai à deux machines seulement.
+  - Il fixe la taille des morceaux (1 166 octets dans le jeu) et remplace le tampon de réception
+    Steam de 2 Ko par un tampon de 128 Ko.
+  - **Injections à des adresses fixes, relevées sur 1.0.12.58 seulement** (table `EXES`, DX12 /
+    DX11). Chaque site est vérifié octet par octet avant d'écrire. Sur une autre version, rien n'est
+    posé et le journal dit `essai de morceaux non posé`.
+
+    | Site | DX12 .58 | DX11 .58 | Ce qui est écrit |
+    |---|---|---|---|
+    | Réglage de session de la taille (plafond 1 166) | `1407f7ab0` | `1407f7330` | `jmp` vers son écriture finale, dont la valeur devient la taille choisie |
+    | Remise à 1 166 | `1407f7780` | `1407f7000` | la valeur écrite |
+    | Globale de la taille | `14128f328` | `14127c328` | la taille choisie |
+    | `lea rbx,[tampon]` de `FSteamTransportThread::Update` | `14085dc4c` | `14085d96c` | l'adresse du nouveau tampon |
+    | `mov r8d,800h`, 27 octets plus loin | `14085dc67` | `14085d987` | 128 Ko |
+
+    **À re-identifier pour 1.0.12.72 et 1.0.12.74.** Le test `chunk_sites_by_pattern` cherche les
+    mêmes motifs dans chaque exe présent (`CIV6_EXE_72_DIR`, `CIV6_EXE_74_DIR` ou le jeu installé)
+    et affiche les adresses : les recopier dans `EXES` avec le nom de la version.
+- **Lecture.**
+  - Chronométrer l'envoi d'une sauvegarde ou d'un contrôle de synchro avec la taille du jeu, puis
+    avec des morceaux plus gros, en regardant la file d'envoi se vider.
+  - Si le débit en octets ne change pas, Steam limite en octets (fenêtre ÷ ping) : la piste ne
+    rapporte rien.
+  - S'il grandit avec la taille des paquets, Steam limite en messages, et la piste vaut un
+    correctif POL.
+- **Le journal.** `debit steam : …` dans `RolloverProxy.log`.
+
 ## Le salon multijoueur : qui a le proxy ?
 
 [src/salon.rs](src/salon.rs) et [src/salon.lua](src/salon.lua). Certains correctifs changent la

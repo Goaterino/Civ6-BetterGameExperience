@@ -243,6 +243,14 @@ la même sauvegarde de fin de tour remet tout le monde au même état. Le chemin
 **Essai à deux machines.** Morceaux de 16 Ko, tampon de 64 Ko, chronométrer l'envoi d'une
 sauvegarde et d'un contrôle, avec une trace temporaire en ms au thread de transport.
 
+**Outils prêts** (builds de diagnostic, voir
+[startup_proxy](../../startup_proxy/README.md#débit-steam-et-taille-des-morceaux-réseau-trace_steam-morceaux_reseau)) :
+- `trace_steam=on` trace l'envoi et la réception Steam et la file d'envoi de Steam, toutes les
+  500 ms. Il ne dépend d'aucune adresse de l'exe.
+- `morceaux_reseau=16384` (même valeur sur les deux machines) porte les morceaux à 16 Ko et le
+  tampon de réception à 128 Ko. Ses adresses sont celles de 1.0.12.58, **à re-identifier sur
+  1.0.12.74** avec le test `chunk_sites_by_pattern`.
+
 ## Piste 4 : nouvelle pile Steam
 
 **Quelle interface.** `ISteamNetworkingMessages`, plutôt que `ISteamNetworkingSockets` : elle a le

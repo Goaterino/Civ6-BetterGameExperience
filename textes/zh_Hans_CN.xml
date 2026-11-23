@@ -347,6 +347,18 @@
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="zh_Hans_CN">
 			<Text>将游戏计时的每个区段（帧、界面、脚本、事件）的耗时记录到 %LOCALAPPDATA%\Civ6RolloverProxy\zones，用于性能分析。每秒游戏约 1 MB。下次启动游戏时生效。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="zh_Hans_CN">
+			<Text>Steam 网络追踪</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="zh_Hans_CN">
+			<Text>每 500 毫秒将通过 Steam 发送给每位玩家和从其接收的数据包与字节、被 Steam 拒绝的发送，以及 Steam 的发送队列（字节、数据包、中继或直连）写入 %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log。用于测量玩家之间的网络速度。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="zh_Hans_CN">
+			<Text>网络分块大小（测试）</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="zh_Hans_CN">
+			<Text>大型网络消息被切分成的块的大小，游戏中为 1166 字节。仅用于两台电脑之间的测试：游戏中的所有电脑必须使用相同的值，否则游戏会损坏。仅限游戏版本 1.0.12.58。下次启动游戏时生效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="zh_Hans_CN">
 			<Text>网络消息保护</Text>
 		</Row>
