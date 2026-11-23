@@ -64,9 +64,15 @@ pub const CHUNK_MAX: u32 = 0x1_0000;
 const RECV_BUFFER: u32 = 0x2_0000;
 
 pub fn parse(cfg: &str) -> Config {
-    let last = |key: &str| cfg.lines().filter_map(|l| l.trim().strip_prefix(key)).last().map(str::trim);
-    let trace = last("trace_steam=") == Some("on");
-    let chunk = last("morceaux_reseau=").and_then(|v| v.parse::<u32>().ok()).filter(|n| (CHUNK_MIN..=CHUNK_MAX).contains(n));
+    // Chaque clé est écrite en clair dans son appel à strip_prefix : le test
+    // `cles_communes_avec_le_proxy` (options.rs) les y lit pour les comparer à celles de l'onglet.
+    let trace = cfg.lines().filter_map(|l| l.trim().strip_prefix("trace_steam=")).last().map(str::trim) == Some("on");
+    let chunk = cfg
+        .lines()
+        .filter_map(|l| l.trim().strip_prefix("morceaux_reseau="))
+        .last()
+        .and_then(|v| v.trim().parse::<u32>().ok())
+        .filter(|n| (CHUNK_MIN..=CHUNK_MAX).contains(n));
     Config { trace, chunk }
 }
 
