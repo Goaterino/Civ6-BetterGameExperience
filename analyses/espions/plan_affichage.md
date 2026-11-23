@@ -1,6 +1,6 @@
 # Plan : afficher le vrai taux de succès des espions
 
-Plan d’intégration du 2026-11-23, rien n’est encore implémenté. Il s'appuie sur l'analyse
+Plan d'intégration du 2026-11-23, rien n'est encore implémenté. Il s'appuie sur l'analyse
 [README.md](README.md). Les fichiers Lua d'espionnage du jeu manquaient sur la machine de rédaction :
 les étapes qui les lisent restent à faire sur une machine qui a le jeu.
 
