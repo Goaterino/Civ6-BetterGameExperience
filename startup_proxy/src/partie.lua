@@ -523,3 +523,61 @@ if Civ6Proxy_EndTurnFor ~= nil then
 		end
 	end
 end
+
+-- Bigger network chunks (diagnostic builds, startup_proxy/src/debit_steam.rs). A receiver with the
+-- game's 2 KB receive buffer crashes on a bigger chunk, so they are only sent in a game, with POL on
+-- (the host's verdict), and only while every other connected player announces this machine's version
+-- of BGE under its own identity (its Steam ID). Any other case gives an empty list: the game's chunk
+-- size. The proxy also goes back to it at the first Steam packet of a peer outside the list.
+--   Civ6Proxy_MorceauxReseau(ids) -> "id,id" Steam IDs of the other connected players, or ""
+if Civ6Proxy_MorceauxReseau ~= nil then
+	local last = nil;
+
+	local function Announce(pc)
+		return string.match(tostring((pc:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+	end
+
+	local function Peers()
+		if not GameConfiguration.IsNetworkMultiplayer() or GameConfiguration.IsPlayByCloud()
+			or Civ6Proxy_PolActifs() ~= 1 then
+			return "";
+		end
+		local me = Network.GetLocalPlayerID();
+		local mine = PlayerConfigurations[me] and Announce(PlayerConfigurations[me]);
+		if mine == nil then return ""; end
+		local ids = {};
+		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+			if id ~= me and Network.IsPlayerConnected(id) then
+				local pc = PlayerConfigurations[id];
+				local steam = pc and pc.GetNetworkIdentifer ~= nil and tostring(pc:GetNetworkIdentifer() or "") or "";
+				local version, _, perso = nil, nil, nil;
+				if pc ~= nil then version, _, perso = Announce(pc); end
+				local ident = perso and string.match(perso, "~(%d+)$");
+				if version ~= mine or not string.match(steam, "^%d+$") or ident ~= steam then
+					return "";
+				end
+				table.insert(ids, steam);
+			end
+		end
+		return table.concat(ids, ",");
+	end
+
+	local function Update()
+		local ok, ids = pcall(Peers);
+		if not ok then
+			BGD_PartieJournal("chunks: error: " .. tostring(ids));
+			ids = "";
+		end
+		if ids ~= last then
+			last = ids;
+			Civ6Proxy_MorceauxReseau(ids);
+		end
+	end
+
+	for _, name in ipairs({ "LoadScreenClose", "PlayerInfoChanged", "MultiplayerPlayerConnected",
+		"MultiplayerPrePlayerDisconnected", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnBegin" }) do
+		if Events[name] ~= nil then
+			Events[name].Add(Update);
+		end
+	end
+end
