@@ -3,6 +3,8 @@
 -- proxy de démarrage (startup_proxy/src/salon.rs). Fonctions natives posées par le proxy :
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0)
 --   Civ6Proxy_Journal(texte)           -> écrit dans RolloverProxy.log
+--   Civ6Proxy_PartieReseau(actif)      -> 1 pour une partie en réseau en direct (ni solo, ni hotseat,
+--                                         ni PlayByCloud), lu par le proxy de GameCore
 -- Une partie qui n'est pas en réseau (solo, hotseat) ne tourne que sur cette machine : rien à
 -- désynchroniser, les correctifs POL y sont actifs. En réseau, c'est le salon qui a décidé
 -- (salon.lua).
@@ -36,6 +38,11 @@ if Civ6Proxy_FixerPol ~= nil then
 	local dit = false;
 	local function BGD_PolDuChargement()
 		local ok, err = pcall(function()
+			if Civ6Proxy_PartieReseau ~= nil then
+				local reseau = GameConfiguration.IsNetworkMultiplayer() and not GameConfiguration.IsPlayByCloud()
+					and not GameConfiguration.IsHotseat();
+				Civ6Proxy_PartieReseau(reseau and 1 or 0);
+			end
 			if not GameConfiguration.IsNetworkMultiplayer() then
 				Civ6Proxy_FixerPol(1, GameConfiguration.IsHotseat() and "hotseat" or "partie solo");
 			elseif not GameConfiguration.IsPlayByCloud() and BGD_PolAuLancement() then

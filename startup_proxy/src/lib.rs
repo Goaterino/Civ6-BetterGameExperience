@@ -86,6 +86,13 @@ pub extern "system" fn BgdPolActifs() -> u32 {
     salon::pol_actifs() as u32
 }
 
+/// Export lu par le proxy de GameCore : 1 si la partie chargée est une partie en réseau en direct
+/// (ni solo, ni hotseat, ni PlayByCloud), posé à chaque écran de chargement (voir `salon`).
+#[no_mangle]
+pub extern "system" fn BgdPartieReseau() -> u32 {
+    salon::partie_reseau() as u32
+}
+
 /// Tests: path of the exe a table index stands for. 0 and 1 are the 1.0.12.72 build
 /// (`CIV6_EXE_72_DIR`), 2 and 3 the 1.0.12.74 build (`CIV6_EXE_74_DIR`, or the installed game when
 /// unset), 4 and 5 the 1.0.12.58 build (`CIV6_EXE_58_DIR`). A build whose folder is not set or

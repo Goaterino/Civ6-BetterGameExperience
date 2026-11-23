@@ -62,6 +62,15 @@ pub fn pol_actifs() -> bool {
     POL.load(Ordering::Relaxed)
 }
 
+/// La partie chargée est en réseau, en direct : ni solo, ni hotseat, ni PlayByCloud. Posé par
+/// `chargement.lua` à chaque écran de chargement, sur chaque machine (la configuration de la partie
+/// est la même pour toutes). Non tant que l'interface n'a rien dit.
+static RESEAU: AtomicBool = AtomicBool::new(false);
+
+pub fn partie_reseau() -> bool {
+    RESEAU.load(Ordering::Relaxed)
+}
+
 /// Bits de `RolloverProxyStatus`, l'export d'état du proxy de GameCore (proxy/src/lib.rs).
 const ST_ORIGINAL: u32 = 2;
 const ST_POL: u32 = 16;
@@ -305,6 +314,16 @@ unsafe extern "C-unwind" fn lua_fix_pol(l: *mut std::ffi::c_void) -> i32 {
     0
 }
 
+/// `Civ6Proxy_PartieReseau(actif)`, actif 1 ou 0 : la partie chargée est en réseau, en direct.
+/// Journalisé quand il change.
+unsafe extern "C-unwind" fn lua_partie_reseau(l: *mut std::ffi::c_void) -> i32 {
+    let actif = arg_str(l, 1).is_some_and(|v| v.trim() == "1");
+    if RESEAU.swap(actif, Ordering::Relaxed) != actif {
+        crate::log(&format!("chargement : partie {}", if actif { "en réseau" } else { "locale ou PlayByCloud" }));
+    }
+    0
+}
+
 /// `Civ6Proxy_PolActifs()` → 1 si les correctifs POL sont actifs sur cette machine, sinon 0.
 unsafe extern "C-unwind" fn lua_pol_state(l: *mut std::ffi::c_void) -> i32 {
     let Some(h) = hks() else { return 0 };
@@ -368,7 +387,11 @@ pub const NATIVES: Natives = &[
     (crate::remap::lua_forget, b"Civ6Proxy_RemapOublier\0"),
 ];
 
-const CHARGEMENT_NATIVES: Natives = &[(lua_log, b"Civ6Proxy_Journal\0"), (lua_fix_pol, b"Civ6Proxy_FixerPol\0")];
+const CHARGEMENT_NATIVES: Natives = &[
+    (lua_log, b"Civ6Proxy_Journal\0"),
+    (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
+    (lua_partie_reseau, b"Civ6Proxy_PartieReseau\0"),
+];
 const PARTIE_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
