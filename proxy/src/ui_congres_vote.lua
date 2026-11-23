@@ -63,13 +63,16 @@ do
 
 	-- Le tour du congrès peut aussi être parti sans vote (minuteur de l'exe, BGE-9E21BE) : la fenêtre
 	-- se rouvre alors avec des votes vides, rien à rendre.
+	-- Les votes envoyés restent gardés jusqu'au prochain OnAccept (la clé tour:segment les borne à la
+	-- session) : un tour reparti sans nouvel envoi puis annulé de nouveau garde les votes comptés par
+	-- GameCore et la faveur qu'il rendra. Les effacer ici limitait le joueur à 1 voix par résolution,
+	-- la faveur affichée étant alors celle de GameCore, encore débitée (BGE-61FC66).
 	local function BGD_OnLocalPlayerTurnUnready()
 		local stage = BGD_StageEnVote();
 		if stage == nil or BGD_Spectateur() then
 			return;
 		end
 		local e = m_BGD_Envoi;
-		m_BGD_Envoi = nil;
 		if e ~= nil and e.cle == BGD_Cle() and e.stage == stage then
 			m_kResolutionVotes = e.resolutions or {};
 			m_kResolutionChoices = e.choix or {};
@@ -78,6 +81,7 @@ do
 			m_BGD_RenduCle = e.cle;
 			print("BGE congrès : fin de tour annulée, retour au vote (session " .. stage .. ", " .. e.depense .. " de faveur à rendre)");
 		else
+			m_BGD_Envoi = nil;
 			m_kResolutionVotes = {};
 			m_kResolutionChoices = {};
 			m_kProposalVotes = {};
