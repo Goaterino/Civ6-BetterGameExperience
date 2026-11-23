@@ -14,12 +14,17 @@
 //! included, so it can only rest on the message being executed: drop_slot's `AWAY` is per-process
 //! memory and a machine that rejoins does not have it. Here the marker is "the `PlayerTurnComplete`
 //! of player P was sent by another player": GameCore's receive function gets the sender with the
-//! message, the same on every machine. In the 15 reports read for this fix, the 23 such messages
-//! out of about 13,000 all came from BGE ending the turn of a player who was not connected (host
-//! migration included: the new host ends the absent players' turns, BGE-141E15 20:34:32). The game
-//! itself never sends one for a connected player, and `partie.lua` only sends one for a player who
-//! is not connected. A paused game is left out by the game: `PlayerTurnComplete` is ignored while
-//! paused.
+//! message, the same on every machine. `partie.lua` only sends one for a player who is not
+//! connected. That the game itself never sends one for a connected player is an observation, not a
+//! reversed fact: in the 15 reports read for this fix, the 23 such messages out of about 13,000 all
+//! came from BGE ending the turn of a player who was not connected (host migration included: the
+//! new host ends the absent players' turns, BGE-141E15 20:34:32). A paused game is left out by the
+//! game: `PlayerTurnComplete` is ignored while paused.
+//!
+//! **The other reactivations.** In the same reports, the 4,266 `AppRequestTurnUnready` are either
+//! the player's own `PlayerTurnUnready` (3,144, request `0xa99d06c`, which an absent player cannot
+//! send) or the two requests of the call redirected here (764 `0x5006dda`, automation; 358
+//! `0xd60b7e54`). The gate's two other callers were never seen reactivating a player.
 //!
 //! **The fix.** For the duration of such a message only, on the thread that executes it, the gate
 //! that `Player_Processor` calls just before `AppRequestTurnUnready` answers "no" for that player.
@@ -37,7 +42,16 @@
 //! 2. put the 1.0.12.72 addresses in `SITES` and add them to `patch::MOVED` with their 1.0.12.74
 //!    counterparts (1.0.12.58 has the 1.0.12.72 code byte for byte);
 //! 3. if a signature does not match, the compiler laid out the code differently: reverse the
-//!    function again and adapt the signature and the checks, do not loosen them.
+//!    function again and adapt the signature and the checks, do not loosen them;
+//! 4. on the six exes, list the callers of the controller's "send turn complete" (`absent_turn`'s
+//!    `send`): the marker holds only if the game never sends it for another, connected human.
+//!
+//! **Limits.**
+//! - `pol::partie_reseau` is per-machine state, set by `chargement.lua` at the load screen. A
+//!   machine where that script is not added would make the player active again, alone, and stall
+//!   the turn: the same dependency as POL's own "launch data" correction.
+//! - Until `SITES` is filled in, the host still ends an absent player's turn once per turn
+//!   (`partie.lua`), and the game can make it active again.
 //!
 //! 2020 addresses (reference only, they are not those of any supported build):
 //! - receive (`180033080`, `Messages_Manager.cpp`): `(sender, stream)`, logs `GameCore RECV (%i): %s`,
@@ -51,8 +65,9 @@
 //!   `180058ce0` and `180058d30` (`RequestTurnUnready`).
 
 use crate::patch::{alloc_near, rel32, write_rel32, Site};
-use crate::{log, pol, win};
-use std::sync::atomic::{AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use crate::{log, pol};
+use std::cell::Cell;
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
 /// 1.0.12.72 addresses of the three sites. `None`: not reversed yet, nothing is installed.
 struct Sites {
@@ -98,22 +113,14 @@ static T_RECEIVE: AtomicUsize = AtomicUsize::new(0);
 static T_TURN_COMPLETE: AtomicUsize = AtomicUsize::new(0);
 static GATE: AtomicUsize = AtomicUsize::new(0);
 static GATE_SITE: AtomicUsize = AtomicUsize::new(0);
-/// Sender of the message being received, with the receiving thread: `pack`, 0 when none.
-static SENDER: AtomicU64 = AtomicU64::new(0);
-/// Player whose reactivation is refused, with the thread executing its message: `pack`, 0 when none.
-static REFUSED: AtomicU64 = AtomicU64::new(0);
+thread_local! {
+    /// Sender of the message this thread is receiving.
+    static SENDER: Cell<Option<i32>> = const { Cell::new(None) };
+    /// Player whose reactivation is refused while this thread executes its message.
+    static REFUSED: Cell<Option<i32>> = const { Cell::new(None) };
+}
 static LOGGED: AtomicU32 = AtomicU32::new(0);
 const MAX_LOGS: u32 = 20;
-
-/// A player (or sender) and a thread, never 0 for a valid player.
-fn pack(thread: u32, player: i32) -> u64 {
-    (u64::from(thread) << 32) | u64::from((player as u32).wrapping_add(1))
-}
-
-/// The player of a `pack`ed value, if it was packed on `thread`.
-fn unpack(value: u64, thread: u32) -> Option<i32> {
-    (value != 0 && (value >> 32) as u32 == thread).then(|| (value as u32).wrapping_sub(1) as i32)
-}
 
 /// Whether a `PlayerTurnComplete` for `player`, received from `sender` (`None`: not received through
 /// GameCore's receive function), keeps the player's turn ended.
@@ -128,28 +135,26 @@ type Gate = unsafe extern "system" fn(i32) -> u64;
 
 unsafe extern "system" fn hook_receive(sender: i32, stream: usize) -> u64 {
     let original: Receive = std::mem::transmute(T_RECEIVE.load(Ordering::Relaxed));
-    let previous = SENDER.swap(pack(win::GetCurrentThreadId(), sender), Ordering::Relaxed);
+    let previous = SENDER.replace(Some(sender));
     let r = original(sender, stream);
-    SENDER.store(previous, Ordering::Relaxed);
+    SENDER.set(previous);
     r
 }
 
 unsafe extern "system" fn hook_turn_complete(msg: *const u8) -> u64 {
     let original: TurnComplete = std::mem::transmute(T_TURN_COMPLETE.load(Ordering::Relaxed));
-    let thread = win::GetCurrentThreadId();
     let player = std::ptr::read_unaligned(msg.add(MSG_PLAYER).cast::<i32>());
-    let sender = unpack(SENDER.load(Ordering::Relaxed), thread);
-    if !keeps_ended(sender, player, pol::actifs(), pol::partie_reseau()) {
+    if !keeps_ended(SENDER.get(), player, pol::actifs(), pol::partie_reseau()) {
         return original(msg);
     }
-    let previous = REFUSED.swap(pack(thread, player), Ordering::Relaxed);
+    let previous = REFUSED.replace(Some(player));
     let r = original(msg);
-    REFUSED.store(previous, Ordering::Relaxed);
+    REFUSED.set(previous);
     r
 }
 
 unsafe extern "system" fn hook_gate(player: i32) -> u64 {
-    if unpack(REFUSED.load(Ordering::Relaxed), win::GetCurrentThreadId()) == Some(player) {
+    if REFUSED.get() == Some(player) {
         let k = LOGGED.fetch_add(1, Ordering::Relaxed) + 1;
         if k <= MAX_LOGS {
             log(&format!("absent: player {player}'s turn was ended by another player; the game wanted to make it active again, it stays ended ({k})"));
@@ -172,9 +177,9 @@ fn matches(pattern: &[Option<u8>], bytes: &[u8]) -> bool {
 /// The signature is at `address` (a 1.0.12.72 address) in the loaded GameCore.
 unsafe fn signature_at(base: usize, address: u64, signature: (&str, usize)) -> bool {
     let p = pattern(signature);
-    let start = address - signature.1 as u64;
-    let read = std::slice::from_raw_parts((base + crate::patch::rva(start)) as *const u8, p.len());
-    matches(&p, &crate::patch::as_known(start, read))
+    // The site's own shift in 1.0.12.74 (`patch::MOVED`), not that of an address before it.
+    let read = std::slice::from_raw_parts((base + crate::patch::rva(address) - signature.1) as *const u8, p.len());
+    matches(&p, &crate::patch::as_known(address - signature.1 as u64, read))
 }
 
 fn site(name: &'static str, address: u64, prologue: &'static [u8]) -> Site {
@@ -273,17 +278,6 @@ mod tests {
         assert!(!keeps_ended(Some(1), 2, true, false), "local game (solo, hotseat) or PlayByCloud");
         assert!(!keeps_ended(Some(-1), 2, true, true) && !keeps_ended(Some(64), 2, true, true), "no such sender");
         assert!(!keeps_ended(Some(1), -1, true, true) && !keeps_ended(Some(1), 64, true, true), "no such player");
-    }
-
-    #[test]
-    fn packed_values_belong_to_their_thread() {
-        for player in [0, 5, 63] {
-            assert_eq!(unpack(pack(7, player), 7), Some(player));
-            assert_eq!(unpack(pack(7, player), 8), None, "another thread");
-        }
-        assert_eq!(unpack(0, 0), None, "nothing recorded");
-        assert_ne!(pack(0, 0), 0);
-        assert_eq!(unpack(pack(7, -1), 7), Some(-1), "an invalid sender stays invalid");
     }
 
     #[test]
