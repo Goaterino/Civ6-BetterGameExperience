@@ -97,6 +97,10 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [huttes_invisibles](analyses/huttes_invisibles/README.md) : villages tribaux invisibles après un
   rechargement, causés par le correctif « améliorations mémorisées » de la 0.14.0 (rapports
   BGE-2C7D19, BGE-E8B107, BGE-93D8D4 ; analyse statique, pas encore corrigé) ;
+- [gamecore_2024](analyses/gamecore_2024/README.md) : GameCore du 2024-06-26 refusé avec l'exe
+  1.0.12.58 depuis la 0.14.0 (aucun correctif posé, signaux `.bgd_` visibles dans le chat), et
+  correctifs POL annoncés à tort à la première partie ; GameCore du joueur à récupérer, pas encore
+  corrigé ;
 - [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
   et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
