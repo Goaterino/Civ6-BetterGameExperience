@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="de_DE">
 			<Text>Stummschaltung für {1} aufgehoben.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="de_DE">
+			<Text>BGE: Spiel {1} nicht unterstützt</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="de_DE">
+			<Text>Spielversion nicht unterstützt</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="de_DE">
+			<Text>BetterGameExperience unterstützt die Spielversion {1} nicht: Keine seiner Korrekturen ist aktiv.[NEWLINE][NEWLINE]Aktualisiere das Spiel über Steam auf die aktuelle Version. Bitte melde keine Probleme mit dieser Version: Sie stammen nicht von BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="de_DE">
+			<Text>Fehlerberichte sind deaktiviert: BetterGameExperience unterstützt die Spielversion {1} nicht, und keine seiner Korrekturen ist aktiv. Aktualisiere das Spiel über Steam auf die aktuelle Version.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

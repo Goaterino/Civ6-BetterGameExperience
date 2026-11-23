@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="it_IT">
 			<Text>Audio e chat di {1} riattivati.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="it_IT">
+			<Text>BGE: gioco {1} non supportato</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="it_IT">
+			<Text>Versione del gioco non supportata</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="it_IT">
+			<Text>BetterGameExperience non supporta la versione {1} del gioco: nessuna delle sue correzioni è attiva.[NEWLINE][NEWLINE]Aggiorna il gioco su Steam alla versione attuale. Per favore, non segnalare problemi visti con questa versione: non dipendono da BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="it_IT">
+			<Text>Le segnalazioni di bug sono disattivate: BetterGameExperience non supporta la versione {1} del gioco e nessuna delle sue correzioni è attiva. Aggiorna il gioco su Steam alla versione attuale.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

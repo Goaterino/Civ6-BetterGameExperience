@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="es_ES">
 			<Text>Has dejado de silenciar a {1}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="es_ES">
+			<Text>BGE: juego {1} no compatible</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="es_ES">
+			<Text>Versión del juego no compatible</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="es_ES">
+			<Text>BetterGameExperience no es compatible con la versión {1} del juego: ninguna de sus correcciones está activa.[NEWLINE][NEWLINE]Actualiza el juego en Steam a su versión actual. Por favor, no informes de problemas vistos con esta versión: no vienen de BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="es_ES">
+			<Text>Los informes de errores están desactivados: BetterGameExperience no es compatible con la versión {1} del juego y ninguna de sus correcciones está activa. Actualiza el juego en Steam a su versión actual.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

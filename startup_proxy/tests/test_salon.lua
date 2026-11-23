@@ -564,6 +564,22 @@ do
 	check(n == 1 and text == "[COLOR_RED]BGE - Bob's game version is not supported by BGE: BGE's fixes are inactive on their PC.[ENDCOLOR]", "unknown game version said once, by that player: " .. text);
 end
 
+-- 13e. The usual case: with an unsupported game version, the machine does not announce itself
+-- (Civ6Proxy_Version gives nil), and still says it to everyone.
+do
+	local l = NewLobby({ { nom = "Hôte" }, { nom = "Bob", indispo = "jeu 1.0.12.72 inconnu" } }, { lang = "en_US", avant = function(env)
+		env.Civ6Proxy_ExeInconnu = function() return env.Network.GetLocalPlayerID() == 1 and 1 or 0; end
+	end });
+	l.open();
+	local n = 0;
+	for _, c in ipairs(l.chat) do
+		if c.from == 1 and c.text:find("is not supported by BGE", 1, true) then n = n + 1; end
+	end
+	check(n == 1, "unsupported version said once, without an announcement (" .. n .. ")");
+	check(#l.annonces == 1 and l.annonces[1].from == 0, "only the host announces itself");
+	check(l.machines[1].values[1] == nil or l.machines[1].values[1].BGD_VERSION == nil, "Bob does not announce a version");
+end
+
 -- 14. En cours de partie, correctifs POL actifs : un joueur sans proxy arrive. L'hôte prévient une
 -- fois, quand il est prêt.
 do

@@ -169,8 +169,28 @@ reprendre.
 
 ## Ce qu'il faut re-identifier sur la 1.0.12.74
 
-La 1.0.12.74 n'est pas disponible localement. [patch.rs](../../proxy/src/patch.rs) la décrit comme le
-même code et les mêmes données que la 1.0.12.58, à d'autres adresses.
+**Fait le 2026-11-23** sur `binaires_jeu/1.0.12.74/GameCore_XP2_FinalRelease.dll` : chaque fonction
+ci-dessous est identique à celle de la .58, morceaux de la table des exceptions compris, au
+déplacement des adresses relatives près. Les règles n'ont pas changé.
+
+| .58 | .74 |
+|---|---|
+| `180375100` (évasion) | `1803749c0` |
+| `180373ac0` | `180373380` |
+| `180373c30` | `1803734f0` |
+| `180372b40` (seuil E) | `180372400` |
+| `180371b10` (sortie de la police) | `1803713d0` |
+| `18011ee20` (quartier terminé) | `18011ee20` |
+| `180374180` (six issues) | `180373a40` |
+| `180374000` | `1803738c0` |
+| `1800d14f0` (interface) | `1800d14f0` |
+| `1806c2740` (interface) | `1806c2780`, seule sa table de saut diffère (RVA décalées de 0x40) |
+| table 3d6 `180b64c70` | `180b64c70`, mêmes valeurs |
+
+Les décalages `+0x2c0` à `+0x2cc`, `+0x934`, `+0x948` et `+0x3f8` sont donc les mêmes. Il reste à
+relire les fichiers Lua d'espionnage installés avec la .74 si le bloc s'accroche à leur texte.
+
+Texte d'origine du plan, avant ces vérifications :
 
 - **Avec la solution Lua seule (retenue) : aucune adresse.** Il faut seulement confirmer que les
   règles n'ont pas changé, en comparant les fonctions suivantes à la .58, au déplacement près :

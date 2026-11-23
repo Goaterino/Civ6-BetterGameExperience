@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="en_US">
 			<Text>Unmuted {1}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="en_US">
+			<Text>BGE: game {1} not supported</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="en_US">
+			<Text>Game version not supported</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="en_US">
+			<Text>BetterGameExperience does not support version {1} of the game: none of its fixes are active.[NEWLINE][NEWLINE]Update the game on Steam to its current version. Please do not report problems seen with this version: they do not come from BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="en_US">
+			<Text>Bug reports are turned off: BetterGameExperience does not support version {1} of the game, and none of its fixes are active. Update the game on Steam to its current version.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

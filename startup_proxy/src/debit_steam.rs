@@ -32,9 +32,8 @@
 //! - Le tampon de réception Steam de 0x800 octets (`14238e040`, une seule référence : le `lea` de
 //!   `14085dc4c` dans `FSteamTransportThread::Update`) est remplacé par un tampon de 128 Ko proche de
 //!   l'exe, et la taille passée à `ReadP2PPacket` (`mov r8d,800h` en `14085dc67`) devient 128 Ko.
-//! - **Adresses fixes, relevées sur 1.0.12.58 seulement** (table `EXES`, DX12 et DX11). Chaque site
-//!   est vérifié octet par octet avant d'écrire : sur une autre version, rien n'est posé et le
-//!   journal le dit. **Pour 1.0.12.72 et 1.0.12.74, il faut les re-identifier** : le test
+//! - **Adresses fixes, relevées sur 1.0.12.58 et 1.0.12.74** (table `EXES`, DX12 et DX11). Chaque site est vérifié octet par octet avant d'écrire : sur une
+//!   autre version, rien n'est posé et le journal le dit. Pour une nouvelle version, le test
 //!   `chunk_sites_by_pattern` cherche les mêmes motifs (`SETTER`, `RESET`, `RECV`) dans chaque exe
 //!   présent et affiche les adresses à recopier dans `EXES`. En jeu, la trace (premier réglage)
 //!   n'en dépend pas.
@@ -283,7 +282,7 @@ unsafe fn install_trace(module: usize) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Essai de morceaux plus gros (adresses de 1.0.12.58)
+// Essai de morceaux plus gros (adresses de 1.0.12.58 et 1.0.12.74)
 
 const BASE: u64 = 0x1_4000_0000;
 
@@ -298,7 +297,9 @@ struct Exe {
     recv_lea: u64,
 }
 
-const EXES: [Exe; 2] = [
+const EXES: [Exe; 4] = [
+    Exe { name: "DX12 1.0.12.74", setter: 0x1_407f_d2e0, reset: 0x1_407f_cfb0, global: 0x1_4129_4328, recv_lea: 0x1_4086_45ac },
+    Exe { name: "DX11 1.0.12.74", setter: 0x1_407f_c1e0, reset: 0x1_407f_beb0, global: 0x1_4128_2328, recv_lea: 0x1_4086_1f9c },
     Exe { name: "DX12 1.0.12.58", setter: 0x1_407f_7ab0, reset: 0x1_407f_7780, global: 0x1_4128_f328, recv_lea: 0x1_4085_dc4c },
     Exe { name: "DX11 1.0.12.58", setter: 0x1_407f_7330, reset: 0x1_407f_7000, global: 0x1_4127_c328, recv_lea: 0x1_4085_d96c },
 ];
@@ -382,7 +383,7 @@ unsafe fn install_chunks(module: usize, chunk: u32) {
         crate::exe::for_this_game(e.name) && fingerprint(e, &read).map_err(|r| reasons.push(format!("{}: {r}", e.name))).is_ok()
     }) else {
         log(&format!(
-            "debit steam : essai de morceaux non posé ({}) ; adresses relevées sur 1.0.12.58 seulement, à re-identifier",
+            "debit steam : essai de morceaux non posé ({}) ; adresses relevées sur 1.0.12.58 et 1.0.12.74",
             crate::exe::no_table(&reasons)
         ));
         return;
@@ -454,22 +455,26 @@ mod tests {
     }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
-    /// Les entrées de `EXES` sur leurs exes (1.0.12.58, `CIV6_EXE_58_DIR`).
+    /// Les entrées de `EXES` sur leurs exes (1.0.12.74 installé ou `CIV6_EXE_74_DIR`, 1.0.12.58
+    /// par `CIV6_EXE_58_DIR`), et aucune autre entrée sur chacun.
     #[test]
     fn chunk_table_on_its_exes() {
-        for (i, name) in FILES.iter().enumerate().skip(4) {
+        for (i, name) in FILES.iter().enumerate() {
             let Ok(file) = std::fs::read(crate::test_exe(EXE_DIR, i, name)) else { continue };
             let img = crate::pe::Image::file(&file).unwrap();
             let read = |a: u64, n: usize| img.at((a - BASE) as u32, n).map(<[u8]>::to_vec).unwrap_or_default();
-            assert_eq!(fingerprint(&EXES[i - 4], &read), Ok(()), "{}", EXES[i - 4].name);
-            assert!(fingerprint(&EXES[5 - i], &read).is_err());
+            let own = i;
+            assert_eq!(fingerprint(&EXES[own], &read), Ok(()), "{}", EXES[own].name);
+            for (_, other) in EXES.iter().enumerate().filter(|&(k, _)| k != own) {
+                assert!(fingerprint(other, &read).is_err(), "{} matches {}", other.name, EXES[own].name);
+            }
         }
     }
 
     /// Pour re-identifier les sites sur une autre version : les motifs dans chaque exe présent
-    /// (1.0.12.72, 1.0.12.74, 1.0.12.58), adresses à recopier dans `EXES`.
+    /// (1.0.12.74, 1.0.12.58), adresses à recopier dans `EXES`.
     #[test]
     fn chunk_sites_by_pattern() {
         for (i, name) in FILES.iter().enumerate() {

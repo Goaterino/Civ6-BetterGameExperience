@@ -56,35 +56,7 @@ struct Exe {
     set_waiting: u64,
 }
 
-const EXES: [Exe; 6] = [
-    Exe {
-        name: "DX12 1.0.12.72",
-        update: 0x1_400f_7f70,
-        turn_end: 0x1_400f_62e0,
-        round_complete: 0x1_400f_5c70,
-        start_check: 0x1_407f_8c10,
-        lookup: 0x1_407f_b740,
-        jobs: 0x1_4230_e728,
-        sync: 0x1_4239_2ee8,
-        net_manager: 0x1_4239_2ef8,
-        snapshot_process: 0x1_4081_0fa0,
-        ack_on_receipt: 0x1_407f_8b80,
-        set_waiting: 0x1_4081_79e0,
-    },
-    Exe {
-        name: "DX11 1.0.12.72",
-        update: 0x1_400f_75b0,
-        turn_end: 0x1_400f_5920,
-        round_complete: 0x1_400f_52b0,
-        start_check: 0x1_407f_6d20,
-        lookup: 0x1_407f_9960,
-        jobs: 0x1_422d_70a8,
-        sync: 0x1_4235_b868,
-        net_manager: 0x1_4235_b878,
-        snapshot_process: 0x1_4080_f230,
-        ack_on_receipt: 0x1_407f_6c90,
-        set_waiting: 0x1_4081_6210,
-    },
+const EXES: [Exe; 4] = [
     Exe {
         name: "DX12 1.0.12.74",
         update: 0x1_400f_8130,
@@ -540,7 +512,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {

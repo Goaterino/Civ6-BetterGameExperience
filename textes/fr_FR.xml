@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="fr_FR">
 			<Text>{1} réactivé.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="fr_FR">
+			<Text>BGE : jeu {1} non pris en charge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="fr_FR">
+			<Text>Version du jeu non prise en charge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="fr_FR">
+			<Text>BetterGameExperience ne prend pas en charge la version {1} du jeu : aucun de ses correctifs n'est actif.[NEWLINE][NEWLINE]Mettez le jeu à jour sur Steam, à sa version actuelle. Merci de ne pas signaler les problèmes vus avec cette version : ils ne viennent pas de BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="fr_FR">
+			<Text>Les rapports de bug sont désactivés : BetterGameExperience ne prend pas en charge la version {1} du jeu, et aucun de ses correctifs n'est actif. Mettez le jeu à jour sur Steam, à sa version actuelle.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

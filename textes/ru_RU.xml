@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ru_RU">
 			<Text>Игрок {1} больше не заглушён.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ru_RU">
+			<Text>BGE: игра {1} не поддерживается</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ru_RU">
+			<Text>Версия игры не поддерживается</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ru_RU">
+			<Text>BetterGameExperience не поддерживает версию игры {1}: ни одно из его исправлений не работает.[NEWLINE][NEWLINE]Обновите игру в Steam до текущей версии. Пожалуйста, не сообщайте о проблемах с этой версией: они не связаны с BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ru_RU">
+			<Text>Отчёты об ошибках отключены: BetterGameExperience не поддерживает версию игры {1}, и ни одно из его исправлений не работает. Обновите игру в Steam до текущей версии.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

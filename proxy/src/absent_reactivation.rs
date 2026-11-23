@@ -33,25 +33,34 @@
 //! alone. The gate is untouched for any other player, any other message, and the gate's two other
 //! callers.
 //!
-//! **Sites, reversed on the 2020 GameCore only** (`GameCore_XP2_FinalRelease.dll`, link time
-//! `5ee10d21`, from the macOS Steam zip). The supported builds (1.0.12.58, .72, .74) were not
-//! available when this was written: `SITES` is `None` and nothing is installed until their addresses
-//! are filled in. `signatures_in_the_installed_game` (Windows, installed game) finds each signature
-//! below in the installed GameCore and prints its address. Then:
-//! 1. check in Ghidra that each match is the function described here (strings and callers below);
-//! 2. put the 1.0.12.72 addresses in `SITES` and add them to `patch::MOVED` with their 1.0.12.74
-//!    counterparts (1.0.12.58 has the 1.0.12.72 code byte for byte);
-//! 3. if a signature does not match, the compiler laid out the code differently: reverse the
-//!    function again and adapt the signature and the checks, do not loosen them;
-//! 4. on the six exes, list the callers of the controller's "send turn complete" (`absent_turn`'s
-//!    `send`): the marker holds only if the game never sends it for another, connected human.
+//! **Sites** (reversed on 2026-11-23 on the 1.0.12.58 and 1.0.12.74 GameCores; the addresses are
+//! written as those of the 1.0.12.72 GameCore, no longer supported, which has the 1.0.12.58 code
+//! byte for byte):
+//! - receive `180037b50`, the same in 1.0.12.74. Its two callers: the message queue's `call`
+//!   (`180037353`) and the exe's API `jmp` (`180590825`, `180590865` in 1.0.12.74), as `executions`
+//!   finds them;
+//! - `PlayerTurnComplete::Execute` `180039920`, the same in 1.0.12.74, the only pointer to it in the
+//!   message's table (`1809bec70`). Compiled differently from 2020: `push rbp ; push r14`, the
+//!   pause read at `game+0x220`; the player is still at `+0x18`. Its strings: "PlayerTurnComplete
+//!   ignored due to game paused." and "... because player %i is already turn complete.";
+//! - the gate's call `18005c98a`, the same in 1.0.12.74, in the end-of-turn automation right after
+//!   the "has movement remaining after completing automation" string. The gate is `18005b640`
+//!   (`18005b650` in 1.0.12.74, already in `patch::MOVED`); its other two callers are `18005d885`
+//!   and `18005d8e2`, as in 2020.
+//!
+//! The controller's "send turn complete" (`absent_turn`'s `send`) has three callers in each of the
+//! four exes checked (DX12 and DX11, 1.0.12.58 and 1.0.12.74), none through a table: the player's
+//! own end of turn (local player, `1400f62b0` in DX12 1.0.12.74), the interface's event dispatch
+//! (local player, `1401b8d00`), and the turn timer (`1400f8170`, "Turn Timer Sending
+//! TurnComplete"), whose player comes from the controller (`+0x450`, then two virtual calls): very
+//! likely the local player, not proven. Were it another player, the marker would keep a turn ended
+//! whose time is up, which is what the timer wants.
 //!
 //! **Limits.**
 //! - `pol::partie_reseau` is per-machine state, set by `chargement.lua` at the load screen. A
 //!   machine where that script is not added would make the player active again, alone, and stall
 //!   the turn: the same dependency as POL's own "launch data" correction.
-//! - Until `SITES` is filled in, the host still ends an absent player's turn once per turn
-//!   (`partie.lua`), and the game can make it active again.
+//! - Not yet tried in a game.
 //!
 //! 2020 addresses (reference only, they are not those of any supported build):
 //! - receive (`180033080`, `Messages_Manager.cpp`): `(sender, stream)`, logs `GameCore RECV (%i): %s`,
@@ -69,31 +78,34 @@ use crate::{log, pol};
 use std::cell::Cell;
 use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
-/// 1.0.12.72 addresses of the three sites. `None`: not reversed yet, nothing is installed.
+/// 1.0.12.72 addresses of the three sites (1.0.12.58 has the same code at the same addresses;
+/// 1.0.12.74 through `patch::MOVED`). `None`: not reversed, nothing is installed.
 struct Sites {
     receive: u64,
     turn_complete: u64,
     /// The `call` to the gate (the `e8` byte).
     gate_call: u64,
 }
-const SITES: Option<Sites> = None;
+const SITES: Option<Sites> = Some(Sites { receive: 0x1_8003_7b50, turn_complete: 0x1_8003_9920, gate_call: 0x1_8005_c98a });
 
 /// `push rbp ; push rbx ; push r12 ; push r13 ; push r14 ; lea rbp,[rsp-5B0h]`, no relative address.
 const RECEIVE_PROLOGUE: [u8; 17] = [0x40, 0x55, 0x53, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56, 0x48, 0x8d, 0xac, 0x24, 0x50, 0xfa, 0xff, 0xff];
-/// `mov rax,rsp ; push rbp ; push rbx ; lea rbp,[rax-1B8h] ; sub rsp,2A8h`, no relative address.
-const TURN_COMPLETE_PROLOGUE: [u8; 19] = [0x48, 0x8b, 0xc4, 0x55, 0x53, 0x48, 0x8d, 0xa8, 0x48, 0xfe, 0xff, 0xff, 0x48, 0x81, 0xec, 0xa8, 0x02, 0x00, 0x00];
+/// `push rbp ; push r14 ; lea rbp,[rsp-1A8h] ; sub rsp,2A8h`, no relative address.
+const TURN_COMPLETE_PROLOGUE: [u8; 19] = [0x40, 0x55, 0x41, 0x56, 0x48, 0x8d, 0xac, 0x24, 0x58, 0xfe, 0xff, 0xff, 0x48, 0x81, 0xec, 0xa8, 0x02, 0x00, 0x00];
 
-/// Byte patterns of the 2020 build, `??` for a relative address, and where the site is in each.
-/// Checked at the site before anything is changed, and searched by the test.
+/// Byte patterns, `??` for a relative address, and where the site is in each. Receive and the gate
+/// call are those of the 2020 build, unchanged in 1.0.12.58 and 1.0.12.74; `PlayerTurnComplete`
+/// was compiled differently (1.0.12.58). Checked at the site before anything is changed, and
+/// searched by the test.
 const RECEIVE_SIGNATURE: (&str, usize) = (
     // prologue ; sub rsp,6B0h ; mov rax,[rdx] ; lea r8,[rbp+5E8h] ; xor r13d,r13d ; mov qword [rsp+50h],-1
     "40 55 53 41 54 41 55 41 56 48 8d ac 24 50 fa ff ff 48 81 ec b0 06 00 00 48 8b 02 4c 8d 85 e8 05 00 00 45 33 ed 48 c7 44 24 50 ff ff ff ff",
     0,
 );
 const TURN_COMPLETE_SIGNATURE: (&str, usize) = (
-    // prologue ; mov rbx,rcx ; mov ecx,[rcx+18h] ; cmp ecx,40h ; jae ; mov [rax+18h],rsi ;
-    // mov [rax-18h],rdi ; mov [rax-20h],r14 ; call
-    "48 8b c4 55 53 48 8d a8 48 fe ff ff 48 81 ec a8 02 00 00 48 8b d9 8b 49 18 83 f9 40 0f 83 ?? ?? ?? ?? 48 89 70 18 48 89 78 e8 4c 89 70 e0 e8",
+    // prologue ; mov r14,rcx ; mov ecx,[rcx+18h] ; cmp ecx,40h ; jae ; mov [rsp+2D0h],rbx ;
+    // call (the player) ; mov rbx,rax ; test rax,rax ; jz
+    "40 55 41 56 48 8d ac 24 58 fe ff ff 48 81 ec a8 02 00 00 4c 8b f1 8b 49 18 83 f9 40 0f 83 ?? ?? ?? ?? 48 89 9c 24 d0 02 00 00 e8 ?? ?? ?? ?? 48 8b d8 48 85 c0 0f 84",
     0,
 );
 const GATE_CALL_SIGNATURE: (&str, usize) = (
@@ -102,8 +114,13 @@ const GATE_CALL_SIGNATURE: (&str, usize) = (
     "41 8b 8f d8 00 00 00 e8 ?? ?? ?? ?? 84 c0 74 34 48 8b 0d ?? ?? ?? ?? 44 8b c3 41 8b 97 d8 00 00 00 48 8b 01 ff 50 68 84 c0 74 19",
     7,
 );
-/// The gate: `mov eax,[rip+…] ; cmp eax,-1 ; jz`.
+/// The gate: `mov eax,[rip+…] ; cmp eax,-1 ; jz`. `congres` rewrites the whole function (its
+/// `ANNULABLE`, "turn cancellation allowed by the segment") and is installed first: the gate then
+/// starts with that detour's `jmp [rip+0]`, and calling it runs the congress's version.
 const GATE_SIGNATURE: (&str, usize) = ("8b 05 ?? ?? ?? ?? 83 f8 ff 74", 0);
+const GATE_DETOURED: [u8; 6] = [0xff, 0x25, 0, 0, 0, 0];
+/// 1.0.12.72 address of the gate, where the call must lead.
+const GATE_ADDRESS: u64 = 0x1_8005_b640;
 
 /// The message's player.
 const MSG_PLAYER: usize = 0x18;
@@ -198,8 +215,10 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
     };
     let call = base + crate::patch::rva(s.gate_call);
     let gate = call.wrapping_add(5).wrapping_add_signed(std::ptr::read_unaligned((call + 1) as *const i32) as isize);
+    let gate_bytes = std::slice::from_raw_parts(gate as *const u8, pattern(GATE_SIGNATURE).len());
     let gate_ok = signature_at(base, s.gate_call, GATE_CALL_SIGNATURE)
-        && matches(&pattern(GATE_SIGNATURE), std::slice::from_raw_parts(gate as *const u8, pattern(GATE_SIGNATURE).len()));
+        && gate == base + crate::patch::rva(GATE_ADDRESS)
+        && (matches(&pattern(GATE_SIGNATURE), gate_bytes) || gate_bytes.starts_with(&GATE_DETOURED));
     if !signature_at(base, s.receive, RECEIVE_SIGNATURE) || !signature_at(base, s.turn_complete, TURN_COMPLETE_SIGNATURE) || !gate_ok {
         log("absent: unexpected GameCore bytes, nothing installed");
         return;

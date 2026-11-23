@@ -408,17 +408,30 @@ local function BGD_Session()
 	return ok and id or nil;
 end
 
+-- Version du jeu sans table d'adresses : aucun correctif ne se pose. La machine ne s'annonce pas
+-- (Civ6Proxy_Version rend nil), mais le dit à tous, pour que personne ne prenne un défaut de son jeu
+-- pour un défaut de BetterGameExperience.
+local function BGD_VersionNonPriseEnCharge()
+	return Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1;
+end
+
 local function BGD_Annoncer()
 	BGD.annonce = false;
-	if not BGD_Concerne() then return; end
+	local inconnue = BGD_VersionNonPriseEnCharge();
+	if not BGD_Concerne() and not (inconnue and BGD.ouvert and GameConfiguration.IsNetworkMultiplayer()
+		and not GameConfiguration.IsHotseat() and not GameConfiguration.IsPlayByCloud()) then
+		return;
+	end
 	local session = BGD_Session();
 	if session ~= nil and session == BGD.session then
 		BGD_Journal("annonce déjà faite dans la session " .. tostring(session));
 		return;
 	end
 	BGD.session = session;
-	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
-	if Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1 then
+	if BGD.version ~= nil then
+		BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+	end
+	if inconnue then
 		BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_EXE", BGD_Nom(Network.GetLocalPlayerID())) .. "[ENDCOLOR]");
 	end
 end

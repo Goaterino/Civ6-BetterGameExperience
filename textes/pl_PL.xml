@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="pl_PL">
 			<Text>Cofnięto wyciszenie gracza {1}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="pl_PL">
+			<Text>BGE: gra {1} nieobsługiwana</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="pl_PL">
+			<Text>Nieobsługiwana wersja gry</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="pl_PL">
+			<Text>BetterGameExperience nie obsługuje wersji gry {1}: żadna z jego poprawek nie jest aktywna.[NEWLINE][NEWLINE]Zaktualizuj grę na Steamie do aktualnej wersji. Prosimy nie zgłaszać problemów z tą wersją: nie pochodzą one od BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="pl_PL">
+			<Text>Zgłaszanie błędów jest wyłączone: BetterGameExperience nie obsługuje wersji gry {1} i żadna z jego poprawek nie jest aktywna. Zaktualizuj grę na Steamie do aktualnej wersji.</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

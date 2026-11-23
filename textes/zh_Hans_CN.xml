@@ -812,5 +812,17 @@
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="zh_Hans_CN">
 			<Text>已取消屏蔽{1}。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="zh_Hans_CN">
+			<Text>BGE：不支持游戏 {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="zh_Hans_CN">
+			<Text>不支持的游戏版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="zh_Hans_CN">
+			<Text>BetterGameExperience 不支持游戏版本 {1}：它的修复均未启用。[NEWLINE][NEWLINE]请在 Steam 上将游戏更新到当前版本。请勿报告在此版本中遇到的问题：它们并非由 BetterGameExperience 引起。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="zh_Hans_CN">
+			<Text>错误报告已关闭：BetterGameExperience 不支持游戏版本 {1}，它的修复均未启用。请在 Steam 上将游戏更新到当前版本。</Text>
+		</Row>
 	</LocalizedText>
 </GameData>

@@ -305,13 +305,13 @@ touche pas au passage de tour. Contexte et mesures : [nuke/README.md](../nuke/RE
 - **DX12 et DX11.** Les deux exe sont compilés des mêmes sources, avec les mêmes fonctions à
   d'autres adresses. La table `EXES` donne un agencement par exe :
 
-  | 1.0.12.72 (build 26407122, exe du 2026-11-02) | DX12 | DX11 |
+  | 1.0.12.74 | DX12 | DX11 |
   |---|---|---|
-  | CombatVisBegin / End | `1400f0390` / `1400f03f0` | `1400ef640` / `1400ef6a0` |
-  | configuration utilisateur, IsQuickCombat | `140118a50`, `140119630` | `140117b60`, `140118740` |
+  | CombatVisBegin / End | `1400f0550` / `1400f05b0` | `1400ef630` / `1400ef690` |
+  | configuration utilisateur, IsQuickCombat | `140118be0`, `1401197c0` | `1401180c0`, `140118ca0` |
   | objet application, échelle de temps | `[1412fb2c8]` + `0x559c` | `[1412c3c88]` + `0x557c` |
 
-  Les autres versions (1.0.12.74 et 1.0.12.58) sont dans `EXES`. Les adresses ont été retrouvées
+  La 1.0.12.58 est aussi dans `EXES`. Les adresses ont été retrouvées
   par les chaînes `SerialEvent::CombatVis*` (fonctions d'enregistrement), `IsQuickCombat` (sa
   closure Lua) et `timescale` (commande de console), et l'objet application par son constructeur
   (celui qui pose 1.0 à l'échelle de temps), dans [tests/wmd_sites.py](tests/wmd_sites.py). Chaque
@@ -873,6 +873,22 @@ les builds de diagnostic, pour comparer avec le jeu d'origine) :
 
 Voir aussi `reparation_synchro` et `maths_communes` dans [startup_proxy](../startup_proxy/README.md).
 
+## Tour d'un joueur absent qui reste fini (POL)
+
+[absent_reactivation](src/absent_reactivation.rs), rapport BGE-4EB5B0. Quand l'hôte finit le tour
+d'un joueur déconnecté (`absent_turn` du proxy de démarrage), l'automatisation de fin de tour de
+GameCore peut rendre ce joueur actif de nouveau (une unité qui garde des mouvements), et plus
+personne ne finit son tour. Pendant l'exécution d'un `PlayerTurnComplete` envoyé par un autre
+joueur, et pour ce joueur seulement, la porte que GameCore consulte avant `AppRequestTurnUnready`
+répond « non ». Correctif POL, parties réseau seulement.
+
+- **Sites** (1.0.12.58, identiques en 1.0.12.74) : réception `180037b50`,
+  `PlayerTurnComplete::Execute` `180039920`, appel de la porte `18005c98a`. La porte (`18005b640`,
+  `18005b650` en .74) est la fonction que `congres` réécrit : l'appel détourné passe par sa
+  version.
+- Vérifié hors jeu par `check_hooks.py` sur les GameCore .58, du 2024-06-26 et .74 ; pas encore
+  essayé en partie.
+
 ## Messages exécutés comptés, pour le cache des contrôles de synchro
 
 [executions](src/executions.rs) ne change rien au jeu. Il compte les messages que GameCore exécute,
@@ -900,9 +916,14 @@ démarrage).
 
 - **Versions du jeu connues seulement.** Le proxy lit la version du jeu dans l'exe (ressource de
   version) et la date d'édition de liens de GameCore. Les versions connues sont dans `BUILDS`
-  ([src/patch.rs](src/patch.rs)) : 1.0.12.58, 1.0.12.72 et 1.0.12.74. Avec une autre version, ou un
-  GameCore qui ne correspond pas à la version de l'exe, aucun correctif n'est posé et le journal le
-  dit. Un nouveau build demande de traduire ses adresses (`MOVED`, `FIXUPS`).
+  ([src/patch.rs](src/patch.rs)) : 1.0.12.58 (deux GameCore : celui du 2023-11-11 et celui du
+  2024-06-26, même code) et 1.0.12.74. La 1.0.12.72 n'est plus prise en charge depuis le
+  2026-11-23 (ses joueurs sont passés à la 1.0.12.74) ; les adresses de GameCore écrites dans les
+  modules restent celles de son GameCore, le même code que celui de la 1.0.12.58. Avec une autre
+  version, ou un GameCore qui ne correspond pas à la version de l'exe, aucun correctif n'est posé
+  et le journal le dit ; le proxy de démarrage le dit au joueur (voir
+  [startup_proxy](../startup_proxy/README.md)). Un nouveau build demande de traduire ses adresses
+  (`MOVED`, `FIXUPS`).
 - **Multijoueur.** Testé avec deux joueurs seulement, le proxy étant chez l'hôte. Le cas où seul
   l'invité a le proxy n'a pas été essayé.
 - **Un seul thread suivi.** Si un instantané était demandé depuis un autre thread pendant la

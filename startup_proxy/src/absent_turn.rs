@@ -25,9 +25,7 @@ struct Exe {
     controller: u64,
 }
 
-const EXES: [Exe; 6] = [
-    Exe { name: "DX12 1.0.12.72", send: 0x1_400f_7630, controller: 0x1_400f_4b20 },
-    Exe { name: "DX11 1.0.12.72", send: 0x1_400f_6c70, controller: 0x1_400f_4150 },
+const EXES: [Exe; 4] = [
     Exe { name: "DX12 1.0.12.74", send: 0x1_400f_77f0, controller: 0x1_400f_4ce0 },
     Exe { name: "DX11 1.0.12.74", send: 0x1_400f_6ab0, controller: 0x1_400f_3f90 },
     Exe { name: "DX12 1.0.12.58", send: 0x1_400f_2ff0, controller: 0x1_400f_04d0 },
@@ -114,7 +112,7 @@ mod tests {
     use super::*;
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";
-    const FILES: [&str; 6] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FILES: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// File offset of a virtual address, from the PE section table.
     fn offset(file: &[u8], address: u64) -> Option<usize> {
