@@ -1,5 +1,5 @@
 //! Une variable relue sur place redevient ce que l'hôte a écrit (`relecture_fidele=on`, par défaut ;
-//! adresses du GameCore_XP2 1.0.12.72, traduites pour les autres builds par `patch`).
+//! adresses du GameCore_XP2 1.0.12.72, les mêmes en 1.0.12.58, traduites pour la 1.0.12.74 par `patch`).
 //!
 //! Le client relit une variable d'AutoArchive dans l'objet qu'il a déjà : lecture complète
 //! (vtable `+0x08`) quand l'hôte renvoie l'archive en données de création (`reparation_synchro`,
@@ -298,6 +298,37 @@ mod tests {
             let o = offset(patch::rva(s.address)).unwrap_or_else(|| panic!("{}: not in the file", s.name));
             assert_eq!(patch::as_known(s.address, &file[o..o + s.expected.len()]), s.expected, "{}", s.name);
             assert!(s.expected.len() >= 14 && s.copy.1 <= s.expected.len() && s.resume >= s.copy.1, "{}", s.name);
+        }
+    }
+
+    /// Les GameCore de la 1.0.12.58 (2023-11-11 et 2024-06-26, dans `binaires_jeu`) ont le code de
+    /// référence aux mêmes adresses : chaque site y a ses octets attendus, sans traduction (test
+    /// sauté sans eux).
+    #[test]
+    fn sites_match_gamecores_58() {
+        let mut seen = 0;
+        for dir in ["1.0.12.58", "1.0.12.58_gamecore_2024-06-26"] {
+            let path = format!(concat!(env!("CARGO_MANIFEST_DIR"), "/../binaires_jeu/{}/GameCore_XP2_FinalRelease.dll"), dir);
+            let Ok(file) = std::fs::read(&path) else { continue };
+            seen += 1;
+            let rd32 = |o: usize| u32::from_le_bytes(file[o..o + 4].try_into().unwrap()) as usize;
+            let rd16 = |o: usize| u16::from_le_bytes(file[o..o + 2].try_into().unwrap()) as usize;
+            let nt = rd32(0x3c);
+            assert!(matches!(rd32(nt + 8), 0x654e_cd4e | 0x667c_6f5b), "{path}: not a 1.0.12.58 GameCore");
+            let sections = nt + 24 + rd16(nt + 20);
+            let offset = |rva: usize| {
+                (0..rd16(nt + 6)).map(|i| sections + 40 * i).find_map(|h| {
+                    let (va, size, raw) = (rd32(h + 12), rd32(h + 16), rd32(h + 20));
+                    (rva >= va && rva < va + size).then(|| rva - va + raw)
+                })
+            };
+            for s in SITES.iter().chain([&OPS_RELEASE]) {
+                let o = offset((s.address - patch::IMAGE_BASE) as usize).unwrap_or_else(|| panic!("{path}: {}", s.name));
+                assert_eq!(&file[o..o + s.expected.len()], s.expected, "{path}: {}", s.name);
+            }
+        }
+        if seen == 0 {
+            eprintln!("no 1.0.12.58 GameCore, test skipped");
         }
     }
 

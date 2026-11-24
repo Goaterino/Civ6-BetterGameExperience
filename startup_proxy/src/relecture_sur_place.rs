@@ -1,7 +1,7 @@
 //! Relecture sur place : le client ne relit que les variables qui diffèrent de celles de l'hôte
 //! (`relecture_fidele=on`, par défaut, le réglage de `relecture` dans le proxy GameCore). Jeux
-//! 1.0.12.74 et 1.0.12.58, exes DX11 et DX12 : sites trouvés par motif, relevés en 1.0.12.74 (et
-//! dans la 1.0.12.72, dont viennent les adresses citées ici).
+//! 1.0.12.74 et 1.0.12.58, exes DX11 et DX12 : sites trouvés par motif, relevés dans les quatre
+//! exes (test `sites_in_installed_exes`) ; les adresses citées ici viennent de la 1.0.12.72.
 //!
 //! Quand l'hôte envoie à un client une archive que celui-ci possède déjà, en données de création
 //! (« full AutoArchive snapshot, already exists on client) Syncing... », par exemple avec
@@ -547,8 +547,8 @@ mod tests {
     const EXPECTED: [(&str, Option<Sites>); 4] = [
         ("CivilizationVI_DX12.exe", Some(Sites { call: 0x1_407f_4bbb, func: 0x1_40dc_b310, header: 0x1_40dc_b3b0 })),
         ("CivilizationVI.exe", Some(Sites { call: 0x1_407f_39ab, func: 0x1_40db_d1d0, header: 0x1_40db_d270 })),
-        ("CivilizationVI_DX12.exe", None),
-        ("CivilizationVI.exe", None),
+        ("CivilizationVI_DX12.exe", Some(Sites { call: 0x1_407e_f14b, func: 0x1_40dc_64f0, header: 0x1_40dc_6590 })),
+        ("CivilizationVI.exe", Some(Sites { call: 0x1_407e_ec0b, func: 0x1_40db_7f90, header: 0x1_40db_8030 })),
     ];
 
     #[test]
