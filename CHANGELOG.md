@@ -9,6 +9,14 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 Multiplayer games need every human player on 0.15.0 for the **[all players]** fixes: a lobby that
 mixes 0.14.0 and 0.15.0 turns them off.
 
+### Installation and updates
+- **Linux (Steam Play / Proton)**: BetterGameExperience can now be installed and updated on Linux,
+  for the Windows version of the game run through Proton. One terminal command downloads the
+  release, checks its signature and the SHA-256 of every file, then installs it (see the README).
+  Contributed by etbala.
+- **Update check without curl**: the update check and bug reports now use Windows' own network
+  functions instead of curl.exe, so they also work under Wine and Proton. Contributed by etbala.
+
 ### Game versions
 - **Civilization VI 1.0.12.72 is no longer supported**: its players have moved to 1.0.12.74. On
   1.0.12.72, BetterGameExperience installs no fix at all and says so on the main menu, in the lobby
@@ -39,6 +47,11 @@ mixes 0.14.0 and 0.15.0 turns them off.
 - **Long turn changes after a rejoin**: the three changes above target the long turn changes seen after
   a player rejoins (up to 45 s per turn). The gain still has to be confirmed in real games: tell us
   what you see.
+- **Fewer desyncs after a repair**: when the host sends an object again to repair a desync, the
+  player's game now reads it back exactly as the host wrote it. Unit operations, AI research and
+  culture boosts and a World Congress analysis kept part of their old content, and AI behavior trees
+  stayed unlinked. In a test with AI civs, full reloads went from 2 to 0. Only the player needs
+  0.15.0 for this. Setting in the advanced options, on by default. Contributed by OzrielTheLost.
 - **Seat swap with a player without BetterGameExperience**: swapping seats in the lobby could make the
   host count a player without BetterGameExperience as equipped, and turn the fixes on for them. Each
   announcement is now tied to the player's Steam account.

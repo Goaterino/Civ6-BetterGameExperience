@@ -7,6 +7,15 @@
 No multijogador, todos os jogadores humanos precisam estar na 0.15.0 para as correções
 **[todos os jogadores]**: uma sala de espera que mistura 0.14.0 e 0.15.0 as desliga.
 
+### Instalação e atualizações
+- **Linux (Steam Play / Proton)**: o BetterGameExperience agora pode ser instalado e atualizado no
+  Linux, para a versão Windows do jogo rodando pelo Proton. Um comando no terminal baixa a versão
+  publicada, verifica a assinatura e o SHA-256 de cada arquivo e depois a instala (veja o README).
+  Contribuição de etbala.
+- **Verificação de atualizações sem curl**: a verificação de atualizações e os relatórios de bug
+  agora usam as funções de rede do Windows em vez do curl.exe, então também funcionam no Wine e no
+  Proton. Contribuição de etbala.
+
 ### Versões do jogo
 - **Civilization VI 1.0.12.72 não é mais suportada**: seus jogadores passaram para a 1.0.12.74. Na
   1.0.12.72, o BetterGameExperience não instala nenhuma correção e avisa no menu principal, na sala
@@ -39,6 +48,13 @@ No multijogador, todos os jogadores humanos precisam estar na 0.15.0 para as cor
 - **Trocas de turno longas depois de uma reconexão**: as três mudanças acima miram as trocas de turno
   longas vistas depois da reconexão de um jogador (até 45 s por turno). O ganho ainda precisa ser
   confirmado em partidas reais: contem para nós o que vocês notarem.
+- **Menos dessincronizações depois de um reparo**: quando o anfitrião envia de novo um objeto para
+  reparar uma dessincronização, o jogo do jogador agora o lê exatamente como o anfitrião o escreveu.
+  As operações de unidades, os impulsos de pesquisa e cultura da IA e uma análise do Congresso Mundial
+  mantinham parte do conteúdo antigo, e as árvores de comportamento da IA ficavam desligadas. Num
+  teste com civilizações IA, os recarregamentos completos caíram de 2 para 0. Só o jogador precisa da
+  0.15.0 para isso. Configuração nas opções avançadas, ligada por padrão. Contribuição de
+  OzrielTheLost.
 - **Troca de lugar com um jogador sem o BetterGameExperience**: uma troca de lugar na sala de espera
   podia fazer o anfitrião contar como equipado um jogador sem o BetterGameExperience e ligar as
   correções para ele. Cada anúncio agora fica ligado à conta Steam do jogador.

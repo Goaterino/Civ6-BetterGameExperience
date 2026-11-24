@@ -7,6 +7,15 @@
 In multigiocatore, tutti i giocatori umani devono avere la 0.15.0 per le correzioni **[tutti i
 giocatori]**: una sala d'attesa che mescola 0.14.0 e 0.15.0 le disattiva.
 
+### Installazione e aggiornamenti
+- **Linux (Steam Play / Proton)**: BetterGameExperience ora si installa e si aggiorna su Linux, per
+  la versione Windows del gioco avviata con Proton. Un comando nel terminale scarica la release,
+  verifica la sua firma e lo SHA-256 di ogni file, poi la installa (vedi il README). Contributo di
+  etbala.
+- **Controllo degli aggiornamenti senza curl**: il controllo degli aggiornamenti e le segnalazioni di
+  bug usano ora le funzioni di rete di Windows invece di curl.exe, quindi funzionano anche con Wine e
+  Proton. Contributo di etbala.
+
 ### Versioni del gioco
 - **Civilization VI 1.0.12.72 non è più supportata**: i suoi giocatori sono passati alla 1.0.12.74.
   Su 1.0.12.72, BetterGameExperience non installa alcuna correzione e lo dice nel menu principale,
@@ -39,6 +48,13 @@ giocatori]**: una sala d'attesa che mescola 0.14.0 e 0.15.0 le disattiva.
 - **Cambi di turno lunghi dopo un rientro**: i tre cambiamenti qui sopra mirano ai cambi di turno
   lunghi visti dopo il rientro di un giocatore (fino a 45 s per turno). Il guadagno va ancora
   confermato in partite reali: diteci cosa vedete.
+- **Meno desincronizzazioni dopo una riparazione**: quando l'host invia di nuovo un oggetto per
+  riparare una desincronizzazione, il gioco del giocatore ora lo rilegge esattamente come l'host l'ha
+  scritto. Le operazioni delle unità, i potenziamenti di ricerca e cultura dell'IA e un'analisi del
+  Congresso Mondiale conservavano parte del loro vecchio contenuto, e gli alberi di comportamento
+  dell'IA restavano scollegati. In una prova con civiltà IA, i ricaricamenti completi sono passati da
+  2 a 0. Solo il giocatore ha bisogno della 0.15.0 per questo. Impostazione nelle opzioni avanzate,
+  attiva per impostazione predefinita. Contributo di OzrielTheLost.
 - **Scambio di posti con un giocatore senza BetterGameExperience**: uno scambio di posti nella sala
   d'attesa poteva far contare all'host un giocatore senza BetterGameExperience come equipaggiato, e
   attivargli le correzioni. Ogni annuncio è ora legato all'account Steam del giocatore.

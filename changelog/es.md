@@ -7,6 +7,15 @@
 En multijugador, todos los jugadores humanos deben tener la 0.15.0 para las correcciones
 **[todos los jugadores]**: una sala que mezcla 0.14.0 y 0.15.0 las desactiva.
 
+### Instalación y actualizaciones
+- **Linux (Steam Play / Proton)**: BetterGameExperience ya se puede instalar y actualizar en Linux,
+  para la versión de Windows del juego ejecutada con Proton. Un comando en una terminal descarga la
+  versión publicada, comprueba su firma y el SHA-256 de cada archivo y luego la instala (ver el
+  README). Contribución de etbala.
+- **Comprobación de actualizaciones sin curl**: la comprobación de actualizaciones y los informes de
+  errores usan ahora las funciones de red de Windows en lugar de curl.exe, así que también funcionan
+  con Wine y Proton. Contribución de etbala.
+
 ### Versiones del juego
 - **Civilization VI 1.0.12.72 ya no es compatible**: sus jugadores han pasado a la 1.0.12.74. En
   1.0.12.72, BetterGameExperience no instala ninguna corrección y lo indica en el menú principal, en
@@ -39,6 +48,13 @@ En multijugador, todos los jugadores humanos deben tener la 0.15.0 para las corr
 - **Cambios de turno largos tras una reconexión**: los tres cambios anteriores apuntan a los cambios de
   turno largos vistos tras la reconexión de un jugador (hasta 45 s por turno). La mejora aún debe
   confirmarse en partidas reales: contadnos lo que veáis.
+- **Menos desincronizaciones tras una reparación**: cuando el anfitrión vuelve a enviar un objeto
+  para reparar una desincronización, el juego del jugador lo lee ahora exactamente como el anfitrión
+  lo escribió. Las operaciones de unidades, los impulsos de investigación y cultura de la IA y un
+  análisis del Congreso Mundial conservaban parte de su contenido anterior, y los árboles de
+  comportamiento de la IA quedaban sin enlazar. En una prueba con civilizaciones IA, las recargas
+  completas pasaron de 2 a 0. Solo el jugador necesita la 0.15.0 para esto. Ajuste en las opciones
+  avanzadas, activado por defecto. Contribución de OzrielTheLost.
 - **Intercambio de puestos con un jugador sin BetterGameExperience**: un intercambio de puestos en la
   sala podía hacer que el anfitrión contara como equipado a un jugador sin BetterGameExperience y le
   activara las correcciones. Cada anuncio está ahora ligado a la cuenta de Steam del jugador.

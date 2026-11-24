@@ -7,6 +7,15 @@
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.15.0 für die Korrekturen **[alle
 Spieler]**: Eine Lobby, die 0.14.0 und 0.15.0 mischt, schaltet sie ab.
 
+### Installation und Updates
+- **Linux (Steam Play / Proton)**: BetterGameExperience lässt sich jetzt unter Linux installieren
+  und aktualisieren, für die Windows-Version des Spiels über Proton. Ein Terminalbefehl lädt die
+  Release herunter, prüft ihre Signatur und den SHA-256 jeder Datei und installiert sie dann (siehe
+  README). Beitrag von etbala.
+- **Update-Prüfung ohne curl**: Update-Prüfung und Fehlerberichte nutzen jetzt die
+  Netzwerkfunktionen von Windows statt curl.exe und funktionieren daher auch unter Wine und Proton.
+  Beitrag von etbala.
+
 ### Spielversionen
 - **Civilization VI 1.0.12.72 wird nicht mehr unterstützt**: Ihre Spieler sind auf 1.0.12.74
   umgestiegen. Unter 1.0.12.72 installiert BetterGameExperience keine Korrektur und sagt das im
@@ -40,6 +49,13 @@ Spieler]**: Eine Lobby, die 0.14.0 und 0.15.0 mischt, schaltet sie ab.
 - **Lange Rundenwechsel nach einem Wiedereintritt**: Die drei Änderungen oben zielen auf die langen
   Rundenwechsel nach dem Wiedereintritt eines Spielers (bis zu 45 s pro Runde). Der Gewinn muss sich
   in echten Partien noch bestätigen: Sagt uns, was ihr beobachtet.
+- **Weniger Desynchronisationen nach einer Reparatur**: Schickt der Host ein Objekt erneut, um eine
+  Desynchronisation zu reparieren, liest das Spiel des Spielers es jetzt genau so, wie der Host es
+  geschrieben hat. Einheitenoperationen, Forschungs- und Kultur-Boosts der KI und eine Analyse des
+  Weltkongresses behielten einen Teil ihres alten Inhalts, und KI-Verhaltensbäume blieben unverknüpft.
+  In einem Test mit KI-Zivilisationen sanken die vollständigen Neuladevorgänge von 2 auf 0. Dafür
+  braucht nur der Spieler 0.15.0. Einstellung in den erweiterten Optionen, standardmäßig aktiviert.
+  Beitrag von OzrielTheLost.
 - **Platztausch mit einem Spieler ohne BetterGameExperience**: Ein Platztausch in der Lobby konnte den
   Host einen Spieler ohne BetterGameExperience als ausgerüstet zählen lassen und die Korrekturen für
   ihn einschalten. Jede Ankündigung ist jetzt an das Steam-Konto des Spielers gebunden.

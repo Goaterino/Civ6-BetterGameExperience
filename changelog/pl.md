@@ -7,6 +7,14 @@
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.15.0, aby działały poprawki
 **[wszyscy gracze]**: poczekalnia, w której są 0.14.0 i 0.15.0, je wyłącza.
 
+### Instalacja i aktualizacje
+- **Linux (Steam Play / Proton)**: BetterGameExperience można teraz instalować i aktualizować w
+  Linuksie, dla wersji gry na Windows uruchamianej przez Proton. Jedno polecenie w terminalu pobiera
+  wydanie, sprawdza jego podpis i SHA-256 każdego pliku, a potem je instaluje (zob. README). Wkład:
+  etbala.
+- **Sprawdzanie aktualizacji bez curl**: sprawdzanie aktualizacji i zgłoszenia błędów używają teraz
+  funkcji sieciowych Windows zamiast curl.exe, więc działają też w Wine i Protonie. Wkład: etbala.
+
 ### Wersje gry
 - **Civilization VI 1.0.12.72 nie jest już obsługiwana**: jej gracze przeszli na 1.0.12.74. W
   1.0.12.72 BetterGameExperience nie instaluje żadnej poprawki i informuje o tym w menu głównym, w
@@ -38,6 +46,12 @@ W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.15.0, aby działały p
 - **Długie zmiany tury po powrocie do gry**: trzy powyższe zmiany dotyczą długich zmian tury po
   powrocie gracza do gry (do 45 s na turę). Zysk trzeba jeszcze potwierdzić w prawdziwych
   rozgrywkach: dajcie znać, co widzicie.
+- **Mniej desynchronizacji po naprawie**: gdy host ponownie wysyła obiekt, aby naprawić
+  desynchronizację, gra gracza odczytuje go teraz dokładnie tak, jak host go zapisał. Operacje
+  jednostek, przyspieszenia badań i kultury SI oraz analiza Kongresu Światowego zachowywały część
+  dawnej zawartości, a drzewa zachowań SI pozostawały niepołączone. W teście z cywilizacjami SI pełne
+  wczytania spadły z 2 do 0. Do tego tylko gracz potrzebuje 0.15.0. Ustawienie w opcjach
+  zaawansowanych, domyślnie włączone. Wkład: OzrielTheLost.
 - **Zamiana miejsc z graczem bez BetterGameExperience**: zamiana miejsc w poczekalni mogła sprawić,
   że host liczył gracza bez BetterGameExperience jako wyposażonego i włączał mu poprawki. Każde
   ogłoszenie jest teraz powiązane z kontem Steam gracza.

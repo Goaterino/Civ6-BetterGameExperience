@@ -7,6 +7,15 @@
 En multijoueur, tous les humains doivent être en 0.15.0 pour les correctifs **[tous les
 joueurs]** : un salon qui mélange 0.14.0 et 0.15.0 les coupe.
 
+### Installation et mises à jour
+- **Linux (Steam Play / Proton)** : BetterGameExperience s'installe et se met désormais à jour sous
+  Linux, pour la version Windows du jeu lancée par Proton. Une commande dans un terminal télécharge
+  la release, vérifie sa signature et le SHA-256 de chaque fichier, puis l'installe (voir le README).
+  Contribution d'etbala.
+- **Vérification des mises à jour sans curl** : la vérification des mises à jour et les rapports de
+  bug passent désormais par les fonctions réseau de Windows au lieu de curl.exe, et marchent donc
+  aussi sous Wine et Proton. Contribution d'etbala.
+
 ### Versions du jeu
 - **Civilization VI 1.0.12.72 n'est plus prise en charge** : ses joueurs sont passés à la 1.0.12.74.
   Sur 1.0.12.72, BetterGameExperience ne pose aucun correctif et le dit au menu principal, dans le
@@ -39,6 +48,13 @@ joueurs]** : un salon qui mélange 0.14.0 et 0.15.0 les coupe.
 - **Longs passages de tour après un retour en partie** : les trois changements ci-dessus visent les
   longs passages de tour vus après le retour d'un joueur (jusqu'à 45 s par tour). Le gain reste à
   confirmer en vraie partie : dites-nous ce que vous constatez.
+- **Moins de désynchros après une réparation** : quand l'hôte renvoie un objet pour réparer une
+  désynchro, le jeu du joueur le relit désormais exactement comme l'hôte l'a écrit. Les opérations
+  d'unités, les boosts de recherche et de culture de l'IA et une analyse du Congrès mondial gardaient
+  une partie de leur ancien contenu, et les arbres de comportement de l'IA restaient déliés. Dans un
+  essai avec des civilisations IA, les rechargements complets sont passés de 2 à 0. Seul le joueur a
+  besoin de la 0.15.0 pour cela. Réglage dans les options avancées, activé par défaut. Contribution
+  d'OzrielTheLost.
 - **Échange de places avec un joueur sans BetterGameExperience** : un échange de places dans le salon
   pouvait faire compter par l'hôte un joueur sans BetterGameExperience comme équipé, et lui activer
   les correctifs. Chaque annonce est désormais liée au compte Steam du joueur.
