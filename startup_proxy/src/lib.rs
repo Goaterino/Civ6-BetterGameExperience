@@ -54,6 +54,7 @@ mod flush;
 mod sync_notes;
 mod remap;
 mod reload_all;
+mod resynchro_volume;
 mod motifs;
 mod assets;
 mod ramasse_miettes;

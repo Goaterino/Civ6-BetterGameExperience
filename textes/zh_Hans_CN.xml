@@ -752,6 +752,12 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="zh_Hans_CN">
 			<Text>{1} 的游戏与主机相比缺少 {2} 个对象，多出 {3} 个：所有人重新加载主机的游戏，以防止 {1} 不同步。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="zh_Hans_CN">
+			<Text>{1} 在回合结束时收到了 {2} 个存档（{3} KB）的修复：主机已让所有人重新加载游戏，以免 {1} 继续不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="zh_Hans_CN">
+			<Text>所有人重新加载后，{1} 仍收到 {2} 个存档（{3} KB）的修复：第 {4} 回合之前不再自动重新加载。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="zh_Hans_CN">
 			<Text>BGE 不支持 {1} 的游戏版本：BGE 的修复在其电脑上未启用。</Text>
 		</Row>

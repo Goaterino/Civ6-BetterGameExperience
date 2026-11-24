@@ -470,7 +470,33 @@ if Civ6Proxy_SyncNotes ~= nil then
 		Network.RequestSnapshot();
 	end));
 
+	-- Host: reloads of everyone started by the volume of repairs (resynchro_volume.rs), and their pause.
+	--   Civ6Proxy_ResyncVolume(turn) -> notes the turn; "R|player|archives|KB" (reload started, read
+	--                            after it) or "P|player|archives|KB|turn" (paused until that turn),
+	--                            separated by ";"
+	local function Volume()
+		if Civ6Proxy_ResyncVolume == nil or not IsHost() then
+			return;
+		end
+		local annonces = Civ6Proxy_ResyncVolume(Game.GetCurrentGameTurn());
+		if annonces == nil or annonces == "" then
+			return;
+		end
+		for a in string.gmatch(annonces, "[^;]+") do
+			local kind, p, n, ko, reprise = string.match(a, "^(%a)|(%-?%d+)|(%d+)|(%d+)|?(%d*)$");
+			p = tonumber(p);
+			if kind == "R" and p ~= nil then
+				BGD_PartieJournal("message sent: LOC_BGD_CHAT_SYNC_RELOAD_VOLUME for player " .. p);
+				Send("[COLOR_Civ6Yellow]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_SYNC_RELOAD_VOLUME", Name(p), n, ko) .. "[ENDCOLOR]");
+			elseif kind == "P" and p ~= nil and reprise ~= "" then
+				BGD_PartieJournal("message sent: LOC_BGD_CHAT_SYNC_RELOAD_PAUSE for player " .. p);
+				Send("[COLOR_Civ6Yellow]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_SYNC_RELOAD_PAUSE", Name(p), n, ko, reprise) .. "[ENDCOLOR]");
+			end
+		end
+	end
+
 	Events.GameCoreEventPublishComplete.Add(Safely(Drain));
+	Events.GameCoreEventPublishComplete.Add(Safely(Volume));
 end
 
 -- A player who drops keeps a human slot when every player has BGE (the GameCore proxy's drop_slot):

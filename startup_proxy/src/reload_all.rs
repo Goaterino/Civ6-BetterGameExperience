@@ -154,7 +154,7 @@ const MAX_PER_TURN: u32 = 2;
 
 /// `start` and `state` results, for `partie.lua`.
 const NOT_POSSIBLE: i32 = 0;
-const CAN_START: i32 = 1;
+pub(crate) const CAN_START: i32 = 1;
 const RUNNING: i32 = 2;
 const GAVE_UP: i32 = 3;
 const OTHERS_RELOADING: i32 = 4;
@@ -196,7 +196,7 @@ fn installed() -> bool {
 }
 
 /// Can this machine, as host, reload everyone? It must see the objects on one side only.
-fn host_ready(cfg: &str) -> bool {
+pub(crate) fn host_ready(cfg: &str) -> bool {
     !crate::salon::actif_off(cfg) && enabled(cfg) && crate::sync_notes::installed() && installed()
 }
 
@@ -320,6 +320,15 @@ unsafe fn start(turn: i32, player: i32) -> i32 {
     let alone = if alone.is_empty() { String::new() } else { format!("; already loading alone: {}", alone.join(", ")) };
     log(&format!("reload: turn {turn}, reload {n} of everyone started for player(s) {}{alone}", asked.join(", ")));
     CAN_START
+}
+
+/// `state` and `start` for `resynchro_volume` (the host's check handler, inside the sync round).
+pub(crate) unsafe fn state_for(turn: i32, player: i32) -> i32 {
+    state(turn, player)
+}
+
+pub(crate) unsafe fn start_for(turn: i32, player: i32) -> i32 {
+    start(turn, player)
 }
 
 /// A player left: the host looks again whether everyone still there has answered the sync round.

@@ -510,6 +510,7 @@ const PARTIE_NATIVES: Natives = &[
     (crate::reload_all::lua_state, b"Civ6Proxy_ReloadAllState\0"),
     (crate::reload_all::lua_start, b"Civ6Proxy_ReloadAllStart\0"),
     (crate::reload_all::lua_recheck, b"Civ6Proxy_ReloadAllRecheck\0"),
+    (crate::resynchro_volume::lua_resync, b"Civ6Proxy_ResyncVolume\0"),
     (crate::rejoin::lua_keep_check, b"Civ6Proxy_RejoinKeepCheck\0"),
     (crate::absent_turn::lua_end_turn, b"Civ6Proxy_EndTurnFor\0"),
     (crate::debit_steam::lua_set_peers, b"Civ6Proxy_MorceauxReseau\0"),

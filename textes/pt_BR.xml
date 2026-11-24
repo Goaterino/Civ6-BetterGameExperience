@@ -752,6 +752,12 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pt_BR">
 			<Text>Faltam {2} objetos na partida de {1} e ela tem {3} a mais em relação à do anfitrião: todos recarregam a partida do anfitrião para evitar a dessincronização de {1}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="pt_BR">
+			<Text>{1} recebeu {2} arquivos ({3} KB) de reparos no fim do turno: o anfitrião fez todos recarregarem a partida para que {1} pare de dessincronizar.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="pt_BR">
+			<Text>{1} continua recebendo {2} arquivos ({3} KB) de reparos após a recarga de todos: nenhuma recarga automática antes do turno {4}.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="pt_BR">
 			<Text>A versão do jogo de {1} não é compatível com o BGE: as correções do BGE estão inativas no PC dele.</Text>
 		</Row>

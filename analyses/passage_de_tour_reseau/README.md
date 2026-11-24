@@ -10,7 +10,7 @@ du jeu est le même en 1.0.12.74 : seules les adresses sont décalées.
 | Piste | Gain attendu | POL | État |
 |---|---|---|---|
 | [Cache des hachages de l'hôte](#piste-1--cache-des-hachages-de-lhôte) | environ 25 s par tour en fin de partie, pour tous | non (hôte seul) | à implémenter |
-| [Resynchro générale au-delà d'un seuil](#piste-2--resynchro-générale-au-delà-dun-seuil) | supprime les environ 45 s par tour d'un joueur qui ne converge pas | non | à concevoir |
+| [Resynchro générale au-delà d'un seuil](#piste-2--resynchro-générale-au-delà-dun-seuil) | supprime les environ 45 s par tour d'un joueur qui ne converge pas | non | fait (`startup_proxy/src/resynchro_volume.rs`) : 500 Ko ou 30 archives, dès le premier contrôle, au plus une fois tous les 10 tours |
 | [Morceaux plus gros](#piste-3--morceaux-plus-gros) | liens lents bien plus rapides, **si** Steam limite en messages | oui | essai à deux machines d'abord |
 | [Nouvelle pile Steam](#piste-4--nouvelle-pile-steam) | débit réglable, mesures fiables | oui (par joueur) | gros chantier, plus tard |
 

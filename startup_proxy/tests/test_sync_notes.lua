@@ -94,6 +94,7 @@ local function NewMachine(host, game, opts)
 		end,
 		Civ6Proxy_ReloadAllRecheck = function() m.rechecks = (m.rechecks or 0) + 1; end,
 		Civ6Proxy_RejoinKeepCheck = function() m.kept = (m.kept or 0) + 1; end,
+		Civ6Proxy_ResyncVolume = function(turn) m.volumeTurn = turn; local v = m.volume or ""; m.volume = ""; return v; end,
 	}, { __index = _G });
 	assert(load(PARTIE, "=partie.lua", "t", env))();
 	m.env = env;
@@ -248,6 +249,29 @@ do
 	c.away[2] = true;
 	c.events.PlayerTurnDeactivated.Fire();
 	check(#c.endedFor == 0, "a client ends nobody's turn");
+end
+
+do
+	-- Reload of everyone by the volume of repairs (resynchro_volume.rs): the host passes the turn and
+	-- says what the native side did, in English, with the player's name.
+	local game = { values = {}, turn = 55 };
+	local h = NewMachine(true, game);
+	h.events.GameCoreEventPublishComplete.Fire();
+	check(h.volumeTurn == 55 and #h.chat == 0, "the turn is passed, nothing said without news");
+	h.volume = "R|6|83|5800";
+	h.events.GameCoreEventPublishComplete.Fire();
+	check(Last(h):find("P6 received 83 archives (5800 KB) of repairs", 1, true) ~= nil
+		and Last(h):find("reloaded everyone's game", 1, true) ~= nil, "reload announced: " .. Last(h));
+	h.volume = "P|6|80|5600|65";
+	h.events.GameCoreEventPublishComplete.Fire();
+	check(Last(h):find("P6 still receives 80 archives (5600 KB)", 1, true) ~= nil
+		and Last(h):find("no automatic reload before turn 65", 1, true) ~= nil, "pause announced: " .. Last(h));
+	check(Logged(h, "LOC_BGD_CHAT_SYNC_RELOAD_PAUSE for player 6"), "journal");
+	-- A client neither asks nor says anything.
+	local c = NewMachine(false, game);
+	c.volume = "R|6|83|5800";
+	c.events.GameCoreEventPublishComplete.Fire();
+	check(c.volumeTurn == nil and #c.chat == 0, "a client stays out of it");
 end
 
 if failures > 0 then

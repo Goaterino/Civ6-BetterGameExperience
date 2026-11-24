@@ -6,7 +6,8 @@
 //! adds one differing archive to the repair (which object), and its two calls that record an object
 //! missing on the host (delete list) or on the client (create entry). AI caches, visibility and
 //! modifiers are repaired silently by the game every few turns: they are not counted as major. Test
-//! checks are left alone.
+//! checks are left alone. Every repaired archive, and the size of its delta, also count in the
+//! check's volume, handed to `resynchro_volume` once the check is handled.
 //!
 //! Setting `sync_notes=off` in `rollover_proxy.cfg` installs nothing. Addresses of both exes of
 //! 2026-11-05, checked at startup.
@@ -115,6 +116,15 @@ const HANDLER_START: [u8; 15] = [0x48, 0x89, 0x54, 0x24, 0x10, 0x48, 0x89, 0x4c,
 const ADD_START: [u8; 16] = [0x48, 0x89, 0x5c, 0x24, 0x08, 0x48, 0x89, 0x6c, 0x24, 0x10, 0x48, 0x89, 0x74, 0x24, 0x18, 0x57];
 const INSERT_START: [u8; 16] = [0x40, 0x53, 0x56, 0x57, 0x48, 0x83, 0xec, 0x60, 0x44, 0x8b, 0x51, 0x10, 0x48, 0x8b, 0xfa, 0x48];
 const CREATE_START: [u8; 16] = [0x48, 0x89, 0x5c, 0x24, 0x08, 0x48, 0x89, 0x6c, 0x24, 0x10, 0x48, 0x89, 0x74, 0x24, 0x18, 0x4c];
+/// In the add function, the serializer (`r8`, kept in `rsi`) is rewound (`call [rax+18h]`, edx = 0),
+/// the delta is written into it, then its size is read for the copy into the repair:
+/// `mov rax,[rsi] ; call [rax+10h] ; mov rcx,rsi ; mov rdi,rax`. After the call, the same virtual
+/// gives the size of this archive's delta (`resynchro_volume`). Same offsets in the four exes.
+const ADD_REWIND_AT: u64 = 0x31;
+const ADD_REWIND: [u8; 3] = [0xff, 0x50, 0x18];
+const ADD_SIZE_AT: u64 = 0x87;
+const ADD_SIZE: [u8; 12] = [0x48, 0x8b, 0x06, 0xff, 0x50, 0x10, 0x48, 0x8b, 0xce, 0x48, 0x8b, 0xf8];
+const SERIALIZER_SIZE: usize = 0x10;
 
 /// The check message: the client's player ID, and the test flag.
 const MSG_PLAYER: usize = 0x24;
@@ -154,6 +164,9 @@ struct Check {
     /// Objects the host has and the client not, and the other way round.
     missing: u32,
     extra: u32,
+    /// Every repaired archive (silent ones included) and the bytes of their deltas.
+    archives: u32,
+    bytes: u64,
 }
 
 #[derive(Default)]
@@ -167,7 +180,14 @@ struct Notes {
 
 impl Notes {
     fn begin(&mut self, player: i32) {
-        self.current = Some(Check { player, major: 0, categories: Vec::new(), missing: 0, extra: 0 });
+        self.current = Some(Check { player, major: 0, categories: Vec::new(), missing: 0, extra: 0, archives: 0, bytes: 0 });
+    }
+
+    /// One archive's delta added to the repair.
+    fn repaired(&mut self, bytes: u64) {
+        let Some(c) = self.current.as_mut() else { return };
+        c.archives += 1;
+        c.bytes += bytes;
     }
 
     fn differs(&mut self, type_name: &str) {
@@ -191,20 +211,23 @@ impl Notes {
     }
 
     /// The check is over; `handled` is false when the handler kept it queued (nothing compared).
-    fn end(&mut self, handled: bool) {
-        let Some(c) = self.current.take() else { return };
+    /// Returns (player, repaired archives, bytes) of a handled check.
+    fn end(&mut self, handled: bool) -> Option<(i32, u32, u64)> {
+        let c = self.current.take()?;
         if !handled {
-            return;
+            return None;
         }
+        let volume = Some((c.player, c.archives, c.bytes));
         if c.major == 0 && c.missing == 0 && c.extra == 0 {
             self.streaks.remove(&c.player);
-            return;
+            return volume;
         }
         let streak = self.streaks.entry(c.player).or_insert(0);
         *streak += 1;
         if self.notes.len() < MAX_NOTES {
             self.notes.push(format!("{}|{}|{streak}|{}|{}|{}", c.player, c.major, c.missing, c.extra, c.categories.join(", ")));
         }
+        volume
     }
 
     fn take(&mut self) -> String {
@@ -276,7 +299,10 @@ unsafe extern "system" fn on_check(sync: usize, message: usize) -> u64 {
     }
     with_notes(|n| n.begin(rd::<i32>(message + MSG_PLAYER)));
     let result = original(sync, message);
-    with_notes(|n| n.end(result as u8 != 0));
+    // Outside the notes' lock: a reload of everyone may start from here.
+    if let Some((player, archives, bytes)) = with_notes(|n| n.end(result as u8 != 0)) {
+        crate::resynchro_volume::apres_controle(player, archives, bytes);
+    }
     result
 }
 
@@ -287,6 +313,13 @@ unsafe extern "system" fn on_repair(sync: usize, repair: usize, serializer: usiz
         with_notes(|n| n.differs(&name));
     }
     original(sync, repair, serializer, entry, key, archive);
+    let bytes = if serializer == 0 {
+        0
+    } else {
+        let size: unsafe extern "system" fn(usize) -> u64 = std::mem::transmute(rd::<usize>(rd::<usize>(serializer) + SERIALIZER_SIZE));
+        u64::from(size(serializer) as u32)
+    };
+    with_notes(|n| n.repaired(bytes));
 }
 
 /// Replaces the handler's insert into its delete list: the client has an object the host has not.
@@ -337,6 +370,9 @@ fn fingerprint<'a>(exe: &Exe, read: impl Fn(u64, usize) -> &'a [u8]) -> Result<(
         if read(at, start.len()) != start {
             return Err(format!("{name}: unexpected bytes at {at:#x}"));
         }
+    }
+    if read(exe.add_repair + ADD_REWIND_AT, ADD_REWIND.len()) != ADD_REWIND || read(exe.add_repair + ADD_SIZE_AT, ADD_SIZE.len()) != ADD_SIZE {
+        return Err("add function: serializer size call not where expected".to_string());
     }
     Ok(())
 }
@@ -482,6 +518,25 @@ mod tests {
         n.differs("Unit");
         n.end(true);
         assert_eq!(n.take(), "3|1|1|0|0|units", "a clean check ends the streak");
+    }
+
+    /// Every repaired archive counts in the volume, silent ones too; a check kept queued gives none.
+    #[test]
+    fn volume_of_a_check() {
+        let mut n = Notes::default();
+        n.begin(6);
+        n.differs("AI::CityBuild");
+        n.repaired(70_000);
+        n.differs("Unit");
+        n.repaired(1_000);
+        assert_eq!(n.end(true), Some((6, 2, 71_000)));
+        n.begin(6);
+        n.repaired(5);
+        assert_eq!(n.end(false), None);
+        n.begin(2);
+        assert_eq!(n.end(true), Some((2, 0, 0)), "a clean check still reports");
+        n.repaired(9);
+        assert_eq!(n.end(true), None, "outside a check nothing is counted");
     }
 
     #[test]

@@ -752,6 +752,12 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="en_US">
 			<Text>{1}'s game is missing {2} objects and has {3} extra compared to the host's: everyone reloads the host's game to prevent {1}'s desync.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="en_US">
+			<Text>{1} received {2} archives ({3} KB) of repairs at the end of the turn: the host reloaded everyone's game so that {1} stops falling out of sync.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="en_US">
+			<Text>{1} still receives {2} archives ({3} KB) of repairs after the reload of everyone: no automatic reload before turn {4}.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="en_US">
 			<Text>{1}'s game version is not supported by BGE: BGE's fixes are inactive on their PC.</Text>
 		</Row>

@@ -752,6 +752,12 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="de_DE">
 			<Text>Im Spiel von {1} fehlen {2} Objekte und es hat {3} zu viel im Vergleich zum Host: Alle laden das Spiel des Hosts neu, um die Desynchronisation von {1} zu verhindern.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="de_DE">
+			<Text>{1} hat am Rundenende {2} Archive ({3} KB) an Reparaturen erhalten: Der Host hat das Spiel für alle neu geladen, damit {1} nicht mehr desynchronisiert.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="de_DE">
+			<Text>{1} erhält nach dem Neuladen für alle weiterhin {2} Archive ({3} KB) an Reparaturen: kein automatisches Neuladen vor Runde {4}.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="de_DE">
 			<Text>Die Spielversion von {1} wird von BGE nicht unterstützt: Die Korrekturen von BGE sind auf diesem PC inaktiv.</Text>
 		</Row>

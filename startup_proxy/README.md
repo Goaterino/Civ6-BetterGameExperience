@@ -824,6 +824,33 @@ Rechargements (options avancées, section Performances) :
 Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
 vérifiés que par les tests sur l'exe.
 
+## Rechargement de tout le monde quand les réparations deviennent trop grosses
+
+[resynchro_volume](src/resynchro_volume.rs), **hôte seulement**. À un contrôle de synchro de fin de
+tour, si l'hôte envoie à un joueur au moins `resynchro_volume_ko` Ko de deltas (500 par défaut) ou
+répare au moins `resynchro_volume_archives` archives (30 par défaut), il recharge tout le monde par
+le chemin de `reload_all`, dès ce contrôle. Un joueur sain reçoit 3 à 16 Ko et au plus une dizaine
+d'archives. Le joueur revenu en plein tour de BGE-2890AC recevait 5,5 à 5,9 Mo sur 74 à 83 archives à
+chaque tour, pendant 30 tours ([analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
+piste 2).
+
+- **Mesure** : `sync_notes` compte chaque archive ajoutée à la réparation, et lit la taille de son
+  delta dans le sérialiseur du gestionnaire, juste après sa copie (`[vtable+0x10]`, l'appel que le
+  jeu fait lui-même ; vérifié dans les quatre exe).
+- **Garde-fou** : au plus un rechargement par ce chemin tous les 10 tours. Un nouveau dépassement
+  pendant ces 10 tours, contrôle de la partie rechargée compris, ne recharge rien : c'est annoncé
+  une fois dans le chat, avec le tour de reprise. Si le chargement recréait lui-même l'écart, on ne
+  recharge donc pas en boucle. Un rechargement déjà en cours n'est ni compté ni gêné.
+- **Chat** (`partie.lua`, `Civ6Proxy_ResyncVolume(tour)`, en anglais comme les autres messages
+  `BGE -`) : après le rechargement, qui l'a causé, avec le nombre d'archives et les Ko
+  (`LOC_BGD_CHAT_SYNC_RELOAD_VOLUME`) ; la pause (`LOC_BGD_CHAT_SYNC_RELOAD_PAUSE`).
+- **Réglages**, dans `rollover_proxy.cfg` seulement (pas d'onglet) : `resynchro_volume=on|off`,
+  `resynchro_volume_ko`, `resynchro_volume_archives`, lus à chaque contrôle.
+- **Journal** : `resync volume: player N: A archive(s), K KB repaired at turn T: the host reloads
+  everyone`, puis `… again … no automatic reload before turn T` ou `(paused)`.
+
+Pas encore essayé en partie : le seuil n'a été vérifié que sur les chiffres des rapports.
+
 ## Contrôles de synchro plus rapides : cache des hachages de l'hôte
 
 [cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `on` par défaut depuis la 0.15.0), **hôte

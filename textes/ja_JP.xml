@@ -752,6 +752,12 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ja_JP">
 			<Text>{1} のゲームにはホストと比べて {2} 個のオブジェクトが不足し、{3} 個が余分です。{1} の非同期を防ぐため、全員がホストのゲームを再読み込みします。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="ja_JP">
+			<Text>{1} はターン終了時に {2} 個のアーカイブ（{3} KB）の修復を受け取りました。{1} の非同期を止めるため、ホストが全員のゲームを再読み込みしました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="ja_JP">
+			<Text>全員の再読み込み後も {1} は {2} 個のアーカイブ（{3} KB）の修復を受け取っています。ターン {4} まで自動再読み込みは行いません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="ja_JP">
 			<Text>{1} のゲームのバージョンは BGE に対応していません。この PC では BGE の修正が無効です。</Text>
 		</Row>

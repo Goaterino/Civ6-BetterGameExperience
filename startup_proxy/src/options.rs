@@ -737,9 +737,21 @@ mod tests {
         lib += include_str!("pool.rs");
         lib += include_str!("remap_leger.rs");
         lib += include_str!("maths_communes.rs");
+        lib += include_str!("resynchro_volume.rs");
         // Correctifs de stabilité (POL) : pas de réglage joueur. Leurs clés ne sont lues que par les
-        // builds de diagnostic (feature `diag`), pour comparer avec le jeu d'origine.
-        const SANS_ONGLET: [&str; 6] = ["unites_promises", "visibilite_chargee", "ecouteurs_charges", "preferences_chargees", "maths_communes", "vision_guerre"];
+        // builds de diagnostic (feature `diag`), pour comparer avec le jeu d'origine. Les seuils de
+        // la resynchro au volume (hôte seulement) se règlent dans le fichier, sans onglet.
+        const SANS_ONGLET: [&str; 9] = [
+            "unites_promises",
+            "visibilite_chargee",
+            "ecouteurs_charges",
+            "preferences_chargees",
+            "maths_communes",
+            "vision_guerre",
+            "resynchro_volume",
+            "resynchro_volume_ko",
+            "resynchro_volume_archives",
+        ];
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();
         let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
         assert!(read.len() >= 12, "{read:?}");

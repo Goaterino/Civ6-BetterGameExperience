@@ -752,6 +752,12 @@
 		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pl_PL">
 			<Text>W grze {1} brakuje {2} obiektów i ma {3} nadmiarowych w porównaniu z grą hosta: wszyscy wczytują ponownie grę hosta, aby zapobiec desynchronizacji {1}.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="pl_PL">
+			<Text>Gra {1} otrzymała na koniec tury {2} archiwów ({3} KB) napraw: host wczytał ponownie grę u wszystkich, aby gra {1} przestała tracić synchronizację.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="pl_PL">
+			<Text>Gra {1} nadal otrzymuje {2} archiwów ({3} KB) napraw po ponownym wczytaniu u wszystkich: brak automatycznego wczytania przed turą {4}.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_CHAT_EXE" Language="pl_PL">
 			<Text>BGE nie obsługuje wersji gry gracza {1}: poprawki BGE są nieaktywne na tym komputerze.</Text>
 		</Row>
