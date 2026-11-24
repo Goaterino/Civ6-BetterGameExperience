@@ -2,6 +2,71 @@
 
 [English](../CHANGELOG.md) · autres langues : voir le [journal anglais](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+En multijoueur, tous les humains doivent être en 0.15.0 pour les correctifs **[tous les
+joueurs]** : un salon qui mélange 0.14.0 et 0.15.0 les coupe.
+
+### Versions du jeu
+- **Civilization VI 1.0.12.72 n'est plus prise en charge** : ses joueurs sont passés à la 1.0.12.74.
+  Sur 1.0.12.72, BetterGameExperience ne pose aucun correctif et le dit au menu principal, dans le
+  salon et sur le bouton de rapport de bug.
+- **1.0.12.58 avec les fichiers de jeu de juin 2024** : depuis la 0.14.0, cette combinaison n'avait
+  plus aucun correctif. Elle est de nouveau reconnue.
+
+### Correctifs multijoueur [tous les joueurs]
+- **Tour d'un joueur absent** : quand un autre joueur terminait le tour d'un absent, le jeu pouvait le
+  rouvrir de lui-même (une unité avec des mouvements restants), et plus personne ne le terminait : le
+  tour restait bloqué. Un tour terminé par un autre joueur reste désormais terminé.
+- **Vision d'une cité-État après une guerre** : un joueur redevenu suzerain d'une cité-État après une
+  guerre contre elle (fréquent en Teamer) ne retrouvait jamais sa vision. Elle revient désormais, et
+  les parties déjà touchées sont réparées au tour suivant.
+- **Villages tribaux invisibles après un rechargement** : depuis la 0.14.0, les villages tribaux dans
+  le brouillard disparaissaient de la carte après un rechargement ou une resynchro. Ils s'affichent
+  de nouveau.
+- **Morceaux réseau plus gros** : les gros messages réseau (sauvegardes, contrôles de synchro)
+  partent désormais en morceaux de 16 Ko au lieu de 1,2 Ko, seulement en partie et quand chaque
+  joueur connecté a la 0.15.0. Un joueur sans BetterGameExperience, ou d'une autre version, ramène
+  aussitôt la taille du jeu.
+
+### Multijoueur
+- **Contrôles de synchro plus rapides chez l'hôte** : à chaque fin de tour, l'hôte ne recalcule plus
+  les mêmes données de synchro pour chaque joueur. Seul l'hôte a besoin de la 0.15.0 pour cela.
+- **Longs passages de tour après un retour en partie** : les deux changements ci-dessus visent les
+  longs passages de tour vus après le retour d'un joueur (jusqu'à 45 s par tour). Le gain reste à
+  confirmer en vraie partie : dites-nous ce que vous constatez.
+- **Échange de places avec un joueur sans BetterGameExperience** : un échange de places dans le salon
+  pouvait faire compter par l'hôte un joueur sans BetterGameExperience comme équipé, et lui activer
+  les correctifs. Chaque annonce est désormais liée au compte Steam du joueur.
+- **Prêt gardé dans le salon** : un changement de l'hôte qui laisse les réglages de la partie
+  inchangés ne retire plus le Prêt des joueurs. Quand les réglages d'un joueur diffèrent encore de
+  ceux de l'hôte une fois l'hôte Prêt, le chat le dit et demande à ce joueur de revenir.
+- **Salon après un redémarrage annulé (MPH)** : après l'annulation d'un redémarrage lancé depuis le
+  salon, la partie suivante créée ou chargée depuis le salon était chargée deux fois par chaque
+  joueur. Elle ne l'est plus qu'une fois.
+- **Salon d'une partie sauvegardée** : le rejoindre pouvait afficher « options de joueur non
+  valides » pour les leaders de DLC ou de mods jusqu'à la réouverture de la configuration de la
+  partie. La liste des joueurs est désormais reconstruite.
+
+### Congrès mondial
+- **Deuxième retour au vote** : un joueur revenu au vote une deuxième fois ne pouvait plus donner
+  toutes ses voix. Les voix déjà envoyées sont désormais gardées.
+
+### Chargements plus rapides
+- **Processeur pendant l'écran de chargement** : depuis la 0.14.0, l'écran de chargement pouvait
+  continuer sans pause entre les images ni VSync une fois la carte prête, processeur à fond. Cette
+  phase rapide s'arrête désormais dès que le terrain est prêt (3 s au plus).
+
+### Interface
+- **Chance de réussite des espions** : la chance affichée au choix d'une mission d'espion compte
+  désormais l'évasion : une réussite qui demande de s'échapper ne rapporte que si l'espion s'évade.
+  Elle suppose la meilleure route de fuite et pas de contre-espion, comme le jeu. Activé par défaut
+  (réglages de l'interface).
+- **Signaux d'équipe** : le volume et les raccourcis des signaux sont gardés d'un chargement et d'un
+  lancement du jeu à l'autre.
+- **Onglet des réglages** : rouvrir l'onglet BetterGameExperience pouvait afficher d'anciennes
+  valeurs.
+
 ## BetterGameExperience 0.14.0
 
 En multijoueur, tous les humains doivent être en 0.14.0 pour les correctifs **[tous les

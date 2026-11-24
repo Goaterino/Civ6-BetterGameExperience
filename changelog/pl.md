@@ -2,6 +2,68 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.15.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.14.0 i 0.15.0, je wyłącza.
+
+### Wersje gry
+- **Civilization VI 1.0.12.72 nie jest już obsługiwana**: jej gracze przeszli na 1.0.12.74. W
+  1.0.12.72 BetterGameExperience nie instaluje żadnej poprawki i informuje o tym w menu głównym, w
+  poczekalni i na przycisku zgłoszenia błędu.
+- **1.0.12.58 z plikami gry z czerwca 2024**: od 0.14.0 to połączenie nie dostawało żadnej poprawki.
+  Znów jest rozpoznawane.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Tura nieobecnego gracza**: gdy inny gracz kończył turę nieobecnego, gra mogła sama ją ponownie
+  otworzyć (jednostka z pozostałym ruchem), a nikt już jej nie kończył: tura stała w miejscu. Tura
+  zakończona przez innego gracza pozostaje teraz zakończona.
+- **Widoczność miasta-państwa po wojnie**: gracz, który znów zostawał zwierzchnikiem miasta-państwa
+  po wojnie z nim (częste w grach Teamer), nigdy nie odzyskiwał jego widoczności. Teraz ona wraca, a
+  rozgrywki już dotknięte są naprawiane w następnej turze.
+- **Niewidoczne wioski plemienne po wczytaniu**: od 0.14.0 wioski plemienne we mgle znikały z mapy
+  po ponownym wczytaniu lub resynchronizacji. Znów są widoczne.
+- **Większe fragmenty sieciowe**: duże wiadomości sieciowe (zapisy gry, kontrole synchronizacji) są
+  teraz wysyłane we fragmentach po 16 KB zamiast 1,2 KB, tylko w rozgrywce, w której każdy
+  połączony gracz ma 0.15.0. Gracz bez BetterGameExperience lub z inną wersją od razu przywraca
+  rozmiar gry.
+
+### Tryb wieloosobowy
+- **Szybsze kontrole synchronizacji u hosta**: na koniec każdej tury host nie przelicza już tych
+  samych danych synchronizacji dla każdego gracza. Do tego tylko host potrzebuje 0.15.0.
+- **Długie zmiany tury po powrocie do gry**: dwie powyższe zmiany dotyczą długich zmian tury po
+  powrocie gracza do gry (do 45 s na turę). Zysk trzeba jeszcze potwierdzić w prawdziwych
+  rozgrywkach: dajcie znać, co widzicie.
+- **Zamiana miejsc z graczem bez BetterGameExperience**: zamiana miejsc w poczekalni mogła sprawić,
+  że host liczył gracza bez BetterGameExperience jako wyposażonego i włączał mu poprawki. Każde
+  ogłoszenie jest teraz powiązane z kontem Steam gracza.
+- **Gotowość zachowana w poczekalni**: zmiana hosta, która nie zmienia ustawień rozgrywki, nie
+  odbiera już graczom gotowości. Gdy ustawienia gracza wciąż różnią się od ustawień hosta, kiedy host
+  jest gotowy, czat o tym informuje i prosi tego gracza o ponowne dołączenie.
+- **Poczekalnia po anulowanym restarcie (MPH)**: po anulowaniu restartu uruchomionego z poczekalni
+  następna rozgrywka utworzona lub wczytana z poczekalni była wczytywana dwa razy przez każdego
+  gracza. Teraz jest wczytywana raz.
+- **Poczekalnia zapisanej gry**: dołączenie do niej mogło pokazywać „nieprawidłowe opcje gracza" dla
+  przywódców z DLC lub modów, dopóki nie otwarto ponownie konfiguracji gry. Lista graczy jest teraz
+  odbudowywana.
+
+### Kongres Światowy
+- **Drugi powrót do głosowania**: gracz, który drugi raz wrócił do głosowania, nie mógł już oddać
+  wszystkich głosów. Głosy już wysłane są teraz zachowywane.
+
+### Szybsze wczytywanie
+- **Użycie procesora na ekranie wczytywania**: od 0.14.0 ekran wczytywania mógł działać dalej bez
+  przerwy między klatkami i bez VSync po przygotowaniu mapy, przy pełnym obciążeniu procesora. Ta
+  szybka faza kończy się teraz, gdy tylko teren jest gotowy (najwyżej 3 s).
+
+### Interfejs
+- **Szansa powodzenia szpiegów**: szansa pokazywana przy wyborze misji szpiega uwzględnia teraz
+  ucieczkę: sukces wymagający ucieczki opłaca się tylko, jeśli szpieg ucieknie. Zakłada najlepszą
+  drogę ucieczki i brak kontrwywiadu, jak gra. Domyślnie włączone (ustawienia interfejsu).
+- **Sygnały drużyny**: głośność i skróty sygnałów są zachowywane między wczytaniami i ponownymi
+  uruchomieniami gry.
+- **Karta ustawień**: ponowne otwarcie karty BetterGameExperience mogło pokazywać stare wartości.
+
 ## BetterGameExperience 0.14.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.14.0, aby działały poprawki

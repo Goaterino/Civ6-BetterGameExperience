@@ -2,6 +2,71 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.15.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.14.0 y 0.15.0 las desactiva.
+
+### Versiones del juego
+- **Civilization VI 1.0.12.72 ya no es compatible**: sus jugadores han pasado a la 1.0.12.74. En
+  1.0.12.72, BetterGameExperience no instala ninguna corrección y lo indica en el menú principal, en
+  la sala y en el botón de informe de errores.
+- **1.0.12.58 con los archivos del juego de junio de 2024**: desde la 0.14.0, esta combinación no
+  recibía ninguna corrección. Vuelve a reconocerse.
+
+### Correcciones multijugador [todos los jugadores]
+- **Turno de un jugador ausente**: cuando otro jugador terminaba el turno de un ausente, el juego
+  podía reabrirlo por sí solo (una unidad con movimientos restantes), y ya nadie lo terminaba: el
+  turno se quedaba bloqueado. Un turno terminado por otro jugador ahora sigue terminado.
+- **Visión de una ciudad-estado tras una guerra**: un jugador que volvía a ser suzerano de una
+  ciudad-estado tras una guerra contra ella (frecuente en Teamer) nunca recuperaba su visión. Ahora
+  vuelve, y las partidas ya afectadas se reparan en el turno siguiente.
+- **Aldeas tribales invisibles tras una recarga**: desde la 0.14.0, las aldeas tribales en la niebla
+  desaparecían del mapa tras una recarga o una resincronización. Vuelven a mostrarse.
+- **Fragmentos de red más grandes**: los mensajes de red grandes (partidas guardadas, comprobaciones
+  de sincronía) se envían ahora en fragmentos de 16 KB en lugar de 1,2 KB, solo en una partida en la
+  que cada jugador conectado tiene la 0.15.0. Un jugador sin BetterGameExperience, o con otra
+  versión, devuelve de inmediato el tamaño del juego.
+
+### Multijugador
+- **Comprobaciones de sincronía más rápidas en el anfitrión**: al final de cada turno, el anfitrión ya
+  no vuelve a calcular los mismos datos de sincronía para cada jugador. Solo el anfitrión necesita la
+  0.15.0 para esto.
+- **Cambios de turno largos tras una reconexión**: los dos cambios anteriores apuntan a los cambios de
+  turno largos vistos tras la reconexión de un jugador (hasta 45 s por turno). La mejora aún debe
+  confirmarse en partidas reales: contadnos lo que veáis.
+- **Intercambio de puestos con un jugador sin BetterGameExperience**: un intercambio de puestos en la
+  sala podía hacer que el anfitrión contara como equipado a un jugador sin BetterGameExperience y le
+  activara las correcciones. Cada anuncio está ahora ligado a la cuenta de Steam del jugador.
+- **Listo se mantiene en la sala**: un cambio del anfitrión que deja igual la configuración de la
+  partida ya no quita el Listo de los jugadores. Si la configuración de un jugador sigue siendo
+  distinta de la del anfitrión cuando este está Listo, el chat lo indica y pide a ese jugador que
+  vuelva a unirse.
+- **Sala tras un reinicio cancelado (MPH)**: tras cancelar un reinicio lanzado desde la sala, la
+  siguiente partida creada o cargada desde la sala se cargaba dos veces en cada jugador. Ahora se
+  carga una vez.
+- **Sala de una partida guardada**: al unirse podía aparecer «opciones de jugador no válidas» para
+  líderes de DLC o de mods hasta reabrir la configuración de la partida. La lista de jugadores se
+  reconstruye ahora.
+
+### Congreso Mundial
+- **Segunda vuelta a la votación**: un jugador que volvía a la votación por segunda vez ya no podía
+  emitir todos sus votos. Los votos ya enviados se conservan ahora.
+
+### Cargas más rápidas
+- **Uso del procesador en la pantalla de carga**: desde la 0.14.0, la pantalla de carga podía seguir
+  sin pausa entre fotogramas ni VSync una vez listo el mapa, con el procesador al máximo. Esta fase
+  rápida termina ahora en cuanto el terreno está listo (3 s como máximo).
+
+### Interfaz
+- **Probabilidad de éxito de los espías**: la probabilidad mostrada al elegir una misión de espía
+  cuenta ahora la huida: un éxito que exige escapar solo rinde si el espía escapa. Supone la mejor
+  ruta de huida y ningún contraespía, como el juego. Activado por defecto (ajustes de interfaz).
+- **Señales de equipo**: el volumen y los atajos de las señales se conservan entre cargas y reinicios
+  del juego.
+- **Pestaña de ajustes**: volver a abrir la pestaña BetterGameExperience podía mostrar valores
+  antiguos.
+
 ## BetterGameExperience 0.14.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.14.0 para las correcciones

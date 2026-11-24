@@ -4,6 +4,64 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.15.0
+
+Multiplayer games need every human player on 0.15.0 for the **[all players]** fixes: a lobby that
+mixes 0.14.0 and 0.15.0 turns them off.
+
+### Game versions
+- **Civilization VI 1.0.12.72 is no longer supported**: its players have moved to 1.0.12.74. On
+  1.0.12.72, BetterGameExperience installs no fix at all and says so on the main menu, in the lobby
+  and on the bug report button.
+- **1.0.12.58 with the June 2024 game files**: since 0.14.0, this combination got no fix at all. It
+  is recognized again.
+
+### Multiplayer fixes [all players]
+- **Absent player's turn**: when another player ended an absent player's turn, the game could reopen
+  it on its own (a unit with moves left), and nobody was left to end it: the turn was stuck. A turn
+  ended by another player now stays ended.
+- **City-state vision after a war**: a player who became suzerain of a city-state again after a war
+  with it (common in Teamer games) never got its vision back. The vision now comes back, and games
+  already affected are repaired at the next turn.
+- **Invisible goody huts after a reload**: since 0.14.0, goody huts in the fog disappeared from the
+  map after a reload or a resync. They show again.
+- **Bigger network pieces**: large network messages (saves, sync checks) are now sent in 16 KB pieces
+  instead of 1.2 KB, only in a game where every connected player has 0.15.0. A player without
+  BetterGameExperience, or with another version, brings back the game's size at once.
+
+### Multiplayer
+- **Faster sync checks on the host**: at the end of each turn, the host no longer recomputes the same
+  sync data for every player. Only the host needs 0.15.0 for this.
+- **Long turn changes after a rejoin**: the two changes above target the long turn changes seen after
+  a player rejoins (up to 45 s per turn). The gain still has to be confirmed in real games: tell us
+  what you see.
+- **Seat swap with a player without BetterGameExperience**: swapping seats in the lobby could make the
+  host count a player without BetterGameExperience as equipped, and turn the fixes on for them. Each
+  announcement is now tied to the player's Steam account.
+- **Ready kept in the lobby**: a host change that leaves the game settings as they were no longer
+  clears the players' Ready. When a player's settings still differ from the host's once the host is
+  Ready, the chat says so and asks that player to rejoin.
+- **Lobby after a cancelled restart (MPH)**: after a restart from the lobby was cancelled, the next
+  game created or loaded from the lobby made every player load it twice. It now loads once.
+- **Lobby of a saved game**: joining it could show "invalid player options" for DLC or mod leaders
+  until the game setup was reopened. The player list is now rebuilt.
+
+### World Congress
+- **Second return to the vote**: a player who went back to the vote a second time could no longer
+  cast all their votes. The votes already sent are now kept.
+
+### Faster loading
+- **Loading screen CPU use**: since 0.14.0, the loading screen could keep running without frame pause
+  or VSync after the map was ready, at full CPU. This fast phase now ends as soon as the terrain is
+  ready (3 s at most).
+
+### Interface
+- **Spy success chance**: the chance shown when choosing a spy mission now counts the escape: a
+  success that requires an escape only pays off if the spy gets away. It assumes the best escape
+  route and no counterspy, like the game. On by default (Interface settings).
+- **Team pings**: the ping volume and key bindings are kept across game loads and restarts.
+- **Settings tab**: reopening the BetterGameExperience tab could show old values.
+
 ## BetterGameExperience 0.14.0
 
 Multiplayer games need every human player on 0.14.0 for the **[all players]** fixes: a lobby that

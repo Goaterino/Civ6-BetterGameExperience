@@ -2,6 +2,72 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.15.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.14.0 und 0.15.0 mischt, schaltet sie ab.
+
+### Spielversionen
+- **Civilization VI 1.0.12.72 wird nicht mehr unterstützt**: Ihre Spieler sind auf 1.0.12.74
+  umgestiegen. Unter 1.0.12.72 installiert BetterGameExperience keine Korrektur und sagt das im
+  Hauptmenü, in der Lobby und beim Fehlerbericht-Button.
+- **1.0.12.58 mit den Spieldateien vom Juni 2024**: Seit 0.14.0 bekam diese Kombination gar keine
+  Korrektur mehr. Sie wird wieder erkannt.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Zug eines abwesenden Spielers**: Wenn ein anderer Spieler den Zug eines Abwesenden beendete,
+  konnte das Spiel ihn von selbst wieder öffnen (eine Einheit mit restlicher Bewegung), und niemand
+  beendete ihn mehr: Der Zug hing fest. Ein von einem anderen Spieler beendeter Zug bleibt jetzt
+  beendet.
+- **Sicht eines Stadtstaats nach einem Krieg**: Ein Spieler, der nach einem Krieg gegen einen
+  Stadtstaat wieder dessen Suzerän wurde (häufig in Teamer-Partien), bekam dessen Sicht nie zurück.
+  Die Sicht kommt jetzt zurück, und bereits betroffene Partien werden in der nächsten Runde repariert.
+- **Unsichtbare Stammesdörfer nach dem Neuladen**: Seit 0.14.0 verschwanden Stammesdörfer im Nebel
+  nach einem Neuladen oder einer Resynchronisation von der Karte. Sie werden wieder angezeigt.
+- **Größere Netzwerkstücke**: Große Netzwerknachrichten (Spielstände, Synchronisationsprüfungen)
+  werden jetzt in Stücken von 16 KB statt 1,2 KB gesendet, nur in einer Partie, in der jeder
+  verbundene Spieler 0.15.0 hat. Ein Spieler ohne BetterGameExperience oder mit einer anderen Version
+  stellt sofort die Größe des Spiels wieder her.
+
+### Mehrspieler
+- **Schnellere Synchronisationsprüfungen beim Host**: Am Ende jeder Runde berechnet der Host
+  dieselben Synchronisationsdaten nicht mehr für jeden Spieler neu. Dafür braucht nur der Host 0.15.0.
+- **Lange Rundenwechsel nach einem Wiedereintritt**: Die beiden Änderungen oben zielen auf die langen
+  Rundenwechsel nach dem Wiedereintritt eines Spielers (bis zu 45 s pro Runde). Der Gewinn muss sich
+  in echten Partien noch bestätigen: Sagt uns, was ihr beobachtet.
+- **Platztausch mit einem Spieler ohne BetterGameExperience**: Ein Platztausch in der Lobby konnte den
+  Host einen Spieler ohne BetterGameExperience als ausgerüstet zählen lassen und die Korrekturen für
+  ihn einschalten. Jede Ankündigung ist jetzt an das Steam-Konto des Spielers gebunden.
+- **Bereit bleibt in der Lobby**: Eine Änderung des Hosts, die die Spieleinstellungen unverändert
+  lässt, nimmt den Spielern nicht mehr ihr Bereit. Weichen die Einstellungen eines Spielers noch von
+  denen des Hosts ab, sobald der Host bereit ist, sagt der Chat das und bittet diesen Spieler,
+  wieder beizutreten.
+- **Lobby nach einem abgebrochenen Neustart (MPH)**: Nach einem abgebrochenen Neustart aus der Lobby
+  ließ die nächste aus der Lobby erstellte oder geladene Partie jeden Spieler sie zweimal laden. Sie
+  wird jetzt einmal geladen.
+- **Lobby eines Spielstands**: Beim Beitreten konnte für Anführer aus DLCs oder Mods „ungültige
+  Spieleroptionen" erscheinen, bis die Spieleinrichtung erneut geöffnet wurde. Die Spielerliste wird
+  jetzt neu aufgebaut.
+
+### Weltkongress
+- **Zweite Rückkehr zur Abstimmung**: Ein Spieler, der ein zweites Mal zur Abstimmung zurückkehrte,
+  konnte nicht mehr alle seine Stimmen abgeben. Die bereits gesendeten Stimmen bleiben jetzt erhalten.
+
+### Schnelleres Laden
+- **Prozessorlast im Ladebildschirm**: Seit 0.14.0 konnte der Ladebildschirm nach dem Fertigstellen
+  der Karte ohne Bildpause und ohne VSync weiterlaufen, mit voller Prozessorlast. Diese schnelle
+  Phase endet jetzt, sobald das Gelände fertig ist (höchstens 3 s).
+
+### Oberfläche
+- **Erfolgschance von Spionen**: Die bei der Wahl einer Spionagemission angezeigte Chance berücksichtigt
+  jetzt die Flucht: Ein Erfolg, der eine Flucht verlangt, zahlt sich nur aus, wenn der Spion
+  entkommt. Sie nimmt den besten Fluchtweg und keinen Gegenspion an, wie das Spiel. Standardmäßig
+  aktiviert (Oberflächeneinstellungen).
+- **Team-Pings**: Lautstärke und Tastenbelegung der Pings bleiben über Ladevorgänge und Neustarts
+  des Spiels erhalten.
+- **Einstellungsreiter**: Beim erneuten Öffnen des BetterGameExperience-Reiters konnten alte Werte
+  erscheinen.
+
 ## BetterGameExperience 0.14.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.14.0 für die Korrekturen **[alle
