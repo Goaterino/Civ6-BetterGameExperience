@@ -360,10 +360,10 @@
 			<Text>Schreibt alle 500 ms die über Steam an jeden Spieler gesendeten und von ihm empfangenen Pakete und Bytes, die von Steam abgelehnten Sendungen und die Sendewarteschlange von Steam (Bytes, Pakete, Relay oder direkt) in %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. Zum Messen des Netzwerkdurchsatzes zwischen Spielern. Wirkt beim nächsten Spielstart.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="de_DE">
-			<Text>Größe der Netzwerkstücke (Test)</Text>
+			<Text>Größe der Netzwerkstücke</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="de_DE">
-			<Text>Größe der Stücke, in die große Netzwerknachrichten zerlegt werden, im Spiel 1166 Bytes. Nur für einen Test zwischen zwei Rechnern: Alle Rechner der Partie müssen denselben Wert haben, sonst wird die Partie beschädigt. Nur Spielversion 1.0.12.58. Wirkt beim nächsten Spielstart.</Text>
+			<Text>Größe der Stücke, in die große Netzwerknachrichten beim Senden zerlegt werden: im Spiel 1166 Bytes, in der BGE-Release 16384. Größere Stücke werden nur in einer Partie gesendet, solange jeder verbundene Spieler dieselbe BGE-Version meldet; jeder Rechner vergrößert beim Start seinen Empfangspuffer. Aus: die Größe des Spiels. Wirkt beim nächsten Spielstart.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="de_DE">
 			<Text>Schutz der Netzwerknachrichten</Text>

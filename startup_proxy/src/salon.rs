@@ -297,14 +297,15 @@ pub fn new_token() -> String {
 
 /// Version annoncée dans le salon. Un build de diagnostic (feature `diag`) annonce `<version>-diag`,
 /// suivi de `-m<taille>` avec `morceaux_reseau` : il peut contenir des changements de simulation pas
-/// encore publiés, et son tampon de réception agrandi (`debit_steam`) manque à la version publiée et
-/// aux builds sans le réglage. Il n'est donc compté comme une autre machine, pour les correctifs POL
-/// comme pour les gros morceaux réseau, que si elle a le même build et le même réglage.
+/// encore publiés. Une machine dont le tampon de réception n'a pas pu être agrandi (`debit_steam`)
+/// ajoute `-t0` : elle planterait sur les gros morceaux réseau des autres. Une autre machine n'est
+/// donc comptée, pour les correctifs POL comme pour les gros morceaux, que si elle annonce la même
+/// chose.
 pub fn version_annoncee() -> String {
     #[cfg(feature = "diag")]
     return format!("{VERSION}-diag{}", crate::debit_steam::announced_suffix());
     #[cfg(not(feature = "diag"))]
-    VERSION.to_string()
+    format!("{VERSION}{}", crate::debit_steam::announced_suffix())
 }
 
 /// `Civ6Proxy_Version()` → la version ; ou nil et la raison si cette machine n'appliquerait pas les
@@ -408,8 +409,7 @@ unsafe extern "C-unwind" fn lua_fix_pol(l: *mut std::ffi::c_void) -> i32 {
         // actifs (`maths_communes`).
         crate::maths_communes::pol_changed(actif);
     }
-    // Gros morceaux réseau (builds de diagnostic) : jamais sans les correctifs POL.
-    #[cfg(feature = "diag")]
+    // Gros morceaux réseau : jamais sans les correctifs POL.
     if !actif {
         crate::debit_steam::pol_off();
     }
@@ -512,7 +512,6 @@ const PARTIE_NATIVES: Natives = &[
     (crate::reload_all::lua_recheck, b"Civ6Proxy_ReloadAllRecheck\0"),
     (crate::rejoin::lua_keep_check, b"Civ6Proxy_RejoinKeepCheck\0"),
     (crate::absent_turn::lua_end_turn, b"Civ6Proxy_EndTurnFor\0"),
-    #[cfg(feature = "diag")]
     (crate::debit_steam::lua_set_peers, b"Civ6Proxy_MorceauxReseau\0"),
 ];
 const OPTION_NATIVES: Natives = &[

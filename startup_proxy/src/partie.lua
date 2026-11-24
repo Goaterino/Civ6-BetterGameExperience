@@ -524,7 +524,7 @@ if Civ6Proxy_EndTurnFor ~= nil then
 	end
 end
 
--- Bigger network chunks (diagnostic builds, startup_proxy/src/debit_steam.rs). A receiver with the
+-- Bigger network chunks (16 KB, startup_proxy/src/debit_steam.rs). A receiver with the
 -- game's 2 KB receive buffer crashes on a bigger chunk, so they are only sent in a game, with POL on
 -- (the host's verdict), and only while every other connected player announces this machine's version
 -- of BGE under its own identity (its Steam ID). Any other case gives an empty list: the game's chunk

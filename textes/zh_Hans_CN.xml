@@ -360,10 +360,10 @@
 			<Text>每 500 毫秒将通过 Steam 发送给每位玩家和从其接收的数据包与字节、被 Steam 拒绝的发送，以及 Steam 的发送队列（字节、数据包、中继或直连）写入 %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log。用于测量玩家之间的网络速度。下次启动游戏时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="zh_Hans_CN">
-			<Text>网络分块大小（测试）</Text>
+			<Text>网络分块大小</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="zh_Hans_CN">
-			<Text>大型网络消息被切分成的块的大小，游戏中为 1166 字节。仅用于两台电脑之间的测试：游戏中的所有电脑必须使用相同的值，否则游戏会损坏。仅限游戏版本 1.0.12.58。下次启动游戏时生效。</Text>
+			<Text>发送时大型网络消息被切分成的块的大小：游戏中为 1166 字节，BGE 正式版为 16384 字节。只有在游戏中、且所有已连接玩家都通告相同的 BGE 版本时才发送大块；每台电脑在启动时扩大其接收缓冲区。关闭：游戏的大小。下次启动游戏时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="zh_Hans_CN">
 			<Text>网络消息保护</Text>

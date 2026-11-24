@@ -66,7 +66,6 @@ mod pool;
 mod remap_leger;
 #[cfg(feature = "diag")]
 mod zones;
-#[cfg(feature = "diag")]
 mod debit_steam;
 #[path = "../../proxy/src/version.rs"]
 mod version;
@@ -202,7 +201,6 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             remap_leger::install(exe_base);
             #[cfg(feature = "diag")]
             zones::install();
-            #[cfg(feature = "diag")]
             debit_steam::install();
         }
     }

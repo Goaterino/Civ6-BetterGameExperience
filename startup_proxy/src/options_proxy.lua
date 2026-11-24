@@ -207,8 +207,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "trace_steam", defaut = "off", libre = true, demarrage = true, diag = true,
 		choix = PROXY_ON_OFF },
-	-- Change le protocole : même valeur sur toutes les machines (src/debit_steam.rs).
-	{ cle = "morceaux_reseau", defaut = "off", libre = true, demarrage = true, diag = true,
+	-- Release : 16384, sans réglage. Ici pour essayer d'autres tailles (src/debit_steam.rs).
+	{ cle = "morceaux_reseau", defaut = "16384", libre = true, demarrage = true, diag = true,
 		choix = {
 			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
 			{ "4096", "4096" },
