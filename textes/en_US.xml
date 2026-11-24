@@ -257,6 +257,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="en_US">
 			<Text>In the deal screen, on an available resource, gold, gold per turn or Diplomatic Favor, Shift+click puts as much in the deal as the deal accepts, and Ctrl+click adds ten times a normal click: 10 of a resource, 1000 gold, 100 gold per turn, 10 Diplomatic Favor. Without this option, a larger amount has to be typed in the amount box. Local only: no effect on other players.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="en_US">
+			<Text>Untradeable luxuries in the deal screen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="en_US">
+			<Text>In the deal screen, each player's available luxuries are followed by greyed-out icons for the luxuries that player holds but cannot trade: copies received from another deal, a city-state or another source. A column then shows every luxury its player has: you can see whether the other side already has the one you offer, and whether the copy you give is your last. Without this option, the game only lists what can be traded. Display only: no effect on other players.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
 			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>
 		</Row>
@@ -514,6 +520,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="en_US">
 			<Text>deal not sent: the turn is ending. Send it again next turn.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="en_US">
+			<Text>Cannot be traded. Source:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="en_US">
+			<Text>Other source</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="en_US">
 			<Text>+{1} {2} {3} from {4}, received by {5}</Text>

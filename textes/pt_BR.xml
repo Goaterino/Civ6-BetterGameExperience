@@ -257,6 +257,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="pt_BR">
 			<Text>Na tela de acordo, em um recurso, ouro, ouro por turno ou Favorecimento Diplomático disponível, Shift+clique adiciona tanto quanto o acordo aceita, e Ctrl+clique adiciona dez vezes um clique normal: 10 de um recurso, 1000 de ouro, 100 de ouro por turno, 10 de Favorecimento Diplomático. Sem esta opção, uma quantidade maior precisa ser digitada no campo de quantidade. Apenas local: sem efeito sobre os outros jogadores.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="pt_BR">
+			<Text>Recursos de luxo não negociáveis na tela de acordo</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="pt_BR">
+			<Text>Na tela de acordo, depois dos recursos de luxo disponíveis de cada jogador aparecem ícones em cinza para os que esse jogador possui mas não pode negociar: cópias recebidas de outro acordo, de uma cidade-estado ou de outra fonte. Assim, uma coluna mostra todos os recursos de luxo do seu jogador: dá para ver se o outro lado já tem o que você oferece e se a cópia que você entrega é a última. Sem esta opção, o jogo só lista o que pode ser negociado. Apenas exibição: sem efeito sobre os outros jogadores.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pt_BR">
 			<Text>Desconto de distrito: -{1}% (você tem menos distritos deste tipo que a sua média).</Text>
 		</Row>
@@ -514,6 +520,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="pt_BR">
 			<Text>acordo não enviado: o turno está terminando. Envie-o novamente no próximo turno.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="pt_BR">
+			<Text>Não pode ser negociado. Origem:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="pt_BR">
+			<Text>Outra origem</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="pt_BR">
 			<Text>+{1} {2} {3} por {4}, recebido por {5}</Text>

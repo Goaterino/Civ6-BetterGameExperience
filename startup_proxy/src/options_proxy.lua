@@ -167,6 +167,8 @@ local PROXY_REGLAGES = {
 		choix = PROXY_ON_OFF },
 	{ cle = "ui_accord_quantites", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
+	{ cle = "ui_accord_luxes", defaut = "on", nouveaute_ui = true,
+		choix = PROXY_ON_OFF },
 	{ cle = "ui_avancement", defaut = "on", nouveaute_ui = true,
 		choix = PROXY_ON_OFF },
 

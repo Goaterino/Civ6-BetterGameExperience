@@ -47,6 +47,10 @@
 //!   On a resource, the gold, the gold per turn or the favor of the "available" column of the deal
 //!   screen, Shift+click puts as much as the deal accepts, Ctrl+click ten times what a click adds
 //!   (10 of a resource, 1000 gold, 100 gold per turn, 10 favor) ;
+//! - `ui_accord_luxes=on|off` (on) : adds `ui_accord_luxes.lua` to DiplomacyDealView.lua. In the
+//!   "available" column of the deal screen, the luxuries a player holds but cannot trade (from
+//!   another deal, a city-state) follow the tradeable ones, greyed out, on both sides ; their
+//!   tooltip names the city-state, or the deal's partner and its turns left ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -86,6 +90,9 @@ const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
 /// Block of the `ui_accord_quantites` setting (DiplomacyDealView.lua). It shows no text.
 const ACCORD_QUANTITES_BLOCK: &str = include_str!("ui_accord_quantites.lua");
+/// Block of the `ui_accord_luxes` setting (DiplomacyDealView.lua), and the text of its tooltip.
+const ACCORD_LUXES_BLOCK: &str =
+    concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_accord_luxes.lua"));
 /// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
 const ANNULER_BLOCK: &str = include_str!("ui_banniere_annuler.lua");
 const QUARTIERS_BLOCK: &str =
@@ -120,6 +127,7 @@ static FORMATIONS: AtomicBool = AtomicBool::new(true);
 static LOGEMENT: AtomicBool = AtomicBool::new(true);
 static ESPIONS: AtomicBool = AtomicBool::new(true);
 static ACCORD_QUANTITES: AtomicBool = AtomicBool::new(true);
+static ACCORD_LUXES: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -183,6 +191,10 @@ pub fn set_accord_quantites(on: bool) {
     ACCORD_QUANTITES.store(on, Ordering::Relaxed);
 }
 
+pub fn set_accord_luxes(on: bool) {
+    ACCORD_LUXES.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -207,6 +219,7 @@ fn active() -> bool {
         || LOGEMENT.load(Ordering::Relaxed)
         || ESPIONS.load(Ordering::Relaxed)
         || ACCORD_QUANTITES.load(Ordering::Relaxed)
+        || ACCORD_LUXES.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
@@ -894,6 +907,26 @@ pub fn patch_accord_quantites(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// What `ui_accord_luxes.lua` wraps and uses in DiplomacyDealView.lua.
+const ACCORD_LUXES_NAMES: [&str; 4] =
+    ["function PopulateAvailableResources(", "function GetOtherPlayer(", "function SetIconToSize(", "g_IconOnlyIM"];
+
+/// DiplomacyDealView.lua followed by `ui_accord_luxes.lua`: the luxuries a player holds but cannot
+/// trade, greyed out in the "available" column of the deal screen (`ui_accord_luxes` setting).
+pub fn patch_accord_luxes(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ACCORD_LUXES_NAMES.iter().find(|n| !has(n)) {
+        return Err(format!("{missing} introuvable"));
+    }
+    if has("Civ6RolloverProxy (src/ui_accord_luxes.lua)") {
+        return Err("déjà ajouté".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ACCORD_LUXES_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// DiplomacyDealView.lua suivi de `ui_accord_fin.lua` : pas d'accord envoyé à un humain pendant le
 /// passage de tour (tours passés en boucle chez l'hôte, depart_tour/README.md).
 pub fn patch_accord_fin(src: &[u8]) -> Result<Vec<u8>, String> {
@@ -1346,6 +1379,20 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         } else {
             fixed
         };
+        let fixed = if ACCORD_LUXES.load(Ordering::Relaxed) {
+            match patch_accord_luxes(fixed.as_deref().unwrap_or(src)) {
+                Ok(text) => {
+                    what.push("luxes non échangeables grisés dans la colonne disponible".into());
+                    Some(text)
+                }
+                Err(e) => {
+                    log(&format!("ui : {chunk} : luxes non échangeables de l'écran d'accord laissés tels quels : {e}"));
+                    fixed
+                }
+            }
+        } else {
+            fixed
+        };
         let fixed = match patch_accord_fin(fixed.as_deref().unwrap_or(src)) {
             Ok(text) => {
                 what.push("pas d'accord vers un humain pendant le passage de tour".into());
@@ -1704,6 +1751,27 @@ mod tests {
             let quantites = patch_accord_quantites(&or).unwrap();
             assert!(quantites.starts_with(&or));
             assert!(patch_accord_fin(&quantites).is_ok());
+        }
+    }
+
+    #[test]
+    fn luxes_non_echangeables_dans_l_ecran_d_accord() {
+        let src = b"g_IconOnlyIM = nil; function SetIconToSize(iconControl, iconName, iconSize) end \
+            function GetOtherPlayer(player) end function PopulateAvailableResources(player, iconList, className) end";
+        let out = patch_accord_luxes(src).unwrap();
+        assert!(out.starts_with(src));
+        assert!(out.ends_with(ACCORD_LUXES_BLOCK.as_bytes()));
+        assert!(patch_accord_luxes(&out).is_err(), "pas deux fois");
+        assert!(patch_accord_luxes(b"function OnShow() end").is_err());
+        // The tooltip's text travels with the block.
+        assert!(ACCORD_LUXES_BLOCK.contains("LOC_BGD_ACCORD_LUXE_NON_CESSIBLE = {"));
+        // Gold button, quantities, luxuries, deals at the end of the turn: the four blocks follow each other.
+        if let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua")) {
+            let or = patch_accord_or(&src).unwrap();
+            let quantites = patch_accord_quantites(&or).unwrap();
+            let luxes = patch_accord_luxes(&quantites).unwrap();
+            assert!(luxes.starts_with(&quantites));
+            assert!(patch_accord_fin(&luxes).is_ok());
         }
     }
 

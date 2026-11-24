@@ -257,6 +257,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="fr_FR">
 			<Text>Dans l'écran d'accord, sur une ressource, l'or, l'or par tour ou la faveur diplomatique disponibles, Maj+clic en met autant que l'accord en accepte, et Ctrl+clic ajoute dix fois un clic normal : 10 d'une ressource, 1000 d'or, 100 d'or par tour, 10 de faveur diplomatique. Sans cette option, une quantité plus grande doit être saisie dans la zone de quantité. Purement local : sans effet sur les autres joueurs.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_NOM" Language="fr_FR">
+			<Text>Ressources de luxe non échangeables dans l'écran d'accord</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_LUXES_AIDE" Language="fr_FR">
+			<Text>Dans l'écran d'accord, les ressources de luxe disponibles de chaque joueur sont suivies d'icônes grisées pour celles que ce joueur possède sans pouvoir les échanger : exemplaires reçus d'un autre accord, d'une cité-état ou d'une autre source. Une colonne montre alors toutes les ressources de luxe de son joueur : on voit si l'autre a déjà celle qu'on lui propose, et si l'exemplaire qu'on donne est le dernier. Sans cette option, le jeu ne liste que ce qui peut être échangé. Affichage seulement : sans effet sur les autres joueurs.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
 			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>
 		</Row>
@@ -514,6 +520,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_ACCORD_FIN_TOUR" Language="fr_FR">
 			<Text>accord non envoyé : le tour se termine. Renvoyez-le au tour suivant.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_NON_CESSIBLE" Language="fr_FR">
+			<Text>Non échangeable. Source :</Text>
+		</Row>
+		<Row Tag="LOC_BGD_ACCORD_LUXE_AUTRE_SOURCE" Language="fr_FR">
+			<Text>Autre source</Text>
 		</Row>
 		<Row Tag="LOC_BGD_ROUTE_OR_DESTINATION" Language="fr_FR">
 			<Text>+{1} {2} {3} grâce à {4}, reçus par {5}</Text>
