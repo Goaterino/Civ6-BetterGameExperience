@@ -32,7 +32,11 @@ joueurs]** : un salon qui mélange 0.14.0 et 0.15.0 les coupe.
 ### Multijoueur
 - **Contrôles de synchro plus rapides chez l'hôte** : à chaque fin de tour, l'hôte ne recalcule plus
   les mêmes données de synchro pour chaque joueur. Seul l'hôte a besoin de la 0.15.0 pour cela.
-- **Longs passages de tour après un retour en partie** : les deux changements ci-dessus visent les
+- **Rechargement automatique quand un joueur reste désynchronisé** : quand un contrôle de synchro
+  enverrait à un joueur plus de 500 Ko de réparations, ou réparerait 30 objets (un joueur revenu en
+  cours de tour pouvait recevoir près de 6 Mo à chaque tour), l'hôte recharge désormais la partie pour
+  tous. Au plus une fois tous les 10 tours ; au-delà, le chat le signale.
+- **Longs passages de tour après un retour en partie** : les trois changements ci-dessus visent les
   longs passages de tour vus après le retour d'un joueur (jusqu'à 45 s par tour). Le gain reste à
   confirmer en vraie partie : dites-nous ce que vous constatez.
 - **Échange de places avec un joueur sans BetterGameExperience** : un échange de places dans le salon

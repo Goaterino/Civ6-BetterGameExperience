@@ -32,7 +32,11 @@ No multijogador, todos os jogadores humanos precisam estar na 0.15.0 para as cor
 - **Verificações de sincronia mais rápidas no anfitrião**: no fim de cada turno, o anfitrião não
   recalcula mais os mesmos dados de sincronia para cada jogador. Só o anfitrião precisa da 0.15.0
   para isso.
-- **Trocas de turno longas depois de uma reconexão**: as duas mudanças acima miram as trocas de turno
+- **Recarregamento automático quando um jogador continua dessincronizado**: quando uma verificação de
+  sincronia enviaria a um jogador mais de 500 KB de reparos, ou repararia 30 objetos (um jogador que
+  voltou no meio do turno podia receber quase 6 MB a cada turno), o anfitrião agora recarrega a
+  partida para todos. No máximo uma vez a cada 10 turnos; além disso, o chat avisa.
+- **Trocas de turno longas depois de uma reconexão**: as três mudanças acima miram as trocas de turno
   longas vistas depois da reconexão de um jogador (até 45 s por turno). O ganho ainda precisa ser
   confirmado em partidas reais: contem para nós o que vocês notarem.
 - **Troca de lugar com um jogador sem o BetterGameExperience**: uma troca de lugar na sala de espera

@@ -31,7 +31,11 @@ W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.15.0, aby działały p
 ### Tryb wieloosobowy
 - **Szybsze kontrole synchronizacji u hosta**: na koniec każdej tury host nie przelicza już tych
   samych danych synchronizacji dla każdego gracza. Do tego tylko host potrzebuje 0.15.0.
-- **Długie zmiany tury po powrocie do gry**: dwie powyższe zmiany dotyczą długich zmian tury po
+- **Automatyczne wczytanie, gdy gracz pozostaje niezsynchronizowany**: gdy kontrola synchronizacji
+  wysłałaby graczowi ponad 500 KB napraw albo naprawiłaby 30 obiektów (gracz, który wrócił w trakcie
+  tury, mógł dostawać prawie 6 MB co turę), host wczytuje teraz grę ponownie dla wszystkich. Najwyżej
+  raz na 10 tur; ponad to informuje o tym czat.
+- **Długie zmiany tury po powrocie do gry**: trzy powyższe zmiany dotyczą długich zmian tury po
   powrocie gracza do gry (do 45 s na turę). Zysk trzeba jeszcze potwierdzić w prawdziwych
   rozgrywkach: dajcie znać, co widzicie.
 - **Zamiana miejsc z graczem bez BetterGameExperience**: zamiana miejsc w poczekalni mogła sprawić,

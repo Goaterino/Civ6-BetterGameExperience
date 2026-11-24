@@ -32,7 +32,11 @@ En multijugador, todos los jugadores humanos deben tener la 0.15.0 para las corr
 - **Comprobaciones de sincronía más rápidas en el anfitrión**: al final de cada turno, el anfitrión ya
   no vuelve a calcular los mismos datos de sincronía para cada jugador. Solo el anfitrión necesita la
   0.15.0 para esto.
-- **Cambios de turno largos tras una reconexión**: los dos cambios anteriores apuntan a los cambios de
+- **Recarga automática cuando un jugador sigue desincronizado**: cuando una comprobación de sincronía
+  enviaría a un jugador más de 500 KB de reparaciones, o repararía 30 objetos (un jugador reconectado a
+  mitad de turno podía recibir casi 6 MB en cada turno), el anfitrión recarga ahora la partida para
+  todos. Como máximo una vez cada 10 turnos; más allá, el chat lo indica.
+- **Cambios de turno largos tras una reconexión**: los tres cambios anteriores apuntan a los cambios de
   turno largos vistos tras la reconexión de un jugador (hasta 45 s por turno). La mejora aún debe
   confirmarse en partidas reales: contadnos lo que veáis.
 - **Intercambio de puestos con un jugador sin BetterGameExperience**: un intercambio de puestos en la

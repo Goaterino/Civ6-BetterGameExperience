@@ -32,7 +32,12 @@ Spieler]**: Eine Lobby, die 0.14.0 und 0.15.0 mischt, schaltet sie ab.
 ### Mehrspieler
 - **Schnellere Synchronisationsprüfungen beim Host**: Am Ende jeder Runde berechnet der Host
   dieselben Synchronisationsdaten nicht mehr für jeden Spieler neu. Dafür braucht nur der Host 0.15.0.
-- **Lange Rundenwechsel nach einem Wiedereintritt**: Die beiden Änderungen oben zielen auf die langen
+- **Automatisches Neuladen, wenn ein Spieler nicht synchron bleibt**: Würde eine
+  Synchronisationsprüfung einem Spieler mehr als 500 KB an Reparaturen schicken oder 30 Objekte
+  reparieren (ein Spieler, der mitten in der Runde zurückkam, konnte jede Runde fast 6 MB bekommen),
+  lädt der Host die Partie jetzt für alle neu. Höchstens einmal alle 10 Runden; darüber hinaus sagt es
+  der Chat.
+- **Lange Rundenwechsel nach einem Wiedereintritt**: Die drei Änderungen oben zielen auf die langen
   Rundenwechsel nach dem Wiedereintritt eines Spielers (bis zu 45 s pro Runde). Der Gewinn muss sich
   in echten Partien noch bestätigen: Sagt uns, was ihr beobachtet.
 - **Platztausch mit einem Spieler ohne BetterGameExperience**: Ein Platztausch in der Lobby konnte den

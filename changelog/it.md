@@ -32,7 +32,11 @@ giocatori]**: una sala d'attesa che mescola 0.14.0 e 0.15.0 le disattiva.
 - **Controlli di sincronizzazione più rapidi per l'host**: alla fine di ogni turno, l'host non
   ricalcola più gli stessi dati di sincronizzazione per ogni giocatore. Solo l'host ha bisogno della
   0.15.0 per questo.
-- **Cambi di turno lunghi dopo un rientro**: i due cambiamenti qui sopra mirano ai cambi di turno
+- **Ricaricamento automatico quando un giocatore resta desincronizzato**: quando un controllo di
+  sincronizzazione invierebbe a un giocatore più di 500 KB di riparazioni, o riparerebbe 30 oggetti (un
+  giocatore rientrato a metà turno poteva ricevere quasi 6 MB a ogni turno), l'host ora ricarica la
+  partita per tutti. Al massimo una volta ogni 10 turni; oltre, la chat lo segnala.
+- **Cambi di turno lunghi dopo un rientro**: i tre cambiamenti qui sopra mirano ai cambi di turno
   lunghi visti dopo il rientro di un giocatore (fino a 45 s per turno). Il guadagno va ancora
   confermato in partite reali: diteci cosa vedete.
 - **Scambio di posti con un giocatore senza BetterGameExperience**: uno scambio di posti nella sala

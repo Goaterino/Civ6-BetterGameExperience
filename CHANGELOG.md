@@ -32,7 +32,11 @@ mixes 0.14.0 and 0.15.0 turns them off.
 ### Multiplayer
 - **Faster sync checks on the host**: at the end of each turn, the host no longer recomputes the same
   sync data for every player. Only the host needs 0.15.0 for this.
-- **Long turn changes after a rejoin**: the two changes above target the long turn changes seen after
+- **Automatic reload when a player stays out of sync**: when one sync check would send a player more than
+  500 KB of repairs, or repair 30 objects (a player who rejoined mid-turn could get almost 6 MB at every
+  turn), the host now reloads the game for everyone. At most once every 10 turns; beyond that, the chat
+  says so.
+- **Long turn changes after a rejoin**: the three changes above target the long turn changes seen after
   a player rejoins (up to 45 s per turn). The gain still has to be confirmed in real games: tell us
   what you see.
 - **Seat swap with a player without BetterGameExperience**: swapping seats in the lobby could make the
