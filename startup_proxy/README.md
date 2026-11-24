@@ -826,7 +826,7 @@ vérifiés que par les tests sur l'exe.
 
 ## Contrôles de synchro plus rapides : cache des hachages de l'hôte
 
-[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `verify` par défaut), **hôte
+[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `on` par défaut depuis la 0.15.0), **hôte
 seulement**, sans changer le protocole ni ce que reçoivent les clients. Pas un correctif POL.
 L'analyse est dans [analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
 piste 1.
