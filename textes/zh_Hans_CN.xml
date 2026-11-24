@@ -551,6 +551,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="zh_Hans_CN">
 			<Text>在 Steam 库中找不到 Civilization VI。\n\n请使用 --game-dir "&lt;游戏文件夹&gt;" 重新运行安装程序。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="zh_Hans_CN">
+			<Text>在 Steam 库中找不到 Civilization VI:\n{1}\n\n游戏必须是通过 Steam Play（Proton）运行的 Windows 版。标有 (?) 的库无法读取：请检查其磁盘是否已挂载。否则请使用 --game-dir "&lt;游戏文件夹&gt;" 重新运行。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="zh_Hans_CN">
+			<Text>无法写入 {1}。\n\n请检查该文件夹不在只读磁盘上、不属于 root，并且磁盘权限（例如 NTFS）允许写入。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="zh_Hans_CN">
+			<Text>要让 BetterGameExperience 在 Proton 中加载，请自行在 Steam 中设置启动选项:\n\n1. 在 Steam 库中右键单击 Civilization VI，然后选择“属性”。\n2. 在“通用”的“启动选项”中输入:\n   {1}\n3. 在“兼容性”中，检查该游戏已强制使用某个 Proton 版本（BetterGameExperience 需要 Windows 版）。\n\n如果启动选项中已有内容，请在最开头添加 WINEDLLOVERRIDES="winmm=n,b"，并保留 %command%。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="zh_Hans_CN">
+			<Text>Steam 中 Civilization VI 的启动选项在 %command% 之前没有 {1}：没有它，BetterGameExperience 不会加载。如果你刚刚设置，Steam 可能还没有保存（它在关闭时保存）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="zh_Hans_CN">
+			<Text>请在终端中运行 BetterGameExperience。\n\n命令: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;代码&gt;\n选项: --game-dir &lt;文件夹&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="zh_Hans_CN">
+			<Text>请选择编号（留空退出）:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="zh_Hans_CN">
+			<Text>显示需要设置的 Steam 启动选项</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="zh_Hans_CN">
 			<Text>正在查找最新版本…</Text>
 		</Row>

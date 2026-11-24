@@ -21,6 +21,7 @@ RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOSSIER = os.path.join(RACINE, "textes")
 LUA = os.path.join(DOSSIER, "bgd_textes.lua")
 RUST = os.path.join(RACINE, "updater", "src", "textes.rs")
+RUST_LINUX = os.path.join(RACINE, "updater_linux", "src", "textes.rs")
 
 # Les langues de Better Balanced Game, dans l'ordre de l'installeur (updater/src/lang.rs).
 LANGUES = ["en_US", "fr_FR", "de_DE", "es_ES", "it_IT", "ja_JP", "ko_KR", "pl_PL", "pt_BR", "ru_RU", "zh_Hans_CN"]
@@ -106,7 +107,7 @@ def generer(strict):
 def main():
     check = "--check" in sys.argv
     lua, rust = generer("--strict" in sys.argv)
-    sorties = [(LUA, lua), (RUST, rust)]
+    sorties = [(LUA, lua), (RUST, rust), (RUST_LINUX, rust)]
     if check:
         perimes = []
         for chemin, contenu in sorties:

@@ -551,6 +551,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="pl_PL">
 			<Text>Nie znaleziono Civilization VI w bibliotekach Steam.\n\nUruchom ponownie instalator z opcją --game-dir "&lt;folder gry&gt;".</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="pl_PL">
+			<Text>Nie znaleziono Civilization VI w bibliotekach Steam:\n{1}\n\nGra musi być wersją Windows uruchamianą przez Steam Play (Proton). Biblioteki oznaczonej (?) nie udało się odczytać: sprawdź, czy jej dysk jest zamontowany. W przeciwnym razie uruchom ponownie z --game-dir "&lt;folder gry&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="pl_PL">
+			<Text>Nie można zapisać w {1}.\n\nSprawdź, czy folder nie jest na dysku tylko do odczytu, nie należy do roota i czy uprawnienia dysku (np. NTFS) pozwalają na zapis.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="pl_PL">
+			<Text>Aby wczytać BetterGameExperience w Protonie, ustaw samodzielnie opcje uruchamiania w Steam:\n\n1. W bibliotece Steam kliknij prawym przyciskiem Civilization VI i wybierz Właściwości.\n2. W Ogólne wpisz w Opcjach uruchamiania:\n   {1}\n3. W Zgodności sprawdź, czy dla gry wymuszona jest wersja Protona (BetterGameExperience wymaga wersji Windows).\n\nJeśli w opcjach uruchamiania jest już tekst, dopisz WINEDLLOVERRIDES="winmm=n,b" na samym początku i zachowaj %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="pl_PL">
+			<Text>Opcje uruchamiania Civilization VI w Steam nie zawierają {1} przed %command%: bez tego BetterGameExperience się nie wczyta. Jeśli opcja została właśnie ustawiona, Steam mógł jej jeszcze nie zapisać (robi to przy zamykaniu).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="pl_PL">
+			<Text>Uruchom BetterGameExperience z terminala.\n\nPolecenia: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;kod&gt;\nOpcje: --game-dir &lt;folder&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="pl_PL">
+			<Text>Wybierz numer (puste, aby wyjść):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="pl_PL">
+			<Text>Pokaż opcję uruchamiania Steam do ustawienia</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="pl_PL">
 			<Text>Szukanie najnowszej wersji…</Text>
 		</Row>

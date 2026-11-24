@@ -137,6 +137,8 @@ export function resume(id, meta, octets, lien) {
 			steam ? `**Steam:** ${steam} <https://steamcommunity.com/profiles/${steam}>` : "**Steam:** unknown",
 			`**Game:** ${partie}`,
 			`**BGE:** ${brut(m.bge_release, 20)} (${brut(m.bge_version, 20)}), ${brut(m.exe, 40)}, language ${brut(m.langue, 12)}`,
+			// Reports from before the field have no `systeme`.
+			m.systeme ? `**System:** ${brut(m.systeme, 80)}` : "**System:** unknown",
 		);
 	}
 	lignes.push(

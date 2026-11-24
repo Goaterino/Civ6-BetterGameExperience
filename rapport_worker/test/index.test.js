@@ -27,6 +27,7 @@ const META = { joueur: "Jean @everyone", tour: "87", civilisation: "France", mul
 	description: "La partie se désynchronise *à chaque* tour après la guerre @here",
 	steam_id: "76561198000000042", steam_id_windows: "76561198000000099",
 	bge_release: "0.7.1", bge_version: "0.7.1", exe: "CivilizationVI_DX12.exe", langue: "fr_FR",
+	systeme: "Linux 6.12.1 (Wine 9.0, Windows 10.0.19045)",
 	fichiers: [{ nom: "logs/Lua.log", octets: 10 }, { nom: "saves/BGE_rapport.Civ6Save", octets: 5 }] };
 
 function env(options = {}) {
@@ -90,6 +91,7 @@ test("rapport reçu, gardé, publié, téléchargeable", async () => {
 	assert.ok(corps.content.startsWith(`**Bug report ${id}**\n\n**Description**\n> La partie se désynchronise \\*à chaque\\* tour après la guerre \\@here\n`), corps.content);
 	assert.ok(corps.content.includes("**Player:** Jean \\@everyone (France), turn 87"), corps.content);
 	assert.ok(corps.content.includes("**Game:** multiplayer, host, paused, 4 human player(s)"), corps.content);
+	assert.ok(corps.content.includes("**System:** Linux 6.12.1 \\(Wine 9.0, Windows 10.0.19045\\)"), corps.content);
 	assert.ok(corps.content.includes("**Steam:** 76561198000000042 <https://steamcommunity.com/profiles/76561198000000042>"), corps.content);
 	assert.ok(corps.content.includes("2 file(s) including 1 save(s)"), corps.content);
 	assert.ok(corps.content.length < 2000);
@@ -181,9 +183,11 @@ test("plafond du bucket : les plus anciens partent d'abord", async () => {
 
 test("message en anglais", async () => {
 	const e = env();
-	await worker.fetch(envoi(zip({ ...META, multijoueur: "0", description: "" })), e);
+	// systeme: undefined is left out of the JSON, as in a report from before the field.
+	await worker.fetch(envoi(zip({ ...META, multijoueur: "0", description: "", systeme: undefined })), e);
 	const c = e.discord[0].corps.content;
 	assert.ok(c.includes("**Game:** single player"), c);
+	assert.ok(c.includes("**System:** unknown"), c);
 	assert.ok(c.includes("> *(no description)*") && c.includes("**Download:**"), c);
 	assert.ok(!/[àéèêç]|joueur|tour |Télécharger|Partie/.test(c), "pas de français : " + c);
 });

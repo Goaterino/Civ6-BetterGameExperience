@@ -4,8 +4,8 @@ Un Cloudflare Worker entre le bouton « Signaler un bug (BGE) » du jeu
 ([startup_proxy](../startup_proxy/README.md#le-signalement-dun-bug)) et Discord :
 
 ```
-proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus)
-                                  └─► webhook ──► forum Discord : un fil par rapport
+proxy (WinHTTP) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus)
+                                 └─► webhook ──► forum Discord : un fil par rapport
 ```
 
 - **`POST /rapport`** : le zip arrive dans le champ `archive` d'un formulaire multipart, avec

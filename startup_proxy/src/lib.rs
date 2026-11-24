@@ -36,6 +36,8 @@ mod pe;
 
 mod absent_turn;
 mod chargeur;
+mod http;
+mod wine;
 mod relais;
 mod options;
 mod maj;

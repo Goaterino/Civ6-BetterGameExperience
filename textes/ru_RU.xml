@@ -551,6 +551,27 @@
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="ru_RU">
 			<Text>Civilization VI не найдена в библиотеках Steam.\n\nЗапустите установщик снова с параметром --game-dir "&lt;папка игры&gt;".</Text>
 		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="ru_RU">
+			<Text>Civilization VI не найдена в библиотеках Steam:\n{1}\n\nИгра должна быть версией для Windows, запущенной через Steam Play (Proton). Библиотеку с пометкой (?) прочитать не удалось: проверьте, что её диск подключён. Иначе запустите снова с --game-dir "&lt;папка игры&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="ru_RU">
+			<Text>Не удаётся записать в {1}.\n\nПроверьте, что папка не находится на диске только для чтения, не принадлежит root и что права диска (например, NTFS) разрешают запись.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="ru_RU">
+			<Text>Чтобы BetterGameExperience загружался в Proton, задайте параметры запуска в Steam самостоятельно:\n\n1. В библиотеке Steam щёлкните Civilization VI правой кнопкой мыши и выберите «Свойства».\n2. На вкладке «Общие» введите в «Параметры запуска»:\n   {1}\n3. На вкладке «Совместимость» убедитесь, что для игры принудительно выбрана версия Proton (BetterGameExperience требуется версия для Windows).\n\nЕсли в параметрах запуска уже есть текст, добавьте WINEDLLOVERRIDES="winmm=n,b" в самое начало и оставьте %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="ru_RU">
+			<Text>В параметрах запуска Civilization VI в Steam нет {1} перед %command%: без этого BetterGameExperience не загружается. Если вы только что их задали, Steam мог ещё не сохранить изменения (он сохраняет их при закрытии).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="ru_RU">
+			<Text>Запустите BetterGameExperience из терминала.\n\nКоманды: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;код&gt;\nПараметры: --game-dir &lt;папка&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="ru_RU">
+			<Text>Выберите номер (пусто — выход):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="ru_RU">
+			<Text>Показать параметр запуска Steam, который нужно задать</Text>
+		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="ru_RU">
 			<Text>Поиск последней версии…</Text>
 		</Row>
