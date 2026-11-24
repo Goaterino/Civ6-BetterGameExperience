@@ -1,6 +1,11 @@
 # Villages tribaux invisibles après un rechargement
 
-**Pas encore corrigé** (2026-11-23) : cause identifiée, correctif à écrire.
+**Corrigé pour la 0.15.0** (2026-11-24, `proxy/src/partie_chargee.rs`) : pendant la passe
+post-chargement, l'écriture de la mémoire d'un joueur a lieu, le temps que l'étape relise celle du
+joueur local et lève l'affichage, puis elle est défaite à la case suivante et à la fin de la passe.
+Les couches restent celles de la sauvegarde (synchro inchangée), l'affichage redevient celui du jeu
+d'origine. Le journal dit désormais `… remembered-improvement write(s) of the players undone after
+the display check`. Vérifié hors jeu (octets du getter sur 1.0.12.58 et .74) ; pas encore en partie.
 
 Rapports BGE-2C7D19, BGE-E8B107 et BGE-93D8D4, tous en 0.14.0. Symptôme : après un relobby, un
 rechargement contre une désynchro ou une resynchro, des villages tribaux (huttes) ne sont plus
@@ -62,8 +67,7 @@ Constats sur la .58 :
 - `18035c020` teste le drapeau 8 (`18035c54f`), puis `case+0x44 != -1`, et lève `0xf391d7b3`
   (`18035c56b`) sans lire la mémoire.
 
-Ces adresses ne sont pas encore dans `patch::MOVED` : à y ajouter avec leur colonne 1.0.12.74 quand
-le correctif s'en servira.
+Le correctif se sert du setter et du getter, tous deux dans `patch::MOVED`.
 
 1. **Setter (`180341ed0`).** Il écrit un `short` dans `Visibility::Instance.m_aExplicitLayers`
    (la couche indexée par `mgr+0x18`) et renvoie vrai si la valeur a changé. Il ne lève aucun

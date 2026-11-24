@@ -366,10 +366,10 @@
 			<Text>Ogni 500 ms scrive i pacchetti e i byte inviati a ogni giocatore e ricevuti da lui tramite Steam, gli invii rifiutati da Steam e la coda di invio di Steam (byte, pacchetti, relay o diretto) in %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. Per misurare il flusso di rete tra i giocatori. Ha effetto al prossimo avvio del gioco.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="it_IT">
-			<Text>Dimensione dei pezzi di rete (prova)</Text>
+			<Text>Dimensione dei pezzi di rete</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="it_IT">
-			<Text>Dimensione dei pezzi in cui vengono divisi i grandi messaggi di rete, 1166 byte nel gioco. Solo per una prova tra due computer: tutti i computer della partita devono avere lo stesso valore, altrimenti la partita si corrompe. Solo versione 1.0.12.58 del gioco. Ha effetto al prossimo avvio del gioco.</Text>
+			<Text>Dimensione dei pezzi in cui vengono divisi i grandi messaggi di rete all'invio: 1166 byte nel gioco, 16384 nella release di BGE. I pezzi più grandi vengono inviati solo in partita, finché ogni giocatore connesso annuncia la stessa versione di BGE; ogni computer ingrandisce il suo buffer di ricezione all'avvio. Off: la dimensione del gioco. Ha effetto al prossimo avvio del gioco.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="it_IT">
 			<Text>Protezione dei messaggi di rete</Text>

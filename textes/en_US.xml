@@ -366,10 +366,10 @@
 			<Text>Every 500 ms, writes the packets and bytes sent to and received from each player through Steam, the sends Steam refuses, and Steam's send queue (bytes, packets, relay or direct) to %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. To measure the network throughput between players. Takes effect at the next game launch.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="en_US">
-			<Text>Network chunk size (test)</Text>
+			<Text>Network chunk size</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="en_US">
-			<Text>Size of the pieces large network messages are cut into, 1166 bytes in the game. Test between two machines only: every machine of the game must have the same value, otherwise the game is corrupted. Game version 1.0.12.58 only. Takes effect at the next game launch.</Text>
+			<Text>Size of the pieces large network messages are cut into when sent: 1166 bytes in the game, 16384 in the BGE release. Bigger pieces are only sent in a game, while every connected player announces the same BGE version; every machine enlarges its receive buffer at launch. Off: the game's size. Takes effect at the next game launch.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="en_US">
 			<Text>Network message guard</Text>

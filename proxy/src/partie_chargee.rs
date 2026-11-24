@@ -13,9 +13,14 @@
 //!   joueur qui a révélé sa case. La partie en cours ne l'y écrit que quand le joueur voit la
 //!   case : un joueur rechargé se souvenait donc de villages tribaux posés après la révélation, et
 //!   les archives de visibilité de quatre joueurs différaient après chaque rechargement. Pendant
-//!   cette passe, l'écriture d'amélioration mémorisée (`18035de10`) laisse désormais les couches
-//!   des joueurs telles que sauvegardées. L'instance partagée (1000), qu'un chargement ne restaure
-//!   pas, est toujours reconstruite par la passe.
+//!   cette passe, une écriture d'amélioration mémorisée d'un joueur (`18035de10`) est désormais
+//!   défaite dès que l'étape passe à la case suivante, et à la fin de la passe : les couches des
+//!   joueurs restent telles que sauvegardées. Elle a lieu quand même le temps du test d'affichage
+//!   de l'étape, qui relit la mémoire du joueur local (`18035b4a0`) et n'affiche l'amélioration
+//!   (`0xf391d7b3`, cache de carte du rendu) que si elle y est. Sauter l'écriture, comme en 0.14.0,
+//!   cachait les villages tribaux en brouillard après chaque chargement
+//!   (`analyses/huttes_invisibles`). L'instance partagée (1000), qu'un chargement ne restaure pas,
+//!   est toujours reconstruite par la passe.
 //! - **Ordre des écouteurs** (`ecouteurs_charges`). Une nouvelle partie connecte les écouteurs
 //!   propres d'un joueur aux événements du jeu (`1802d6c40`) juste après avoir créé le joueur,
 //!   avant que ses objets d'IA connectent les leurs ; un chargement les connecte à la fin de la
@@ -127,6 +132,16 @@ const GS_READ: Site = Site {
     copy: (0, 21),
     resume: 21,
 };
+/// Lecture d'une amélioration mémorisée (gestionnaire de visibilité, joueur, case) -> valeur, -1
+/// sans couche. Appelée, pas détournée : ses octets sont seulement vérifiés.
+const GET_REMEMBERED: Site = Site {
+    name: "remembered improvement getter",
+    address: 0x1_8035_b4a0,
+    // mov r9,rcx ; cmp edx,0x3e8 ; jne +6 ; mov rdx,[rcx+0x50] ; jmp +0x28
+    expected: &[0x4C, 0x8B, 0xC9, 0x81, 0xFA, 0xE8, 0x03, 0x00, 0x00, 0x75, 0x06, 0x48, 0x8B, 0x51, 0x50, 0xEB, 0x28],
+    copy: (0, 0),
+    resume: 0,
+};
 const SITES: [Site; 6] = [POST_LOAD, SET_REMEMBERED, PLAYER_READ, PLAYER_CONNECT, FC_CONNECT, GS_READ];
 
 /// Les joueurs (objet rendu par `180306b80`) : `+0x20` le tableau des `Player*` par id, `+0x28` sa
@@ -160,7 +175,10 @@ static BASE: AtomicUsize = AtomicUsize::new(0);
 static TRAMPS: [AtomicUsize; 6] = [const { AtomicUsize::new(0) }; 6];
 
 static IN_POST_LOAD: AtomicBool = AtomicBool::new(false);
-static SKIPPED: AtomicU32 = AtomicU32::new(0);
+static UNDONE: AtomicU32 = AtomicU32::new(0);
+/// Écritures d'un joueur faites pendant la passe et pas encore défaites : (gestionnaire, joueur,
+/// case, ancienne valeur). Toutes portent sur la même case.
+static PENDING: Mutex<Vec<(usize, i32, u32, i32)>> = Mutex::new(Vec::new());
 /// Pendant la lecture d'un joueur : chaque événement (sentinelle, dernier nœud au début de la
 /// lecture).
 static READ_MARKS: Mutex<Option<Vec<(usize, usize)>>> = Mutex::new(None);
@@ -260,14 +278,16 @@ unsafe extern "system-unwind" fn post_load_hook(game: usize) -> u64 {
     let orig: PostLoadFn = std::mem::transmute(tramp(0));
     let pol = pol::actifs();
     let vis = pol && VISIBILITY.load(Ordering::Relaxed);
-    SKIPPED.store(0, Ordering::Relaxed);
+    UNDONE.store(0, Ordering::Relaxed);
+    lock(&PENDING).clear();
     IN_POST_LOAD.store(vis, Ordering::SeqCst);
     let r = orig(game);
     IN_POST_LOAD.store(false, Ordering::SeqCst);
+    undo_pending(None);
     if vis {
         log(&format!(
-            "loaded game: post-load pass done, {} remembered-improvement write(s) of the players skipped",
-            SKIPPED.load(Ordering::Relaxed)
+            "loaded game: post-load pass done, {} remembered-improvement write(s) of the players undone after the display check",
+            UNDONE.load(Ordering::Relaxed)
         ));
     }
     let st = std::mem::take(&mut *lock(&STATS));
@@ -287,13 +307,42 @@ unsafe extern "system-unwind" fn post_load_hook(game: usize) -> u64 {
     r
 }
 
-unsafe extern "system-unwind" fn set_remembered_hook(mgr: usize, player: i32, plot: u32, value: u32) -> u64 {
-    if player != SHARED_INSTANCE && IN_POST_LOAD.load(Ordering::SeqCst) {
-        SKIPPED.fetch_add(1, Ordering::Relaxed);
-        return 0;
+type GetRememberedFn = unsafe extern "system-unwind" fn(usize, i32, u32) -> i32;
+
+/// Remet l'ancienne valeur de chaque écriture en attente, sauf si elle porte sur `keep` (la case
+/// que l'étape traite encore).
+unsafe fn undo_pending(keep: Option<u32>) {
+    let mut pending = lock(&PENDING);
+    if pending.is_empty() || pending.first().map(|p| p.2) == keep {
+        return;
     }
     let orig: SetRememberedFn = std::mem::transmute(tramp(1));
-    orig(mgr, player, plot, value)
+    for (mgr, player, plot, old) in pending.drain(..) {
+        orig(mgr, player, plot, old as u32);
+        UNDONE.fetch_add(1, Ordering::Relaxed);
+    }
+}
+
+/// Pendant la passe post-chargement, l'étape des améliorations écrit, pour chaque case, la mémoire
+/// de chaque joueur qui l'a révélée, puis celle de l'instance partagée, puis relit celle du joueur
+/// local pour décider d'afficher l'amélioration. L'écriture d'un joueur a donc lieu, et elle est
+/// défaite à la première écriture d'une autre case, ou à la fin de la passe.
+unsafe extern "system-unwind" fn set_remembered_hook(mgr: usize, player: i32, plot: u32, value: u32) -> u64 {
+    let orig: SetRememberedFn = std::mem::transmute(tramp(1));
+    if !IN_POST_LOAD.load(Ordering::SeqCst) {
+        return orig(mgr, player, plot, value);
+    }
+    undo_pending(Some(plot));
+    if player == SHARED_INSTANCE {
+        return orig(mgr, player, plot, value);
+    }
+    let get: GetRememberedFn = std::mem::transmute(global(GET_REMEMBERED.address));
+    let old = get(mgr, player, plot);
+    let r = orig(mgr, player, plot, value);
+    if r & 0xff != 0 {
+        lock(&PENDING).push((mgr, player, plot, old));
+    }
+    r
 }
 
 // ------------------------------------------------------------------ ordre des écouteurs
@@ -477,7 +526,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         log("loaded game: off (visibilite_chargee=off, ecouteurs_charges=off, preferences_chargees=off), no hooks");
         return;
     }
-    if let Err(e) = patch::check(base, &SITES) {
+    if let Err(e) = patch::check(base, &SITES).and_then(|_| patch::check(base, &[GET_REMEMBERED])) {
         log(&format!("loaded game: unexpected game version, no hooks (POL fix unavailable): {e}"));
         return;
     }
@@ -545,7 +594,7 @@ mod tests {
         let rd16 = |o: usize| u16::from_le_bytes(file[o..o + 2].try_into().unwrap()) as usize;
         let nt = rd32(0x3c);
         let sections = nt + 24 + rd16(nt + 20);
-        for s in &SITES {
+        for s in SITES.iter().chain([&GET_REMEMBERED]) {
             let rva = patch::rva(s.address);
             let o = (0..rd16(nt + 6))
                 .map(|i| sections + 40 * i)
@@ -555,6 +604,9 @@ mod tests {
                 })
                 .unwrap_or_else(|| panic!("{}: not in the file", s.name));
             assert_eq!(patch::as_known(s.address, &file[o..o + s.expected.len()]), s.expected, "{}", s.name);
+            if s.address == GET_REMEMBERED.address {
+                continue;
+            }
             assert!(s.expected.len() >= 14 && s.copy.1 <= s.expected.len() && s.resume >= s.copy.1, "{}", s.name);
         }
     }

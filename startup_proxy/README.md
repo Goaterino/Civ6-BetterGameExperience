@@ -199,9 +199,15 @@ donnent en français et en anglais.
 
 ## Débit Steam et taille des morceaux réseau (`trace_steam`, `morceaux_reseau`)
 
-Deux réglages de diagnostic, désactivés par défaut : onglet BetterGameExperience, section
-Diagnostic, builds locaux seulement. Ils prennent effet au lancement suivant du jeu. Ce sont les
-outils de l'analyse préliminaire de la piste « morceaux plus gros »
+**Depuis la 0.15.0, la release envoie des morceaux de 16 384 octets**, sans réglage joueur, aux
+conditions ci-dessous (tampon agrandi partout, même version annoncée par tous les joueurs
+connectés). Une machine dont le tampon n'a pas pu être agrandi annonce `<version>-t0` : elle ne
+compte pas comme équipée, et les correctifs POL se coupent aussi avec elle.
+
+Dans les builds locaux (feature `diag`), deux réglages de l'onglet, section Diagnostic, qui
+prennent effet au lancement suivant du jeu : `trace_steam` (off par défaut, absent de la release)
+et `morceaux_reseau` (16384 par défaut, pour essayer d'autres tailles). Ce sont les outils de la
+piste « morceaux plus gros »
 ([analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md), piste 3). Code :
 [src/debit_steam.rs](src/debit_steam.rs).
 
@@ -215,16 +221,18 @@ outils de l'analyse préliminaire de la piste « morceaux plus gros »
     relais ou direct).
   - Fichier : `%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-<pid>.log`. Il n'entre pas dans les
     rapports de bug. Un pair y est noté par un numéro et l'identifiant de compte de son SteamID.
-- **`morceaux_reseau=4096|16384|60000` : essai de morceaux plus gros.**
+- **`morceaux_reseau=off|4096|16384|60000` : morceaux plus gros (16384 en release).**
   - Un receveur au tampon d'origine (2 Ko) plante sur un morceau plus gros. Le 2026-11-23, un
     joueur sans BGE (`actif=off`) a planté en rejoignant un hôte réglé à 60 000.
   - **Au lancement**, seul le tampon de réception Steam de 2 Ko est remplacé par un tampon de
-    128 Ko : il reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets.
+    128 Ko : il reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets. Il
+    l'est sur toute machine, même réglée à `off`.
   - **En partie seulement**, la taille choisie s'applique quand les correctifs POL sont actifs et
     que chaque joueur connecté annonce la même version (`partie.lua`, native
     `Civ6Proxy_MorceauxReseau` : leurs SteamID). Un build de diagnostic annonce
     `<version>-diag`, plus `-m<taille>` avec ce réglage (`salon::version_annoncee`) : ni la version
-    publiée, ni un build réglé autrement ne comptent comme lui.
+    publiée, ni un build réglé autrement ne comptent comme lui. La release annonce sa version
+    seule, toutes ses machines envoient donc la même taille.
   - **Retour à 1 166 octets** : correctifs POL coupés (salon), joueur non équipé, ou premier
     paquet Steam, envoyé ou reçu, d'un pair hors de la liste. Un nouveau venu écrit avant que
     l'hôte lui réponde. Un pair hors liste vu dans les 30 dernières secondes bloque aussi le
@@ -247,7 +255,7 @@ outils de l'analyse préliminaire de la piste « morceaux plus gros »
   - Le nombre de morceaux d'un message (`1407f7ae0` en DX12 .58 : `(taille − 1) / globale + 1`)
     n'est calculé qu'à l'envoi, par le vidage de la file sortante (`FNetSession`, « Net Flushing
     Outgoing Message Queue »). La lecture des morceaux à la réception n'est pas encore relue :
-    par prudence, seuls des builds du même réglage échangent des gros morceaux (voir plus haut).
+    par prudence, seules des machines de même taille échangent des gros morceaux (voir plus haut).
     Essai du 2026-11-23, deux machines à 60 000 : contrôle de synchro de 490 Ko en 9 morceaux,
     sauvegarde de 2,9 Mo reçue en environ 4,5 s, autant de paquets et d'octets reçus qu'envoyés.
 - **Lecture.**
@@ -812,7 +820,12 @@ Rechargements (options avancées, section Performances) :
   [analyses/chargement](../analyses/chargement/README.md)). `bdd` laisse alors la localisation
   intacte (avec `textes_gardes`).
 - [fin_chargement](src/fin_chargement.rs) (`pause_fin_chargement`) : la phase d'après chargement
-  (cache du terrain) n'attend plus 16 ms entre ses ticks.
+  (cache du terrain) n'attend plus 16 ms entre ses ticks. L'intervalle est remis dès que
+  `WorldView_PostLoadUpdate` n'a plus rien à cuire, au plus tard 3 s après le premier appel, et la
+  levée de VSync de `vsync` s'arrête au même moment (si le jeu l'avait demandée). En
+  0.14.0, il restait à 0 jusqu'à `LoadGameViewState::End()` : toute l'attente qui suivait sur
+  l'écran de chargement tournait sans pause, VSync levée, CPU à fond (plaintes de joueurs). Journal :
+  `post-load: N step(s) without pause in X ms, tick interval back to Y ms (terrain done|time cap)`.
 - [vsync](src/vsync.rs) (`vsync_chargement`) : aussi en DX11.
 
 Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
@@ -820,7 +833,7 @@ vérifiés que par les tests sur l'exe.
 
 ## Contrôles de synchro plus rapides : cache des hachages de l'hôte
 
-[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `verify` par défaut), **hôte
+[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `on` par défaut depuis la 0.15.0), **hôte
 seulement**, sans changer le protocole ni ce que reçoivent les clients. Pas un correctif POL.
 L'analyse est dans [analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
 piste 1.

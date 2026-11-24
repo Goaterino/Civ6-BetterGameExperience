@@ -1,7 +1,15 @@
-//! Outils de diagnostic pour la piste « morceaux plus gros » (piste 3 de
-//! `analyses/passage_de_tour_reseau/README.md`) : savoir si la couche P2P de Steam limite le débit
-//! en messages ou en octets. Builds locaux seulement (feature `diag`), deux réglages de l'onglet,
-//! section Diagnostic, lus au lancement du jeu.
+//! Morceaux réseau plus gros (piste 3 de `analyses/passage_de_tour_reseau/README.md`), et trace
+//! des envois et réceptions Steam.
+//!
+//! **Release (depuis la 0.15.0).** Morceaux de 16 384 octets (`DEFAULT_CHUNK`), sans réglage
+//! joueur : tampon de réception agrandi au lancement sur chaque machine, gros morceaux en partie
+//! seulement, entre machines qui annoncent toutes la même version de BGE (voir plus bas). Une
+//! machine dont le tampon n'a pas pu être agrandi annonce `<version>-t0` (`announced_suffix`) :
+//! elle n'est jamais comptée comme équipée, et les correctifs POL se coupent aussi avec elle.
+//!
+//! **Builds de diagnostic (feature `diag`)** : deux réglages de l'onglet, section Diagnostic, lus au
+//! lancement du jeu. `trace_steam` n'existe que là ; `morceaux_reseau` (16384 par défaut, `off`
+//! pour la taille du jeu) permet d'essayer d'autres tailles.
 //!
 //! **`trace_steam=on` : trace des envois et réceptions Steam.** Aucune adresse de l'exe.
 //! - L'exe obtient `SteamNetworking005` par son import `SteamInternal_FindOrCreateUserInterface`
@@ -20,17 +28,19 @@
 //!   veut dire que Steam limite en octets (fenêtre ÷ ping) : la piste ne rapporte rien. Un débit qui
 //!   grandit avec la taille des paquets veut dire qu'il limite en messages.
 //!
-//! **`morceaux_reseau=<octets>` : essai de morceaux plus gros.** Un receveur au tampon d'origine
+//! **`morceaux_reseau=<octets>` : morceaux plus gros.** Un receveur au tampon d'origine
 //! (2 048 octets) plante sur un morceau plus gros : un joueur sans BGE qui rejoignait un hôte réglé
 //! à 60 000 plantait dans le salon (2026-11-23). Seul l'envoyeur compte les morceaux
 //! (`1407f7ae0`), le receveur n'a besoin que d'un tampon assez grand.
 //! - **Au lancement** : seul le tampon de réception est agrandi (voir plus bas), sans risque : il
-//!   reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets.
+//!   reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets. Il l'est sur toute
+//!   machine, même avec `morceaux_reseau=off` (diagnostic) : elle reçoit les gros morceaux des
+//!   autres.
 //! - **En partie seulement** (`partie.lua`, native `Civ6Proxy_MorceauxReseau(ids)`) : quand les
 //!   correctifs POL sont actifs (verdict de l'hôte) et que chaque joueur connecté annonce la même
 //!   version de BGE, l'interface donne leurs SteamID. Les morceaux passent alors à la valeur
 //!   choisie. Les builds `diag` annoncent `<version>-diag` (`salon::version_annoncee`) : une machine
-//!   de la version publiée, au tampon d'origine, n'est jamais comptée.
+//!   d'une autre version, peut-être au tampon d'origine, n'est jamais comptée.
 //! - **Retour aux 1 166 octets** : liste vide (salon, correctifs POL coupés, joueur non équipé), ou
 //!   premier paquet Steam, envoyé ou reçu, d'un pair hors de la liste. Un nouveau venu se manifeste
 //!   avant que l'hôte lui envoie quoi que ce soit : le retour précède toute réponse. Un pair hors
@@ -69,6 +79,8 @@ pub struct Config {
     pub chunk: Option<u32>,
 }
 
+/// Taille des morceaux de la release, et valeur de `morceaux_reseau` quand la clé manque.
+pub const DEFAULT_CHUNK: u32 = 16384;
 /// Bornes de `morceaux_reseau` : au-dessus de la taille du jeu, et dans le tampon de réception.
 pub const CHUNK_MIN: u32 = 1167;
 pub const CHUNK_MAX: u32 = 0x1_0000;
@@ -79,12 +91,10 @@ pub fn parse(cfg: &str) -> Config {
     // Chaque clé est écrite en clair dans son appel à strip_prefix : le test
     // `cles_communes_avec_le_proxy` (options.rs) les y lit pour les comparer à celles de l'onglet.
     let trace = cfg.lines().filter_map(|l| l.trim().strip_prefix("trace_steam=")).last().map(str::trim) == Some("on");
-    let chunk = cfg
-        .lines()
-        .filter_map(|l| l.trim().strip_prefix("morceaux_reseau="))
-        .last()
-        .and_then(|v| v.trim().parse::<u32>().ok())
-        .filter(|n| (CHUNK_MIN..=CHUNK_MAX).contains(n));
+    let chunk = match cfg.lines().filter_map(|l| l.trim().strip_prefix("morceaux_reseau=")).last() {
+        None => Some(DEFAULT_CHUNK),
+        Some(v) => v.trim().parse::<u32>().ok().filter(|n| (CHUNK_MIN..=CHUNK_MAX).contains(n)),
+    };
     Config { trace, chunk }
 }
 
@@ -399,6 +409,7 @@ unsafe fn buffer_near(near: usize, size: usize) -> Option<usize> {
     None
 }
 
+/// Tampon de réception agrandi ; `chunk` : taille envoyée en partie, 0 pour celle du jeu.
 unsafe fn install_chunks(module: usize, chunk: u32) {
     let image = |a: u64| module + (a - BASE) as usize;
     let read = |a: u64, n: usize| std::slice::from_raw_parts(image(a) as *const u8, n).to_vec();
@@ -426,6 +437,7 @@ unsafe fn install_chunks(module: usize, chunk: u32) {
         log("debit steam : écriture refusée, tampon de réception d'origine, pas de gros morceaux");
         return;
     }
+    BUFFER_OK.store(true, Ordering::Relaxed);
     let mut g = GATE.lock().unwrap_or_else(|e| e.into_inner());
     g.sites = Some(Sites {
         setter: image(exe.setter),
@@ -436,8 +448,13 @@ unsafe fn install_chunks(module: usize, chunk: u32) {
     });
     g.chunk = chunk;
     log(&format!(
-        "debit steam : tampon de réception de {RECV_BUFFER} octets ({}) ; morceaux de {chunk} octets en partie seulement, quand chaque joueur annonce la même version de BGE",
-        exe.name
+        "debit steam : tampon de réception de {RECV_BUFFER} octets ({}) ; {}",
+        exe.name,
+        if chunk == 0 {
+            "morceaux du jeu (morceaux_reseau=off)".to_string()
+        } else {
+            format!("morceaux de {chunk} octets en partie seulement, quand chaque joueur annonce la même version de BGE")
+        }
     ));
 }
 
@@ -480,13 +497,19 @@ static TRACE_ON: AtomicBool = AtomicBool::new(false);
 /// `morceaux_reseau` lu au lancement (0 : désactivé), pour la version annoncée.
 static CONFIGURED: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 
-/// Suffixe de la version annoncée par un build de diagnostic : `-m<taille>` avec `morceaux_reseau`.
-/// Deux machines de réglages différents ne se comptent pas comme de la même version : une machine
-/// sans le réglage garde le tampon de réception d'origine.
+/// Tampon de réception agrandi.
+static BUFFER_OK: AtomicBool = AtomicBool::new(false);
+
+/// Suffixe de la version annoncée : `-t0` si le tampon de réception n'a pas pu être agrandi (cette
+/// machine planterait sur les gros morceaux des autres) ; sinon rien en release, et `-m<taille>`
+/// avec `morceaux_reseau` dans un build de diagnostic.
 pub fn announced_suffix() -> String {
+    if !BUFFER_OK.load(Ordering::Relaxed) {
+        return "-t0".into();
+    }
     match CONFIGURED.load(Ordering::Relaxed) {
-        0 => String::new(),
-        n => format!("-m{n}"),
+        n if n != 0 && cfg!(feature = "diag") => format!("-m{n}"),
+        _ => String::new(),
     }
 }
 static HOOKED: AtomicBool = AtomicBool::new(false);
@@ -494,6 +517,7 @@ static HOOKED: AtomicBool = AtomicBool::new(false);
 /// Écrit la taille choisie (`on`) ou celle du jeu, et l'état d'origine du réglage de session.
 unsafe fn apply(g: &mut Gate, on: bool, why: &str) {
     let Some(s) = g.sites.as_ref() else { return };
+    let on = on && g.chunk != 0;
     if g.active == on {
         return;
     }
@@ -569,18 +593,16 @@ pub fn pol_off() {
     unsafe { apply(&mut g, false, "correctifs POL coupés") };
 }
 
-/// Appelé par DllMain (builds de diagnostic).
+/// Appelé par DllMain. La release ne lit aucun réglage : morceaux de `DEFAULT_CHUNK`, sans trace.
 pub unsafe fn install() {
-    let cfg = parse(&crate::options::read_config().map(|(t, _)| t).unwrap_or_default());
+    let text = if cfg!(feature = "diag") { crate::options::read_config().map(|(t, _)| t).unwrap_or_default() } else { String::new() };
+    let cfg = parse(&text);
     let module = win::GetModuleHandleW(std::ptr::null()) as usize;
     TRACE_ON.store(cfg.trace, Ordering::Relaxed);
     CONFIGURED.store(cfg.chunk.unwrap_or(0), Ordering::Relaxed);
-    if cfg.trace || cfg.chunk.is_some() {
-        install_hooks(module);
-    }
-    if let Some(chunk) = cfg.chunk {
-        install_chunks(module, chunk);
-    }
+    // Toujours : le contrôle des pairs (retour aux morceaux du jeu) en dépend.
+    install_hooks(module);
+    install_chunks(module, cfg.chunk.unwrap_or(0));
 }
 
 #[cfg(test)]
@@ -589,7 +611,7 @@ mod tests {
 
     #[test]
     fn settings() {
-        assert_eq!(parse(""), Config { trace: false, chunk: None });
+        assert_eq!(parse(""), Config { trace: false, chunk: Some(DEFAULT_CHUNK) }, "la release passe un texte vide");
         assert_eq!(parse("trace_steam=on\nmorceaux_reseau=16384\n"), Config { trace: true, chunk: Some(16384) });
         assert_eq!(parse("morceaux_reseau=off").chunk, None);
         assert_eq!(parse("morceaux_reseau=1166").chunk, None, "pas en dessous de la taille du jeu");
