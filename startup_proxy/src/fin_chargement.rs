@@ -11,18 +11,141 @@
 //! par appel à `WorldView_PostLoadUpdate`, et le rechargement d'une petite carte demande 80 appels.
 //! À 16 ms le tick, cela fait 1,37 s ; sans pause, 0,09 à 0,21 s (VSync coupée).
 //!
-//! Le module pose un relais de deux instructions sur le seul appel à `WorldView_PostLoadUpdate` : il
-//! écrit 0 dans la globale de l'intervalle, puis saute à la fonction, sans toucher aux registres ni
-//! aux arguments. Le post-chargement enchaîne donc ses ticks sans pause ; `::End()` remet
-//! l'intervalle normal juste après, comme toujours. L'étape de configuration, GameCore et
-//! `StartupGame` gardent leurs ticks de 16 ms (sans pause, la boucle leur prend du temps CPU :
-//! 0,3 à 0,4 s de plus, mesuré).
+//! Le module redirige le seul appel à `WorldView_PostLoadUpdate` (`1400808dc` en DX12 1.0.12.74,
+//! dans l'étape d'après-chargement `140080800`, `call` avec `ecx` et `xmm1`, résultat dans `al` :
+//! vrai tant qu'il reste du terrain à cuire) vers [`relais`]. Le relais écrit 0 dans la globale de
+//! l'intervalle avant l'appel, et remet la valeur qu'il y a trouvée (`LoadGameTickIntervalInMS`) :
+//!
+//! - dès que `WorldView_PostLoadUpdate` rend faux (plus rien à cuire) ;
+//! - au plus tard [`PLAFOND`] après le premier appel du chargement, même s'il rend encore vrai.
+//!
+//! La fenêtre sans pause ne couvre donc que les étapes de cuisson. La 0.14.0 laissait l'intervalle à
+//! 0 jusqu'à `::End()` : tout ce que l'écran de chargement attendait ensuite tournait sans aucune
+//! pause, VSync levée (`vsync`), soit des centaines d'images par seconde pour rien et le CPU à fond
+//! (plaintes de joueurs, 2026-11-23). `::End()` remet toujours `TickIntervalInMS`, comme avant.
+//!
+//! Un nouveau chargement est reconnu à un nouveau `LoadGameViewState::Begin()` (`vsync::debuts`),
+//! ou, sans ce détour, à plus de [`NOUVEAU_CHARGEMENT`] sans appel. L'étape de configuration,
+//! GameCore et `StartupGame` gardent leurs ticks de 16 ms (sans pause, la boucle leur prend du temps
+//! CPU : 0,3 à 0,4 s de plus, mesuré).
 //!
 //! Avec la VSync, chaque image attend encore l'écran : `vsync` la coupe pendant les écrans de
-//! chargement (DX12 et DX11).
+//! chargement (DX12 et DX11), depuis `::Begin()`. Quand le relais remet l'intervalle, il remet aussi
+//! la VSync (`vsync::fin_levee`) : les deux limites reviennent ensemble, au lieu d'attendre `::End()`.
 
 use crate::{exe, log, motifs, patch, win};
 use std::ffi::c_void;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
+
+/// Durée maximale sans pause par chargement. Le rechargement d'une petite carte cuit en 0,09 à
+/// 0,21 s sans pause (80 étapes) ; une grande carte en demande environ deux fois plus.
+pub const PLAFOND: Duration = Duration::from_secs(3);
+/// Sans détour de `::Begin()`, un appel après ce silence ouvre la fenêtre d'un nouveau chargement
+/// (les étapes se suivent à chaque image).
+pub const NOUVEAU_CHARGEMENT: Duration = Duration::from_secs(2);
+
+/// Pourquoi l'intervalle a été remis.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Fin {
+    /// `WorldView_PostLoadUpdate` n'a plus rien à cuire.
+    Cuit,
+    /// [`PLAFOND`] atteint.
+    Plafond,
+}
+
+/// La fenêtre sans pause d'un chargement.
+#[derive(Clone, Copy, Debug)]
+pub struct Fenetre {
+    /// Valeur trouvée dans la globale (`LoadGameTickIntervalInMS`), remise à la fin.
+    sauve: u32,
+    debut: Instant,
+    dernier: Instant,
+    /// `vsync::debuts()` à l'ouverture.
+    generation: Option<u64>,
+    pas: u32,
+    fini: bool,
+}
+
+/// Avant un appel : la valeur à écrire dans la globale (`None` : n'y rien écrire).
+pub fn avant(f: &mut Option<Fenetre>, actuel: u32, generation: Option<u64>, t: Instant) -> Option<u32> {
+    let nouveau = match f {
+        None => true,
+        Some(x) => generation != x.generation || t.saturating_duration_since(x.dernier) > NOUVEAU_CHARGEMENT,
+    };
+    if nouveau {
+        // 0 trouvé : soit `LoadGameTickIntervalInMS 0`, soit un chargement interrompu pendant la
+        // fenêtre précédente ; on garde alors la valeur sauvée d'avant.
+        let sauve = if actuel == 0 { f.map_or(0, |x| x.sauve) } else { actuel };
+        *f = Some(Fenetre { sauve, debut: t, dernier: t, generation, pas: 0, fini: false });
+    }
+    let x = f.as_mut()?;
+    x.dernier = t;
+    if x.fini {
+        return None;
+    }
+    x.pas += 1;
+    // Plafond atteint : cette étape garde la pause ; `apres` ferme la fenêtre.
+    if t.saturating_duration_since(x.debut) >= PLAFOND {
+        return Some(x.sauve);
+    }
+    Some(0)
+}
+
+/// Après un appel : la valeur à remettre et pourquoi, une seule fois par chargement.
+pub fn apres(f: &mut Option<Fenetre>, encore: bool, t: Instant) -> Option<(u32, Fin)> {
+    let x = f.as_mut()?;
+    if x.fini {
+        return None;
+    }
+    let fin = if !encore {
+        Fin::Cuit
+    } else if t.saturating_duration_since(x.debut) >= PLAFOND {
+        Fin::Plafond
+    } else {
+        return None;
+    };
+    x.fini = true;
+    Some((x.sauve, fin))
+}
+
+static TICK: AtomicUsize = AtomicUsize::new(0);
+static ORIG: AtomicUsize = AtomicUsize::new(0);
+static FENETRE: Mutex<Option<Fenetre>> = Mutex::new(None);
+
+type PostLoad = unsafe extern "system" fn(usize, f32, usize, usize) -> u64;
+
+/// À la place de `WorldView_PostLoadUpdate(ecx, xmm1)` : `rcx`, `xmm1`, `r8` et `r9` passent tels
+/// quels (le 2e argument est un flottant, `rdx` ne porte rien), et `rax` revient tel quel.
+unsafe extern "system" fn relais(a: usize, b: f32, c: usize, d: usize) -> u64 {
+    let tick = TICK.load(Ordering::Relaxed) as *mut u32;
+    let mut f = FENETRE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(v) = avant(&mut f, std::ptr::read_volatile(tick), crate::vsync::debuts(), Instant::now()) {
+        std::ptr::write_volatile(tick, v);
+    }
+    drop(f);
+    let orig: PostLoad = std::mem::transmute(ORIG.load(Ordering::Relaxed));
+    let r = orig(a, b, c, d);
+    let mut f = FENETRE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((v, fin)) = apres(&mut f, r as u8 != 0, Instant::now()) {
+        std::ptr::write_volatile(tick, v);
+        crate::vsync::fin_levee();
+        if let Some(x) = *f {
+            log(&format!(
+                "post-load: {} step(s) without pause in {} ms, tick interval back to {} ms ({})",
+                x.pas,
+                x.dernier.duration_since(x.debut).as_millis(),
+                v,
+                match fin {
+                    Fin::Cuit => "terrain done",
+                    Fin::Plafond => "time cap",
+                }
+            ));
+        }
+    }
+    r
+}
 
 /// `mov rax,[rip+app] ; mov ecx,[rax+champ] ; call fixe_tick` dans `LoadGameViewState::Begin()` et
 /// `::End()` ; `fixe_tick` est `mov [rip+tick],ecx ; ret`.
@@ -106,16 +229,11 @@ unsafe fn poser(exe_base: usize) -> Result<(usize, usize), String> {
     let tick = tick_global(exe_base)?;
     let (call, func) = postload_call(exe_base)?;
     let page = patch::alloc_near(call).ok_or("no page near the exe")?;
-    // mov dword [rip+tick], 0 ; jmp [rip+0] ; dq WorldView_PostLoadUpdate
-    let mut code = vec![0xc7, 0x05];
-    let rel = (tick as i64 - (page as i64 + 10)) as i32;
-    if (page as i64 + 10 + rel as i64) as usize != tick {
-        return Err("tick global out of range".into());
-    }
-    code.extend_from_slice(&rel.to_le_bytes());
-    code.extend_from_slice(&0u32.to_le_bytes());
-    code.extend_from_slice(&[0xff, 0x25, 0, 0, 0, 0]);
-    code.extend_from_slice(&(func as u64).to_le_bytes());
+    TICK.store(tick, Ordering::Relaxed);
+    ORIG.store(func, Ordering::Relaxed);
+    // jmp [rip+0] ; dq relais
+    let mut code = vec![0xff, 0x25, 0, 0, 0, 0];
+    code.extend_from_slice(&(relais as *const () as u64).to_le_bytes());
     std::ptr::copy_nonoverlapping(code.as_ptr(), page as *mut u8, code.len());
     win::FlushInstructionCache(win::GetCurrentProcess(), page as *const c_void, code.len());
     let r = patch::rel32(call, page).ok_or("page out of range")?;
@@ -135,7 +253,8 @@ pub fn install(exe_base: usize) {
     }
     match unsafe { poser(exe_base) } {
         Ok((call, tick)) => log(&format!(
-            "post-load: ticked continuously (call {:#x}, tick interval {:#x})",
+            "post-load: ticked continuously while the terrain bakes, {} s at most (call {:#x}, tick interval {:#x})",
+            PLAFOND.as_secs(),
             call - exe_base + 0x1_4000_0000,
             tick - exe_base + 0x1_4000_0000
         )),
@@ -152,6 +271,63 @@ mod tests {
         assert!(enabled(""));
         assert!(!enabled("pause_fin_chargement=off\n"));
         assert!(enabled("pause_fin_chargement=off\npause_fin_chargement=on\n"));
+    }
+
+    /// La fenêtre sans pause se ferme dès que le terrain est cuit, ne se rouvre pas dans le même
+    /// chargement, et rend la valeur trouvée.
+    #[test]
+    fn fenetre_fermee_quand_cuit() {
+        let t0 = Instant::now();
+        let ms = |n| t0 + Duration::from_millis(n);
+        let mut f = None;
+        assert_eq!(avant(&mut f, 16, Some(1), ms(0)), Some(0));
+        assert_eq!(apres(&mut f, true, ms(1)), None);
+        assert_eq!(avant(&mut f, 0, Some(1), ms(2)), Some(0));
+        assert_eq!(apres(&mut f, false, ms(3)), Some((16, Fin::Cuit)));
+        // Appels suivants du même chargement : rien n'est écrit, rien n'est remis.
+        assert_eq!(avant(&mut f, 33, Some(1), ms(4)), None);
+        assert_eq!(apres(&mut f, false, ms(5)), None);
+    }
+
+    /// Le terrain ne finit jamais : l'intervalle revient au plafond.
+    #[test]
+    fn fenetre_plafonnee() {
+        let t0 = Instant::now();
+        let mut f = None;
+        assert_eq!(avant(&mut f, 16, None, t0), Some(0));
+        let mut t = t0;
+        while t < t0 + PLAFOND - Duration::from_millis(10) {
+            t += Duration::from_millis(5);
+            assert_eq!(avant(&mut f, 0, None, t), Some(0));
+            assert_eq!(apres(&mut f, true, t), None);
+        }
+        t = t0 + PLAFOND;
+        assert_eq!(apres(&mut f, true, t), Some((16, Fin::Plafond)));
+        assert_eq!(avant(&mut f, 16, None, t + Duration::from_millis(5)), None);
+        // Plafond atteint avant l'appel : la pause revient pour cet appel, la fenêtre se ferme après.
+        let mut g = None;
+        avant(&mut g, 16, None, t0);
+        avant(&mut g, 0, None, t0 + PLAFOND / 2);
+        assert_eq!(avant(&mut g, 0, None, t0 + PLAFOND), Some(16));
+        assert_eq!(apres(&mut g, true, t0 + PLAFOND), Some((16, Fin::Plafond)));
+        assert_eq!(apres(&mut g, true, t0 + PLAFOND), None);
+    }
+
+    /// Nouveau chargement : par un nouveau `::Begin()`, ou par le silence sans ce détour. Un 0
+    /// trouvé reprend la valeur sauvée d'avant (chargement interrompu pendant la fenêtre).
+    #[test]
+    fn nouveau_chargement() {
+        let t0 = Instant::now();
+        let mut f = None;
+        avant(&mut f, 16, Some(1), t0);
+        apres(&mut f, false, t0);
+        assert_eq!(avant(&mut f, 16, Some(2), t0 + Duration::from_millis(100)), Some(0));
+        // Interrompu pendant la fenêtre (globale restée à 0), puis rechargé plus tard sans détour.
+        let mut g = None;
+        avant(&mut g, 16, None, t0);
+        let tard = t0 + NOUVEAU_CHARGEMENT + Duration::from_millis(1);
+        assert_eq!(avant(&mut g, 0, None, tard), Some(0));
+        assert_eq!(apres(&mut g, false, tard), Some((16, Fin::Cuit)));
     }
 
     const EXE_DIR: &str = r"C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI\Base\Binaries\Win64Steam";

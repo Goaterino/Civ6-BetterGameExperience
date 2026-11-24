@@ -74,6 +74,13 @@ unsafe extern "system" fn fin(a: usize, b: usize, c: usize, d: usize) -> usize {
     r
 }
 
+/// Fin anticipée de la levée : `fin_chargement` l'appelle quand il remet l'intervalle des ticks
+/// (terrain cuit ou plafond). La VSync revient avec la limite d'images du chargement, au lieu
+/// d'attendre `::End()` ; le prochain `::Begin()` la relève.
+pub fn fin_levee() {
+    CHARGEMENT.store(false, Ordering::Release);
+}
+
 /// `IDXGISwapChain::Present` (vtable +0x40), intervalle 0 au lieu de 1 pendant le chargement.
 unsafe extern "system" fn presenter(chaine: *mut c_void, intervalle: u32, drapeaux: u32) -> i32 {
     let intervalle = intervalle_voulu(intervalle, CHARGEMENT.load(Ordering::Acquire));

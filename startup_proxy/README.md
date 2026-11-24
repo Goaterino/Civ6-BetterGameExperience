@@ -805,7 +805,12 @@ Rechargements (options avancées, section Performances) :
   [analyses/chargement](../analyses/chargement/README.md)). `bdd` laisse alors la localisation
   intacte (avec `textes_gardes`).
 - [fin_chargement](src/fin_chargement.rs) (`pause_fin_chargement`) : la phase d'après chargement
-  (cache du terrain) n'attend plus 16 ms entre ses ticks.
+  (cache du terrain) n'attend plus 16 ms entre ses ticks. L'intervalle est remis dès que
+  `WorldView_PostLoadUpdate` n'a plus rien à cuire, au plus tard 3 s après le premier appel, et la
+  levée de VSync de `vsync` s'arrête au même moment (si le jeu l'avait demandée). En
+  0.14.0, il restait à 0 jusqu'à `LoadGameViewState::End()` : toute l'attente qui suivait sur
+  l'écran de chargement tournait sans pause, VSync levée, CPU à fond (plaintes de joueurs). Journal :
+  `post-load: N step(s) without pause in X ms, tick interval back to Y ms (terrain done|time cap)`.
 - [vsync](src/vsync.rs) (`vsync_chargement`) : aussi en DX11.
 
 Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
