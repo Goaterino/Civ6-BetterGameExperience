@@ -872,7 +872,19 @@ les builds de diagnostic, pour comparer avec le jeu d'origine) :
   n'a pas rechargé ; les préférences de grande stratégie de l'IA sont remises à zéro après la lecture,
   comme dans une nouvelle partie (Sejong gardait −75 % de points de prophète).
 
-Voir aussi `reparation_synchro` et `maths_communes` dans [startup_proxy](../startup_proxy/README.md).
+Côté client, avec un réglage (`relecture_fidele`, options avancées, section Performances, activé par défaut) : pas POL,
+un joueur peut le couper sans gêner les autres.
+
+- [relecture](src/relecture.rs) : quand l'hôte renvoie une variable d'AutoArchive (delta ou données
+  de création), le client la relit dans l'objet qu'il a déjà. Trois de ces lectures, écrites pour un
+  objet neuf, ne rendaient pas ce que l'hôte avait écrit : les opérations d'une unité et les boosts
+  suivis par l'IA (`AI::Research`, `AI::CultureAi`) s'ajoutaient à ceux déjà là, et un analyseur de
+  résolution du Congrès mondial remettait ses quatre derniers champs à zéro après les avoir lus. Les
+  listes sont vidées avant la lecture, la remise à zéro est sautée. Le chargement d'une partie, qui
+  lit dans des objets neufs, ne change pas.
+
+Voir aussi `reparation_synchro`, `relecture_sur_place` et `maths_communes` dans
+[startup_proxy](../startup_proxy/README.md).
 
 ## Tour d'un joueur absent qui reste fini (POL)
 

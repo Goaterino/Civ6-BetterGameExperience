@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="zh_Hans_CN">
 			<Text>在总督头衔、总督调任或伟人之后，无需调整公民，顶部栏也会更新。仅影响显示：不会不同步。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="zh_Hans_CN">
+			<Text>按原样重读修复的数据</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="zh_Hans_CN">
+			<Text>当主机重新发送不同步的数据时，游戏会完全按照主机写入的内容重新读取：单位行动和 AI 追踪的加速不再重复，世界议会分析保留其数值，AI 行为树保持链接，已与主机一致的数据保持不变（减少以完全重新载入告终的不同步）。即使其他玩家没有此版本也有效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="zh_Hans_CN">
 			<Text>在旗帜上显示建造者次数</Text>
 		</Row>

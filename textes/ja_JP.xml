@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ja_JP">
 			<Text>総督の称号、総督の移動、偉人の後に、市民を動かさなくても上部バーが更新されます。表示のみで、同期ずれは起きません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="ja_JP">
+			<Text>修復データを正確に再読み込み</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="ja_JP">
+			<Text>ホストが同期ずれしたデータを再送したとき、ゲームはホストが書いたとおりに正確に読み直します。ユニットの作戦やAIが追跡するブーストが二重にならず、世界会議の分析は値を保ち、AIの行動ツリーはリンクされたままで、すでにホストと同じデータには手を加えません（完全な再読み込みに至る同期ずれが減ります）。他のプレイヤーがこのバージョンでなくても機能します。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="ja_JP">
 			<Text>労働者の残り回数を旗に表示</Text>
 		</Row>

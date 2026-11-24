@@ -15,7 +15,8 @@
 //! `debordement`), `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_formations`, `ui_logement`, `ui_espions`, `ui_accord_quantites` et `ui_avancement` (on, voir `ui`),
 //! `ui_charges`, `ui_routes`, `ui_notifications`, `ui_bandeau`, `ui_politiques`, `ui_rapports` (on
 //! par défaut, voir `mods_ui`), `journal_chokepoints=on|off` (off, voir `journal_chokepoints`),
-//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`).
+//! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`),
+//! `relecture_fidele=on|off` (on, voir `relecture` ; côté client, pas POL).
 //! Les réglages de diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus
 //! qu'avec la feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. De même pour
 //! `unites_promises=on|count|off`, `visibilite_chargee`, `ecouteurs_charges`,
@@ -52,6 +53,7 @@ mod pings;
 mod pol;
 mod ports;
 mod production_modifiers;
+mod relecture;
 mod rendements;
 mod rendements_empire;
 mod spectateurs;
@@ -315,6 +317,9 @@ pub(crate) fn read_config() {
                 vision_guerre::set_enabled(v.trim() != "off");
             }
         }
+        if let Some(v) = line.trim().strip_prefix("relecture_fidele=") {
+            relecture::set_enabled(v.trim() != "off");
+        }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");
         }
@@ -390,6 +395,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             citoyens::on_proxy_unload();
             unites_promises::on_proxy_unload();
             partie_chargee::on_proxy_unload();
+            relecture::on_proxy_unload();
             congres::on_proxy_unload();
             spectateurs::on_proxy_unload();
             ports::on_proxy_unload();

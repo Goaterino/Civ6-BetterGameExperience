@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="de_DE">
 			<Text>Die obere Leiste aktualisiert sich nach einem Gouverneurstitel, einer Gouverneursversetzung oder einer Großen Persönlichkeit, ohne einen Bürger zu verschieben. Nur Anzeige: keine Desynchronisation.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="de_DE">
+			<Text>Reparierte Daten exakt zurücklesen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="de_DE">
+			<Text>Wenn der Host nicht synchrone Daten erneut sendet, liest das Spiel sie genau so, wie der Host sie geschrieben hat: Einheitenoperationen und von der KI verfolgte Boosts werden nicht mehr verdoppelt, Analysen des Weltkongresses behalten ihre Werte, die Verhaltensbäume der KI bleiben verknüpft und Daten, die bereits denen des Hosts entsprechen, bleiben unverändert (weniger Desynchronisationen, die mit einem vollständigen Neuladen enden). Funktioniert auch, wenn andere Spieler diese Version nicht haben.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="de_DE">
 			<Text>Ladungen der Handwerker auf ihrer Flagge</Text>
 		</Row>

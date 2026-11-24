@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ko_KR">
 			<Text>총독 칭호, 총독 이동, 위인 이후에 시민을 옮기지 않아도 상단 바가 갱신됩니다. 표시만 바뀌며 동기화 오류는 없습니다.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="ko_KR">
+			<Text>복구된 데이터를 그대로 다시 읽기</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="ko_KR">
+			<Text>호스트가 동기화가 어긋난 데이터를 다시 보내면, 게임은 호스트가 기록한 그대로 다시 읽습니다. 유닛 작전과 AI가 추적하는 부스트가 더 이상 두 배가 되지 않고, 세계 의회 분석은 값을 유지하며, AI 행동 트리는 연결된 상태로 남고, 이미 호스트와 같은 데이터는 건드리지 않습니다(전체 다시 불러오기로 끝나는 동기화 오류 감소). 다른 플레이어가 이 버전이 아니어도 작동합니다.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="ko_KR">
 			<Text>깃발에 건설자 건설력 표시</Text>
 		</Row>

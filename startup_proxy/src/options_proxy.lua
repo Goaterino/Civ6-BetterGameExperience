@@ -125,6 +125,11 @@ local PROXY_REGLAGES = {
 			{ "off", "LOC_BGD_OPT_CHOIX_DESACTIVE" },
 			{ "verifier", "LOC_BGD_OPT_CHOIX_VERIFICATION" },
 		} },
+	-- Correctif de désynchronisation côté client, pas POL : chaque joueur peut le couper sans
+	-- gêner les autres. Lu par le proxy de GameCore à chaque partie et par le proxy de démarrage au
+	-- lancement du jeu (relecture sur place) : son changement demande le redémarrage.
+	{ cle = "relecture_fidele", defaut = "on", demarrage = true,
+		choix = PROXY_ON_OFF },
 
 	{ titre = "LOC_BGD_OPT_TITRE_INTERFACE" },
 	-- Off : les ajouts d'interface (`nouveaute_ui`) absents du fichier sont coupés. À la

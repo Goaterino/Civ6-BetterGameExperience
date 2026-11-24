@@ -118,8 +118,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   chacun ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
   [docs/netcode](docs/netcode/README.md) ; archives désynchronisées réparées sur place par l'hôte
-  (`reparation_synchro`), partie rechargée identique à la partie en cours (`unites_promises`,
-  `partie_chargee`, correctifs POL) ;
+  (`reparation_synchro`), données renvoyées par l'hôte relues à l'identique chez le client
+  (`relecture`, `relecture_sur_place`), partie rechargée identique à la partie en cours
+  (`unites_promises`, `partie_chargee`, correctifs POL) ;
 - [macos](analyses/macos/README.md) : portage macOS, binaires du jeu inspectés (Mach-O universels,
   hardened runtime, GameCore chargé par `dlopen`) et essai de patch du code sur les machines macOS
   de la CI (passe, mais SIP y est désactivé : à refaire sur un Mac ordinaire) ;

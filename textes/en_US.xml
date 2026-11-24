@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="en_US">
 			<Text>The top bar updates after a governor title, a governor move or a great person, without changing a citizen. Display only: no desync.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="en_US">
+			<Text>Repaired data read back exactly</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="en_US">
+			<Text>When the host resends data that went out of sync, the game reads it back exactly as the host wrote it: unit operations and the boosts the AI tracks are no longer doubled, World Congress analyses keep their values, AI behavior trees stay linked, and data that already matches the host's is left untouched (fewer desyncs that end in a full reload). Works even if other players don't have this version.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="en_US">
 			<Text>Builder charges on their flag</Text>
 		</Row>

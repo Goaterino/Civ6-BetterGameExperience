@@ -269,6 +269,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="pt_BR">
 			<Text>A barra superior é atualizada após um título de governador, uma transferência de governador ou uma grande personalidade, sem mexer num cidadão. Apenas exibição: sem dessincronização.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="pt_BR">
+			<Text>Dados reparados relidos com exatidão</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="pt_BR">
+			<Text>Quando o anfitrião reenvia dados dessincronizados, o jogo os relê exatamente como o anfitrião os escreveu: as operações das unidades e os impulsos acompanhados pela IA não são mais duplicados, as análises do Congresso Mundial mantêm seus valores, as árvores de comportamento da IA continuam vinculadas e os dados que já coincidem com os do anfitrião não são alterados (menos dessincronizações que terminam em um recarregamento completo). Funciona mesmo que os outros jogadores não tenham esta versão.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="pt_BR">
 			<Text>Cargas dos construtores na bandeira</Text>
 		</Row>
