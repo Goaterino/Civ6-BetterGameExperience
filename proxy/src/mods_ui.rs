@@ -629,10 +629,48 @@ unsafe extern "C-unwind" fn lua_ping_sound(l: *mut c_void) -> i32 {
     0
 }
 
+/// `Civ6Proxy_PingPref(key)` → the integer saved for this `ping_*` key, or nothing.
+unsafe extern "C-unwind" fn lua_ping_pref(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let key = (h.to_lstring)(l, 1, std::ptr::null_mut());
+    if key.is_null() {
+        return 0;
+    }
+    match crate::pings::read_pref(&CStr::from_ptr(key).to_string_lossy()) {
+        Some(v) => {
+            (h.push_integer)(l, v);
+            1
+        }
+        None => 0,
+    }
+}
+
+/// `Civ6Proxy_PingPrefsSave(lines)`, lines `ping_*=integer` → 1, or nothing (error logged).
+unsafe extern "C-unwind" fn lua_ping_prefs_save(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let mut len = 0usize;
+    let p = (h.to_lstring)(l, 1, &mut len);
+    if p.is_null() {
+        return 0;
+    }
+    match crate::pings::save_prefs(&String::from_utf8_lossy(std::slice::from_raw_parts(p as *const u8, len))) {
+        Ok(()) => {
+            (h.push_integer)(l, 1);
+            1
+        }
+        Err(e) => {
+            log(&format!("pings : {e}"));
+            0
+        }
+    }
+}
+
 unsafe extern "C-unwind" fn installer(l: *mut c_void) -> i32 {
     if let Some(h) = hks() {
         for (name, f) in [(&b"Civ6Proxy_Charger\0"[..], lua_charger as LuaCFn), (&b"Civ6Proxy_FinRoute\0"[..], lua_fin_route as LuaCFn),
-                          (&b"Civ6Proxy_PingSound\0"[..], lua_ping_sound as LuaCFn)] {
+                          (&b"Civ6Proxy_PingSound\0"[..], lua_ping_sound as LuaCFn),
+                          (&b"Civ6Proxy_PingPref\0"[..], lua_ping_pref as LuaCFn),
+                          (&b"Civ6Proxy_PingPrefsSave\0"[..], lua_ping_prefs_save as LuaCFn)] {
             (h.push_closure)(l, f, 0, name.as_ptr() as *const c_char, 0);
             (h.set_field)(l, LUA_GLOBALSINDEX, name.as_ptr() as *const c_char);
         }

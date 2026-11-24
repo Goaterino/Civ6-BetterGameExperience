@@ -351,12 +351,16 @@ local function resetInput()
 end
 
 local function onReady()
+    -- The load may have emptied UserConfiguration after this context was built.
+    restorePingPrefs()
+    refreshBindings()
     Controls.BGD_PingMap:SetHide(false)
     ContextPtr:SetHide(false)
 end
 local function previewVolume()
     play(center)
 end
+restorePingPrefs()
 refreshBindings()
 LuaEvents.BGD_PingBindingsChanged.Add(refreshBindings)
 Events.InputActionStarted.Add(onActionStarted)
