@@ -18,8 +18,8 @@
 //! `delaunay_rapide=off|on|verifier` (on, voir `delaunay`), `depart_signaux=on|off` (off, voir `depart`), `ui_mesure_mouvements=on|off` (off, voir `ui`).
 //! Les réglages de diagnostic `ui_journal`, `ui_mesure_epingles` et `ui_diag_accords` ne sont lus
 //! qu'avec la feature `diag` (builds locaux) : la release l'omet, ils y restent sur off. De même pour
-//! `unites_promises=on|count|off`, `visibilite_chargee`, `ecouteurs_charges` et
-//! `preferences_chargees` (correctifs POL, toujours actifs en release, sans réglage joueur). Journal :
+//! `unites_promises=on|count|off`, `visibilite_chargee`, `ecouteurs_charges`,
+//! `preferences_chargees` et `vision_guerre` (correctifs POL, toujours actifs en release, sans réglage joueur). Journal :
 //! `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`, hors du dossier Logs du jeu.
 
 #![allow(non_snake_case)] // le nom de la DLL produite, BGD_GameCore_XP2.
@@ -59,6 +59,7 @@ mod tours;
 mod ui;
 #[allow(dead_code)] // RELEASE ne sert qu'au proxy de démarrage.
 mod version;
+mod vision_guerre;
 mod win;
 mod wmd;
 
@@ -310,6 +311,9 @@ pub(crate) fn read_config() {
             if let Some(v) = line.trim().strip_prefix("preferences_chargees=") {
                 partie_chargee::set_preferences(v.trim() != "off");
             }
+            if let Some(v) = line.trim().strip_prefix("vision_guerre=") {
+                vision_guerre::set_enabled(v.trim() != "off");
+            }
         }
         if let Some(v) = line.trim().strip_prefix("depart_signaux=") {
             depart::set_signaux(v.trim() == "on");
@@ -394,6 +398,7 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, reserve
             drop_slot::on_proxy_unload();
             absent_reactivation::on_proxy_unload();
             empilement::on_proxy_unload();
+            vision_guerre::on_proxy_unload();
             echange::on_proxy_unload();
             depart::on_proxy_unload();
             carte::on_proxy_unload();

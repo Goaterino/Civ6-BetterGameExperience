@@ -80,6 +80,7 @@ pub(crate) fn real_module() -> usize {
         crate::drop_slot::on_gamecore_loaded(h);
         crate::absent_reactivation::on_gamecore_loaded(h);
         crate::empilement::on_gamecore_loaded(h);
+        crate::vision_guerre::on_gamecore_loaded(h);
         crate::echange::on_gamecore_loaded(h);
         crate::depart::on_gamecore_loaded(h);
         crate::carte::on_gamecore_loaded();

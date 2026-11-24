@@ -105,6 +105,9 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   prédit par le salon (corrigé en local, pas encore publié) ;
 - [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
   et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
+- [vision_cites_etats](vision_cites_etats/README.md) : vision des unités d'une cité-État perdue quand
+  on en reprend la suzeraineté après une guerre (surtout en Teamer), listes de partage suspendu
+  laissées par la paix (correctif POL, essayé sur une sauvegarde) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),

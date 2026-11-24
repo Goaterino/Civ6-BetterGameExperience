@@ -739,7 +739,7 @@ mod tests {
         lib += include_str!("maths_communes.rs");
         // Correctifs de stabilité (POL) : pas de réglage joueur. Leurs clés ne sont lues que par les
         // builds de diagnostic (feature `diag`), pour comparer avec le jeu d'origine.
-        const SANS_ONGLET: [&str; 5] = ["unites_promises", "visibilite_chargee", "ecouteurs_charges", "preferences_chargees", "maths_communes"];
+        const SANS_ONGLET: [&str; 6] = ["unites_promises", "visibilite_chargee", "ecouteurs_charges", "preferences_chargees", "maths_communes", "vision_guerre"];
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();
         let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
         assert!(read.len() >= 12, "{read:?}");
