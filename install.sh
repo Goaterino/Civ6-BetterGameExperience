@@ -3,14 +3,17 @@
 #
 #   curl -fsSL https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest/download/install.sh | sh
 #
-# Downloads the static Linux binary to a temporary directory and runs its `install`
-# command. The binary copies itself to ${XDG_DATA_HOME:-~/.local/share}/BetterGameExperience
-# and verifies the signed manifest and every file it installs; this script does nothing
-# security-relevant beyond fetching it over HTTPS. The temporary download is deleted afterwards.
+# Downloads the static Linux binary and its signature (`<binary>.sig`, ed25519, made by the release
+# workflow with the key that also signs the manifest) to a temporary directory, checks the signature
+# with openssl, then runs the binary's `install` command. The binary copies itself to
+# ${XDG_DATA_HOME:-~/.local/share}/BetterGameExperience and verifies the signed manifest and every
+# file it installs. The temporary download is deleted afterwards.
 #
 # Extra arguments are passed to the binary:   sh install.sh --game-dir /path/to/game
 # Uninstall (removes the proxies from the game, then the installer's own files):
 #   curl -fsSL https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest/download/install.sh | sh -s -- uninstall
+# Check a binary already downloaded, against `<file>.sig` next to it:
+#   sh install.sh verify BetterGameExperience-linux-x86_64
 # Environment:
 #   BGE_CHANNEL=prerelease   install from the pre-release channel instead of the latest release.
 #                            The channel is saved for in-game updates; running the script without
@@ -20,16 +23,42 @@ set -eu
 REPO="Goaterino/Civ6-BetterGameExperience"
 ASSET="BetterGameExperience-linux-x86_64"
 
-command=install
-if [ "${1:-}" = "uninstall" ]; then
-    command=uninstall
-    shift
-fi
+# Public key of the release signatures: release/public_key.txt in PEM form
+# (`python release/manifest.py public-pem`; the CI checks that both match).
+PUBLIC_KEY_PEM="-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAxQxNrSEW5GiVuTN+x+EAjZrnHBTHtgvwpXqJlU+jdhw=
+-----END PUBLIC KEY-----"
 
 die() {
     printf 'install.sh: %s\n' "$*" >&2
     exit 1
 }
+
+# verify_signature <file> <base64 signature file> <work dir>: ed25519 over the file's exact bytes.
+# OpenSSL 3 (`pkeyutl -rawin`); 1.1.1 cannot verify ed25519 from the command line.
+verify_signature() {
+    command -v openssl >/dev/null 2>&1 || die "openssl is required to verify the installer's signature."
+    printf '%s\n' "$PUBLIC_KEY_PEM" >"$3/key.pem"
+    openssl base64 -d -A -in "$2" -out "$3/sig.bin" 2>/dev/null || die "unreadable signature: $2"
+    openssl pkeyutl -verify -pubin -inkey "$3/key.pem" -rawin -in "$1" -sigfile "$3/sig.bin" >/dev/null 2>&1 ||
+        die "invalid signature for $1: the file was not published by BetterGameExperience (or openssl is older than 3.0)."
+}
+
+command=install
+case "${1:-}" in
+    uninstall)
+        command=uninstall
+        shift
+        ;;
+    verify)
+        [ $# -eq 2 ] || die "usage: sh install.sh verify <file>"
+        work=$(mktemp -d "${TMPDIR:-/tmp}/bge-verify.XXXXXX")
+        trap 'rm -rf "$work"' EXIT HUP INT TERM
+        verify_signature "$2" "$2.sig" "$work"
+        printf 'Valid signature: %s\n' "$2"
+        exit 0
+        ;;
+esac
 
 [ "$(uname -s)" = "Linux" ] || die "Linux only (found $(uname -s))."
 case "$(uname -m)" in
@@ -44,10 +73,11 @@ elif command -v wget >/dev/null 2>&1; then
 else
     die "curl or wget is required."
 fi
+command -v openssl >/dev/null 2>&1 || die "openssl is required to verify the installer's signature."
 
 # Reads the GitHub API release listing on stdin and prints the download URL of $ASSET from the
 # published release with the highest version number, pre-releases included. Same choice as the
-# installer (version_key in updater_linux/src/release.rs) and the startup proxy's update check
+# installer (version_key in updater/src/release.rs) and the startup proxy's update check
 # (parse_releases in startup_proxy/src/maj.rs) on the pre-release channel. GitHub sorts the list
 # by date, so its first entry can be older. Order: X.Y.Z numerically, then a pre-release
 # (vX.Y.Z-rc.1) before the final release of the same number, then suffixes as text.
@@ -84,6 +114,9 @@ bin="$tmp/BetterGameExperience"
 printf 'Downloading %s\n' "$url"
 fetch "$url" >"$bin" || die "download failed."
 [ -s "$bin" ] || die "downloaded file is empty."
+fetch "$url.sig" >"$bin.sig" || die "download of the signature failed."
+# Before chmod: an unsigned file is never made executable.
+verify_signature "$bin" "$bin.sig" "$tmp"
 chmod 700 "$bin"
 
 # Not exec: the trap must still remove the temporary directory.

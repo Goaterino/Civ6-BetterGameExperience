@@ -97,7 +97,7 @@ fn config_enabled(text: &str) -> bool {
 
 /// Canal choisi dans l'installeur (updater/src/release.rs) : `prerelease`, sinon release.
 fn prerelease_channel() -> bool {
-    // Under Wine, the Linux installer keeps its channel in its own directory (updater_linux/src/release.rs).
+    // Under Wine, the Linux installer keeps its channel in its own directory (updater/src/release.rs, data_dir).
     if crate::wine::is_wine() {
         return crate::wine::data_dir()
             .and_then(|d| std::fs::read_to_string(d.join("canal.txt")).ok())
@@ -169,7 +169,7 @@ fn newer(latest: &str, current: &str) -> bool {
 }
 
 /// L'installeur se copie là à chaque installation (updater/src/main.rs).
-/// Under Wine: the Linux installer's `bge-launch.sh` script (updater_linux/src/main.rs), which starts
+/// Under Wine: the Linux installer's `bge-launch.sh` script (updater/src/linux/app.rs), which starts
 /// it outside the game. The binary itself is never launched from here: Wine would take this static
 /// ELF for one of its own modules.
 fn installer() -> Option<PathBuf> {

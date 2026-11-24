@@ -10,6 +10,9 @@ téléchargé. La clé privée vit hors du dépôt et dans le secret GitHub BGD_
     python release/manifest.py sign dist/manifest.json          (clé dans $BGD_SIGNING_KEY)
     python release/manifest.py verify dist/manifest.json
     python release/manifest.py rehash dist/manifest.json        (après la signature Authenticode)
+    python release/manifest.py sign-file dist/BetterGameExperience-linux-x86_64   (installeur Linux)
+    python release/manifest.py verify-file dist/BetterGameExperience-linux-x86_64
+    python release/manifest.py public-pem                       (clé publique embarquée par install.sh)
 """
 
 import argparse
@@ -21,6 +24,7 @@ import re
 import sys
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -87,14 +91,8 @@ def rehash(args):
 
 
 def sign(args):
-    seed = os.environ.get("BGD_SIGNING_KEY")
-    if not seed:
-        sys.exit("BGD_SIGNING_KEY absente.")
-    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(seed.strip()))
-    if key.public_key().public_bytes_raw() != base64.b64decode(PUBLIC_KEY.read_text().strip()):
-        sys.exit(f"BGD_SIGNING_KEY ne correspond pas à {PUBLIC_KEY}.")
     data = Path(args.manifest).read_bytes()
-    Path(args.manifest + ".sig").write_text(base64.b64encode(key.sign(data)).decode() + "\n")
+    Path(args.manifest + ".sig").write_text(base64.b64encode(_signing_key().sign(data)).decode() + "\n")
     print(f"Signé : {args.manifest}.sig")
 
 
@@ -107,6 +105,38 @@ def verify(args):
         if hashlib.sha256((manifest.parent / f["name"]).read_bytes()).hexdigest() != f["sha256"]:
             sys.exit(f"SHA-256 différent : {f['name']}")
     print("Signature et SHA-256 valides.")
+
+
+def _signing_key():
+    seed = os.environ.get("BGD_SIGNING_KEY")
+    if not seed:
+        sys.exit("BGD_SIGNING_KEY absente.")
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(seed.strip()))
+    if key.public_key().public_bytes_raw() != base64.b64decode(PUBLIC_KEY.read_text().strip()):
+        sys.exit(f"BGD_SIGNING_KEY ne correspond pas à {PUBLIC_KEY}.")
+    return key
+
+
+def sign_file(args):
+    """Signature ed25519 d'un fichier hors manifeste (l'installeur Linux), dans `<fichier>.sig` en
+    base64 : install.sh la vérifie avec openssl avant de lancer le binaire. Le manifeste ne peut pas
+    lister ce fichier : un installeur déjà distribué refuse tout manifeste qui liste plus que les deux
+    DLL."""
+    data = Path(args.file).read_bytes()
+    Path(args.file + ".sig").write_text(base64.b64encode(_signing_key().sign(data)).decode() + "\n")
+    print(f"Signé : {args.file}.sig")
+
+
+def verify_file(args):
+    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(PUBLIC_KEY.read_text().strip()))
+    pub.verify(base64.b64decode(Path(args.file + ".sig").read_text().strip()), Path(args.file).read_bytes())
+    print(f"Signature valide : {args.file}")
+
+
+def public_pem(_args):
+    """La clé publique au format PEM (SubjectPublicKeyInfo), celle qu'install.sh embarque."""
+    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(PUBLIC_KEY.read_text().strip()))
+    print(pub.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode(), end="")
 
 
 def main():
@@ -129,6 +159,14 @@ def main():
     p = sub.add_parser("verify")
     p.add_argument("manifest")
     p.set_defaults(func=verify)
+    p = sub.add_parser("sign-file")
+    p.add_argument("file")
+    p.set_defaults(func=sign_file)
+    p = sub.add_parser("verify-file")
+    p.add_argument("file")
+    p.set_defaults(func=verify_file)
+    p = sub.add_parser("public-pem")
+    p.set_defaults(func=public_pem)
     args = parser.parse_args()
     args.func(args)
 

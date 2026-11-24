@@ -22,7 +22,7 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   Cloudflare qui reçoit les rapports et les publie dans le forum Discord, et
   [ANALYSE.md](rapport_worker/ANALYSE.md) : récupérer un rapport (`rapports.ps1`) et l'analyser ;
 - [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe` et l'installeur
-  Linux ([updater_linux](updater/README.md#linux-proton), [install.sh](install.sh)), et [release](release/README.md) :
+  Linux (même crate, [Linux](updater/README.md#linux-proton), [install.sh](install.sh)), et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
   [cascade d'une déclaration de guerre](rollover/cascade_guerre.md) ;

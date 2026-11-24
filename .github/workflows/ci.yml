@@ -1,6 +1,7 @@
 # Tests à chaque push et pull request (SOMMAIRE.md, « Tests continus ») : les trois crates Rust sur
 # Windows, comme le workflow de release, puis les tests Lua, ceux du relais des rapports et les textes
-# sur Linux. Sans secret ni écriture : les tests Lua qui ont besoin des fichiers du jeu sont sautés.
+# sur Linux, avec l'installeur compilé pour Linux et install.sh. Sans secret ni écriture : les tests Lua qui ont
+# besoin des fichiers du jeu sont sautés.
 name: ci
 
 on:
@@ -63,8 +64,14 @@ jobs:
       - name: Textes
         run: python3 textes/gen_textes.py --check --strict
 
-      - name: Linux installer
-        run: cd updater_linux && cargo test --locked
+      # La crate de l'installeur, compilée pour Linux (la partie Windows est testée dans le job rust).
+      - name: Installeur Linux
+        run: cd updater && cargo test --locked
 
-      - name: install.sh syntax
-        run: sh -n install.sh
+      # Syntaxe d'install.sh, clé publique embarquée = release/public_key.txt, et vérification de la
+      # signature du binaire (acceptée, puis refusée pour un fichier modifié ou une autre clé).
+      - name: install.sh
+        run: |
+          sh -n install.sh
+          pip install cryptography
+          sh release/test_install_sh.sh

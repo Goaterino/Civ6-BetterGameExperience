@@ -1,7 +1,7 @@
 //! Wine (Proton) detection and conversion between Windows and Unix paths.
 //!
 //! Under Wine, the game runs in a prefix where the Windows installer is useless: updates go through
-//! the Linux installer (`updater_linux/`), placed outside the prefix in
+//! the Linux installer (`updater/`, built for Linux), placed outside the prefix in
 //! `$XDG_DATA_HOME/BetterGameExperience` (`~/.local/share/` by default). Wine passes the Unix
 //! environment to its processes and exposes the whole filesystem as drive `Z:`.
 

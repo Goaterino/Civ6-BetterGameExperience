@@ -1,7 +1,7 @@
 //! BetterGameExperience (Linux): installs, updates, repairs or removes the BetterGameExperience
 //! proxies in Civilization VI under Steam Play (Proton), from the GitHub releases.
-//! Same structure as updater/src/main.rs (the release and install logic is copied from it), but
-//! command-line only: no window, no administrator.
+//! Same structure as `windows/app.rs`, with the same release and install logic (`release`,
+//! `install`, shared by both), but command-line only: no window, no administrator.
 //!
 //!   BetterGameExperience                              menu (in a terminal)
 //!   BetterGameExperience status                       installation status
@@ -20,28 +20,16 @@
 //! The Steam launch option (`localconfig.vdf`) is never modified here: `launch-option` gives the
 //! player the steps.
 
-mod game;
-mod http;
-mod install;
-mod lang;
-mod launch;
-#[path = "../../proxy/src/noms.rs"]
-mod noms;
-mod release;
-mod sys;
-mod textes;
-mod ui;
-mod vdf;
-
 use std::fs;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use crate::{game, install, lang, launch, release, sys, ui};
 use install::{Action, State};
 use lang::{f, t};
-use textes as tx;
+use crate::textes as tx;
 use ui::Icon;
 
 /// To enter in Civilization VI's launch options: without `winmm=n,b`, Wine loads its own `winmm` and
@@ -69,7 +57,7 @@ fi
 exec \"$dir/BetterGameExperience\" \"$@\" </dev/null >/dev/null 2>&1
 ";
 
-fn main() {
+pub fn main() {
     lang::init();
     let mut args: Vec<String> = std::env::args().skip(1).collect();
     let yes = take_flag(&mut args, "--yes");

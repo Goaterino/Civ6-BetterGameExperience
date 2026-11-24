@@ -9,6 +9,10 @@
 fn main() {
     println!("cargo:rerun-if-changed=ressources");
     println!("cargo:rerun-if-env-changed=BGD_RELEASE");
+    // Ressources Windows seulement : le binaire Linux n'en a pas.
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
+        return;
+    }
 
     let release = std::env::var("BGD_RELEASE").unwrap_or_default();
     let numbers: Vec<u16> = release.split(['.', '-']).take(3).map_while(|n| n.parse().ok()).collect();

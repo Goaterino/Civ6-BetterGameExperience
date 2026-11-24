@@ -9,7 +9,6 @@ netcode/runs/
 map_pins/runs/
 wonder_queue/runs/
 /updater/target/
-/updater_linux/target/
 empire_yields/runs/
 analyses/lobby/runs/
 /rapport_worker/node_modules/

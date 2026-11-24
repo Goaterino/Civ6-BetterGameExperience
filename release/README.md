@@ -14,6 +14,9 @@ fichiers compilés par le workflow, sans les recompiler.
 | `BetterGameExperience_V<version>.exe` | l'installeur ([updater/](../updater/README.md)), hors manifeste : c'est lui qui le lit |
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |
+| `BetterGameExperience-linux-x86_64` | l'installeur Linux (même crate, [updater/](../updater/README.md#linux-proton)), hors manifeste |
+| `BetterGameExperience-linux-x86_64.sig` | sa signature ed25519 (même clé, `manifest.py sign-file`), en base64 : `install.sh` la vérifie avec openssl avant de le lancer. `signer.ps1` ne touche ni l'un ni l'autre |
+| `install.sh` | télécharge l'installeur Linux et sa signature, la vérifie, puis lance `install` (`curl … \| sh`) |
 
 Les scripts Lua et XML sont compilés dans les DLL (`include_str!`) : aucun autre fichier à installer.
 Les images et sons des signaux d'équipe (`ping_assets/`) sont embarqués dans `winmm.dll`

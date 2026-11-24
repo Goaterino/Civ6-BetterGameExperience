@@ -11,11 +11,14 @@ on:
     tags: ["v*.*.*"]
   workflow_dispatch:
 
+# Lecture seule par défaut : les jobs de compilation exécutent les build scripts des crates (ring
+# compile du C) et n'ont pas à écrire dans le dépôt. Seul le job `release`, qui crée le brouillon,
+# reçoit `contents: write`.
 permissions:
-  contents: write
+  contents: read
 
 # One build job per platform, each uploading a `<platform>-dist` artifact; the release job merges
-# them, signs the manifest and creates the draft.
+# them, signs the manifest and the Linux installer, and creates the draft.
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -29,11 +32,12 @@ jobs:
           sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Tests
-        run: cd updater_linux && cargo test --release --locked
+        run: cd updater && cargo test --release --locked
 
       - name: Compilation
         run: |
-          cd updater_linux && cargo build --release --locked --target x86_64-unknown-linux-musl
+          # Même crate que l'installeur Windows (updater/src/main.rs), compilée pour Linux.
+          cd updater && cargo build --release --locked --target x86_64-unknown-linux-musl
           mkdir -p ../linux-dist
           cp target/x86_64-unknown-linux-musl/release/BetterGameExperience ../linux-dist/BetterGameExperience-linux-x86_64
           cp ../install.sh ../linux-dist/install.sh
@@ -102,6 +106,8 @@ jobs:
   release:
     needs: [linux, windows]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
 
@@ -136,6 +142,11 @@ jobs:
           python release/manifest.py build --version "$v" --out dist/manifest.json dist
           python release/manifest.py sign dist/manifest.json
           python release/manifest.py verify dist/manifest.json
+          # Installeur Linux : hors manifeste, signé à part ; install.sh vérifie cette signature avec
+          # openssl avant de le lancer. signer.ps1 ne le touche pas : la signature reste valide.
+          python release/manifest.py sign-file dist/BetterGameExperience-linux-x86_64
+          python release/manifest.py verify-file dist/BetterGameExperience-linux-x86_64
+          sh install.sh verify dist/BetterGameExperience-linux-x86_64
 
       - uses: actions/upload-artifact@v7
         with:

@@ -5,15 +5,20 @@
 //!
 //! Jusqu'à la v0.3.0, chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
 //! L'installation et la désinstallation remettent ces originaux en place.
+//!
+//! Commun à Windows et Linux ; seul `run` diffère : relance en administrateur sous Windows, erreur
+//! qui nomme le dossier sous Linux.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[cfg(windows)]
 use crate::game;
 use crate::lang::f;
 use crate::textes as tx;
 use crate::noms;
 use crate::release::{self, Manifest};
+#[cfg(windows)]
 use crate::win;
 
 pub struct Target {
@@ -45,7 +50,8 @@ const MEDIAS: [&str; 13] = [
 /// Marques des anciens proxys, posés sous le nom des originaux.
 const ANCIENNES_MARQUES: [&[u8]; 2] = [b"RolloverProxyStatus", b"StartupProxyStatus"];
 
-/// Fichier où le processus administrateur laisse son erreur.
+/// Fichier où le processus administrateur laisse son erreur (Windows).
+#[cfg(windows)]
 const ERROR_FILE: &str = "erreur.txt";
 
 #[derive(Clone, Copy, PartialEq)]
@@ -126,8 +132,9 @@ pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
 
 /// Installe la release téléchargée dans `work`, ou retire les proxys ; en administrateur si le
 /// dossier du jeu n'est pas modifiable (Program Files).
+#[cfg(windows)]
 pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
-    if writable(game) {
+    if not_writable(game).is_none() {
         return apply(action, game, work);
     }
     let _ = fs::remove_file(work.join(ERROR_FILE));
@@ -143,8 +150,19 @@ pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     }
 }
 
+/// Linux : jamais de `sudo`. Un dossier du jeu en lecture seule (disque monté en lecture seule,
+/// bibliothèque appartenant à root, permissions NTFS) est une erreur qui le nomme.
+#[cfg(unix)]
+pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
+    if let Some(dir) = not_writable(game) {
+        return Err(f(tx::LINUX_FOLDER_NOT_WRITABLE_X, &[&dir.display()]));
+    }
+    apply(action, game, work)
+}
+
 /// Point d'entrée du processus administrateur : son erreur va dans `work`. Ses arguments viennent
 /// du processus utilisateur : le dossier du jeu est revérifié avant toute écriture.
+#[cfg(windows)]
 pub fn apply_elevated(action: &str, work: &Path, game: &Path) -> i32 {
     let action = if action == "uninstall" { Action::Uninstall } else { Action::Install };
     let result = if game::is_game_dir(game) {
@@ -173,12 +191,13 @@ fn apply(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     }
 }
 
-fn writable(game: &Path) -> bool {
-    TARGETS.iter().all(|t| {
-        let probe = game.join(t.dest).join(".bgd_test");
+/// Le premier dossier de destination où l'on ne peut pas écrire, s'il y en a un.
+fn not_writable(game: &Path) -> Option<PathBuf> {
+    TARGETS.iter().map(|t| game.join(t.dest)).find(|dir| {
+        let probe = dir.join(".bgd_test");
         let ok = fs::write(&probe, b"").is_ok();
         let _ = fs::remove_file(&probe);
-        ok
+        !ok
     })
 }
 
@@ -402,6 +421,33 @@ mod tests {
         fs::remove_dir_all(dir).unwrap();
     }
 
+    /// Linux : un dossier du jeu en lecture seule est nommé dans l'erreur, sans `sudo`.
+    #[cfg(unix)]
+    #[test]
+    fn dossier_en_lecture_seule_nomme() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = game("lecture_seule", &[]);
+        let win64 = dir.join("DLC/Expansion2/Binaries/Win64");
+        fs::set_permissions(&win64, fs::Permissions::from_mode(0o555)).unwrap();
+        // root écrit quand même : le test ne vérifie alors rien.
+        if let Some(refused) = not_writable(&dir) {
+            assert_eq!(refused, win64);
+            let err = run(Action::Install, &dir, &dir).unwrap_err();
+            assert!(err.contains(&win64.display().to_string()), "{err}");
+        }
+        fs::set_permissions(&win64, fs::Permissions::from_mode(0o755)).unwrap();
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn dossiers_modifiables() {
+        let dir = game("modifiable", &[]);
+        assert_eq!(not_writable(&dir), None);
+        assert!(!dir.join("DLC/Expansion2/Binaries/Win64/.bgd_test").exists(), "sonde retirée");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[cfg(windows)]
     #[test]
     fn administrateur_hors_du_jeu() {
         let work = std::env::temp_dir().join(format!("bgd_install_work_{}", std::process::id()));

@@ -127,13 +127,19 @@ $env:BGD_DIST = "C:\...\dist"; .\target\release\BetterGameExperience.exe --game-
 
 ## Linux (Proton)
 
-[updater_linux/](../updater_linux/) : l'installeur pour le jeu Windows lancé par Steam Play (Proton).
+La même crate compile aussi l'installeur Linux, pour le jeu Windows lancé par Steam Play (Proton).
 Binaire statique (`x86_64-unknown-linux-musl`), publié avec chaque release sous le nom
-`BetterGameExperience-linux-x86_64`, à côté de [install.sh](../install.sh), qui le télécharge et
-lance `install` (`curl -fsSL …/releases/latest/download/install.sh | sh`). Sa logique de release,
-d'installation et de langue est copiée d'ici (`release.rs`, `install.rs`, `lang.rs`, et `textes.rs`
-généré par [textes/gen_textes.py](../textes/gen_textes.py)) : même manifeste signé, mêmes contrôles,
-mêmes états. Ce qui change :
+`BetterGameExperience-linux-x86_64`, avec sa signature `BetterGameExperience-linux-x86_64.sig`
+(ed25519, même clé que le manifeste, faite par le workflow de release) et [install.sh](../install.sh).
+`install.sh` télécharge le binaire et sa signature, vérifie la signature avec `openssl` (3.0 ou plus)
+et lance `install` (`curl -fsSL …/releases/latest/download/install.sh | sh`). Le binaire n'est pas
+dans le manifeste : un installeur déjà distribué refuse tout manifeste qui liste plus que les deux DLL.
+
+Organisation du code ([src/main.rs](src/main.rs)) : `release.rs`, `install.rs`, `lang.rs` et
+`textes.rs` (généré par [textes/gen_textes.py](../textes/gen_textes.py)) sont communs aux deux
+systèmes, avec quelques `#[cfg]` : même manifeste signé, mêmes contrôles, mêmes états. L'interface
+et le système sont dans `src/windows/` (TaskDialog, WinHTTP, registre, élévation) et `src/linux/`
+(ligne de commande, ureq, racines de Steam, `vdf.rs`, `launch.rs`). Ce qui change sous Linux :
 
 - **En ligne de commande** : `status`, `install`, `uninstall`, `launch-option`,
   `channel release|prerelease`, `lang <code>`, avec `--game-dir "<dossier>"` et `--yes`. Sans
@@ -164,4 +170,7 @@ mêmes états. Ce qui change :
   ignore donc un `steam://rungameid` envoyé de là. Le joueur relance le jeu depuis Steam.
 - **Réseau** : ureq (rustls, certificats racine embarqués) au lieu de WinHTTP.
 
-Tests : `cd updater_linux && cargo test` (aussi dans le workflow ci).
+Tests : `cargo test` dans `updater/`, sous Windows et sous Linux (les deux dans le workflow ci).
+Les modules communs, `vdf.rs` et la lecture des locales ont leurs tests sur les deux systèmes.
+Depuis Windows, la partie Linux se vérifie avec `cargo check --target x86_64-unknown-linux-musl`
+(ring demande un compilateur C pour la cible). Signature d'install.sh : `sh release/test_install_sh.sh`.
