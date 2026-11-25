@@ -73,8 +73,8 @@ unsafe extern "C" fn loadbuffer(l: *mut c_void, buff: *const c_char, size: usize
         "options.lua" => (super::options::options_lua(l, source), "options : onglet BetterGameExperience et limiteur d'images ajoutés"),
         super::pol::SCRIPT_CHARGEMENT => (super::pol::chargement_lua(l, source), "chargement : correctifs POL des parties locales ajoutés"),
         super::salon::SCRIPT => (super::salon::staging_lua(l, source), "salon : annonce de version ajoutée"),
-        super::salon::SCRIPT_PARTIE => (super::salon::partie_lua(l, source), "partie : relais du verdict ajouté"),
-        nom => match super::congres::lua(l, nom, source) {
+        super::salon::SCRIPT_PARTIE => (super::depart::partie(l, super::salon::partie_lua(l, source)), "partie : relais du verdict et départ simultané ajoutés"),
+        nom => match super::congres::lua(l, nom, source).or_else(|| super::depart::lua(l, nom, source)) {
             Some(Ok((t, quoi))) => (t, quoi),
             Some(Err(e)) => {
                 log(&format!("congrès : {chunk} laissé tel quel : {e}"));

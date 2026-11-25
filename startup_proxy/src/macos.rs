@@ -59,6 +59,8 @@ mod absent;
 mod congres;
 #[path = "../../proxy/src/congres_texte.rs"]
 mod congres_texte;
+#[path = "macos_depart.rs"]
+mod depart;
 
 use journal::log;
 

@@ -116,6 +116,7 @@ unsafe extern "C" fn hook_etat(entree: usize, etat: i32) -> u64 {
 /// `DllCreateGameContext` : une nouvelle partie, puis l'original.
 unsafe extern "C" fn hook_nouvelle_partie() -> usize {
     reset();
+    super::depart::reset();
     let original: unsafe extern "C" fn() -> usize = std::mem::transmute(T_NOUVELLE_PARTIE.load(Ordering::Relaxed));
     original()
 }

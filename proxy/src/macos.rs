@@ -61,6 +61,8 @@ mod echange;
 mod vision_guerre;
 #[path = "drop_slot_mac.rs"]
 mod drop_slot;
+#[path = "depart_mac.rs"]
+mod depart;
 #[path = "absent_reactivation_mac.rs"]
 mod absent_reactivation;
 #[path = "unites_promises_mac.rs"]
@@ -189,7 +191,7 @@ unsafe fn poser_correctifs() {
     };
     // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
     // annoncerait des règles qu'elle n'applique pas.
-    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 13] = [
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 14] = [
         ("citoyens", citoyens::installer),
         ("fin de tour", fin_tour::installer),
         ("ports", ports::installer),
@@ -205,6 +207,7 @@ unsafe fn poser_correctifs() {
         ("vision après une guerre", vision_guerre::installer),
         ("unités promises", unites_promises::installer),
         ("partie chargée", partie_chargee::installer),
+        ("départ simultané", depart::installer),
     ];
     let mut tous = true;
     for (nom, installer) in correctifs {
