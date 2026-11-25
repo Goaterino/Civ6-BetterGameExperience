@@ -212,7 +212,16 @@ mod tests {
         assert!(t.starts_with("Initialize();") && cale < bloc, "cale entre le script et le bloc");
         // Chaque native qu'attend un bloc est posée, ou rendue par la cale, ou absente à dessein.
         let posees: Vec<&str> = NATIVES_SALON.iter().chain(&NATIVES_PARTIE).map(|(_, n)| n.trim_end_matches('\0')).collect();
-        let sans = ["Civ6Proxy_MediasPings", "Civ6Proxy_GardeMessages", "Civ6Proxy_RelayedPairs", "Civ6Proxy_RelinkStart", "Civ6Proxy_RelinkState", "Civ6Proxy_RelayForgetPair"];
+        // Fonctions du chargeur Windows pas encore portées : le Lua teste leur présence avant de les
+        // appeler (`ReloadAllState` après `ReloadAllReady`). La machine s'annonce `-macos-partiel`
+        // tant que `reload_all`, `rejoin` et `debit_steam` (MorceauxReseau) manquent.
+        let sans = [
+            "Civ6Proxy_MediasPings", "Civ6Proxy_GardeMessages", "Civ6Proxy_RelayedPairs", "Civ6Proxy_RelinkStart",
+            "Civ6Proxy_RelinkState", "Civ6Proxy_RelayForgetPair", "Civ6Proxy_ExeInconnu", "Civ6Proxy_RemapOublier",
+            "Civ6Proxy_DoubleLoadRefused", "Civ6Proxy_EndTurnFor", "Civ6Proxy_GardeWipes", "Civ6Proxy_LaunchGuarded",
+            "Civ6Proxy_MorceauxReseau", "Civ6Proxy_RejoinKeepCheck", "Civ6Proxy_ReloadAllReady", "Civ6Proxy_ReloadAllRecheck",
+            "Civ6Proxy_ReloadAllStart", "Civ6Proxy_ReloadAllState", "Civ6Proxy_ResyncVolume", "Civ6Proxy_SyncNotes",
+        ];
         for bloc in [LUA_BLOCK, PARTIE_BLOCK] {
             for (i, _) in bloc.match_indices("Civ6Proxy_") {
                 let nom: String = bloc[i..].chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '_').collect();
