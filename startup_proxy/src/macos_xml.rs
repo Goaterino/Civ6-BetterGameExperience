@@ -12,10 +12,9 @@
 //!   textes en mémoire), elle passe la main telle quelle.
 //!
 //! Relevé sur Civ6 Aspyr 1.4.6, arm64 : `load_file` en 0x1005c57b8, `parse` en 0x1005c5920.
-//! x86_64 : à relever.
-
-// x86_64 : signatures à relever, l'accroche n'y est pas encore posée.
-#![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
+//! x86_64 : `load_file` en 0x100672ef0, `parse` en 0x100673060 (même structure : seul appelant
+//! d'`OpenFile` dans `XML::Document`, `GrowToFit` en +0xed, `parse` appelée en +0x158 ; deux appelants
+//! de `load_file` et 63 de `parse`, comme en arm64).
 
 use super::journal::log;
 use super::macho;
@@ -33,6 +32,31 @@ const SIG_PARSE: &str = "f6 57 bd a9 f4 4f 01 a9 fd 7b 02 a9 fd 83 00 91 f5 03 0
 /// Prologue recopié dans le trampoline : quatre instructions de pile, sans adresse relative.
 #[cfg(target_arch = "aarch64")]
 const PROLOGUE: usize = 16;
+
+/// push rbp ; mov rbp,rsp ; push r15 ; push r14 ; push r13 ; push r12 ; push rbx ; sub rsp,0x38 ;
+/// test rsi,rsi ; je … ; mov ebx,edx ; mov r14,rdi ; mov rax,[rdi+0x28] ; mov rcx,[rax+0x30] ;
+/// test rcx,rcx ; je ….
+#[cfg(target_arch = "x86_64")]
+const SIG_LOAD_FILE: &str = "55 48 89 e5 41 57 41 56 41 55 41 54 53 48 83 ec 38 48 85 f6 0f 84 45 01 00 00 89 d3 49 89 fe \
+                             48 8b 47 28 48 8b 48 30 48 85 c9 74 15";
+/// push rbp ; mov rbp,rsp ; push r15 ; push r14 ; push r12 ; push rbx ; mov r15d,edx ; mov r14,rsi ;
+/// mov rbx,rdi ; mov byte [rdi+0x38],0 ; mov qword [rdi+0x48],0 ; mov r12,[rdi+0x40] ;
+/// call GetUniversalEmptyBasicString.
+#[cfg(target_arch = "x86_64")]
+const SIG_PARSE: &str = "55 48 89 e5 41 57 41 56 41 54 53 41 89 d7 49 89 f6 48 89 fb c6 47 38 00 48 c7 47 48 00 00 00 00 \
+                         4c 8b 67 40 e8 ?? ?? ?? ??";
+/// Prologues recopiés dans les trampolines, en instructions entières, sans adresse relative, d'au
+/// moins 14 octets (`jmp [rip+0]` et son adresse) : `load_file` jusqu'au `sub rsp,0x38` compris (17),
+/// `parse` jusqu'au `mov r15d,edx` compris (14).
+#[cfg(target_arch = "x86_64")]
+const PROLOGUE_LOAD: usize = 17;
+#[cfg(target_arch = "x86_64")]
+const PROLOGUE_PARSE: usize = 14;
+/// Appels de `load_file` vérifiés avant d'accrocher : `GrowToFit` en +0xed, `parse` en +0x158.
+#[cfg(target_arch = "x86_64")]
+const APPEL_GROW: usize = 0xed;
+#[cfg(target_arch = "x86_64")]
+const APPEL_PARSE: usize = 0x158;
 
 static TRAMP_LOAD: AtomicUsize = AtomicUsize::new(0);
 static TRAMP_PARSE: AtomicUsize = AtomicUsize::new(0);
@@ -159,9 +183,43 @@ pub unsafe fn installer(mh: *const macho::MachHeader64, slide: isize) -> Result<
     Ok(())
 }
 
+/// x86_64 : comme arm64, avec en plus les appels de `load_file` à `GrowToFit` et à `parse` vérifiés
+/// avant de poser quoi que ce soit.
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_mh: *const macho::MachHeader64, _slide: isize) -> Result<(), String> {
-    Err("lecture XML pas encore relevée en x86_64".into())
+pub unsafe fn installer(mh: *const macho::MachHeader64, slide: isize) -> Result<(), String> {
+    let grow = dlsym(RTLD_MAIN_ONLY, c"_ZN8Platform12MemoryBuffer9GrowToFitEm".as_ptr());
+    if grow.is_null() {
+        return Err("Platform::MemoryBuffer::GrowToFit introuvable".into());
+    }
+    let (debut, taille) = macho::text_section(mh, slide).ok_or("section __text de l'exe introuvable")?;
+    let text = std::slice::from_raw_parts(debut as *const u8, taille);
+    let unique = |nom: &str, sig: &str| -> Result<usize, String> {
+        match patch::find(text, &patch::sig(sig))[..] {
+            [i] => Ok(debut + i),
+            ref v => Err(format!("{nom} trouvée {} fois au lieu d'une", v.len())),
+        }
+    };
+    let (at_load, at_parse) = (unique("load_file", SIG_LOAD_FILE)?, unique("parse", SIG_PARSE)?);
+    let appel = |decalage: usize| {
+        let at = at_load + decalage;
+        (at + 5 <= debut + taille).then(|| patch::cible_rel32_x86(at, std::slice::from_raw_parts(at as *const u8, 5))).flatten()
+    };
+    if appel(APPEL_GROW) != Some(grow as usize) {
+        return Err(format!("load_file en {:#x} : appel de GrowToFit attendu en +{APPEL_GROW:#x}", at_load as isize - slide));
+    }
+    if appel(APPEL_PARSE) != Some(at_parse) {
+        return Err(format!("load_file en {:#x} : appel de parse attendu en +{APPEL_PARSE:#x}", at_load as isize - slide));
+    }
+    GROW_TO_FIT.store(grow as usize, Ordering::Relaxed);
+    // Trampolines rangés avant que les sauts ne soient écrits.
+    let m = patch::hook_with_trampoline_publie(at_parse, PROLOGUE_PARSE, parse as *const () as usize, &TRAMP_PARSE)?;
+    patch::hook_with_trampoline_publie(at_load, PROLOGUE_LOAD, load_file as *const () as usize, &TRAMP_LOAD)?;
+    log(&format!(
+        "xml : load_file accrochée en {:#x}, parse en {:#x} ({m})",
+        at_load as isize - slide,
+        at_parse as isize - slide
+    ));
+    Ok(())
 }
 
 #[cfg(test)]
@@ -176,5 +234,16 @@ mod tests {
         // Sans les ancres d'Options.xml, le fichier reste tel quel.
         assert!(remplacement("a/Options.xml", b"<x/>").is_none());
         assert!(remplacement("a/TopPanel.xml", b"<x/>").is_none());
+    }
+
+    /// Les prologues recopiés sont fixés par la signature et assez longs pour le saut.
+    #[cfg(target_arch = "x86_64")]
+    #[test]
+    fn prologues_x86_64() {
+        for (sig, prologue) in [(SIG_LOAD_FILE, PROLOGUE_LOAD), (SIG_PARSE, PROLOGUE_PARSE)] {
+            let sig = patch::sig(sig);
+            assert!(prologue >= patch::jump(0).len());
+            assert!(sig.len() > prologue && sig[..prologue].iter().all(Option::is_some));
+        }
     }
 }

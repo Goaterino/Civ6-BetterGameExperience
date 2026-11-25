@@ -16,6 +16,13 @@
 //! comme sous Windows) : plutôt que de le recopier, chaque accroche appelle l'originale, puis ajoute
 //! à chaque entrée touchée l'écart entre la conversion corrigée et celle du jeu. L'entrée est déjà
 //! marquée modifiée par l'originale ; le résultat est celui de Windows.
+//!
+//! En x86_64 (Rosetta, Mac Intel), même vtable (ajout `0xcd4b20`, retrait `0xcd4e60`), mêmes
+//! offsets ; le compilateur a mis en ligne la boucle du joueur, qui appelle `0xcd51b0(unités,
+//! index, pourcentage)` pour chaque type, pourcentage négé au retrait. Ville : `0xcd4cb0` (ajout)
+//! et `0xcd4ff0` (retrait), propriétaire par `0x3ae800`. La conversion est la même (`mulss` par
+//! 0,01f, `floorf`, `cvttss2si`), au bit près. Les prologues (`push`, puis `sub rsp` pour les
+//! villes) font 14 et 17 octets, sans adresse relative : de quoi loger le `jmp [rip+0]`.
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
 
@@ -50,6 +57,27 @@ const V_PROPRIETAIRE: usize = 0xe0;
 const V_TABLEAU: usize = 0x1398;
 const J_UNITES: usize = 0x6d0;
 const U_INDEX: usize = 0x130;
+
+/// Relevé dans la tranche x86_64 de GameCore_XP2 (Civ6 Aspyr 1.4.6), adresses relatives à l'image.
+/// Chaque fonction avec la longueur de son prologue, recopié dans le trampoline.
+#[cfg_attr(target_arch = "aarch64", allow(dead_code))]
+mod x86 {
+    use super::Fonction;
+    /// `push rbp` / `mov rbp, rsp` / `push r15`…`push rbx` / `push rax`.
+    pub const JOUEUR: (Fonction, usize) = (Fonction { nom: "joueur", adresse: 0xcd51b0, taille: 288, empreinte: 0x156d_6836_f909_476d }, 14);
+    /// Les mêmes `push`, sans `push rax`, puis `sub rsp, 0x18`.
+    pub const VILLE_AJOUT: (Fonction, usize) =
+        (Fonction { nom: "ville, ajout", adresse: 0xcd4cb0, taille: 432, empreinte: 0x26c3_f57b_994f_7fd3 }, 17);
+    pub const VILLE_RETRAIT: (Fonction, usize) =
+        (Fonction { nom: "ville, retrait", adresse: 0xcd4ff0, taille: 448, empreinte: 0x1557_7117_b3a9_dfb9 }, 17);
+    pub const PAR_ID: usize = 0x3ae800;
+}
+
+/// Joueur par identifiant, selon l'architecture.
+#[cfg(target_arch = "aarch64")]
+const PAR_ID_ICI: usize = PAR_ID;
+#[cfg(target_arch = "x86_64")]
+const PAR_ID_ICI: usize = x86::PAR_ID;
 
 static BASE: AtomicUsize = AtomicUsize::new(0);
 static TRAMP_JOUEUR: AtomicUsize = AtomicUsize::new(0);
@@ -104,7 +132,7 @@ unsafe fn corriger(effet: usize, ville: usize, retire: bool) {
     if !(0..rd::<u32>(effet + E_NB_TYPES)).any(|i| derive(montant(effet, i, retire))) || !pol::actifs() {
         return;
     }
-    let par_id: unsafe extern "C" fn(i32) -> usize = std::mem::transmute(BASE.load(Ordering::Relaxed) + PAR_ID);
+    let par_id: unsafe extern "C" fn(i32) -> usize = std::mem::transmute(BASE.load(Ordering::Relaxed) + PAR_ID_ICI);
     let proprietaire = par_id(rd(ville + V_PROPRIETAIRE));
     let index_par_type: usize = rd(rd::<usize>(proprietaire + J_UNITES) + U_INDEX);
     let tableau: usize = rd(ville + V_TABLEAU);
@@ -162,8 +190,24 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
 }
 
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_base: usize) -> Result<String, String> {
-    Err("pas encore relevé en x86_64".into())
+pub unsafe fn installer(base: usize) -> Result<String, String> {
+    let fonctions = [
+        (x86::JOUEUR, &TRAMP_JOUEUR, joueur as *const () as usize),
+        (x86::VILLE_AJOUT, &TRAMP_AJOUT, ville_ajout as *const () as usize),
+        (x86::VILLE_RETRAIT, &TRAMP_RETRAIT, ville_retrait as *const () as usize),
+    ];
+    for ((f, _), _, _) in &fonctions {
+        if fnv(std::slice::from_raw_parts((base + f.adresse) as *const u8, f.taille)) != f.empreinte {
+            return Err(format!("version inattendue ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    BASE.store(base, Ordering::Relaxed);
+    let mut methode = "";
+    for ((f, prologue), tramp, accroche) in fonctions {
+        // Le trampoline est publié avant que le saut ne soit écrit.
+        methode = patch::hook_with_trampoline_publie(base + f.adresse, prologue, accroche, tramp)?;
+    }
+    Ok(format!("retrait symétrique des modificateurs d'unités posé, joueur et villes ({methode})"))
 }
 
 #[cfg(test)]
@@ -194,6 +238,13 @@ mod tests {
                 let m = u32::from_le_bytes(t[f.adresse + 4 * k..f.adresse + 4 * k + 4].try_into().unwrap());
                 assert!((m >> 24) & 0xfe == 0xa8 && (m >> 22) & 1 == 0, "{} : stp attendu en +{}", f.nom, 4 * k);
             }
+        }
+        // Tranche x86_64 : prologues de `push` (et `sub rsp, 0x18`), copiés tels quels.
+        let t = super::super::fin_tour::tranche_x86_64(&b).expect("tranche x86_64");
+        let pousse = [0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53];
+        for ((f, prologue), suite) in [(x86::JOUEUR, &[0x50][..]), (x86::VILLE_AJOUT, &[0x48, 0x83, 0xec, 0x18]), (x86::VILLE_RETRAIT, &[0x48, 0x83, 0xec, 0x18])] {
+            assert_eq!(fnv(&t[f.adresse..f.adresse + f.taille]), f.empreinte, "{} x86_64", f.nom);
+            assert_eq!([&pousse[..], suite].concat(), &t[f.adresse..f.adresse + prologue], "{} x86_64 : prologue", f.nom);
         }
     }
 }

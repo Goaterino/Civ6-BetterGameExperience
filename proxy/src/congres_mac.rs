@@ -16,8 +16,19 @@
 //!   crédit, suivi des modifications en ligne) ; paramètres `0xade0f4()`, coût des voix
 //!   `0xae0f4c(paramètres, voix)`, `0x8c460c(faveur, delta, raison)` (raison 1 : résolution, 2 :
 //!   proposition).
+//!
+//! En x86_64 (Mac Intel, Rosetta), mêmes décalages de structure :
+//! - annulation permise `0x891aa0` (bit 2 de `+0x50`, appelée en `0x9eeb0e`, `0x9eecfc`,
+//!   `0x9eef82`), segment courant `[0x13da2f0]`, lignes `[0x13e0050]` ; segment de ce type
+//!   `0x891c40` (28 appelants, comme `0x8ae7d4`) ;
+//! - indice de résolution `0x696400`, faveur `0x8a6c40`, paramètres `0xae7190`, coût des voix
+//!   `0xaea280`, changement de faveur `0x8a9240` (relevés dans le vote `0xc38740`), élément de
+//!   proposition `0xc38b40` et sa méthode `+0x20` `0xc3a800` (relevés dans `0xc38a00`).
+//! Les booléens rendus par le jeu le sont dans `al` : la réécriture rend 0 ou 1 dans `eax`.
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
+// Les relevés x86_64 ne servent, en arm64, qu'aux tests qui lisent le jeu installé.
+#![cfg_attr(target_arch = "aarch64", allow(dead_code))]
 
 use super::congres_regle::{decision, WC_1, WC_2};
 use super::journal::log;
@@ -48,16 +59,40 @@ const APPELEES: [Fonction; 8] = [
 // (exigé), les a vérifiés puis a réécrit leur début, qui ne correspond donc plus à l'empreinte.
 const VOIX_PROPOSITION: u64 = 0x9737_e81b_3ed8_b616;
 
-const EST_SEGMENT: usize = 0x8ae7d4;
-const INDICE_RESOLUTION: usize = 0x69241c;
-const FAVEUR_JOUEUR: usize = 0x8c23b0;
-const PARAMETRES_CONGRES: usize = 0xade0f4;
-const COUT_VOIX: usize = 0xae0f4c;
-const CHANGER_FAVEUR: usize = 0x8c460c;
-const ELEMENT_PROPOSITION: usize = 0xc1e1dc;
+/// x86_64 : la fonction réécrite, puis celles qu'appelle le proxy (mêmes rôles, même ordre).
+const X86_ANNULABLE: Fonction = Fonction { nom: "annulation permise", adresse: 0x891aa0, taille: 0x60, empreinte: 0xf3f0_6f4d_440c_d2f3 };
+const X86_APPELEES: [Fonction; 8] = [
+    Fonction { nom: "segment courant", adresse: 0x891c40, taille: 0x60, empreinte: 0xae37_e9f2_6805_cc73 },
+    Fonction { nom: "indice de résolution", adresse: 0x696400, taille: 0x110, empreinte: 0x632b_1076_8729_98b8 },
+    Fonction { nom: "faveur du joueur", adresse: 0x8a6c40, taille: 0x30, empreinte: 0x07e2_d63e_2450_095a },
+    Fonction { nom: "paramètres du congrès", adresse: 0xae7190, taille: 0x10, empreinte: 0x245c_ba0a_4357_3c9b },
+    Fonction { nom: "coût des voix", adresse: 0xaea280, taille: 0x80, empreinte: 0x3f22_72f1_acd1_284c },
+    Fonction { nom: "changement de faveur", adresse: 0x8a9240, taille: 0x1d0, empreinte: 0x6952_ef22_292e_fdbf },
+    Fonction { nom: "élément de proposition", adresse: 0xc38b40, taille: 0x130, empreinte: 0x4b9a_46b9_b6f8_8dc4 },
+    Fonction { nom: "voix d'une proposition", adresse: 0xc3a800, taille: 0x20, empreinte: 0xa2d8_d891_0077_25db },
+];
+// Comme en arm64, les votes (0xc38740, 0xc38a00) sont laissés à spectateurs_mac.rs.
 
-const SEGMENT_COURANT: usize = 0x138e460;
-const SEGMENTS: usize = 0x1394090;
+/// Adresses x86_64 (voir l'en-tête).
+const X86_EST_SEGMENT: usize = 0x891c40;
+const X86_INDICE_RESOLUTION: usize = 0x696400;
+const X86_FAVEUR_JOUEUR: usize = 0x8a6c40;
+const X86_PARAMETRES_CONGRES: usize = 0xae7190;
+const X86_COUT_VOIX: usize = 0xaea280;
+const X86_CHANGER_FAVEUR: usize = 0x8a9240;
+const X86_ELEMENT_PROPOSITION: usize = 0xc38b40;
+const X86_SEGMENT_COURANT: usize = 0x13da2f0;
+const X86_SEGMENTS: usize = 0x13e0050;
+const EST_SEGMENT: usize = if cfg!(target_arch = "x86_64") { X86_EST_SEGMENT } else { 0x8ae7d4 };
+const INDICE_RESOLUTION: usize = if cfg!(target_arch = "x86_64") { X86_INDICE_RESOLUTION } else { 0x69241c };
+const FAVEUR_JOUEUR: usize = if cfg!(target_arch = "x86_64") { X86_FAVEUR_JOUEUR } else { 0x8c23b0 };
+const PARAMETRES_CONGRES: usize = if cfg!(target_arch = "x86_64") { X86_PARAMETRES_CONGRES } else { 0xade0f4 };
+const COUT_VOIX: usize = if cfg!(target_arch = "x86_64") { X86_COUT_VOIX } else { 0xae0f4c };
+const CHANGER_FAVEUR: usize = if cfg!(target_arch = "x86_64") { X86_CHANGER_FAVEUR } else { 0x8c460c };
+const ELEMENT_PROPOSITION: usize = if cfg!(target_arch = "x86_64") { X86_ELEMENT_PROPOSITION } else { 0xc1e1dc };
+
+const SEGMENT_COURANT: usize = if cfg!(target_arch = "x86_64") { X86_SEGMENT_COURANT } else { 0x138e460 };
+const SEGMENTS: usize = if cfg!(target_arch = "x86_64") { X86_SEGMENTS } else { 0x1394090 };
 const L_SEGMENT: usize = 0x60;
 const S_DRAPEAUX: usize = 0x50;
 const S_TYPE: usize = 0x18;
@@ -231,8 +266,20 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
 }
 
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_base: usize) -> Result<String, String> {
-    Err("pas encore relevé en x86_64".into())
+pub unsafe fn installer(base: usize) -> Result<String, String> {
+    if !super::spectateurs::poses() {
+        return Err("détours des votes absents (spectateurs), pas de retour au vote".into());
+    }
+    for f in std::iter::once(&X86_ANNULABLE).chain(X86_APPELEES.iter()) {
+        if fnv(std::slice::from_raw_parts((base + f.adresse) as *const u8, f.taille)) != f.empreinte {
+            return Err(format!("version inattendue ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    BASE.store(base, Ordering::Relaxed);
+    // La fonction est réécrite : pas de trampoline, le saut (14 octets) couvre son début.
+    let methode = patch::write_code(base + X86_ANNULABLE.adresse, &patch::jump(hook_annulable as *const () as usize))?;
+    POSE.store(true, Ordering::Relaxed);
+    Ok(format!("annulation de fin de tour pendant le vote, faveur rendue au second vote ({methode})"))
 }
 
 #[cfg(test)]
@@ -256,5 +303,38 @@ mod tests {
         for site in [0x9f56a8, 0x9f5b7c, 0x9f5dd4] {
             assert_eq!(patch::cible_branche(site, mot(site)), Some(ANNULABLE.adresse), "appel en {site:#x}");
         }
+    }
+
+    #[test]
+    fn fonctions_du_jeu_x86_64() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let p = std::path::Path::new(&home)
+            .join("Library/Application Support/Steam/steamapps/common/Sid Meier's Civilization VI/Civ6.app/Contents/MacOS/GameCore_XP2.dll");
+        let Ok(b) = std::fs::read(&p) else { return };
+        let t = super::super::spectateurs::tranche_x86_64(&b).expect("tranche x86_64");
+        for f in std::iter::once(&X86_ANNULABLE).chain(X86_APPELEES.iter()) {
+            let e = fnv(&t[f.adresse..f.adresse + f.taille]);
+            assert_eq!(e, f.empreinte, "{} : empreinte {e:#x}", f.nom);
+        }
+        assert!(14 <= X86_ANNULABLE.taille, "le saut tient dans la fonction");
+        let appel = |a: usize| patch::cible_rel32_x86(a, &t[a..a + 5]);
+        let rip = |a: usize| (a as i64 + 4 + i32::from_le_bytes(t[a..a + 4].try_into().unwrap()) as i64) as usize;
+        // Les trois appelants de l'annulation.
+        for site in [0x9eeb0e, 0x9eecfc, 0x9eef82] {
+            assert_eq!(appel(site), Some(X86_ANNULABLE.adresse), "appel en {site:#x}");
+        }
+        // mov eax, [rip + segment courant] ; mov rcx, [rip + lignes], dans l'annulation.
+        assert_eq!(rip(0x891aa6), X86_SEGMENT_COURANT);
+        assert_eq!(rip(0x891ab7), X86_SEGMENTS);
+        // Le vote appelle indice, faveur, paramètres, coût et changement de faveur.
+        for (site, cible) in [(0xc3875c, X86_INDICE_RESOLUTION), (0xc38957, X86_FAVEUR_JOUEUR), (0xc389b0, X86_PARAMETRES_CONGRES), (0xc389bb, X86_COUT_VOIX), (0xc389cc, X86_CHANGER_FAVEUR), (0xc38a19, X86_ELEMENT_PROPOSITION)] {
+            assert_eq!(appel(site), Some(cible), "appel en {site:#x}");
+        }
+        // Résolutions en +0x120 (nombre +0x130, éléments de 0x218), faveur en +0xc8 et +0xe0.
+        assert_eq!(t[0xc388a8..0xc388bc], [0x8b, 0x81, 0x30, 0x01, 0, 0, 0x48, 0x69, 0xc0, 0x18, 0x02, 0, 0, 0x48, 0x03, 0x81, 0x20, 0x01, 0, 0]);
+        assert_eq!(t[0xc38964..0xc3896a], [0x8b, 0xb3, 0xc8, 0, 0, 0]);
+        assert_eq!(t[0x8a9381..0x8a9387], [0x89, 0x99, 0xe0, 0, 0, 0]);
+        // Méthode +0x20 de l'élément : voix en +0x10 + 4 × joueur.
+        assert_eq!(t[0xc3a80b..0xc3a80f], [0x89, 0x54, 0x87, 0x10]);
     }
 }

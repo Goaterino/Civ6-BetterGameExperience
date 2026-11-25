@@ -21,8 +21,23 @@
 //!   (ce qu'appelle la méthode Lua `GetLeaderTypeID`).
 //!
 //! Les mêmes détours de vote rendent la faveur d'un second vote (retour au vote, congres_mac.rs).
+//!
+//! En x86_64 (Mac Intel, Rosetta), compilation à part, mêmes fonctions et mêmes décalages de
+//! structure, retrouvées par leurs constantes et leurs appelants :
+//! - touristes `0x8d0600` et demande `0x8d1110` (seuls `idivl` par `+0x6d0`/`+0x6e0` des
+//!   `GlobalParameters`, `[0x13dc0b8]`, avec `+0x10d0` du PlayerManager) ;
+//! - vote `0xc38740` et proposition `0xc38a00` (hachage `0xab763662`, résolutions de `0x218`
+//!   octets ; appelés par l'exécution des opérations `0x9ea5e0` en `0x9eb2a7` et `0x9eaf3b`) ;
+//! - dépouillement `0xc44150` (seul appelant `0xc376b3`, boucle sur les éléments de `0x218`) ;
+//! - PlayerManager `0x9e4ec0()` (`[0x13e00e0]`) ; a rencontré `0x90c9a0` (rend un booléen dans
+//!   `al`) ; configuration `0x3743b0([0x13dc0d8], id)` et hachage du leader `0x37b370(config)`
+//!   (méthode Lua `GetLeaderTypeID`, `0x7cc810`).
+//! Le saut posé (`jmp [rip+0]`) prend 14 octets : les trampolines recopient les `push` et le
+//! `sub rsp` du prologue (14, 17 ou 20 octets selon la fonction, aucune adresse relative).
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
+// Les relevés x86_64 ne servent, en arm64, qu'aux tests qui lisent le jeu installé.
+#![cfg_attr(target_arch = "aarch64", allow(dead_code))]
 
 use super::journal::log;
 use super::spectateurs_calcul::{quotient, touristes};
@@ -46,12 +61,39 @@ const DEPOUILLEMENT: Fonction = Fonction { nom: "dépouillement", adresse: 0xc28
 /// Prologue recopié dans les trampolines : quatre instructions de pile, sans adresse relative.
 const PROLOGUE: usize = 16;
 
-const PARAMETRES: usize = 0x1390220;
-const CONFIGS_JOUEURS: usize = 0x1390240;
-const GESTION_JOUEURS: usize = 0x9eba84;
-const CONFIG_JOUEUR: usize = 0x383328;
-const TYPE_LEADER: usize = 0x38a0cc;
-const A_RENCONTRE: usize = 0x91fb20;
+/// x86_64 : les mêmes fonctions, et la longueur de leur prologue recopié (instructions entières,
+/// sans adresse relative, au moins les 14 octets du saut).
+const X86_TOURISTES: Fonction = Fonction { nom: "touristes", adresse: 0x8d0600, taille: 0x110, empreinte: 0x578b_f926_14c4_93f6 };
+const X86_DEMANDE: Fonction = Fonction { nom: "demande", adresse: 0x8d1110, taille: 0xf0, empreinte: 0xe201_5301_fdf2_b489 };
+const X86_VOTE: Fonction = Fonction { nom: "vote", adresse: 0xc38740, taille: 0x2c0, empreinte: 0x9582_3621_5e7a_b40b };
+const X86_DISCUSSION: Fonction = Fonction { nom: "vote sur une proposition", adresse: 0xc38a00, taille: 0x140, empreinte: 0x6493_e0aa_3da6_7c59 };
+const X86_DEPOUILLEMENT: Fonction = Fonction { nom: "dépouillement", adresse: 0xc44150, taille: 0x2320, empreinte: 0x1d5b_ceb3_deac_4722 };
+/// push rbp ; mov rbp, rsp ; push r15 ; push r14 ; push r13 ; push r12 ; push rbx (13 octets).
+const X86_PUSH: [u8; 13] = [0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53];
+/// Suite du prologue : `push rax` (touristes, demande), `sub rsp, 0x28` (vote), `sub rsp, 0x18`
+/// (proposition), `sub rsp, 0x208` (dépouillement).
+const X86_SUITE: [&[u8]; 5] = [&[0x50], &[0x50], &[0x48, 0x83, 0xec, 0x28], &[0x48, 0x83, 0xec, 0x18], &[0x48, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00]];
+/// Fonctions appelées par le proxy en x86_64 : vérifiées aussi, une autre version ne les appelle pas.
+const X86_APPELEES: [Fonction; 4] = [
+    Fonction { nom: "PlayerManager", adresse: 0x9e4ec0, taille: 0x10, empreinte: 0xfb90_c246_417c_5244 },
+    Fonction { nom: "configuration du joueur", adresse: 0x3743b0, taille: 0x30, empreinte: 0xefc4_e548_df8d_f7be },
+    Fonction { nom: "type de leader", adresse: 0x37b370, taille: 0x40, empreinte: 0x1e56_9c64_dfc5_71dd },
+    Fonction { nom: "a rencontré", adresse: 0x90c9a0, taille: 0x60, empreinte: 0x809e_95b6_7252_5599 },
+];
+
+/// Adresses x86_64 (voir l'en-tête).
+const X86_PARAMETRES: usize = 0x13dc0b8;
+const X86_CONFIGS_JOUEURS: usize = 0x13dc0d8;
+const X86_GESTION_JOUEURS: usize = 0x9e4ec0;
+const X86_CONFIG_JOUEUR: usize = 0x3743b0;
+const X86_TYPE_LEADER: usize = 0x37b370;
+const X86_A_RENCONTRE: usize = 0x90c9a0;
+const PARAMETRES: usize = if cfg!(target_arch = "x86_64") { X86_PARAMETRES } else { 0x1390220 };
+const CONFIGS_JOUEURS: usize = if cfg!(target_arch = "x86_64") { X86_CONFIGS_JOUEURS } else { 0x1390240 };
+const GESTION_JOUEURS: usize = if cfg!(target_arch = "x86_64") { X86_GESTION_JOUEURS } else { 0x9eba84 };
+const CONFIG_JOUEUR: usize = if cfg!(target_arch = "x86_64") { X86_CONFIG_JOUEUR } else { 0x383328 };
+const TYPE_LEADER: usize = if cfg!(target_arch = "x86_64") { X86_TYPE_LEADER } else { 0x38a0cc };
+const A_RENCONTRE: usize = if cfg!(target_arch = "x86_64") { X86_A_RENCONTRE } else { 0x91fb20 };
 
 const P_CULTURE_PAR_CITOYEN: usize = 0x6d0;
 const P_TOURISME_PAR_TOURISTE: usize = 0x6e0;
@@ -276,8 +318,33 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
 }
 
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_base: usize) -> Result<String, String> {
-    Err("pas encore relevé en x86_64".into())
+pub unsafe fn installer(base: usize) -> Result<String, String> {
+    let poses: [(Fonction, &AtomicUsize, usize); 5] = [
+        (X86_TOURISTES, &T_TOURISTES, hook_touristes as *const () as usize),
+        (X86_DEMANDE, &T_DEMANDE, hook_demande as *const () as usize),
+        (X86_VOTE, &T_VOTE, hook_vote as *const () as usize),
+        (X86_DISCUSSION, &T_DISCUSSION, hook_discussion as *const () as usize),
+        (X86_DEPOUILLEMENT, &T_DEPOUILLEMENT, hook_depouillement as *const () as usize),
+    ];
+    let octets = |f: &Fonction| std::slice::from_raw_parts((base + f.adresse) as *const u8, f.taille);
+    for f in poses.iter().map(|(f, _, _)| f).chain(X86_APPELEES.iter()) {
+        if fnv(octets(f)) != f.empreinte {
+            return Err(format!("version inattendue ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    for ((f, _, _), suite) in poses.iter().zip(X86_SUITE) {
+        let o = octets(f);
+        if o[..13] != X86_PUSH || &o[13..13 + suite.len()] != suite {
+            return Err(format!("prologue inattendu ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    BASE.store(base, Ordering::Relaxed);
+    let mut methode = "";
+    for ((f, tramp, accroche), suite) in poses.into_iter().zip(X86_SUITE) {
+        methode = patch::hook_with_trampoline_publie(base + f.adresse, 13 + suite.len(), accroche, tramp)?;
+    }
+    POSES.store(true, Ordering::Relaxed);
+    Ok(format!("détours posés (tourisme, votes, dépouillement, {methode})"))
 }
 
 /// Détours posés (l'état POL se décide ensuite, en partie).
@@ -289,6 +356,25 @@ pub fn poses() -> bool {
 /// actifs, pour que GameCore et les scripts décident de la même façon.
 pub fn lua_actif() -> bool {
     POSES.load(Ordering::Relaxed) && pol::actifs()
+}
+
+/// Tranche x86_64 d'un binaire universel (macho.rs n'a que `tranche_arm64`), pour les tests de
+/// spectateurs_mac.rs, congres_mac.rs et citoyens_mac.rs.
+#[cfg(test)]
+pub(crate) fn tranche_x86_64(b: &[u8]) -> Option<&[u8]> {
+    const CPU_X86_64: u32 = 0x0100_0007;
+    let be = |o: usize| b.get(o..o + 4).map(|s| u32::from_be_bytes(s.try_into().unwrap()));
+    let le = |o: usize| b.get(o..o + 4).map(|s| u32::from_le_bytes(s.try_into().unwrap()));
+    if le(0)? == 0xfeed_facf {
+        return (le(4)? == CPU_X86_64).then_some(b);
+    }
+    if be(0)? != 0xcafe_babe {
+        return None;
+    }
+    (0..be(4)? as usize).find_map(|i| {
+        let e = 8 + 20 * i;
+        (be(e)? == CPU_X86_64).then(|| b.get(be(e + 8)? as usize..(be(e + 8)? + be(e + 12)?) as usize)).flatten()
+    })
 }
 
 #[cfg(test)]
@@ -311,5 +397,52 @@ mod tests {
                 assert!(!relatif, "{} : instruction relative en +{}", f.nom, 4 * k);
             }
         }
+    }
+
+    /// Cible d'un `lea`/`mov reg, [rip + disp32]` dont le disp32 est en `at` (instruction finie juste après).
+    fn rip(t: &[u8], at: usize) -> usize {
+        (at as i64 + 4 + i32::from_le_bytes(t[at..at + 4].try_into().unwrap()) as i64) as usize
+    }
+
+    #[test]
+    fn fonctions_du_jeu_x86_64() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let p = std::path::Path::new(&home)
+            .join("Library/Application Support/Steam/steamapps/common/Sid Meier's Civilization VI/Civ6.app/Contents/MacOS/GameCore_XP2.dll");
+        let Ok(b) = std::fs::read(&p) else { return };
+        let t = super::tranche_x86_64(&b).expect("tranche x86_64");
+        let poses = [X86_TOURISTES, X86_DEMANDE, X86_VOTE, X86_DISCUSSION, X86_DEPOUILLEMENT];
+        for f in poses.iter().chain(X86_APPELEES.iter()) {
+            let e = fnv(&t[f.adresse..f.adresse + f.taille]);
+            assert_eq!(e, f.empreinte, "{} : empreinte {e:#x}", f.nom);
+        }
+        for (f, suite) in poses.iter().zip(X86_SUITE) {
+            assert_eq!(t[f.adresse..f.adresse + 13], X86_PUSH, "{} : push", f.nom);
+            assert_eq!(&t[f.adresse + 13..f.adresse + 13 + suite.len()], suite, "{} : suite du prologue", f.nom);
+            // `jmp [rip+0]` et son adresse : 14 octets (patch_mac.rs, `jump` en x86_64).
+            assert!(13 + suite.len() >= 14, "{} : prologue plus court que le saut", f.nom);
+        }
+        let appel = |a: usize| patch::cible_rel32_x86(a, &t[a..a + 5]);
+        // Données lues par le proxy, relevées dans le code du jeu : `lea r15, [rip + …]` des
+        // touristes, `lea rax, [rip + …]` du coût des voix (configurations).
+        assert_eq!(rip(&t, 0x8d0611), X86_PARAMETRES);
+        assert_eq!(rip(&t, 0xaea28c), X86_CONFIGS_JOUEURS);
+        assert_eq!(appel(0x8d063b), Some(X86_GESTION_JOUEURS));
+        assert_eq!(appel(0x8d11b1), Some(X86_A_RENCONTRE));
+        assert_eq!(appel(0x8d067a), Some(X86_DEMANDE.adresse));
+        // GetLeaderTypeID (Lua) : configuration du joueur, puis hachage du leader.
+        assert_eq!(appel(0x7cc82b), Some(X86_TYPE_LEADER));
+        // Appels des votes par l'exécution des opérations, du dépouillement par le congrès.
+        assert_eq!(appel(0x9eb2a7), Some(X86_VOTE.adresse));
+        assert_eq!(appel(0x9eaf3b), Some(X86_DISCUSSION.adresse));
+        assert_eq!(appel(0xc376b3), Some(X86_DEPOUILLEMENT.adresse));
+        // Décalages relus : +0x6d0 / +0x6e0 des paramètres, +0x10d0 / +0xb50 / +0xfa0 du
+        // PlayerManager, choix +4 et voix +0x104 de la résolution.
+        let contient = |a: usize, n: usize, motif: &[u8]| t[a..a + n].windows(motif.len()).any(|w| w == motif);
+        assert!(contient(0x8d0600, 0x110, &[0x83, 0xb8, 0xd0, 0x06, 0, 0, 0]), "cmp [rax+0x6d0], 0");
+        assert!(contient(0x8d0600, 0x110, &[0x48, 0x2b, 0x88, 0xd0, 0x10, 0, 0]), "sub rcx, [rax+0x10d0]");
+        assert!(contient(0x8d1110, 0xf0, &[0x4c, 0x8b, 0xa0, 0x50, 0x0b, 0, 0]), "mov r12, [rax+0xb50]");
+        assert!(contient(0xc44150, 0x100, &[0x48, 0x8b, 0x98, 0xa0, 0x0f, 0, 0]), "mov rbx, [rax+0xfa0]");
+        assert!(contient(0xc44150, 0x100, &[0x41, 0xc7, 0x44, 0xb7, 0x04, 1, 0, 0, 0]), "mov [r15+rsi*4+4], 1");
     }
 }

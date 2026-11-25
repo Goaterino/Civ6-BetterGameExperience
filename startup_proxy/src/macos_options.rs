@@ -16,9 +16,6 @@
 //! Le fichier de réglages est `~/Library/Application Support/BetterGameExperience/rollover_proxy.cfg`.
 //! Le proxy de GameCore macOS ne le lit pas encore (aucun correctif porté) : « déjà lu » vaut 0.
 
-// x86_64 : lua_pushlstring à relever, l'onglet n'y a pas encore ses natives.
-#![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
-
 use super::journal::{data_dir, log};
 use super::macho;
 use super::options_texte::{merge_config, patch_options_lua, patch_tick_intervals, reset_config, CFG_NAME};
@@ -30,6 +27,21 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 /// (`0x6b6f7265`). Relevé sur Civ6 Aspyr 1.4.6, arm64 0x10090f828.
 #[cfg(target_arch = "aarch64")]
 const SIG_PUSHLSTRING: &str = "f4 4f be a9 fd 7b 01 a9 fd 43 00 91 f3 03 00 aa a8 4c 8e 52 e8 6d ad 72 43 00 08 0b e8 03 80 52";
+/// x86_64 0x1009f0900 : push rbp ; mov rbp,rsp ; push rbx ; push rax ; mov r8,rdx ; mov rcx,rsi ;
+/// mov rbx,rdi ; lea r9d,[rdx+0x6b6f7265] ; cmp rdx,0x1f ; mov esi,0x1f ; cmovb rsi,rdx ;
+/// cmp rsi,0xd ; jb …. Le hachage y est suivi de l'appel inline de l'interneur des chaînes
+/// (`G(L) + 0x1a8`, comme `hks_obj_newlstringhashed`) et de l'empilement {4, chaîne} en `L + 0x48`.
+/// C'est la fonction qu'appelle `LuaUtils::ExposeLibraryToThread` avec `(L, nom, strlen(nom))`, et
+/// celle qui a le plus d'appelants (10 254, contre 12 256 pour celle d'arm64).
+#[cfg(target_arch = "x86_64")]
+const SIG_PUSHLSTRING: &str = "55 48 89 e5 53 50 49 89 d0 48 89 f1 48 89 fb 44 8d 8a 65 72 6f 6b 48 83 fa 1f be 1f 00 00 00 \
+                               48 0f 42 f2 48 83 fe 0d 0f 82";
+/// Fin de `lua_pushlstring` x86_64, à `SIG_PUSHLSTRING_FIN_DECALAGE` du début : appel de l'interneur,
+/// puis `mov rcx,[rbx+0x48] ; mov dword [rcx],4 ; mov [rcx+8],rax ; add rcx,0x10 ; mov [rbx+0x48],rcx`.
+#[cfg(target_arch = "x86_64")]
+const SIG_PUSHLSTRING_FIN: &str = "e8 ?? ?? ?? ?? 48 8b 4b 48 c7 01 04 00 00 00 48 89 41 08 48 83 c1 10 48 89 4b 48";
+#[cfg(target_arch = "x86_64")]
+const SIG_PUSHLSTRING_FIN_DECALAGE: usize = 0x1fe;
 
 const L_TOP: usize = 0x48;
 const L_GLOBALES: usize = 0x70;
@@ -245,9 +257,34 @@ pub unsafe fn installer(mh: *const macho::MachHeader64, slide: isize) -> Result<
     Ok(())
 }
 
+/// x86_64 : comme arm64, avec en plus la fin de la fonction vérifiée (empilement d'une chaîne en
+/// `L + 0x48`) avant de s'en servir.
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_mh: *const macho::MachHeader64, _slide: isize) -> Result<(), String> {
-    Err("lua_pushlstring pas encore relevée en x86_64".into())
+pub unsafe fn installer(mh: *const macho::MachHeader64, slide: isize) -> Result<(), String> {
+    let get = |nom: &std::ffi::CStr| {
+        let p = dlsym(RTLD_MAIN_ONLY, nom.as_ptr());
+        (!p.is_null()).then_some(p as usize).ok_or_else(|| format!("{} introuvable", nom.to_string_lossy()))
+    };
+    let closure = get(c"_Z21hks_pushnamedcclosureP9lua_StatePFiS0_EiPKci")?;
+    let rawset = get(c"_Z14hks_obj_rawsetP9lua_StatePK9HksObjectS3_S3_")?;
+    let check = get(c"_Z17luaL_checklstringP9lua_StateiPm")?;
+    let (debut, taille) = macho::text_section(mh, slide).ok_or("section __text de l'exe introuvable")?;
+    let text = std::slice::from_raw_parts(debut as *const u8, taille);
+    let i = match patch::find(text, &patch::sig(SIG_PUSHLSTRING))[..] {
+        [i] => i,
+        ref v => return Err(format!("lua_pushlstring trouvée {} fois au lieu d'une", v.len())),
+    };
+    let fin = patch::sig(SIG_PUSHLSTRING_FIN);
+    let o = i + SIG_PUSHLSTRING_FIN_DECALAGE;
+    if text.get(o..o + fin.len()).is_none_or(|t| patch::find(t, &fin) != [0]) {
+        return Err(format!("lua_pushlstring en {:#x} : fin inattendue", (debut + i) as isize - slide));
+    }
+    PUSH_CLOSURE.store(closure, Ordering::Relaxed);
+    RAWSET.store(rawset, Ordering::Relaxed);
+    CHECK_LSTRING.store(check, Ordering::Relaxed);
+    PUSH_LSTRING.store(debut + i, Ordering::Relaxed);
+    log(&format!("options : lua_pushlstring en {:#x}, natives prêtes", (debut + i) as isize - slide));
+    Ok(())
 }
 
 #[cfg(test)]

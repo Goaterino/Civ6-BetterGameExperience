@@ -11,6 +11,13 @@
 //! son domaine en `+0x2a8` (lu par la destination : 0, `DOMAIN_SEA`, ouvre les districts).
 //!
 //! Ce seul `bl` est redirigé vers un relais `mov x1, x20` puis saut vers `depart_valide`.
+//!
+//! En x86_64 (Rosetta, Mac Intel), même vtable (`CanStart` en `0xbfc640`, droit `0xbfcad0`,
+//! destination `0xbfcba0`, qui lit aussi le domaine en `+0x2a8`) ; le test du centre-ville est en
+//! `0xa91660` (même clé, même type, résultat dans `al`), appelé en `0xbfc6d3` par `call rel32`,
+//! après `call [rax+0x38]` / `mov rdi, rax` et avant `test al, al` / `je`, l'unité étant dans `r14`.
+//! Le `call` est redirigé vers un relais `mov rsi, r14` puis `jmp [rip+0]` vers `depart_valide`,
+//! à moins de 1 Go (portée du `rel32`).
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
 
@@ -32,6 +39,24 @@ const DOMAIN_SEA: i32 = 0;
 const O_ID: usize = 0x10;
 const O_PROPRIETAIRE: usize = 0x1c;
 const GENRE_DISTRICT: i16 = 3;
+
+/// Relevé dans la tranche x86_64 de GameCore_XP2 (Civ6 Aspyr 1.4.6), adresses relatives à l'image.
+#[cfg_attr(target_arch = "aarch64", allow(dead_code))]
+mod x86 {
+    /// `CanStart` entier, FNV-1a 64 : le site, les registres (`r14` : l'unité) et les offsets.
+    pub const CAN_START: usize = 0xbfc640;
+    pub const CAN_START_TAILLE: usize = 0x2c0;
+    pub const CAN_START_EMPREINTE: u64 = 0xd2c1_4372_5e35_1823;
+    pub const SITE: usize = 0xbfc6d3;
+    pub const EST_CENTRE_VILLE: usize = 0xa91660;
+    /// `EST_CENTRE_VILLE` entier (jusqu'au `ret`), FNV-1a 64.
+    pub const CENTRE_TAILLE: usize = 0x61;
+    pub const CENTRE_EMPREINTE: u64 = 0x283a_1e41_18d4_90cc;
+    /// `call [rax+0x38]` (l'objet sous l'unité) puis `mov rdi, rax` avant le site,
+    /// `test al, al` puis `je rel32` après.
+    pub const AVANT: [u8; 6] = [0xff, 0x50, 0x38, 0x48, 0x89, 0xc7];
+    pub const APRES: [u8; 4] = [0x84, 0xc0, 0x0f, 0x84];
+}
 
 static BASE: AtomicUsize = AtomicUsize::new(0);
 static DEPARTS: AtomicU32 = AtomicU32::new(0);
@@ -111,9 +136,45 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
     Ok(format!("départ de TELEPORT_TO_CITY accepté depuis un district (appel redirigé en {SITE:#x}, {methode})"))
 }
 
+#[cfg_attr(target_arch = "aarch64", allow(dead_code))]
+fn fnv(octets: &[u8]) -> u64 {
+    octets.iter().fold(0xcbf2_9ce4_8422_2325u64, |h, &b| (h ^ b as u64).wrapping_mul(0x100_0000_01b3))
+}
+
+#[cfg_attr(target_arch = "aarch64", allow(dead_code))]
+unsafe fn octets(addr: usize, n: usize) -> &'static [u8] {
+    std::slice::from_raw_parts(addr as *const u8, n)
+}
+
+#[cfg_attr(target_arch = "aarch64", allow(dead_code))]
+unsafe fn site_attendu_x86() -> bool {
+    let at = gc(x86::SITE);
+    fnv(octets(gc(x86::CAN_START), x86::CAN_START_TAILLE)) == x86::CAN_START_EMPREINTE
+        && fnv(octets(gc(x86::EST_CENTRE_VILLE), x86::CENTRE_TAILLE)) == x86::CENTRE_EMPREINTE
+        && octets(at, 1)[0] == 0xe8
+        && patch::cible_rel32_x86(at, octets(at, 5)) == Some(gc(x86::EST_CENTRE_VILLE))
+        && octets(at - 6, 6) == x86::AVANT
+        && octets(at + 5, 4) == x86::APRES
+}
+
+/// Relais x86_64 : `mov rsi, r14` (l'unité), puis `jmp [rip+0]` vers `cible`.
+#[cfg_attr(target_arch = "aarch64", allow(dead_code))]
+fn relais_x86(cible: usize) -> Vec<u8> {
+    let mut v = vec![0x4c, 0x89, 0xf6, 0xff, 0x25, 0, 0, 0, 0];
+    v.extend_from_slice(&(cible as u64).to_le_bytes());
+    v
+}
+
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_base: usize) -> Result<String, String> {
-    Err("pas encore relevé en x86_64".into())
+pub unsafe fn installer(base: usize) -> Result<String, String> {
+    BASE.store(base, Ordering::Relaxed);
+    if !site_attendu_x86() {
+        return Err(format!("version inattendue en {:#x}, aucun appel redirigé", x86::SITE));
+    }
+    let page = patch::executable_near(&relais_x86(depart_valide as *const () as usize), gc(x86::SITE), 1 << 30)?;
+    let call = patch::rel32_x86(0xe8, gc(x86::SITE), page).ok_or("relais hors de portée, aucun appel redirigé")?;
+    let methode = patch::write_code(gc(x86::SITE), &call)?;
+    Ok(format!("départ de TELEPORT_TO_CITY accepté depuis un district (appel redirigé en {:#x}, {methode})", x86::SITE))
 }
 
 #[cfg(test)]
@@ -130,6 +191,14 @@ mod tests {
     }
 
     #[test]
+    fn relais_x86_64() {
+        let r = relais_x86(0x1122_3344_5566_7788);
+        // mov rsi, r14 ; jmp [rip+0] ; .quad
+        assert_eq!(r, [0x4c, 0x89, 0xf6, 0xff, 0x25, 0, 0, 0, 0, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11]);
+        assert_eq!(patch::rel32_x86(0xe8, x86::SITE, x86::EST_CENTRE_VILLE), Some([0xe8, 0x88, 0x4f, 0xe9, 0xff]), "le call d'origine, réencodé");
+    }
+
+    #[test]
     fn site_du_jeu() {
         let Some(home) = std::env::var_os("HOME") else { return };
         let p = std::path::Path::new(&home)
@@ -141,5 +210,14 @@ mod tests {
         assert_eq!(mot(SITE - 4), AVANT);
         assert_eq!(&t[SITE + 4..SITE + 8], &APRES);
         assert_eq!(&t[EST_CENTRE_VILLE..EST_CENTRE_VILLE + 16], &CENTRE_OCTETS);
+        // Tranche x86_64.
+        let t = super::super::fin_tour::tranche_x86_64(&b).expect("tranche x86_64");
+        assert_eq!(fnv(&t[x86::CAN_START..x86::CAN_START + x86::CAN_START_TAILLE]), x86::CAN_START_EMPREINTE);
+        assert_eq!(fnv(&t[x86::EST_CENTRE_VILLE..x86::EST_CENTRE_VILLE + x86::CENTRE_TAILLE]), x86::CENTRE_EMPREINTE);
+        assert_eq!(t[x86::EST_CENTRE_VILLE + x86::CENTRE_TAILLE - 1], 0xc3, "ret en fin de EST_CENTRE_VILLE");
+        assert_eq!(t[x86::SITE], 0xe8);
+        assert_eq!(patch::cible_rel32_x86(x86::SITE, &t[x86::SITE..]), Some(x86::EST_CENTRE_VILLE));
+        assert_eq!(&t[x86::SITE - 6..x86::SITE], &x86::AVANT);
+        assert_eq!(&t[x86::SITE + 5..x86::SITE + 9], &x86::APRES);
     }
 }

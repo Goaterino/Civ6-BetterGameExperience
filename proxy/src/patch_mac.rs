@@ -230,6 +230,25 @@ pub fn branche(depuis: usize, vers: usize) -> Option<[u8; 4]> {
         .then(|| (0x1400_0000u32 | ((ecart >> 2) as u32 & 0x03ff_ffff)).to_le_bytes())
 }
 
+/// `jmp rel32` (`0xe9`) ou `call rel32` (`0xe8`) x86_64 de `depuis` vers `vers`, s'il est à portée
+/// (±2 Go) : 5 octets, à écrire sur une instruction entière (compléter par des `nop` au besoin).
+#[allow(dead_code)]
+pub fn rel32_x86(opcode: u8, depuis: usize, vers: usize) -> Option<[u8; 5]> {
+    let ecart = vers as i64 - (depuis as i64 + 5);
+    let d = i32::try_from(ecart).ok()?;
+    let b = d.to_le_bytes();
+    Some([opcode, b[0], b[1], b[2], b[3]])
+}
+
+/// Cible d'un `call`/`jmp rel32` x86_64 (`0xe8`/`0xe9`) en `at`, ou None.
+#[allow(dead_code)]
+pub fn cible_rel32_x86(at: usize, octets: &[u8]) -> Option<usize> {
+    match octets {
+        [0xe8 | 0xe9, a, b, c, d, ..] => Some((at as i64 + 5 + i32::from_le_bytes([*a, *b, *c, *d]) as i64) as usize),
+        _ => None,
+    }
+}
+
 /// Relais arm64 : les instructions `avant` (sans adresse relative), puis un saut absolu vers
 /// `cible` par `x16` (`ldr x16, #8` ; `br x16` ; l'adresse).
 #[allow(dead_code)]
