@@ -130,11 +130,17 @@ const NATIVES_SALON: [(LuaCFn, &str); 5] = [
     (super::pol::fixer_pol, "Civ6Proxy_FixerPol\0"),
     (version_installee, "Civ6Proxy_VersionInstallee\0"),
 ];
-const NATIVES_PARTIE: [(LuaCFn, &str); 4] = [
+const NATIVES_PARTIE: [(LuaCFn, &str); 10] = [
     (journal, "Civ6Proxy_Journal\0"),
     (pol_actifs, "Civ6Proxy_MacPolActifs\0"),
     super::absent::NATIVES_PARTIE[0],
     super::debit::NATIVES_PARTIE[0],
+    super::reload::NATIVES_PARTIE[0],
+    super::reload::NATIVES_PARTIE[1],
+    super::reload::NATIVES_PARTIE[2],
+    super::reload::NATIVES_PARTIE[3],
+    super::reload::NATIVES_PARTIE[4],
+    super::reload::NATIVES_PARTIE[5],
 ];
 
 const CALE_SALON: &str = r#"
@@ -172,11 +178,12 @@ pub unsafe fn staging_lua(l: *mut c_void, src: &[u8]) -> Vec<u8> {
 
 /// InGame.lua avec le relais du verdict, si les natives sont posées.
 pub unsafe fn partie_lua(l: *mut c_void, src: &[u8]) -> Vec<u8> {
+    super::reload::new_game();
     if !publier(l, &NATIVES_PARTIE) {
         log("partie : natives non posées, pas de relais du verdict");
         return src.to_vec();
     }
-    avec_cale(src, patch_in_game_lua(src), &format!("{CALE_PARTIE}{}", super::absent::CALE_PARTIE))
+    avec_cale(src, patch_in_game_lua(src), &format!("{CALE_PARTIE}{}{}", super::absent::CALE_PARTIE, super::reload::CALE_PARTIE))
 }
 
 #[cfg(test)]
@@ -224,13 +231,13 @@ mod tests {
             "Civ6Proxy_MediasPings", "Civ6Proxy_GardeMessages", "Civ6Proxy_RelayedPairs", "Civ6Proxy_RelinkStart",
             "Civ6Proxy_RelinkState", "Civ6Proxy_RelayForgetPair", "Civ6Proxy_ExeInconnu", "Civ6Proxy_RemapOublier",
             "Civ6Proxy_DoubleLoadRefused", "Civ6Proxy_GardeWipes", "Civ6Proxy_LaunchGuarded",
-            "Civ6Proxy_RejoinKeepCheck", "Civ6Proxy_ReloadAllReady", "Civ6Proxy_ReloadAllRecheck",
-            "Civ6Proxy_ReloadAllStart", "Civ6Proxy_ReloadAllState", "Civ6Proxy_ResyncVolume", "Civ6Proxy_SyncNotes",
+            "Civ6Proxy_ResyncVolume",
         ];
         for bloc in [LUA_BLOCK, PARTIE_BLOCK] {
             for (i, _) in bloc.match_indices("Civ6Proxy_") {
                 let nom: String = bloc[i..].chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '_').collect();
-                let par_cale = nom == "Civ6Proxy_Version" || nom == "Civ6Proxy_PolActifs" || super::super::absent::CALE_PARTIE.contains(&format!("{nom} = function"));
+                let par_cale = nom == "Civ6Proxy_Version" || nom == "Civ6Proxy_PolActifs" || super::super::absent::CALE_PARTIE.contains(&format!("{nom} = function"))
+                    || super::super::reload::CALE_PARTIE.contains(&format!("{nom} = function"));
                 assert!(posees.contains(&nom.as_str()) || par_cale || sans.contains(&nom.as_str()), "{nom} attendue mais ni posée ni rendue");
             }
         }

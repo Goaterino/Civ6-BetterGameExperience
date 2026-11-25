@@ -61,6 +61,8 @@ mod congres;
 mod congres_texte;
 #[path = "macos_depart.rs"]
 mod depart;
+#[path = "macos_reload.rs"]
+mod reload;
 #[path = "macos_debit.rs"]
 mod debit;
 
@@ -210,6 +212,9 @@ unsafe fn installer() {
     }
     if let Err(e) = absent::installer(mh, slide) {
         log(&format!("absent : {e}"));
+    }
+    if let Err(e) = reload::installer(mh, slide) {
+        log(&format!("reload : {e}"));
     }
     if let Err(e) = debit::installer(mh, slide) {
         log(&format!("debit steam : {e}"));
