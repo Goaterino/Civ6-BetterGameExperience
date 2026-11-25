@@ -34,6 +34,19 @@
 //! - `ui_avancement=on|off` (on) : ajoute `ui_avancement.lua` à WorldTracker.lua, et un libellé à
 //!   WorldTrackerResearch.xml et WorldTrackerCivic.xml : « x/y (+z) » (placé / coût, excédent lu par `avancement`) à droite du nom de
 //!   la technologie et du dogme en cours, dans le panneau en haut à gauche ;
+//! - `ui_formations=on|off` (on) : adds `ui_formations.lua` to ProductionPanel.lua. In the
+//!   production list, the main button of a unit trains the highest formation the city can train
+//!   (army, else corps), and the drawer under it holds the lower ones: the reverse of the game ;
+//! - `ui_logement=on|off` (on) : adds `ui_logement.lua` to CityBannerManager.lua. An orange house on
+//!   the banner of a city one housing below its cap (growth -50%), the game's red one at the cap
+//!   (-75%), where the game itself only shows it over the cap ;
+//! - `ui_espions=on|off` (on) : adds `ui_espions.lua` to EspionageSupport.lua (mission chooser
+//!   and mission popup). The displayed success chance counts the escape: success undetected +
+//!   success-must-escape × escape chance, best exit, no counterspy (analyses/espions) ;
+//! - `ui_accord_quantites=on|off` (on) : adds `ui_accord_quantites.lua` to DiplomacyDealView.lua.
+//!   On a resource, the gold, the gold per turn or the favor of the "available" column of the deal
+//!   screen, Shift+click puts as much as the deal accepts, Ctrl+click ten times what a click adds
+//!   (10 of a resource, 1000 gold, 100 gold per turn, 10 favor) ;
 //! - `ui_rendements=on|off` (on, lu par `rendements_empire`) : ajoute `ui_rendements.lua` à
 //!   TopPanel.lua. Le bandeau redessine ses rendements après un gouverneur ou un personnage
 //!   illustre, dont `rendements_empire` refait les instantanés (empire_yields/README.md).
@@ -62,14 +75,23 @@ const MESURE_BLOCK: &str = include_str!("ui_epingles.lua");
 const OPTI_BLOCK: &str = include_str!("ui_epingles_opti.lua");
 const MERVEILLES_BLOCK: &str = include_str!("ui_merveilles.lua");
 const RENDEMENTS_BLOCK: &str = include_str!("ui_rendements.lua");
+const PAUSE_BLOCK: &str = include_str!("ui_pause.lua");
 const DIAG_ACCORDS_BLOCK: &str = include_str!("ui_diag_accords.lua");
 const ACCORD_OR_BLOCK: &str = include_str!("ui_accord_or.lua");
+/// Block of the `ui_accord_quantites` setting (DiplomacyDealView.lua). It shows no text.
+const ACCORD_QUANTITES_BLOCK: &str = include_str!("ui_accord_quantites.lua");
 /// Blocs des réglages `ui_banniere_annuler`, `ui_reduction_quartiers` et `ui_debordement`.
 const ANNULER_BLOCK: &str = include_str!("ui_banniere_annuler.lua");
 const QUARTIERS_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_quartiers.lua"));
 const DEBORDEMENT_BLOCK: &str =
     concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("ui_debordement.lua"));
+/// Block of the `ui_formations` setting (ProductionPanel.lua). Its texts are the game's own.
+const FORMATIONS_BLOCK: &str = include_str!("ui_formations.lua");
+/// Block of the `ui_logement` setting (CityBannerManager.lua). Its texts are the game's own.
+const LOGEMENT_BLOCK: &str = include_str!("ui_logement.lua");
+/// Block of the `ui_espions` setting (EspionageSupport.lua). No text of ours.
+const ESPIONS_BLOCK: &str = include_str!("ui_espions.lua");
 /// Bloc du réglage `ui_avancement` (WorldTracker.lua), et son libellé (WorldTrackerResearch.xml,
 /// WorldTrackerCivic.xml).
 const AVANCEMENT_BLOCK: &str = include_str!("ui_avancement.lua");
@@ -88,6 +110,10 @@ static MESURE_MOUVEMENTS: AtomicBool = AtomicBool::new(false);
 static ANNULER: AtomicBool = AtomicBool::new(true);
 static QUARTIERS: AtomicBool = AtomicBool::new(true);
 static AVANCEMENT: AtomicBool = AtomicBool::new(true);
+static FORMATIONS: AtomicBool = AtomicBool::new(true);
+static LOGEMENT: AtomicBool = AtomicBool::new(true);
+static ESPIONS: AtomicBool = AtomicBool::new(true);
+static ACCORD_QUANTITES: AtomicBool = AtomicBool::new(true);
 /// Les calques sont définis dans le dernier CityBannerInstances.xml lu : le bloc Lua, qui s'en
 /// sert, n'est ajouté qu'à cette condition.
 static XML_PATCHED: AtomicBool = AtomicBool::new(false);
@@ -135,6 +161,22 @@ pub fn set_avancement(on: bool) {
     AVANCEMENT.store(on, Ordering::Relaxed);
 }
 
+pub fn set_formations(on: bool) {
+    FORMATIONS.store(on, Ordering::Relaxed);
+}
+
+pub fn set_logement(on: bool) {
+    LOGEMENT.store(on, Ordering::Relaxed);
+}
+
+pub fn set_espions(on: bool) {
+    ESPIONS.store(on, Ordering::Relaxed);
+}
+
+pub fn set_accord_quantites(on: bool) {
+    ACCORD_QUANTITES.store(on, Ordering::Relaxed);
+}
+
 pub fn set_merveilles(on: bool) {
     MERVEILLES.store(on, Ordering::Relaxed);
 }
@@ -155,6 +197,10 @@ fn active() -> bool {
         || ANNULER.load(Ordering::Relaxed)
         || QUARTIERS.load(Ordering::Relaxed)
         || AVANCEMENT.load(Ordering::Relaxed)
+        || FORMATIONS.load(Ordering::Relaxed)
+        || LOGEMENT.load(Ordering::Relaxed)
+        || ESPIONS.load(Ordering::Relaxed)
+        || ACCORD_QUANTITES.load(Ordering::Relaxed)
         || crate::debordement::pose()
         || crate::rendements_empire::enabled()
         || crate::mods_ui::any()
@@ -817,6 +863,31 @@ pub fn patch_accord_or(src: &[u8]) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
+/// What `ui_accord_quantites.lua` wraps in DiplomacyDealView.lua.
+const ACCORD_QUANTITES_NAMES: [&str; 5] = [
+    "function OnClickAvailableResource(",
+    "function InputHandler(",
+    "function UpdateDealPanel(",
+    "function UpdateProposedWorkingDeal(",
+    "ContextPtr:SetInputHandler(",
+];
+
+/// DiplomacyDealView.lua followed by `ui_accord_quantites.lua`: Shift+click and Ctrl+click on an
+/// available resource, gold or favor of the deal screen (`ui_accord_quantites` setting).
+pub fn patch_accord_quantites(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if let Some(missing) = ACCORD_QUANTITES_NAMES.iter().find(|n| !has(n)) {
+        return Err(format!("{missing} introuvable"));
+    }
+    if has("Civ6RolloverProxy (src/ui_accord_quantites.lua)") {
+        return Err("déjà ajouté".into());
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ACCORD_QUANTITES_BLOCK.as_bytes());
+    Ok(out)
+}
+
 /// DiplomacyDealView.lua suivi de `ui_accord_fin.lua` : pas d'accord envoyé à un humain pendant le
 /// passage de tour (tours passés en boucle chez l'hôte, depart_tour/README.md).
 pub fn patch_accord_fin(src: &[u8]) -> Result<Vec<u8>, String> {
@@ -838,6 +909,14 @@ pub fn patch_diag_accords(src: &[u8]) -> Vec<u8> {
     let mut out = src.to_vec();
     out.extend_from_slice(b"\r\n");
     out.extend_from_slice(DIAG_ACCORDS_BLOCK.as_bytes());
+    out
+}
+
+/// EspionageSupport.lua suivi de `ui_espions.lua`.
+pub fn patch_espions(src: &[u8]) -> Vec<u8> {
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"\r\n");
+    out.extend_from_slice(ESPIONS_BLOCK.as_bytes());
     out
 }
 
@@ -899,6 +978,27 @@ pub fn patch_avancement(src: &[u8]) -> Result<Vec<u8>, String> {
 pub(crate) use crate::congres_texte::{patch_congres, patch_congres_attente, patch_congres_attente_xml, patch_congres_cibles, patch_congres_intro};
 #[cfg(test)]
 use crate::congres_texte::{ATTENTE_BLOCK, CIBLES_BLOCK, CONGRES_BLOCK, INTRO_BLOCK, VOTE_BLOCK};
+
+/// PausePanel.lua (du jeu ou de Multiplayer Helper) suivi de `ui_pause.lua` : la fenêtre « Partie
+/// en pause » n'est plus remise dans la file des popups tant qu'elle y est, ce qui l'empilait
+/// pendant les chargements en multijoueur. Correctif de bug, sans réglage.
+pub fn patch_pause(src: &[u8]) -> Result<Vec<u8>, String> {
+    let has = |pat: &str| src.windows(pat.len()).any(|w| w == pat.as_bytes());
+    if has("Civ6RolloverProxy (src/ui_pause.lua)") {
+        return Err("déjà corrigé".into());
+    }
+    for pat in ["function OpenPausePanel(", "function ClosePausePanel(", "OpenPausePanel()"] {
+        if !has(pat) {
+            return Err(format!("{pat} introuvable"));
+        }
+    }
+    let mut out = src.to_vec();
+    out.extend_from_slice(b"
+");
+    out.extend_from_slice(PAUSE_BLOCK.as_bytes());
+    Ok(out)
+}
+
 
 type Fix = fn(&[u8]) -> Result<Vec<u8>, String>;
 
@@ -984,6 +1084,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         );
         return Some(patch_epingles(src, &ctx, opti, mesure));
     }
+    if ESPIONS.load(Ordering::Relaxed) && ctx == "espionagesupport.lua" {
+        what.push("taux de succès des espions avec l'évasion".into());
+        return Some(patch_espions(src));
+    }
     if MERVEILLES.load(Ordering::Relaxed) && ctx == "productionhelper.lua" {
         what.push("rattrapage des merveilles ajouté".into());
         return Some(patch_merveilles(src));
@@ -1010,6 +1114,18 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         return match patch_congres_intro(src) {
             Ok(text) => {
                 what.push("intro du congrès une seule fois par tour et par session".into());
+                Some(text)
+            }
+            Err(e) => {
+                log(&format!("ui : {chunk} laissé tel quel : {e}"));
+                None
+            }
+        };
+    }
+    if is_file(chunk, "PausePanel.lua") {
+        return match patch_pause(src) {
+            Ok(text) => {
+                what.push("fenêtre de pause mise en file une seule fois".into());
                 Some(text)
             }
             Err(e) => {
@@ -1081,6 +1197,20 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
                 log(&format!("ui : {chunk} : bouton d'or laissé tel quel : {e}"));
                 None
             }
+        };
+        let fixed = if ACCORD_QUANTITES.load(Ordering::Relaxed) {
+            match patch_accord_quantites(fixed.as_deref().unwrap_or(src)) {
+                Ok(text) => {
+                    what.push("Maj+clic et Ctrl+clic sur les ressources, l'or et la faveur disponibles".into());
+                    Some(text)
+                }
+                Err(e) => {
+                    log(&format!("ui : {chunk} : quantités de l'écran d'accord laissées telles quelles : {e}"));
+                    fixed
+                }
+            }
+        } else {
+            fixed
         };
         let fixed = match patch_accord_fin(fixed.as_deref().unwrap_or(src)) {
             Ok(text) => {
@@ -1173,6 +1303,10 @@ unsafe fn patch_ui(l: *mut c_void, chunk: &str, src: &[u8], what: &mut Vec<Strin
         blocks.push(DEBORDEMENT_BLOCK);
         what.push("production en réserve sur le bandeau".into());
     }
+    if LOGEMENT.load(Ordering::Relaxed) {
+        blocks.push(LOGEMENT_BLOCK);
+        what.push("alerte de logement sur le bandeau".into());
+    }
     if blocks.is_empty() {
         return new;
     }
@@ -1191,12 +1325,24 @@ fn append_blocks(src: &[u8], blocks: &[&str]) -> Vec<u8> {
 }
 
 /// ProductionPanel.lua : blocs des réglages `ui_reduction_quartiers` (badge des quartiers en
-/// réduction) et `ui_debordement` (production en réserve), après `ui_production.lua`. None si aucun.
+/// réduction), `ui_formations` (highest formation on the main button of a unit) et `ui_debordement`
+/// (production en réserve), après `ui_production.lua`. None si aucun.
 unsafe fn production_extras(l: *mut c_void, src: &[u8], what: &mut Vec<String>) -> Option<Vec<u8>> {
     let mut blocks: Vec<&str> = Vec::new();
+    if crate::debordement::diag() {
+        // Réglage `diag_production` : lignes `BGD diag quartiers` du badge dans Lua.log.
+        blocks.push("BGD_DIAG_PRODUCTION = true;");
+        what.push("diagnostic de la production".into());
+    }
     if QUARTIERS.load(Ordering::Relaxed) {
+        // Coût lu en direct dans GameCore : le cache de la ville peut être périmé (BGE-36E0D7).
+        crate::debordement::publier_cout(l);
         blocks.push(QUARTIERS_BLOCK);
         what.push("badge des quartiers en réduction".into());
+    }
+    if FORMATIONS.load(Ordering::Relaxed) {
+        blocks.push(FORMATIONS_BLOCK);
+        what.push("formation la plus haute sur le bouton principal".into());
     }
     if crate::debordement::pose() && crate::debordement::publier(l) {
         blocks.push(DEBORDEMENT_BLOCK);
@@ -1410,6 +1556,24 @@ mod tests {
     }
 
     #[test]
+    fn quantites_de_ressources_dans_l_ecran_d_accord() {
+        let src = b"function OnClickAvailableResource(player, resourceType) end function InputHandler( pInputStruct ) end \
+            function UpdateDealPanel(player) end function UpdateProposedWorkingDeal() end ContextPtr:SetInputHandler( InputHandler, true );";
+        let out = patch_accord_quantites(src).unwrap();
+        assert!(out.starts_with(src));
+        assert!(out.ends_with(ACCORD_QUANTITES_BLOCK.as_bytes()));
+        assert!(patch_accord_quantites(&out).is_err(), "pas deux fois");
+        assert!(patch_accord_quantites(b"function OnShow() end").is_err());
+        // Bouton d'or, quantités, accords en fin de tour : les trois blocs se suivent.
+        if let Some(src) = read(format!(r"{GAME}\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua")) {
+            let or = patch_accord_or(&src).unwrap();
+            let quantites = patch_accord_quantites(&or).unwrap();
+            assert!(quantites.starts_with(&or));
+            assert!(patch_accord_fin(&quantites).is_ok());
+        }
+    }
+
+    #[test]
     fn accords_retenus_en_fin_de_tour() {
         let src = b"function OnPropose() DealManager.SendWorkingDeal(1, 0, 1); end";
         let out = patch_accord_fin(src).unwrap();
@@ -1429,6 +1593,18 @@ mod tests {
         assert!(out.ends_with(DIAG_ACCORDS_BLOCK));
         assert!(is_file(r"C:\x\DLC\Expansion2\UI\Replacements\DiplomacyDealView.lua", "DiplomacyDealView.lua"));
         assert!(!is_file(r"C:\x\ui\Replacements\diplomacydealview_MPH.lua", "DiplomacyDealView.lua"));
+    }
+
+    #[test]
+    fn espions_ajoutes_a_espionage_support() {
+        assert_eq!(script_name(r"C:\x\Base\Assets\UI\EspionageSupport.lua"), "espionagesupport.lua");
+        let out = String::from_utf8(patch_espions(b"x = 1")).unwrap();
+        assert!(out.starts_with("x = 1\r\n-- ====="));
+        assert!(out.ends_with(ESPIONS_BLOCK));
+        let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\EspionageSupport.lua")) else { return };
+        let src = String::from_utf8_lossy(&src);
+        assert!(src.contains("UnitManager.GetResultProbability(eOperation, spy, targetPlot)"));
+        assert!(src.contains("ESPIONAGE_SUCCESS_MUST_ESCAPE"));
     }
 
     #[test]
@@ -1800,6 +1976,20 @@ mod tests {
     }
 
     #[test]
+    fn pause_mise_en_file_une_fois() {
+        for f in [
+            "C:/Program Files (x86)/Steam/steamapps/common/Sid Meier's Civilization VI/Base/Assets/UI/Panels/PausePanel.lua",
+            "C:/Program Files (x86)/Steam/steamapps/workshop/content/289070/3307282026/ui/Replacements/pausepanel.lua",
+        ] {
+            let Ok(src) = std::fs::read(f) else { continue };
+            let new = patch_pause(&src).unwrap();
+            assert!(new.starts_with(&src) && new.ends_with(PAUSE_BLOCK.as_bytes()));
+            assert!(patch_pause(&new).is_err(), "pas deux fois");
+        }
+        assert!(patch_pause(b"function Autre() end").is_err());
+    }
+
+    #[test]
     fn production_panel_du_jeu() {
         let Some(src) = read(format!(r"{GAME}\Base\Assets\UI\Panels\ProductionPanel.lua")) else { return };
         let new = patch_production_panel(&src).unwrap();
@@ -1876,8 +2066,8 @@ mod tests {
 
     #[test]
     fn signature_xml() {
-        // Adresse de chaque build connu : 15296837, puis 26407122 (exe du 2026-11-02).
-        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80])] {
+        // Address in each known build: 15296837, 26407122 (exe of 2026-11-02), 26595377 (1.0.12.74).
+        for (exe, expected) in [("CivilizationVI_DX12.exe", [0xa2d280usize, 0xa2d700, 0xa2df50]), ("CivilizationVI.exe", [0xa1f3f0, 0xa1fc80, 0xa1f770])] {
             let Some(bytes) = read(format!(r"{GAME}\Base\Binaries\Win64Steam\{exe}")) else { continue };
             // Adresse virtuelle relative de chaque occurrence, par les en-têtes de sections.
             let base = bytes.as_ptr() as usize;

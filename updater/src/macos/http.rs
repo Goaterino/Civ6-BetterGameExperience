@@ -1,4 +1,4 @@
-//! Téléchargements HTTPS sous macOS, l'équivalent de http.rs : ureq, avec le TLS du système
+//! Téléchargements HTTPS sous macOS, l'équivalent de windows/http.rs : ureq, avec le TLS du système
 //! (Security.framework, par native-tls) et le proxy des variables d'environnement. Pas de `curl`
 //! lancé : tout reste dans le processus du lanceur. Mêmes règles que sous Windows : trois essais
 //! pour une erreur réseau ou une erreur passagère du serveur, jamais pour un 404.

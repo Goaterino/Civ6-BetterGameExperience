@@ -2,7 +2,16 @@
 //! (macos_options.rs) : insertion dans Options.xml et Options.lua, fusion du fichier de réglages.
 //! Sans appel au système : testés sur les vrais fichiers du jeu (options.rs, tests).
 
-pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("options_proxy.lua"), include_str!("ping_volume.lua"));
+pub const LUA_BLOCK: &str = concat!(
+    include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("options_proxy.lua"),
+    // Its own function: the locals stay out of Options.lua's chunk and its register limit.
+    "\ndo\nlocal ok, err = pcall(function()\n",
+    include_str!("../../proxy/src/mods/pings/catalog.lua"), "\n",
+    include_str!("../../proxy/src/mods/pings/bindings.lua"), "\n",
+    include_str!("../../proxy/src/mods/pings/prefs.lua"), "\n",
+    include_str!("ping_volume.lua"),
+    "\nend)\nif not ok then print('BGE team pings options: ' .. tostring(err)) end\nend\n"
+);
 pub(crate) const XML_TAB: &str = include_str!("options_proxy_tab.xml");
 pub(crate) const XML_PANEL: &str = include_str!("options_proxy_panel.xml");
 

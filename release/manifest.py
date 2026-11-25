@@ -11,6 +11,10 @@ téléchargé. La clé privée vit hors du dépôt et dans le secret GitHub BGD_
     python release/manifest.py sign dist/manifest.json          (clé dans $BGD_SIGNING_KEY)
     python release/manifest.py verify dist/manifest.json
     python release/manifest.py sign --public-key updater/macos/test/public_key.txt …   (clé de test)
+    python release/manifest.py rehash dist/manifest.json        (après la signature Authenticode)
+    python release/manifest.py sign-file dist/BetterGameExperience-linux-x86_64   (installeur Linux)
+    python release/manifest.py verify-file dist/BetterGameExperience-linux-x86_64
+    python release/manifest.py public-pem                       (clé publique embarquée par install.sh)
 """
 
 import argparse
@@ -89,16 +93,23 @@ def build(args):
     print(Path(args.out).read_text(encoding="utf-8"))
 
 
+def rehash(args):
+    """Recalcule taille et SHA-256 des fichiers d'un manifeste existant, à côté de lui, sans toucher
+    à version, lobby_version ni commit : la signature Authenticode (release/signer.ps1) change les
+    octets des DLL, pas ce qu'elles sont. La signature ed25519 est à refaire ensuite."""
+    path = Path(args.manifest)
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    for f in manifest["files"]:
+        data = (path.parent / f["name"]).read_bytes()
+        f["size"] = len(data)
+        f["sha256"] = hashlib.sha256(data).hexdigest()
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+    print(path.read_text(encoding="utf-8"))
+
+
 def sign(args):
-    seed = os.environ.get("BGD_SIGNING_KEY")
-    if not seed:
-        sys.exit("BGD_SIGNING_KEY absente.")
-    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(seed.strip()))
-    public_key = Path(args.public_key)
-    if raw(key.public_key()) != base64.b64decode(public_key.read_text().strip()):
-        sys.exit(f"BGD_SIGNING_KEY ne correspond pas à {public_key}.")
     data = Path(args.manifest).read_bytes()
-    Path(args.manifest + ".sig").write_text(base64.b64encode(key.sign(data)).decode() + "\n")
+    Path(args.manifest + ".sig").write_text(base64.b64encode(_signing_key(Path(args.public_key)).sign(data)).decode() + "\n")
     print(f"Signé : {args.manifest}.sig")
 
 
@@ -113,6 +124,40 @@ def verify(args):
     print("Signature et SHA-256 valides.")
 
 
+def _signing_key(public_key=PUBLIC_KEY):
+    """La clé privée de $BGD_SIGNING_KEY, refusée si elle ne correspond pas à `public_key` (celle des
+    releases par défaut ; `sign --public-key` pour la clé de test du lanceur macOS)."""
+    seed = os.environ.get("BGD_SIGNING_KEY")
+    if not seed:
+        sys.exit("BGD_SIGNING_KEY absente.")
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(seed.strip()))
+    if raw(key.public_key()) != base64.b64decode(Path(public_key).read_text().strip()):
+        sys.exit(f"BGD_SIGNING_KEY ne correspond pas à {public_key}.")
+    return key
+
+
+def sign_file(args):
+    """Signature ed25519 d'un fichier hors manifeste (l'installeur Linux), dans `<fichier>.sig` en
+    base64 : install.sh la vérifie avec openssl avant de lancer le binaire. Le manifeste ne peut pas
+    lister ce fichier : un installeur déjà distribué refuse tout manifeste qui liste plus que les deux
+    DLL."""
+    data = Path(args.file).read_bytes()
+    Path(args.file + ".sig").write_text(base64.b64encode(_signing_key().sign(data)).decode() + "\n")
+    print(f"Signé : {args.file}.sig")
+
+
+def verify_file(args):
+    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(PUBLIC_KEY.read_text().strip()))
+    pub.verify(base64.b64decode(Path(args.file + ".sig").read_text().strip()), Path(args.file).read_bytes())
+    print(f"Signature valide : {args.file}")
+
+
+def public_pem(_args):
+    """La clé publique au format PEM (SubjectPublicKeyInfo), celle qu'install.sh embarque."""
+    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(PUBLIC_KEY.read_text().strip()))
+    print(pub.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode(), end="")
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(required=True)
@@ -125,6 +170,9 @@ def main():
     p.add_argument("--platform", choices=["windows", "macos"], default="windows")
     p.add_argument("dist")
     p.set_defaults(func=build)
+    p = sub.add_parser("rehash")
+    p.add_argument("manifest")
+    p.set_defaults(func=rehash)
     p = sub.add_parser("sign")
     p.add_argument("--public-key", default=PUBLIC_KEY, help="clé publique attendue (par défaut celle des releases)")
     p.add_argument("manifest")
@@ -133,6 +181,14 @@ def main():
     p.add_argument("--public-key", default=PUBLIC_KEY, help="clé publique attendue (par défaut celle des releases)")
     p.add_argument("manifest")
     p.set_defaults(func=verify)
+    p = sub.add_parser("sign-file")
+    p.add_argument("file")
+    p.set_defaults(func=sign_file)
+    p = sub.add_parser("verify-file")
+    p.add_argument("file")
+    p.set_defaults(func=verify_file)
+    p = sub.add_parser("public-pem")
+    p.set_defaults(func=public_pem)
     args = parser.parse_args()
     args.func(args)
 

@@ -1,5 +1,5 @@
-//! Fenêtres du lanceur sous macOS : `NSAlert` d'AppKit, avec la même interface que gui.rs (le
-//! TaskDialog de Windows), pour que main.rs reste commun.
+//! Fenêtres du lanceur sous macOS : `NSAlert` d'AppKit, avec la même interface que windows/gui.rs (le
+//! TaskDialog de Windows), pour que macos/app.rs suive windows/app.rs.
 //!
 //! Correspondances avec le TaskDialog :
 //! - liens de commande (`titre\ndescription`) : un bouton par titre, les descriptions sous le texte ;

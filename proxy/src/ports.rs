@@ -16,7 +16,7 @@
 //! de propriétaire qui suit l'appel reste en place, comme les règles de destination.
 //! Investigation : analyses/teleportation/README.md.
 
-use crate::patch::{alloc_near, rel32, write_rel32, IMAGE_BASE};
+use crate::patch::{alloc_near, rel32, write_rel32};
 use crate::{log, pol};
 use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
@@ -41,7 +41,7 @@ static DEPARTS: AtomicU32 = AtomicU32::new(0);
 const MAX_LOGS: u32 = 20;
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -123,8 +123,8 @@ pub unsafe fn on_proxy_unload() {
     if base == 0 {
         return;
     }
-    let at = base + (SITE - IMAGE_BASE) as usize;
-    if let Some(rel) = rel32(at, base + (EST_CENTRE_VILLE - IMAGE_BASE) as usize) {
+    let at = base + crate::patch::rva(SITE);
+    if let Some(rel) = rel32(at, base + crate::patch::rva(EST_CENTRE_VILLE)) {
         write_rel32(at, rel);
     }
 }

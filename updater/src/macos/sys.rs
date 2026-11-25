@@ -1,4 +1,4 @@
-//! Les fonctions du système utilisées sous macOS, l'équivalent de win.rs : dossier de Steam, liste
+//! Les fonctions du système utilisées sous macOS, l'équivalent de windows/win.rs : dossier de Steam, liste
 //! des processus (libproc), ouverture d'une adresse `steam://` (NSWorkspace), langue préférée
 //! (NSLocale), presse-papiers (NSPasteboard).
 

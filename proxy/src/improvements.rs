@@ -21,7 +21,7 @@
 //! - `fast` : version précalculée seule, comptée et chronométrée ;
 //! - `quiet` : version précalculée seule, sans compteur ni chronomètre ni journal (pour jouer).
 
-use crate::patch::{self, Site, IMAGE_BASE};
+use crate::patch::{self, Site};
 use crate::{log, win};
 use std::sync::atomic::{AtomicI64, AtomicPtr, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::Mutex;
@@ -84,7 +84,7 @@ unsafe fn rd<T: Copy>(addr: usize) -> T {
 
 /// Adresse dans l'originale chargée d'une fonction ou donnée repérée dans Ghidra.
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 macro_rules! call {

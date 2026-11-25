@@ -1,7 +1,7 @@
 //! Notification de mise à jour au menu principal (voir `maj.lua`).
 //!
 //! Au premier script Lua chargé par l'exe, bien avant le menu principal, un thread cherche la dernière
-//! version (`curl.exe` de Windows, sans fenêtre) et la compare à celle de ces DLL (`version::RELEASE`).
+//! version (WinHTTP, voir `http`) et la compare à celle de ces DLL (`version::RELEASE`).
 //! Il suit le canal choisi dans l'installeur (`%LOCALAPPDATA%\BetterGameDLLs\canal.txt`) : en canal
 //! release, le manifeste de la dernière release ; en canal pré-release, la release publiée au plus
 //! grand numéro, pré-releases comprises (liste de l'API GitHub). Le popup dit laquelle des deux. Rien n'est cherché pour une compilation locale, ni avec `verif_maj=off`
@@ -14,7 +14,6 @@
 use crate::log;
 use crate::options::{hks, publish_natives, push_str, Natives};
 use crate::version::RELEASE;
-use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::{Mutex, Once};
@@ -27,7 +26,6 @@ const RELEASE_PAGE: &str = "https://github.com/Goaterino/Civ6-BetterGameExperien
 const TAG_PAGE: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/tag/v";
 /// Releases publiées, les plus récentes d'abord (sans jeton, les brouillons n'y sont pas).
 const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6-BetterGameExperience/releases?per_page=30";
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Dernière version trouvée, et si c'est une pré-release.
 #[derive(Clone, Debug, PartialEq)]
@@ -64,6 +62,12 @@ pub fn start() {
         }
         let prerelease = prerelease_channel();
         let channel = if prerelease { "pré-release" } else { "release" };
+        if crate::wine::is_wine() {
+            // Plain paths, not `{:?}`: its doubled `\\` would also escape the bug report's anonymisation.
+            let chemin = |p: Option<PathBuf>| p.map_or("aucun".to_string(), |p| p.display().to_string());
+            log(&format!("maj : Wine détecté, dossier de données Linux : {}, script de lancement : {}", chemin(crate::wine::data_dir()), chemin(installer())));
+        }
+        log(&format!("maj : version installée {current}, vérification du canal {channel} ({})", if prerelease { API_RELEASES } else { MANIFEST_URL }));
         std::thread::spawn(move || match fetch_latest(prerelease) {
             Ok(latest) if newer(&latest.version, current) => {
                 log(&format!("maj : version {} disponible (canal {channel}, installée : {current})", latest.version));
@@ -93,6 +97,12 @@ fn config_enabled(text: &str) -> bool {
 
 /// Canal choisi dans l'installeur (updater/src/release.rs) : `prerelease`, sinon release.
 fn prerelease_channel() -> bool {
+    // Under Wine, the Linux installer keeps its channel in its own directory (updater/src/release.rs, data_dir).
+    if crate::wine::is_wine() {
+        return crate::wine::data_dir()
+            .and_then(|d| std::fs::read_to_string(d.join("canal.txt")).ok())
+            .is_some_and(|c| c.trim() == "prerelease");
+    }
     let Some(dir) = std::env::var_os("LOCALAPPDATA") else { return false };
     // BetterGameDLLs : nom du projet jusqu'à la v0.5.0, tant que le nouvel installeur n'a pas tourné.
     ["BetterGameExperience", "BetterGameDLLs"]
@@ -103,24 +113,11 @@ fn prerelease_channel() -> bool {
 
 fn fetch_latest(prerelease: bool) -> Result<Found, String> {
     if prerelease {
-        let list = curl(API_RELEASES)?;
+        let list = crate::http::get(API_RELEASES)?;
         return parse_releases(&list).ok_or_else(|| "aucune release publiée dans la liste".into());
     }
-    let version = parse_version(&curl(MANIFEST_URL)?).ok_or("manifeste sans version")?;
+    let version = parse_version(&crate::http::get(MANIFEST_URL)?).ok_or("manifeste sans version")?;
     Ok(Found { version, prerelease: false })
-}
-
-fn curl(url: &str) -> Result<String, String> {
-    let root = std::env::var_os("SystemRoot").unwrap_or("C:\\Windows".into());
-    let out = Command::new(PathBuf::from(root).join("System32\\curl.exe"))
-        .args(["-fsSL", "--max-time", "20", url])
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| format!("curl.exe : {e}"))?;
-    if !out.status.success() {
-        return Err(String::from_utf8_lossy(&out.stderr).trim().to_string());
-    }
-    Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
 /// La release au plus grand numéro de la liste de l'API, sans analyseur JSON : chaque release y
@@ -172,7 +169,13 @@ fn newer(latest: &str, current: &str) -> bool {
 }
 
 /// L'installeur se copie là à chaque installation (updater/src/main.rs).
+/// Under Wine: the Linux installer's `bge-launch.sh` script (updater/src/linux/app.rs), which starts
+/// it outside the game. The binary itself is never launched from here: Wine would take this static
+/// ELF for one of its own modules.
 fn installer() -> Option<PathBuf> {
+    if crate::wine::is_wine() {
+        return crate::wine::data_dir().map(|d| d.join("bge-launch.sh")).filter(|p| p.is_file());
+    }
     // L'installeur d'avant le changement de nom (BetterGameDLLs) sait aussi installer la release.
     let dir = PathBuf::from(std::env::var_os("LOCALAPPDATA")?);
     [dir.join("BetterGameExperience\\BetterGameExperience.exe"), dir.join("BetterGameDLLs\\BetterGameDLLs.exe")]
@@ -188,7 +191,17 @@ fn launch_installer(version: Option<&str>) -> bool {
         let mut cmd = Command::new(&exe);
         cmd.arg("--after-game");
         if let Some(dir) = crate::self_dir() {
-            cmd.arg(dir);
+            if crate::wine::is_wine() {
+                // The Linux installer expects a Unix path.
+                match crate::wine::to_unix(&dir) {
+                    Some(unix) => {
+                        cmd.arg(unix);
+                    }
+                    None => log(&format!("maj : pas de chemin Unix pour {}", dir.display())),
+                }
+            } else {
+                cmd.arg(dir);
+            }
         }
         match cmd.spawn() {
             Ok(_) => {
@@ -244,7 +257,11 @@ unsafe extern "C-unwind" fn lua_update(l: *mut std::ffi::c_void) -> i32 {
     }
 }
 
-pub const NATIVES: Natives = &[(lua_update, b"Civ6Proxy_MiseAJour\0"), (crate::salon::lua_log, b"Civ6Proxy_Journal\0")];
+pub const NATIVES: Natives = &[
+    (lua_update, b"Civ6Proxy_MiseAJour\0"),
+    (crate::salon::lua_log, b"Civ6Proxy_Journal\0"),
+    (crate::salon::lua_version_non_prise_en_charge, b"Civ6Proxy_VersionNonPriseEnCharge\0"),
+];
 
 pub const XML: &str = "MainMenu.xml";
 

@@ -2,6 +2,254 @@
 
 [English](../CHANGELOG.md) · inne języki: zobacz [listę zmian po angielsku](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.15.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.14.0 i 0.15.0, je wyłącza.
+
+### Instalacja i aktualizacje
+- **Linux (Steam Play / Proton)**: BetterGameExperience można teraz instalować i aktualizować w
+  Linuksie, dla wersji gry na Windows uruchamianej przez Proton. Jedno polecenie w terminalu pobiera
+  wydanie, sprawdza jego podpis i SHA-256 każdego pliku, a potem je instaluje (zob. README). Wkład:
+  etbala.
+- **Sprawdzanie aktualizacji bez curl**: sprawdzanie aktualizacji i zgłoszenia błędów używają teraz
+  funkcji sieciowych Windows zamiast curl.exe, więc działają też w Wine i Protonie. Wkład: etbala.
+
+### Wersje gry
+- **Civilization VI 1.0.12.72 nie jest już obsługiwana**: jej gracze przeszli na 1.0.12.74. W
+  1.0.12.72 BetterGameExperience nie instaluje żadnej poprawki i informuje o tym w menu głównym, w
+  poczekalni i na przycisku zgłoszenia błędu.
+- **1.0.12.58 z plikami gry z czerwca 2024**: od 0.14.0 to połączenie nie dostawało żadnej poprawki.
+  Znów jest rozpoznawane.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Tura nieobecnego gracza**: gdy inny gracz kończył turę nieobecnego, gra mogła sama ją ponownie
+  otworzyć (jednostka z pozostałym ruchem), a nikt już jej nie kończył: tura stała w miejscu. Tura
+  zakończona przez innego gracza pozostaje teraz zakończona.
+- **Widoczność miasta-państwa po wojnie**: gracz, który znów zostawał zwierzchnikiem miasta-państwa
+  po wojnie z nim (częste w grach Teamer), nigdy nie odzyskiwał jego widoczności. Teraz ona wraca, a
+  rozgrywki już dotknięte są naprawiane w następnej turze.
+- **Niewidoczne wioski plemienne po wczytaniu**: od 0.14.0 wioski plemienne we mgle znikały z mapy
+  po ponownym wczytaniu lub resynchronizacji. Znów są widoczne.
+- **Większe fragmenty sieciowe**: duże wiadomości sieciowe (zapisy gry, kontrole synchronizacji) są
+  teraz wysyłane we fragmentach po 16 KB zamiast 1,2 KB, tylko w rozgrywce, w której każdy
+  połączony gracz ma 0.15.0. Gracz bez BetterGameExperience lub z inną wersją od razu przywraca
+  rozmiar gry.
+
+### Tryb wieloosobowy
+- **Szybsze kontrole synchronizacji u hosta**: na koniec każdej tury host nie przelicza już tych
+  samych danych synchronizacji dla każdego gracza. Do tego tylko host potrzebuje 0.15.0.
+- **Automatyczne wczytanie, gdy gracz pozostaje niezsynchronizowany**: gdy kontrola synchronizacji
+  wysłałaby graczowi ponad 500 KB napraw albo naprawiłaby 30 obiektów (gracz, który wrócił w trakcie
+  tury, mógł dostawać prawie 6 MB co turę), host wczytuje teraz grę ponownie dla wszystkich. Najwyżej
+  raz na 10 tur; ponad to informuje o tym czat.
+- **Długie zmiany tury po powrocie do gry**: trzy powyższe zmiany dotyczą długich zmian tury po
+  powrocie gracza do gry (do 45 s na turę). Zysk trzeba jeszcze potwierdzić w prawdziwych
+  rozgrywkach: dajcie znać, co widzicie.
+- **Mniej desynchronizacji po naprawie**: gdy host ponownie wysyła obiekt, aby naprawić
+  desynchronizację, gra gracza odczytuje go teraz dokładnie tak, jak host go zapisał. Operacje
+  jednostek, przyspieszenia badań i kultury SI oraz analiza Kongresu Światowego zachowywały część
+  dawnej zawartości, a drzewa zachowań SI pozostawały niepołączone. W teście z cywilizacjami SI pełne
+  wczytania spadły z 2 do 0. Do tego tylko gracz potrzebuje 0.15.0. Ustawienie w opcjach
+  zaawansowanych, domyślnie włączone. Wkład: OzrielTheLost.
+- **Zamiana miejsc z graczem bez BetterGameExperience**: zamiana miejsc w poczekalni mogła sprawić,
+  że host liczył gracza bez BetterGameExperience jako wyposażonego i włączał mu poprawki. Każde
+  ogłoszenie jest teraz powiązane z kontem Steam gracza.
+- **Gotowość zachowana w poczekalni**: zmiana hosta, która nie zmienia ustawień rozgrywki, nie
+  odbiera już graczom gotowości. Gdy ustawienia gracza wciąż różnią się od ustawień hosta, kiedy host
+  jest gotowy, czat o tym informuje i prosi tego gracza o ponowne dołączenie.
+- **Poczekalnia po anulowanym restarcie (MPH)**: po anulowaniu restartu uruchomionego z poczekalni
+  następna rozgrywka utworzona lub wczytana z poczekalni była wczytywana dwa razy przez każdego
+  gracza. Teraz jest wczytywana raz.
+- **Poczekalnia zapisanej gry**: dołączenie do niej mogło pokazywać „nieprawidłowe opcje gracza" dla
+  przywódców z DLC lub modów, dopóki nie otwarto ponownie konfiguracji gry. Lista graczy jest teraz
+  odbudowywana.
+
+### Kongres Światowy
+- **Drugi powrót do głosowania**: gracz, który drugi raz wrócił do głosowania, nie mógł już oddać
+  wszystkich głosów. Głosy już wysłane są teraz zachowywane.
+
+### Szybsze wczytywanie
+- **Użycie procesora na ekranie wczytywania**: od 0.14.0 ekran wczytywania mógł działać dalej bez
+  przerwy między klatkami i bez VSync po przygotowaniu mapy, przy pełnym obciążeniu procesora. Ta
+  szybka faza kończy się teraz, gdy tylko teren jest gotowy (najwyżej 3 s).
+
+### Interfejs
+- **Szansa powodzenia szpiegów**: szansa pokazywana przy wyborze misji szpiega uwzględnia teraz
+  ucieczkę: sukces wymagający ucieczki opłaca się tylko, jeśli szpieg ucieknie. Zakłada najlepszą
+  drogę ucieczki i brak kontrwywiadu, jak gra. Domyślnie włączone (ustawienia interfejsu).
+- **Sygnały drużyny**: głośność i skróty sygnałów są zachowywane między wczytaniami i ponownymi
+  uruchomieniami gry.
+- **Karta ustawień**: ponowne otwarcie karty BetterGameExperience mogło pokazywać stare wartości.
+
+## BetterGameExperience 0.14.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.14.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.13.0 i 0.14.0, je wyłącza.
+
+### Instalacja i aktualizacje
+- **Podpisane pliki**: instalator i obie biblioteki DLL BetterGameExperience mają teraz certyfikat
+  podpisywania kodu (Certum, programista open source). Windows pokazuje wydawcę we właściwościach
+  pliku i w oknie instalatora, a ostrzeżenia SmartScreen i programów antywirusowych powinny być
+  rzadsze.
+
+### Wersje gry
+- **Civilization VI 1.0.12.58**: BetterGameExperience rozpoznaje teraz tę starszą wersję gry, w DX12 i
+  DX11. Każda wersja gry ma własne adresy, a gra, której pliki nie pasują do jej wersji, nie
+  instaluje żadnej poprawki.
+- **Nieobsługiwana wersja gry**: gracz, którego wersja gry nie jest obsługiwana przez
+  BetterGameExperience, jest ogłaszany na czacie po dołączeniu (komunikat mówił wcześniej, że jego
+  kopia nie jest aktualną wersją ze Steam).
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Mniej desynchronizacji po wczytaniu**: gra wczytana na jednym komputerze liczyła nieco inaczej niż
+  gra toczona na pozostałych. Zapamiętane ulepszenia graczy były przepisywane przy wczytaniu,
+  odbiorniki zdarzeń działały w innej kolejności, SI na stałe zachowywała preferencje swojego
+  przywódcy (Sejong: -75% punktów Wielkiego Proroka), a jednostki dawane przy tworzeniu dzielnicy
+  (bonusy poziomu trudności SI, start w późniejszej erze) powstawały w innej kolejności. Wczytana gra
+  liczy teraz tak samo jak toczona. Wkład OzrielTheLost.
+- **Te same obliczenia na każdym procesorze**: niektóre obliczenia (funkcje wykładnicze, potęgi) mogły
+  zaokrąglać się inaczej na procesorach z instrukcjami FMA3 i bez nich. Wszystkie komputery liczą je
+  teraz tak samo. Wkład OzrielTheLost.
+- **Zamiana jednostek**: zamiana dwóch jednostek mogła zostawić jedną w połowie drogi, na jednym polu
+  z inną jednostką (szermierz na przyczajonym tygrysie). Obie jednostki kończą teraz swój ruch.
+
+### Gra wieloosobowa
+- **Desynchronizacje naprawiane bez wczytywania**: gdy obiekt pozostaje rozsynchronizowany, host
+  wysyła teraz wszystkie jego dane, a gra gracza naprawia go na miejscu, zamiast odpływać aż do
+  pełnego wczytania. Do tego wersji 0.14.0 potrzebuje tylko host. Wkład OzrielTheLost.
+
+### Kongres Światowy
+- **Tura kongresu po wymuszonym końcu tury**: gdy jednoczesny koniec tury wymuszał zakończenie tury
+  gracza, tura kongresu mogła skończyć się dwie sekundy po otwarciu, bez głosowania. Tura kongresu
+  zaczyna się teraz z pełnym zegarem, okno głosowania otwiera się ponownie, jeśli tura skończyła się
+  bez głosu, a przycisk kongresu pokazuje bieżącą sesję.
+
+### Szybsze wczytywanie
+- **Szybsze ponowne wczytywanie**: przy tych samych modach ponowne wczytanie zachowuje etap
+  konfiguracji i zostawia teksty modów bez zmian, ostatnia faza wczytywania nie czeka już między
+  krokami, a czekanie na VSync jest wyłączone także w DX11. Zmierzone na małej mapie: z 13 s do 9 s.
+  Ustawienia w opcjach zaawansowanych, domyślnie włączone. Wkład OzrielTheLost.
+
+### Interfejs
+- **Skróty na ekranie umowy**: w kolumnie „dostępne” Shift+klik dodaje tyle, ile umowa przyjmie, a
+  Ctrl+klik dodaje dziesięć razy tyle co klik, dla surowców, złota, złota na turę i przychylności.
+  Domyślnie włączone. Wkład huchenlei.
+- **Odznaka zniżki dzielnic**: po postawieniu dzielnicy ze zniżką w jednym mieście inne, już oglądane
+  miasto nadal pokazywało zniżkę, choć dzielnica kosztowała pełną cenę.
+- **Nadwyżka produkcji**: „+N” na banerze miasta zostawało po tym, jak tura je wydała.
+
+### Ustawienia
+- **Nowości interfejsu z aktualizacji**: nowe ustawienie na początku sekcji Interfejs. Na
+  „Wyłączone” nowości interfejsu z kolejnych aktualizacji przychodzą wyłączone, a te, które masz,
+  zachowują obecny stan.
+
+## BetterGameExperience 0.13.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.13.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.12.0 i 0.13.0, je wyłącza.
+
+### Aktualizacja gry 1.0.12.74
+- **Aktualizacja Civilization VI z 19 listopada (1.0.12.74)**: BetterGameExperience rozpoznaje teraz
+  zaktualizowaną grę, w DX12 i DX11. Wcześniejsze wersje nie instalują w niej żadnej ze swoich
+  poprawek. Wkład yodha.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Gracz, który się rozłącza**: gra oddawała rozłączonego gracza SI na każdym komputerze osobno, bez
+  żadnej wiadomości między nimi, więc komputery mogły rozegrać tę turę inaczej i się rozsynchronizować.
+  Miejsce pozostaje teraz ludzkie, a host kończy turę nieobecnego gracza, gdy wszyscy połączeni
+  ludzie zakończą swoją. Wyrzucony gracz nadal przechodzi pod SI. Wkład yodha.
+- **Ponowne wczytanie u wszystkich**: gdy gra jednego gracza przestaje się zgadzać, host sam
+  rozpoczyna ponowne wczytanie i wszyscy gracze wczytują tę samą kopię jego gry; tura zaczyna się
+  dopiero, gdy każdy gracz ją wczyta, a jego gra zostanie sprawdzona. Gracz, który nadal się różni,
+  jest wczytywany jeszcze raz. Wkład yodha.
+
+## BetterGameExperience 0.12.0
+
+W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.12.0, aby działały poprawki
+**[wszyscy gracze]**: poczekalnia, w której są 0.11.0 i 0.12.0, je wyłącza.
+
+### Poprawki gry wieloosobowej [wszyscy gracze]
+- **Desynchronizacja po ponownym dołączeniu**: gracz, który dołączył ponownie albo został wczytany
+  ponownie sam, prowadził świeżo wczytaną grę obok trwających gier pozostałych. Różnią się one
+  danymi, których sprawdzanie synchronizacji nie obejmuje, więc gra znów się rozjeżdżała i wczytywała
+  tego gracza raz za razem. Teraz, gdy gra jednego gracza przestaje się zgadzać, host podaje powód na
+  czacie i wszyscy od razu wczytują grę hosta; host czeka na sprawdzenie wczytanej gry przez każdego
+  gracza, a potem tura zaczyna się dla wszystkich. Wkład yodha.
+- **Ponowne dołączenie pod koniec tury**: gracz, który dołączył ponownie w trakcie końca tury, był
+  porównywany z następną turą, co powodowało zbędną naprawę, a potem ponowne wczytanie co dwie tury.
+  Wkład yodha.
+- **Remap Multiplayer Helper**: po remapie host prowadził świeżo wygenerowaną grę, a wszyscy
+  pozostali gracze tę samą grę wczytaną z zapisu hosta, i SI podejmowała po obu stronach nieco inne
+  decyzje (naprawy po kilka MB na turę w grze 8 graczy). Teraz host także wczytuje własny zapis, więc
+  wszystkie komputery prowadzą tę samą grę. Koszt: jeden dodatkowy ekran wczytywania dla hosta, raz
+  na remap. Wkład yodha.
+- **Każda gra zaczyna się od zera**: niektóre liczniki gry przechodziły z jednej gry do następnej w
+  tej samej sesji, przez co obiekty były numerowane inaczej niż u pozostałych graczy. Wkład yodha.
+
+### Gra wieloosobowa
+- **Podwójne wczytanie przy uruchamianiu zapisu**: host nie wysyła już drugiej kopii gry graczom,
+  którzy jeszcze wczytują, przez co niektórzy wczytywali dwa razy. Gdy kopia nadal zostanie
+  odrzucona, czat pokazuje „Zapobieżono podwójnemu wczytaniu”. Wkład yodha.
+- **Uszkodzone wiadomości sieciowe**: wiadomość, która wyczyściłaby ustawienia gry, jest teraz też
+  odrzucana. Czat podaje gracza i to, czemu zapobieżono („Zapobieżono zawieszeniu gry”,
+  „Zapobieżono wyczyszczeniu ustawień gry”). Wkład yodha.
+- **Wiadomości ucięte pod koniec wczytywania**: wiadomość wstrzymana w trakcie wczytywania nie jest
+  już doklejana do wiadomości, która jeszcze przychodzi w częściach. Wkład yodha.
+- **Poprawki BetterGameExperience ustalane przy wczytywaniu**: decyzja o włączeniu poprawek
+  **[wszyscy gracze]** jest ponownie sprawdzana przy wczytywaniu i przy zamknięciu ekranu
+  wczytywania, nowy host po migracji hosta ją przejmuje (gracze dołączający po migracji grali bez
+  nich), a ignorowani gracze pozostają ignorowani po ponownym wczytaniu. Wkład yodha.
+- **Nieaktualna kopia gry**: gracz, którego gra nie jest aktualną wersją ze Steama, jest ogłaszany
+  na czacie po dołączeniu, bo poprawki sieciowe BetterGameExperience nie mogą działać na jego PC.
+- **Okno „Gra wstrzymana”**: nie piętrzy się już podczas wczytywania i nie pojawia się nad ekranem
+  wczytywania.
+- **Ustawienia gry**: sygnałów drużynowych nie można już włączyć ani wyłączyć po rozpoczęciu gry
+  (zmiana nic nie dawała albo zostawiała sygnały aktywne), także we wczytanych zapisach. No
+  First/Last moves i sygnałów drużynowych nie można już włączyć w poczekalni, w której któryś gracz
+  nie ma BetterGameExperience lub właściwej wersji, ale nadal można je wyłączyć. Wkład mariusbw.
+
+### No First/Last moves
+- Opcja pozostaje włączona po włączeniu. Host nie czeka już na gracza, który dwie tury z rzędu nie
+  był gotowy, i mówi o tym na czacie. Gracz, który przez 75 s nie dostaje od hosta sygnału startu,
+  zaczyna turę sam. Wkład yodha.
+- **Spokojniejszy czat**: komunikat o włączeniu skrócono do „No First/Last moves włączone.”, a
+  wiersze o wstrzymaniu rozkazów i o starcie pojawiają się raz na grę zamiast co turę. Ogłoszenie,
+  że BetterGameExperience jest aktywny, jest wysyłane raz na poczekalnię, a nie przy każdym ponownym
+  otwarciu ekranu poczekalni.
+
+### Szybsze wczytywanie
+- Nowe ustawienia w karcie BetterGameExperience, wszystkie domyślnie włączone, które skracają
+  wczytywanie bez zmiany gry: szybsze wyszukiwanie plików graficznych (kilka sekund z menu
+  głównego), baza danych rozgrywki i teksty modów zachowywane między wczytaniami, gdy mody są te same
+  (po około 1,5 s), brak czekania na VSync na ekranach wczytywania (około 2 s, tylko przy włączonym
+  VSync), jedno czyszczenie Lua przy zamykaniu interfejsu (około 2 s przed remapem), lżejsze
+  pierwsze wczytanie dla hosta przy remapie (około 10 s) i szybsza analiza wąskich przejść przy
+  generowaniu mapy (około 2 s, ten sam wynik). Dziennik wąskich przejść SI (AI_ChokePoint.csv,
+  12 MB) nie jest już domyślnie zapisywany.
+- **Wątki zadań**: bezczynne wątki marnują mniej czasu procesora podczas czekania (ustawienia w tej
+  samej karcie).
+
+### Interfejs
+- **Najwyższa formacja jako pierwsza**: na liście produkcji główny przycisk jednostki szkoli
+  najwyższą formację, jaką miasto może wyszkolić (armię, a jeśli nie, korpus; na morzu armadę, a
+  jeśli nie, flotę), a pojedyncza jednostka trafia do rozwijanego menu pod spodem. Zakupy za złoto i
+  wiarę się nie zmieniają. Domyślnie włączone. Wkład huchenlei.
+- **Wczesne ostrzeżenie o obszarach mieszkalnych**: banery twoich miast pokazują pomarańczowy dom,
+  gdy miastu brakuje jednego obszaru mieszkalnego do limitu (wzrost -50 %), i czerwony dom, gdy tylko
+  go osiągnie (-75 %); gra pokazywała czerwony dom dopiero powyżej limitu. Domyślnie włączone. Wkład
+  huchenlei.
+- **Karty ustrojowe**: ich efekty nie znikają już do końca gry, gdy ekran rządu zostanie po raz
+  pierwszy narysowany w niefortunnym momencie (widziane po ponownym wczytaniu gry); wracały dopiero
+  po kolejnym wczytaniu.
+- **Flagi jednostek**: jednostki bojowe z ładunkami (legion rzymski, toa, nau…) znów pokazują swoje
+  awanse zamiast ładunków; budowniczowie, inżynierowie wojskowi i inne jednostki cywilne i wsparcia
+  nadal pokazują swoje ładunki.
+
+### Zgłoszenie błędu
+- Dzienniki zawierające tokeny logowania (FiraxisLive.log, EOS.log) są pomijane, a długie
+  dzienniki zachowują początek i koniec. Wkład yodha.
+
 ## BetterGameExperience 0.11.0
 
 W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.11.0, aby działały poprawki
@@ -13,6 +261,30 @@ W grze wieloosobowej wszyscy ludzcy gracze muszą mieć 0.11.0, aby działały p
   więcej, niż premia dodała, za każdym razem około 0,4 %, a strata rosła przy każdej zamianie karty.
   Usunięcie premii odejmuje teraz dokładnie tyle, ile dodała. Zapisy gry zachowują już narosłą
   stratę. Wkład Serianol.
+
+### Tryb wieloosobowy
+- **Gra zawieszona tuż po wczytaniu**: gracz z wolnym połączeniem mógł otrzymać grę od gospodarza
+  drugi raz tuż po zakończeniu własnego wczytywania, wczytać ją ponownie z mapy i się zawiesić. Ta
+  spóźniona druga kopia jest teraz odrzucana; dołączanie, ponowne łączenie i resynchronizacje
+  działają jak wcześniej.
+- **Awaria przy wczytywaniu zapisu po innej grze**: ponowne łączenie graczy przekazywanych przez
+  gospodarza (0.10.0) mogło odczytać połączenie poprzedniej gry, już zamknięte, i spowodować awarię
+  gry podczas wczytywania następnej. Wkład yodha.
+- **Ustawienia gry**: opcje gry dodane przez BetterGameExperience są wyszarzone, gdy gospodarz ma
+  wyłączone BetterGameExperience.
+
+### Sygnały drużyny
+- Nowe grafiki i dźwięki koła, znaczników i każdego wezwania, instalowane z BetterGameExperience.
+  Są dodawane do gry tylko wtedy, gdy gospodarz włączy sygnały drużyny, a wszyscy gracze mają
+  BetterGameExperience: gracz bez BGE nadal może dołączyć do poczekalni. Wkład mariusbw.
+- **Głośność sygnałów drużyny** znajduje się tuż pod efektami dźwiękowymi w opcjach dźwięku, zarówno
+  w menu głównym, jak i w grze, a skróty sygnałów pozostają widoczne w opcjach klawiszy. Wkład
+  mariusbw.
+
+### Ustawienia
+- **Zakładka BetterGameExperience**: włączenie lub wyłączenie BetterGameExperience zawsze prosi o
+  ponowne uruchomienie gry. Przywrócenie poprzedniej wartości ustawienia bez ponownego otwierania
+  ekranu jest znów zapisywane; wcześniej było ignorowane.
 
 ## BetterGameExperience 0.10.0
 

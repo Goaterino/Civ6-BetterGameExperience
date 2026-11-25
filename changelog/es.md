@@ -2,6 +2,271 @@
 
 [English](../CHANGELOG.md) · otros idiomas: ver el [registro en inglés](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.15.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.14.0 y 0.15.0 las desactiva.
+
+### Instalación y actualizaciones
+- **Linux (Steam Play / Proton)**: BetterGameExperience ya se puede instalar y actualizar en Linux,
+  para la versión de Windows del juego ejecutada con Proton. Un comando en una terminal descarga la
+  versión publicada, comprueba su firma y el SHA-256 de cada archivo y luego la instala (ver el
+  README). Contribución de etbala.
+- **Comprobación de actualizaciones sin curl**: la comprobación de actualizaciones y los informes de
+  errores usan ahora las funciones de red de Windows en lugar de curl.exe, así que también funcionan
+  con Wine y Proton. Contribución de etbala.
+
+### Versiones del juego
+- **Civilization VI 1.0.12.72 ya no es compatible**: sus jugadores han pasado a la 1.0.12.74. En
+  1.0.12.72, BetterGameExperience no instala ninguna corrección y lo indica en el menú principal, en
+  la sala y en el botón de informe de errores.
+- **1.0.12.58 con los archivos del juego de junio de 2024**: desde la 0.14.0, esta combinación no
+  recibía ninguna corrección. Vuelve a reconocerse.
+
+### Correcciones multijugador [todos los jugadores]
+- **Turno de un jugador ausente**: cuando otro jugador terminaba el turno de un ausente, el juego
+  podía reabrirlo por sí solo (una unidad con movimientos restantes), y ya nadie lo terminaba: el
+  turno se quedaba bloqueado. Un turno terminado por otro jugador ahora sigue terminado.
+- **Visión de una ciudad-estado tras una guerra**: un jugador que volvía a ser suzerano de una
+  ciudad-estado tras una guerra contra ella (frecuente en Teamer) nunca recuperaba su visión. Ahora
+  vuelve, y las partidas ya afectadas se reparan en el turno siguiente.
+- **Aldeas tribales invisibles tras una recarga**: desde la 0.14.0, las aldeas tribales en la niebla
+  desaparecían del mapa tras una recarga o una resincronización. Vuelven a mostrarse.
+- **Fragmentos de red más grandes**: los mensajes de red grandes (partidas guardadas, comprobaciones
+  de sincronía) se envían ahora en fragmentos de 16 KB en lugar de 1,2 KB, solo en una partida en la
+  que cada jugador conectado tiene la 0.15.0. Un jugador sin BetterGameExperience, o con otra
+  versión, devuelve de inmediato el tamaño del juego.
+
+### Multijugador
+- **Comprobaciones de sincronía más rápidas en el anfitrión**: al final de cada turno, el anfitrión ya
+  no vuelve a calcular los mismos datos de sincronía para cada jugador. Solo el anfitrión necesita la
+  0.15.0 para esto.
+- **Recarga automática cuando un jugador sigue desincronizado**: cuando una comprobación de sincronía
+  enviaría a un jugador más de 500 KB de reparaciones, o repararía 30 objetos (un jugador reconectado a
+  mitad de turno podía recibir casi 6 MB en cada turno), el anfitrión recarga ahora la partida para
+  todos. Como máximo una vez cada 10 turnos; más allá, el chat lo indica.
+- **Cambios de turno largos tras una reconexión**: los tres cambios anteriores apuntan a los cambios de
+  turno largos vistos tras la reconexión de un jugador (hasta 45 s por turno). La mejora aún debe
+  confirmarse en partidas reales: contadnos lo que veáis.
+- **Menos desincronizaciones tras una reparación**: cuando el anfitrión vuelve a enviar un objeto
+  para reparar una desincronización, el juego del jugador lo lee ahora exactamente como el anfitrión
+  lo escribió. Las operaciones de unidades, los impulsos de investigación y cultura de la IA y un
+  análisis del Congreso Mundial conservaban parte de su contenido anterior, y los árboles de
+  comportamiento de la IA quedaban sin enlazar. En una prueba con civilizaciones IA, las recargas
+  completas pasaron de 2 a 0. Solo el jugador necesita la 0.15.0 para esto. Ajuste en las opciones
+  avanzadas, activado por defecto. Contribución de OzrielTheLost.
+- **Intercambio de puestos con un jugador sin BetterGameExperience**: un intercambio de puestos en la
+  sala podía hacer que el anfitrión contara como equipado a un jugador sin BetterGameExperience y le
+  activara las correcciones. Cada anuncio está ahora ligado a la cuenta de Steam del jugador.
+- **Listo se mantiene en la sala**: un cambio del anfitrión que deja igual la configuración de la
+  partida ya no quita el Listo de los jugadores. Si la configuración de un jugador sigue siendo
+  distinta de la del anfitrión cuando este está Listo, el chat lo indica y pide a ese jugador que
+  vuelva a unirse.
+- **Sala tras un reinicio cancelado (MPH)**: tras cancelar un reinicio lanzado desde la sala, la
+  siguiente partida creada o cargada desde la sala se cargaba dos veces en cada jugador. Ahora se
+  carga una vez.
+- **Sala de una partida guardada**: al unirse podía aparecer «opciones de jugador no válidas» para
+  líderes de DLC o de mods hasta reabrir la configuración de la partida. La lista de jugadores se
+  reconstruye ahora.
+
+### Congreso Mundial
+- **Segunda vuelta a la votación**: un jugador que volvía a la votación por segunda vez ya no podía
+  emitir todos sus votos. Los votos ya enviados se conservan ahora.
+
+### Cargas más rápidas
+- **Uso del procesador en la pantalla de carga**: desde la 0.14.0, la pantalla de carga podía seguir
+  sin pausa entre fotogramas ni VSync una vez listo el mapa, con el procesador al máximo. Esta fase
+  rápida termina ahora en cuanto el terreno está listo (3 s como máximo).
+
+### Interfaz
+- **Probabilidad de éxito de los espías**: la probabilidad mostrada al elegir una misión de espía
+  cuenta ahora la huida: un éxito que exige escapar solo rinde si el espía escapa. Supone la mejor
+  ruta de huida y ningún contraespía, como el juego. Activado por defecto (ajustes de interfaz).
+- **Señales de equipo**: el volumen y los atajos de las señales se conservan entre cargas y reinicios
+  del juego.
+- **Pestaña de ajustes**: volver a abrir la pestaña BetterGameExperience podía mostrar valores
+  antiguos.
+
+## BetterGameExperience 0.14.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.14.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.13.0 y 0.14.0 las desactiva.
+
+### Instalación y actualizaciones
+- **Archivos firmados**: el instalador y las dos DLL de BetterGameExperience llevan ahora un
+  certificado de firma de código (Certum, desarrollador de código abierto). Windows muestra el editor
+  en las propiedades del archivo y en el aviso del instalador, y las alertas de SmartScreen y de los
+  antivirus deberían ser menos frecuentes.
+
+### Versiones del juego
+- **Civilization VI 1.0.12.58**: BetterGameExperience reconoce ahora esta versión antigua del juego,
+  en DX12 y DX11. Cada versión del juego usa sus propias direcciones, y un juego cuyos archivos no
+  corresponden a su versión no instala ninguna corrección.
+- **Versión del juego no compatible**: un jugador cuya versión del juego no es compatible con
+  BetterGameExperience se anuncia en el chat al llegar (el mensaje decía que su copia no era la
+  versión actual de Steam).
+
+### Correcciones multijugador [todos los jugadores]
+- **Menos desincronizaciones tras una recarga**: una partida cargada en una máquina calculaba de forma
+  algo distinta a la partida en curso en las demás. Las mejoras recordadas de los jugadores se
+  reescribían al cargar, los oyentes de eventos se ejecutaban en otro orden, la IA conservaba para
+  siempre las preferencias de su líder (Sejong: -75 % de puntos de Gran Profeta) y las unidades que
+  se dan al crear un distrito (bonificaciones de dificultad de la IA, inicios en eras avanzadas) se
+  creaban en otro orden. Una partida cargada calcula ahora como una partida en curso. Contribución de
+  OzrielTheLost.
+- **Los mismos cálculos en todos los procesadores**: algunos cálculos (exponenciales, potencias)
+  podían redondear de forma distinta en procesadores con y sin instrucciones FMA3. Todas las máquinas
+  los calculan ahora igual. Contribución de OzrielTheLost.
+- **Intercambio de unidades**: intercambiar dos unidades podía dejar una a medio camino, apilada en
+  una casilla con otra unidad (un espadachín sobre un tigre agazapado). Las dos unidades terminan
+  ahora su movimiento.
+
+### Multijugador
+- **Desincronizaciones reparadas sin recarga**: cuando un objeto sigue desincronizado, el anfitrión
+  envía ahora todos sus datos, y la partida del jugador lo repara en el sitio en lugar de desviarse
+  hasta una recarga completa. Para esto solo el anfitrión necesita la 0.14.0. Contribución de
+  OzrielTheLost.
+
+### Congreso Mundial
+- **Turno del congreso tras un fin de turno forzado**: cuando el fin de turno simultáneo forzaba el
+  fin del turno de un jugador, el turno del congreso podía terminar dos segundos después de abrirse,
+  sin votación. El turno del congreso empieza ahora con el temporizador completo, la ventana de
+  votación se vuelve a abrir si el turno terminó sin votar y el botón del congreso muestra la sesión
+  actual.
+
+### Cargas más rápidas
+- **Recargas más rápidas**: con los mismos mods, una recarga conserva el paso de configuración y deja
+  los textos de los mods como están, la última fase de la carga ya no espera entre sus pasos y la
+  espera de la VSync se quita también en DX11. Medido en un mapa pequeño: de 13 s a 9 s. Ajustes en
+  las opciones avanzadas, activados por defecto. Contribución de OzrielTheLost.
+
+### Interfaz
+- **Atajos de la pantalla de acuerdo**: en la columna «disponible», Mayús+clic añade tanto como acepta
+  el acuerdo y Ctrl+clic añade diez veces un clic, para recursos, oro, oro por turno y favor.
+  Activado por defecto. Contribución de huchenlei.
+- **Insignia de descuento de distritos**: tras colocar un distrito con descuento en una ciudad, otra
+  ciudad ya consultada seguía mostrando el descuento aunque costaba el precio completo.
+- **Producción sobrante**: el «+N» del estandarte de la ciudad seguía visible después de que el turno
+  lo hubiera gastado.
+
+### Ajustes
+- **Novedades de interfaz de las actualizaciones**: un ajuste nuevo al principio de la sección
+  Interfaz. En «Desactivado», las novedades de interfaz de las actualizaciones siguientes llegan
+  desactivadas, y las que ya tienes conservan su estado actual.
+
+## BetterGameExperience 0.13.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.13.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.12.0 y 0.13.0 las desactiva.
+
+### Actualización del juego 1.0.12.74
+- **Actualización de Civilization VI del 19 de noviembre (1.0.12.74)**: BetterGameExperience ya
+  reconoce el juego actualizado, en DX12 y DX11. Las versiones anteriores no instalan en él ninguna
+  de sus correcciones. Contribución de yodha.
+
+### Correcciones multijugador [todos los jugadores]
+- **Jugador que se desconecta**: el juego entregaba a la IA un jugador desconectado en cada máquina
+  por separado, sin ningún mensaje entre ellas, así que las máquinas podían jugar ese turno de forma
+  distinta y desincronizarse. Ahora el puesto sigue siendo humano, y el anfitrión termina el turno del
+  jugador ausente cuando todos los humanos conectados han terminado el suyo. Un jugador expulsado
+  sigue pasando a la IA. Contribución de yodha.
+- **Recarga de todos**: cuando la partida de un jugador deja de coincidir, el anfitrión inicia ahora
+  la recarga y todos los jugadores cargan la misma copia de su partida; el turno solo empieza cuando
+  cada jugador la ha cargado y su partida se ha comprobado. Un jugador que sigue difiriendo se recarga
+  una vez más. Contribución de yodha.
+
+## BetterGameExperience 0.12.0
+
+En multijugador, todos los jugadores humanos deben tener la 0.12.0 para las correcciones
+**[todos los jugadores]**: una sala que mezcla 0.11.0 y 0.12.0 las desactiva.
+
+### Correcciones multijugador [todos los jugadores]
+- **Desincronización tras una reconexión**: un jugador que se reconectaba, o que se recargaba solo,
+  ejecutaba una partida recién cargada frente a las partidas en curso de los demás. Ambas difieren
+  en datos que la comprobación de sincronización no cubre, así que la partida volvía a desviarse y
+  recargaba a ese jugador una y otra vez. Ahora, cuando la partida de un jugador deja de coincidir,
+  el anfitrión explica el motivo en el chat y todos recargan de inmediato la partida del anfitrión;
+  el anfitrión espera la comprobación de cada jugador sobre la partida recargada y luego el turno
+  empieza para todos. Contribución de yodha.
+- **Reconexión al final de un turno**: un jugador que se reconectaba durante un final de turno se
+  comparaba con el turno siguiente, lo que provocaba una reparación inútil y luego una recarga cada
+  dos turnos. Contribución de yodha.
+- **Remap de Multiplayer Helper**: tras un remap, el anfitrión ejecutaba la partida que acababa de
+  generar y todos los demás jugadores la misma partida cargada desde la partida guardada del
+  anfitrión, y la IA tomaba decisiones ligeramente distintas en cada lado (reparaciones de varios MB
+  por turno en una partida de 8 jugadores). Ahora el anfitrión también carga su propia partida
+  guardada, así que todas las máquinas ejecutan la misma partida. Coste: una pantalla de carga más
+  para el anfitrión, una vez por remap. Contribución de yodha.
+- **Cada partida empieza limpia**: algunos contadores del juego pasaban de una partida a la
+  siguiente en la misma sesión, y los objetos se numeraban de forma distinta que en los demás
+  jugadores. Contribución de yodha.
+
+### Multijugador
+- **Doble carga al iniciar una partida guardada**: el anfitrión ya no envía una segunda copia de la
+  partida a los jugadores que siguen cargando, lo que hacía que algunos cargaran dos veces. Cuando
+  aún se rechaza una copia, el chat muestra «Doble carga evitada». Contribución de yodha.
+- **Mensajes de red dañados**: un mensaje que borraría los ajustes de la partida ahora también se
+  rechaza. El chat nombra al jugador y lo que se evitó («Congelación de la partida evitada», «Borrado
+  de los ajustes de la partida evitado»). Contribución de yodha.
+- **Mensajes cortados al final de una carga**: un mensaje en espera durante una carga ya no se pega
+  a un mensaje que todavía llega por partes. Contribución de yodha.
+- **Correcciones de BetterGameExperience decididas en la carga**: la decisión de activar las
+  correcciones **[todos los jugadores]** se vuelve a comprobar en la carga y al cerrarse la pantalla
+  de carga, un nuevo anfitrión tras una migración la asume (los jugadores que entraban después de una
+  migración jugaban sin ellas), y los jugadores ignorados siguen ignorados tras una recarga.
+  Contribución de yodha.
+- **Copia del juego desactualizada**: un jugador cuyo juego no es la versión actual de Steam se
+  anuncia en el chat al llegar, ya que las correcciones de red de BetterGameExperience no pueden
+  funcionar en su PC.
+- **Ventana «Partida en pausa»**: ya no se acumula durante las cargas ni aparece sobre la pantalla
+  de carga.
+- **Configuración de la partida**: los avisos de equipo ya no se pueden activar ni desactivar una vez
+  empezada la partida (el cambio no hacía nada o dejaba los avisos activos), partidas guardadas
+  incluidas. No First/Last moves y los avisos de equipo ya no se pueden activar en una sala donde un
+  jugador no tiene BetterGameExperience o la versión correcta, pero aún se pueden desactivar.
+  Contribución de mariusbw.
+
+### No First/Last moves
+- La opción sigue activa una vez activada. El anfitrión ya no espera a un jugador que no estuvo
+  listo dos turnos seguidos, y lo dice en el chat. Un jugador que no recibe la señal de inicio del
+  anfitrión durante 75 s empieza su turno solo. Contribución de yodha.
+- **Chat más discreto**: el mensaje de activación se reduce a «No First/Last moves activo.», y las
+  líneas de órdenes retenidas y de salida aparecen una vez por partida en lugar de en cada turno. El
+  aviso de que BetterGameExperience está activo se envía una vez por sala, no cada vez que se vuelve
+  a abrir la pantalla de la sala.
+
+### Cargas más rápidas
+- Nuevos ajustes en la pestaña BetterGameExperience, todos activados por defecto, que acortan las
+  cargas sin cambiar la partida: búsqueda más rápida de los archivos gráficos (varios segundos desde
+  el menú principal), base de datos de juego y textos de los mods conservados entre cargas cuando los
+  mods son los mismos (unos 1,5 s cada uno), sin espera de VSync en las pantallas de carga (unos 2 s,
+  solo con VSync activado), una sola limpieza de Lua al cerrar la interfaz (unos 2 s antes de un
+  remap), una primera carga más ligera para el anfitrión en un remap (unos 10 s) y un análisis de
+  cuellos de botella más rápido al generar el mapa (unos 2 s, mismo resultado). El registro de
+  cuellos de botella de la IA (AI_ChokePoint.csv, 12 MB) ya no se escribe por defecto.
+- **Hilos de tareas**: los hilos inactivos desperdician menos tiempo de procesador mientras esperan
+  (ajustes en la misma pestaña).
+
+### Interfaz
+- **Formación más alta primero**: en la lista de producción, el botón principal de una unidad
+  entrena la formación más alta que la ciudad puede entrenar (ejército, si no cuerpo; en el mar,
+  armada, si no flota), y la unidad sola pasa al menú desplegable de debajo. Las compras con oro y fe
+  no cambian. Activado por defecto. Contribución de huchenlei.
+- **Aviso anticipado de alojamiento**: los estandartes de tus ciudades muestran una casa naranja
+  cuando a una ciudad le falta un alojamiento para el límite (crecimiento -50 %) y la casa roja en
+  cuanto lo alcanza (-75 %); el juego solo mostraba la casa roja por encima del límite. Activado por
+  defecto. Contribución de huchenlei.
+- **Cartas de política**: sus efectos ya no desaparecen el resto de la partida cuando la pantalla de
+  gobierno se dibuja por primera vez en un mal momento (visto tras recargar una partida); solo
+  volvían tras otra recarga.
+- **Banderas de unidades**: las unidades de combate con cargas (legión romana, toa, nao…) vuelven a
+  mostrar sus ascensos en lugar de sus cargas; los constructores, los ingenieros militares y las
+  demás unidades civiles y de apoyo siguen mostrando sus cargas.
+
+### Informe de error
+- Los registros que contienen tokens de inicio de sesión (FiraxisLive.log, EOS.log) se excluyen, y
+  los registros largos conservan su principio y su final. Contribución de yodha.
+
 ## BetterGameExperience 0.11.0
 
 En multijugador, todos los jugadores humanos deben tener la 0.11.0 para las correcciones
@@ -14,6 +279,31 @@ En multijugador, todos los jugadores humanos deben tener la 0.11.0 para las corr
   vez, y la pérdida crecía con cada cambio de la carta. Quitar una bonificación ahora resta
   exactamente lo que sumó. Las partidas guardadas conservan la pérdida ya acumulada. Contribución de
   Serianol.
+
+### Multijugador
+- **Partida congelada justo después de cargar**: un jugador con una conexión lenta podía recibir la
+  partida por segunda vez del anfitrión justo después de terminar su carga, volver a cargarla desde
+  el mapa y quedarse congelado. Esa segunda copia tardía ahora se rechaza; la entrada, la reconexión
+  y las resincronizaciones funcionan como antes.
+- **Cierre al cargar una partida guardada después de otra partida**: la reconexión de los jugadores
+  retransmitidos por el anfitrión (0.10.0) podía leer la conexión de la partida anterior, ya cerrada,
+  y cerrar el juego mientras se cargaba la siguiente. Contribución de yodha.
+- **Configuración de la partida**: las opciones de partida añadidas por BetterGameExperience aparecen
+  en gris cuando el anfitrión tiene BetterGameExperience desactivado.
+
+### Señales de equipo
+- Nuevas imágenes y sonidos para la rueda, los marcadores y cada llamada, instalados con
+  BetterGameExperience. Solo se añaden a una partida si el anfitrión activa las señales de equipo y
+  todos los jugadores tienen BetterGameExperience: un jugador sin BGE puede seguir uniéndose a la
+  sala. Contribución de mariusbw.
+- El **volumen de las señales de equipo** está justo debajo de los efectos de sonido en las opciones
+  de audio, tanto en el menú principal como en partida, y los atajos de las señales siguen
+  apareciendo en las opciones de teclas. Contribución de mariusbw.
+
+### Ajustes
+- **Pestaña BetterGameExperience**: activar o desactivar BetterGameExperience siempre pide reiniciar
+  el juego. Volver al valor anterior de un ajuste sin reabrir la pantalla se guarda de nuevo; antes
+  se ignoraba.
 
 ## BetterGameExperience 0.10.0
 

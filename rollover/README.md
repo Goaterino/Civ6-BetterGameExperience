@@ -33,6 +33,12 @@ Outils pour mesurer où part le temps entre la fin d'un tour et la reprise de la
 .venv/Scripts/python.exe -I rollover/analyze.py rollover/captures/<dossier>
 ```
 
+**Chargement d'une partie** (salon, reprise, remap) : `capture.ps1 -Chargement`, puis
+`analyze.py --chargement`, qui ajoute la ventilation par phases de `chargement.py` (utilisable seul,
+sur les journaux sans trace) et analyse la trace chargement par chargement. Protocole, constats et
+analyse des piles ([piles.py](../analyses/chargement/piles.py)) :
+[analyses/chargement](../analyses/chargement/README.md).
+
 Les captures (`captures/`) ne sont pas versionnées.
 
 ## Premier constat : tour 78 → 79 (capture du 2026-10-27)
@@ -426,6 +432,87 @@ renvoie WMI (`Win32_VideoController`, qui ne décrit qu'un écran) : c'était fa
      étant trop sensible. Si on y revient, la piste la moins risquée est de n'attendre 1 ms qu'après
      un appel qui n'a trouvé aucun paquet. Une attente fixe après chaque paquet ralentirait les
      transferts en rafale, par exemple l'envoi de la sauvegarde à un joueur qui rejoint.
+
+### Avec les correctifs du pool (2026-11-17)
+
+`pool_cessions=16` et `pool_attente_fin=on` ([pool.rs](../startup_proxy/src/pool.rs),
+[analyses/chargement/pool_taches.md](../analyses/chargement/pool_taches.md)), sauvegarde `BGD banc T78`,
+trois passages enchaînés (78 → 81) par capture, un stream Twitch en fond dans le navigateur pendant
+les deux captures (`20261117-161057-banc-passage-6t-pool`, `20261117-161430-banc-passage-12t-pool`).
+
+| passage | 6 threads : durée, CPU du processus | 12 threads : durée, CPU du processus |
+|---|---:|---:|
+| 78 → 79 | 4 477 ms, 15,5 s | 4 576 ms, 20,1 s |
+| 79 → 80 | 3 916 ms, 13,7 s | 3 951 ms, 17,0 s |
+| 80 → 81 | 3 917 ms, 13,5 s | 4 839 ms, 20,2 s |
+| total | 12,3 s, 42,7 s (CPU GameCore 5,5 s) | 13,4 s, 57,3 s (CPU GameCore 5,8 s) |
+
+- **12 threads n'accélèrent toujours pas le passage**, et coûtent 34 % de CPU de plus. Le passage
+  reste lié au thread GameCore et au thread principal. **6 threads reste le réglage.**
+- Au passage 78 → 79, comparable à la référence du 2026-11-03 (même sauvegarde) : 6 threads,
+  4 890 ms et 19,8 s de CPU, puis 4 477 ms et 15,5 s ; 12 threads, 4 594 ms et 23,8 s, puis 4 576 ms
+  et 20,1 s. Le CPU baisse de 16 à 22 %, mais d'autres changements du proxy ont eu lieu entre-temps :
+  le gain n'est pas attribuable au pool seul.
+- **Les ouvriers tournent encore à vide**, mais peu. Leur adresse la plus fréquente reste la pause
+  de `receive_or_steal_task` (`exe+e50fd2`), mais elle ne concentre que 8 % de leurs échantillons :
+  voir la mesure suivante, qui la chiffre.
+
+**`pool_cessions=4`, 6 threads** (`20261117-162632-banc-passage-6t-pool-4-pc`, même sauvegarde, quatre
+passages cette fois). Comparé sur les trois premiers passages à la capture à 16 cessions :
+
+| passage | 16 cessions | 4 cessions |
+|---|---:|---:|
+| 78 → 79 | 4 477 ms, 15,5 s | 4 477 ms, 15,5 s |
+| 79 → 80 | 3 916 ms, 13,7 s | 3 612 ms, 12,1 s |
+| 80 → 81 | 3 917 ms, 13,5 s | 4 601 ms, 14,8 s |
+| total | 12,3 s, 42,7 s | 12,7 s, 42,4 s |
+
+Temps des cinq ouvriers sur ces trois passages, par la feuille de leurs piles
+([ouvriers.py](ouvriers.py) ; pause = feuille dans `receive_or_steal_task`) :
+
+| | 16 cessions | 4 cessions |
+|---|---:|---:|
+| CPU des ouvriers | 24,0 s | 22,5 s |
+| dont pauses | 1,50 s (6,3 %) | 1,04 s (4,6 %) |
+| dont `SwitchToThread` et sommeil (noyau sous `receive_or_steal_task`) | 0,10 s | 0,05 s |
+| sorties du processeur | 100 180 | 91 293 |
+
+- **Durée : rien de mesurable.** Les écarts d'un passage à l'autre (± 0,6 s) dépassent l'effet.
+- **CPU : −1,5 s chez les ouvriers** sur trois passages, dont 0,5 s de pauses. Le reste de leur
+  temps est du vrai travail (pilote graphique `nvwgf2umx`, GameCore, rendu de l'exe).
+- **L'attente active est désormais marginale** : 1 s de pauses sur 42 s de CPU du processus. Le
+  seuil des pauses (`pool_pauses`, [pool.rs](../startup_proxy/src/pool.rs)) ne peut plus gagner
+  qu'une partie de cette seconde. Implémenté pour le mesurer, réglé au jeu d'origine par défaut.
+- **Répétition** (`20261117-164648-banc-passage-6t-pool-4-pc-with-lea-changed`) : capture prévue
+  avec `pool_pauses=2`, mais le seuil n'a pas été posé (la modification des cessions, faite
+  d'abord, cassait le motif qui le retrouve ; corrigé depuis). C'est donc une deuxième mesure à
+  4 cessions : 4 986, 4 703 et 4 046 ms, soit 13,7 s et 45,2 s de CPU ; ouvriers 24,7 s dont
+  1,16 s de pauses (4,7 %). Les mêmes réglages donnent donc 12,7 ou 13,7 s : un écart d'une
+  seconde sur trois passages reste du bruit.
+
+**`pool_pauses=2`, avec `pool_cessions=4`** (`20261117-165419-banc-passage-6t-pool-4-pc-with-lea-changed-2`,
+journal : « idle workers yield after 2 spin rounds »). Trois passages : 4 523, 3 491 et 4 846 ms,
+soit 12,9 s et 42,8 s de CPU. Mêmes fenêtres que plus haut, avec [ouvriers.py](ouvriers.py) :
+
+| | 16 cessions | 4 cessions (1) | 4 cessions (2) | 4 cessions, 2 pauses |
+|---|---:|---:|---:|---:|
+| durée des trois passages | 12,3 s | 12,7 s | 13,7 s | 12,9 s |
+| CPU du processus | 42,7 s | 42,4 s | 45,2 s | 42,8 s |
+| CPU des ouvriers | 24,0 s | 22,5 s | 24,7 s | 22,1 s |
+| dont pauses | 1,50 s | 1,04 s | 1,16 s | 0,74 s |
+| réveils d'ouvriers (`ReadyThread`) | 60 687 | 62 393 | 70 040 | 63 943 |
+| sorties des ouvriers : sommeil (`UserRequest`) | 58 919 | 60 632 | 68 305 | 62 371 |
+| sorties des ouvriers : cession | 28 949 | 20 369 | 24 100 | 44 410 |
+| temps noyau, thread principal / GameCore | 1,03 / 0,33 s | 1,07 / 0,28 s | 1,33 / 0,31 s | 1,19 / 0,30 s |
+
+- **Pas d'explosion des réveils.** Réveils et mises en sommeil restent dans la fourchette des
+  trois autres captures, et le temps noyau des threads qui soumettent les tâches ne bouge pas.
+  Les ouvriers ne s'endorment donc pas plus souvent : ils cèdent plus tôt (cessions ×2), mais une
+  cession sans autre thread prêt revient aussitôt et ne coûte presque rien (0,09 s de noyau en tout).
+- **Gain : 0,3 à 0,4 s de pauses** sur trois passages, moins de 1 % du CPU du processus. La durée
+  reste dans le bruit.
+- **Le pool n'est plus un levier.** Ses pauses font 3 % du temps des ouvriers, le reste est du vrai
+  travail.
 
 
 ## Étage 1 : les zones du profileur de l'exe (2026-11-03)

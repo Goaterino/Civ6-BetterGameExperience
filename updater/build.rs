@@ -9,7 +9,8 @@
 fn main() {
     println!("cargo:rerun-if-changed=ressources");
     println!("cargo:rerun-if-env-changed=BGD_RELEASE");
-    // Ressources Windows seulement : sous macOS, Info.plist du bundle (macos/Info.plist).
+    // Ressources Windows seulement : le binaire Linux n'en a pas, et sous macOS c'est l'Info.plist du
+    // bundle (macos/Info.plist).
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
     }

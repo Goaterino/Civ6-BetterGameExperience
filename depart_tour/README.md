@@ -415,8 +415,9 @@ Choix faits à l'implémentation :
   envers le joueur, que sa machine envoie. Au chargement d'une partie, le signal « prêt » attend
   la fermeture de l'écran de chargement.
 - **Qui est attendu** : les humains vivants, connectés, pas spectateurs, et qui annoncent la même
-  version dans leur config de joueur (`BGD_VERSION`). Un humain sans BetterGameExperience n'est pas
-  attendu : il ne serait pas bloqué de toute façon.
+  version dans leur config de joueur (`BGD_VERSION`), avec leur propre identité : une annonce restée
+  sur l'emplacement d'un autre joueur (swap, remplaçant) ne compte pas. Un humain sans
+  BetterGameExperience n'est pas attendu : il ne serait pas bloqué de toute façon.
 - **Hôte spectateur** : il ne retient rien chez lui, mais c'est toujours lui qui reçoit les signaux
   et donne le départ. Il se déclare prêt au début du tour (`TurnBegin`, `LocalPlayerTurnBegin` ou
   fermeture de l'écran de chargement) et attend les joueurs comme un hôte joueur. Avant le
@@ -427,8 +428,8 @@ Choix faits à l'implémentation :
 - **`CivicsCommand`** (choix de recherche ou de dogme) passe : son ordre n'a pas d'enjeu.
 - **Annonce** : au chargement, l'hôte écrit dans le chat, pour tous, si le départ simultané est
   actif, ou pourquoi il ne l'est pas.
-- **Prévenir le joueur** : au premier ordre retenu du tour, une ligne locale « ordres retenus »,
-  puis « c'est parti » au départ.
+- **Prévenir le joueur** : au premier ordre retenu, une ligne locale « ordres retenus », puis
+  « c'est parti » au départ ; une seule fois par partie, pas à chaque tour.
 
 ## Reste à vérifier en partie
 

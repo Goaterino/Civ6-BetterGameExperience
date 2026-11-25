@@ -25,7 +25,7 @@
 //! suit le contrôle de synchro lance la mise à jour. Drapeau baissé (un joueur qui a passé son tour
 //! puis agit, tour encore en cours), rien ne change.
 
-use crate::patch::{alloc_near, rel32, write_rel32, IMAGE_BASE};
+use crate::patch::{alloc_near, rel32, write_rel32};
 use crate::{log, pol};
 use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
@@ -62,7 +62,7 @@ static SAUTEES: AtomicU32 = AtomicU32::new(0);
 const MAX_LOGS: u32 = 20;
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -87,14 +87,14 @@ unsafe extern "system" fn etape_apres_diplomatie(jeu: usize, quel: u32) {
 
 unsafe fn site_attendu(a: &Appel) -> bool {
     let at = gc(a.site);
-    std::slice::from_raw_parts((at - a.avant.len()) as *const u8, a.avant.len()) == a.avant
+    crate::patch::as_known(a.site - a.avant.len() as u64, std::slice::from_raw_parts((at - a.avant.len()) as *const u8, a.avant.len())) == a.avant
         && rd::<u8>(at) == a.opcode
         && rel32(at, gc(ETAPE)) == Some(rd::<i32>(at + 1))
 }
 
 pub unsafe fn on_gamecore_loaded(base: usize) {
     BASE.store(base, Ordering::Relaxed);
-    let tour_fini = std::slice::from_raw_parts(gc(TOUR_FINI) as *const u8, TOUR_FINI_OCTETS.len());
+    let tour_fini = crate::patch::as_known(TOUR_FINI, std::slice::from_raw_parts(gc(TOUR_FINI) as *const u8, TOUR_FINI_OCTETS.len()));
     if tour_fini != TOUR_FINI_OCTETS || !APPELS.iter().all(|a| site_attendu(a)) {
         log("fin de tour : version inattendue de GameCore, aucun appel redirigé");
         return;
@@ -133,9 +133,9 @@ pub unsafe fn on_proxy_unload() {
     if base == 0 {
         return;
     }
-    let etape = base + (ETAPE - IMAGE_BASE) as usize;
+    let etape = base + crate::patch::rva(ETAPE);
     for a in &APPELS {
-        let at = base + (a.site - IMAGE_BASE) as usize;
+        let at = base + crate::patch::rva(a.site);
         if let Some(rel) = rel32(at, etape) {
             write_rel32(at, rel);
         }
@@ -161,7 +161,7 @@ mod tests {
         let n = u16::from_le_bytes(b[pe + 6..pe + 8].try_into().unwrap()) as usize;
         let opt = u16::from_le_bytes(b[pe + 20..pe + 22].try_into().unwrap()) as usize;
         let fichier = |addr: u64| {
-            let rva = (addr - IMAGE_BASE) as usize;
+            let rva = crate::patch::rva(addr);
             (0..n).find_map(|i| {
                 let s = pe + 24 + opt + i * 40;
                 let (taille, va, brut) = (u32_at(s + 8), u32_at(s + 12), u32_at(s + 20));
@@ -169,13 +169,13 @@ mod tests {
             })
         };
         let o = fichier(TOUR_FINI).unwrap();
-        assert_eq!(&b[o..o + TOUR_FINI_OCTETS.len()], &TOUR_FINI_OCTETS);
+        assert_eq!(crate::patch::as_known(TOUR_FINI, &b[o..o + TOUR_FINI_OCTETS.len()]), TOUR_FINI_OCTETS);
         for a in &APPELS {
             let o = fichier(a.site).unwrap();
             assert_eq!(&b[o - a.avant.len()..o], a.avant, "{}", a.message);
             assert_eq!(b[o], a.opcode, "{}", a.message);
             let rel = i32::from_le_bytes(b[o + 1..o + 5].try_into().unwrap());
-            assert_eq!(a.site as i64 + 5 + rel as i64, ETAPE as i64, "{}", a.message);
+            assert_eq!(crate::patch::rva(a.site) as i64 + 5 + rel as i64, crate::patch::rva(ETAPE) as i64, "{}", a.message);
         }
     }
 }

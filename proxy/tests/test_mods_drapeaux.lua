@@ -50,9 +50,12 @@ local function Run(charges, routesOn)
 	env.Game = { GetLocalPlayer = function() return LOCAL; end, GetCurrentGameTurn = function() return TURN; end };
 	env.GameInfo = { Units = {
 		[1] = { BuildCharges = 3 },					-- bâtisseur
-		[2] = { BuildCharges = 1 },					-- légion romaine
+		[2] = { BuildCharges = 1, FormationClass = "FORMATION_CLASS_LAND_COMBAT" },	-- légion romaine
 		[3] = { BuildCharges = 0, MakeTradeRoute = true },	-- négociant
-		[4] = { BuildCharges = 0 },					-- guerrier
+		[4] = { BuildCharges = 0, FormationClass = "FORMATION_CLASS_LAND_COMBAT" },	-- guerrier
+		[5] = { BuildCharges = 2, FormationClass = "FORMATION_CLASS_SUPPORT" },	-- ingénieur militaire
+		[6] = { BuildCharges = 1, FormationClass = "FORMATION_CLASS_NAVAL" },	-- nau
+		[7] = { BuildCharges = 1, FormationClass = "FORMATION_CLASS_AIR" },	-- unité aérienne de mod
 	} };
 	env.Players = { [LOCAL] = { GetCities = function()
 		return { Members = function()
@@ -99,9 +102,15 @@ local env = Run(true, true);
 local s = Flag(env, { type = 1, charges = 2, id = 1 });
 Check(not s.hidden and s.text == "2", "bâtisseur : 2 charges");
 s = Flag(env, { type = 2, charges = 1, promotions = 2, id = 2 });
-Check(not s.hidden and s.text == "1", "légion : la charge d'abord");
-s = Flag(env, { type = 2, charges = 0, promotions = 2, id = 3 });
-Check(not s.hidden and s.text == 2, "légion sans charge : ses promotions");
+Check(not s.hidden and s.text == 2, "légion avec charge : ses promotions");
+s = Flag(env, { type = 2, charges = 1, promotions = 0, id = 3 });
+Check(s.hidden, "légion avec charge, sans promotion : rien");
+s = Flag(env, { type = 6, charges = 1, promotions = 1, id = 6 });
+Check(not s.hidden and s.text == 1, "nau et sa promotion gratuite : ses promotions");
+s = Flag(env, { type = 5, charges = 2, id = 7 });
+Check(not s.hidden and s.text == "2", "ingénieur militaire (soutien) : 2 charges");
+s = Flag(env, { type = 7, charges = 1, promotions = 0, id = 8 });
+Check(s.hidden, "unité aérienne avec charge, sans promotion : rien");
 s = Flag(env, { type = 4, promotions = 0, id = 4 });
 Check(s.hidden, "guerrier sans promotion : rien");
 s = Flag(env, { type = 1, charges = 3, owner = 5, id = 5 });

@@ -89,6 +89,90 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="pl_PL">
 			<Text>Zapamiętuje plony pól podczas równoległych obliczeń SI, gdy mapa nie może się zmienić.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="pl_PL">
+			<Text>Szybsze wczytywanie zasobów</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="pl_PL">
+			<Text>Podczas wczytywania gry gra sprawdza dla każdego pliku graficznego, czy istnieje w każdym folderze zasobów (około 55). Te sprawdzenia są obsługiwane z listy plików każdego folderu, odczytywanej raz na wczytanie. Oszczędza kilka sekund przy wczytywaniu z menu głównego. Tylko lokalnie, bez wpływu na grę. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="pl_PL">
+			<Text>Jedno czyszczenie Lua przy zamykaniu interfejsu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="pl_PL">
+			<Text>Gdy gra zamyka swój interfejs (wyjście z gry, remap Multiplayer Helper), wykonuje pełne odśmiecanie Lua dla każdej zwalnianej funkcji skryptu. Zamiast tego na końcu wykonywane jest jedno. Oszczędza około 2 s przed remapem. Tylko interfejs, bez wpływu na grę. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="pl_PL">
+			<Text>Zachowaj bazę danych rozgrywki między wczytaniami</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="pl_PL">
+			<Text>Gdy następna gra używa dokładnie tych samych modów, baza danych rozgrywki zbudowana dla poprzedniej jest zachowywana zamiast budowania od nowa (około 1,5 s na wczytanie). GameCore jest nadal przeładowywany przy każdej grze. Zawartość jest taka sama jak po przebudowie: bez desynchronizacji. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="pl_PL">
+			<Text>Zachowaj teksty modów w grze między wczytaniami</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="pl_PL">
+			<Text>Teksty modów w grze są zapisywane przy pierwszym wczytaniu, a przy kolejnych, gdy mody są te same, odtwarzane z pamięci zamiast ponownego odczytu z ich plików (około 1,5 s na wczytanie). Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="pl_PL">
+			<Text>Bez VSync na ekranach wczytywania</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="pl_PL">
+			<Text>Gdy VSync jest włączony, gra czeka na każde odświeżenie ekranu, co spowalnia też tworzenie terenu 3D podczas wczytywania. Jest wyłączany tylko na ekranach wczytywania, a w grze pozostaje zgodnie z ustawieniem (około 2 s na wczytanie). Bez efektu, gdy VSync jest wyłączony. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="pl_PL">
+			<Text>Zachowaj niezmienioną konfigurację przy ponownym wczytaniu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="pl_PL">
+			<Text>Przy ponownym wczytaniu gra odbudowuje bazę konfiguracji i przywraca swoje teksty, nawet jeśli od ostatniego wczytania nic się nie zmieniło. Jeśli się nie zmieniły, oba są zachowywane; zasady gry są wczytywane ponownie jak zwykle (około 3 s na ponowne wczytanie). Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="pl_PL">
+			<Text>Bez przerw na końcu wczytywania</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="pl_PL">
+			<Text>Na końcu wczytywania gra przygotowuje teren 3D po kilka pól naraz i robi przerwę między krokami (LoadGameTickIntervalInMS, domyślnie 16 ms). Przerwa jest usuwana tylko w tej ostatniej fazie (około 1,5 s na wczytanie). Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="pl_PL">
+			<Text>Pierwsze wczytanie remapu hosta bez terenu</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="pl_PL">
+			<Text>Przy remapie Multiplayer Helper host wczytuje nową grę, a potem od razu wczytuje ją ponownie z własnego zapisu. Pierwsze wczytanie pomija teren 3D, który i tak zostałby odrzucony (około 10 s). Gra, interfejs i klienci się nie zmieniają. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="pl_PL">
+			<Text>Bezczynne wątki zadań: oddania przed uśpieniem</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="pl_PL">
+			<Text>Wątek zadań bez pracy oddaje procesor 100 razy, zanim zaśnie, setki razy na sekundę podczas zmiany tury. Mniej oddań: mniej czasu procesora traconego na czekanie, ta sama praca. Wyłączone = 100, jak w grze. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="pl_PL">
+			<Text>Bezczynne wątki zadań: próby przed pierwszym oddaniem</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="pl_PL">
+			<Text>Wątek zadań bez pracy ponawia próbę 2 × (wątki + 1) razy, czekając aktywnie, zanim odda procesor. Mniejsza stała wartość skraca to aktywne czekanie, zwłaszcza przy wielu wątkach. Wyłączone = jak w grze. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="pl_PL">
+			<Text>Uśpienie podczas czekania na wątki zadań</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="pl_PL">
+			<Text>Wątek czekający na koniec partii zadań kręci się na procesorze, aż ostatni wątek zadań skończy, około 1 s procesora na wczytanie. Zamiast tego po krótkim czekaniu zasypia i jest budzony, gdy wątek zadań kończy. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="pl_PL">
+			<Text>Zapisuj dziennik przewężeń SI</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="pl_PL">
+			<Text>Podczas generowania mapy gra zapisuje cały graf przewężeń do AI_ChokePoint.csv (około 12 MB, 0,35 s). Wyłączone: plik nie jest zapisywany. Bez wpływu na mapę i grę.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="pl_PL">
+			<Text>Szybka analiza przewężeń</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="pl_PL">
+			<Text>Generowanie mapy: triangulacja służąca do znajdowania przewężeń jest liczona szybszym odpowiednikiem o dokładnie tym samym wyniku (około 2 s na wygenerowaną mapę). Weryfikacja: liczy oba, zachowuje wynik gry i zapisuje każdą różnicę.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="pl_PL">
+			<Text>Nowości interfejsu z aktualizacji</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="pl_PL">
+			<Text>Wyłączone: nowości interfejsu z kolejnych aktualizacji BetterGameExperience przychodzą wyłączone i możesz je tu włączyć, kiedy chcesz. Obecne opcje interfejsu zachowują swoje wartości. Poprawki nie są objęte. Ponownie włączone: nowości dodane w międzyczasie, których nie ustawiłeś sam, zostają włączone. Tylko lokalnie: bez wpływu na innych graczy.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="pl_PL">
 			<Text>Przyspieszona animacja ataków jądrowych</Text>
 		</Row>
@@ -143,11 +227,35 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="pl_PL">
 			<Text>Na liście produkcji dzielnice o obniżonym koszcie (mniej dzielnic tego typu niż twoja średnia) pokazują zniżkę, odświeżaną od razu po umieszczeniu dzielnicy. Tylko wyświetlanie.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="pl_PL">
+			<Text>Najwyższa formacja jako pierwsza</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="pl_PL">
+			<Text>Na liście produkcji główny przycisk jednostki szkoli najwyższą formację, jaką miasto może wyszkolić (armia, w przeciwnym razie korpus), a pojedyncza jednostka trafia do rozwijanej listy poniżej. Gra robi odwrotnie. Zakupy za złoto i wiarę pozostają bez zmian.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="pl_PL">
 			<Text>Zachowana produkcja</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="pl_PL">
 			<Text>Pokazuje produkcję, którą miasto trzyma w zapasie (nadwyżka, najwyżej jedna tura) i która dochodzi do jego produkcji w następnej turze: w banerze miasta, w panelu miasta i w panelu produkcji. Tylko wyświetlanie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="pl_PL">
+			<Text>Wczesne ostrzeżenie o obszarach mieszkalnych w banerze miasta</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="pl_PL">
+			<Text>W banerze twoich miast pojawia się pomarańczowy dom, gdy miastu brakuje 1 obszaru mieszkalnego do limitu (przyrost spowolniony o 50%), a czerwony dom, gdy tylko miasto osiągnie limit (75%). Bez tej opcji gra pokazuje czerwony dom dopiero po przekroczeniu limitu. Tylko wyświetlanie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="pl_PL">
+			<Text>Szansa powodzenia szpiegów z ucieczką</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="pl_PL">
+			<Text>Szansa powodzenia wyświetlana dla misji szpiegowskiej uwzględnia ucieczkę: sukces, po którym szpieg musi uciekać, liczy się tylko wtedy, gdy szpiegowi uda się uciec, bo dopiero wtedy łup zostaje przekazany. Zakłada najlepszą drogę ucieczki i nie uwzględnia wrogiego kontrwywiadu. Tylko wyświetlanie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="pl_PL">
+			<Text>Shift+klik i Ctrl+klik na ekranie umowy</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="pl_PL">
+			<Text>Na ekranie umowy Shift+klik na dostępnym zasobie, złocie, złocie na turę lub dyplomatycznych względach dodaje tyle, ile umowa przyjmie, a Ctrl+klik dodaje dziesięć razy więcej niż zwykły klik: 10 sztuk zasobu, 1000 złota, 100 złota na turę, 10 dyplomatycznych względów. Bez tej opcji większą ilość trzeba wpisać w polu ilości. Działa tylko lokalnie: bez wpływu na innych graczy.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="pl_PL">
 			<Text>Zniżka dzielnicy: -{1}% (masz mniej dzielnic tego typu niż twoja średnia).</Text>
@@ -161,11 +269,17 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="pl_PL">
 			<Text>Górny pasek odświeża się po tytule gubernatora, przeniesieniu gubernatora lub wielkim człowieku, bez przestawiania obywatela. Tylko wyświetlanie: bez desynchronizacji.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="pl_PL">
+			<Text>Naprawione dane wczytywane dokładnie</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="pl_PL">
+			<Text>Gdy host ponownie wysyła zdesynchronizowane dane, gra wczytuje je dokładnie tak, jak zapisał je host: operacje jednostek i bonusy śledzone przez SI nie są już podwajane, analizy Kongresu Światowego zachowują swoje wartości, drzewa zachowań SI pozostają połączone, a dane zgodne już z danymi hosta pozostają nietknięte (mniej desynchronizacji kończących się pełnym ponownym wczytaniem). Działa nawet wtedy, gdy inni gracze nie mają tej wersji.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="pl_PL">
 			<Text>Ładunki budowniczych na ich fladze</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="pl_PL">
-			<Text>Na podstawie Better Builder Charges Tracking (wltk). Flaga jednostki z ładunkami (budowniczy, inżynier wojskowy, legion…) pokazuje je zamiast awansów. Zastępuje moda, jeśli jest aktywny.</Text>
+			<Text>Na podstawie Better Builder Charges Tracking (wltk). Flaga jednostki z ładunkami (budowniczy, inżynier wojskowy…) pokazuje je zamiast awansów, z wyjątkiem jednostek bojowych (lądowych, morskich i powietrznych: legion, nau…) – te zachowują awanse. Zastępuje moda, jeśli jest aktywny.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="pl_PL">
 			<Text>Pozostałe tury szlaków handlowych</Text>
@@ -227,6 +341,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="pl_PL">
 			<Text>Zapisuje w Lua.log wysłane i otrzymane propozycje umów oraz to, co pokazuje ekran umowy, aby zrozumieć krzyżujące się umowy między ludźmi.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="pl_PL">
+			<Text>Diagnostyka produkcji w rezerwie i dzielnic ze zniżką</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="pl_PL">
+			<Text>Zapisuje w dzienniku proxy, jak odczytywana jest produkcja w rezerwie (nadwyżka) każdego miasta, a w Lua.log, jak obliczana jest odznaka dzielnic ze zniżką, aby przeanalizować zgłoszenia BGE-E6DF54 i BGE-36E0D7.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="pl_PL">
 			<Text>Pokazuj sygnały jednoczesnego początku i końca tury</Text>
 		</Row>
@@ -238,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="pl_PL">
 			<Text>Zapisuje czas trwania każdej strefy mierzonej przez grę (klatka, interfejs, skrypty, zdarzenia) w %LOCALAPPDATA%\Civ6RolloverProxy\zones, do analizy wydajności. Około 1 MB na sekundę gry. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="pl_PL">
+			<Text>Śledzenie sieci Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="pl_PL">
+			<Text>Co 500 ms zapisuje pakiety i bajty wysłane do każdego gracza i odebrane od niego przez Steam, wysyłki odrzucone przez Steam oraz kolejkę wysyłania Steam (bajty, pakiety, przekaźnik lub bezpośrednio) w %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. Do pomiaru przepustowości sieci między graczami. Działa od następnego uruchomienia gry.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="pl_PL">
+			<Text>Rozmiar fragmentów sieciowych</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="pl_PL">
+			<Text>Rozmiar fragmentów, na które dzielone są duże wiadomości sieciowe przy wysyłaniu: w grze 1166 bajtów, w wydaniu BGE 16384. Większe fragmenty są wysyłane tylko w rozgrywce, dopóki każdy połączony gracz zgłasza tę samą wersję BGE; każdy komputer powiększa bufor odbioru przy uruchomieniu. Wył.: rozmiar gry. Działa od następnego uruchomienia gry.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="pl_PL">
 			<Text>Ochrona wiadomości sieciowych</Text>
@@ -345,7 +477,7 @@
 			<Text>{1}: dołączenie bez BetterGameExperience (lub z inną wersją), gdy poprawki POL są włączone. Rozgrywka tego gracza ulegnie desynchronizacji.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="pl_PL">
-			<Text>No First/Last moves włączone: wszyscy gracze zaczynają turę razem, a tura kończy się dla wszystkich, gdy zegar hosta dojdzie do zera.</Text>
+			<Text>No First/Last moves włączone.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="pl_PL">
 			<Text>No First/Last moves: jednoczesny początek tury włączony; jednoczesny koniec niedostępny (zegar gry nie został przechwycony).</Text>
@@ -355,6 +487,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="pl_PL">
 			<Text>{1} ma włączony BetterGameExperience {2}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="pl_PL">
+			<Text>Ustawienia rozgrywki gracza {1} różnią się od ustawień hosta. {1}, opuść poczekalnię i dołącz ponownie przed rozpoczęciem gry.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="pl_PL">
 			<Text>BGE Check: wszyscy gracze mają włączony BetterGameExperience {1} ({2}).</Text>
@@ -373,6 +508,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="pl_PL">
 			<Text>rozpoczęto bez: {1} (niegotowi po {2} s).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="pl_PL">
+			<Text>{1} dwie tury z rzędu nie zgłosił gotowości: początek tury już na niego nie czeka.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="pl_PL">
+			<Text>brak sygnału startu od hosta po {1} s: twoja tura zaczyna się teraz.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="pl_PL">
 			<Text>koniec tury: zegar hosta dobiegł końca.</Text>
@@ -409,6 +550,27 @@
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="pl_PL">
 			<Text>Nie znaleziono Civilization VI w bibliotekach Steam.\n\nUruchom ponownie instalator z opcją --game-dir "&lt;folder gry&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="pl_PL">
+			<Text>Nie znaleziono Civilization VI w bibliotekach Steam:\n{1}\n\nGra musi być wersją Windows uruchamianą przez Steam Play (Proton). Biblioteki oznaczonej (?) nie udało się odczytać: sprawdź, czy jej dysk jest zamontowany. W przeciwnym razie uruchom ponownie z --game-dir "&lt;folder gry&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="pl_PL">
+			<Text>Nie można zapisać w {1}.\n\nSprawdź, czy folder nie jest na dysku tylko do odczytu, nie należy do roota i czy uprawnienia dysku (np. NTFS) pozwalają na zapis.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="pl_PL">
+			<Text>Aby wczytać BetterGameExperience w Protonie, ustaw samodzielnie opcje uruchamiania w Steam:\n\n1. W bibliotece Steam kliknij prawym przyciskiem Civilization VI i wybierz Właściwości.\n2. W Ogólne wpisz w Opcjach uruchamiania:\n   {1}\n3. W Zgodności sprawdź, czy dla gry wymuszona jest wersja Protona (BetterGameExperience wymaga wersji Windows).\n\nJeśli w opcjach uruchamiania jest już tekst, dopisz WINEDLLOVERRIDES="winmm=n,b" na samym początku i zachowaj %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="pl_PL">
+			<Text>Opcje uruchamiania Civilization VI w Steam nie zawierają {1} przed %command%: bez tego BetterGameExperience się nie wczyta. Jeśli opcja została właśnie ustawiona, Steam mógł jej jeszcze nie zapisać (robi to przy zamykaniu).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="pl_PL">
+			<Text>Uruchom BetterGameExperience z terminala.\n\nPolecenia: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;kod&gt;\nOpcje: --game-dir &lt;folder&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="pl_PL">
+			<Text>Wybierz numer (puste, aby wyjść):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="pl_PL">
+			<Text>Pokaż opcję uruchamiania Steam do ustawienia</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="pl_PL">
 			<Text>Szukanie najnowszej wersji…</Text>
@@ -636,7 +798,25 @@
 			<Text>{1}: nie udało się wysłać zgłoszenia błędu, zostało zapisane na komputerze gracza.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="pl_PL">
-			<Text>Zablokowano uszkodzoną wiadomość sieciową, która zamroziłaby grę.</Text>
+			<Text>Zapobieżono zawieszeniu gry u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="pl_PL">
+			<Text>Zapobieżono wyczyszczeniu ustawień gry u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="pl_PL">
+			<Text>Zapobieżono podwójnemu wczytaniu u {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="pl_PL">
+			<Text>W grze {1} brakuje {2} obiektów i ma {3} nadmiarowych w porównaniu z grą hosta: wszyscy wczytują ponownie grę hosta, aby zapobiec desynchronizacji {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="pl_PL">
+			<Text>Gra {1} otrzymała na koniec tury {2} archiwów ({3} KB) napraw: host wczytał ponownie grę u wszystkich, aby gra {1} przestała tracić synchronizację.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="pl_PL">
+			<Text>Gra {1} nadal otrzymuje {2} archiwów ({3} KB) napraw po ponownym wczytaniu u wszystkich: brak automatycznego wczytania przed turą {4}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="pl_PL">
+			<Text>BGE nie obsługuje wersji gry gracza {1}: poprawki BGE są nieaktywne na tym komputerze.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="pl_PL">
 			<Text>{1} i {2} są połączeni przez hosta (0 ms). Próba bezpośredniego połączenia podczas zmiany tury.</Text>
@@ -700,6 +880,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="pl_PL">
 			<Text>Cofnięto wyciszenie gracza {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="pl_PL">
+			<Text>BGE: gra {1} nieobsługiwana</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="pl_PL">
+			<Text>Nieobsługiwana wersja gry</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="pl_PL">
+			<Text>BetterGameExperience nie obsługuje wersji gry {1}: żadna z jego poprawek nie jest aktywna.[NEWLINE][NEWLINE]Zaktualizuj grę na Steamie do aktualnej wersji. Prosimy nie zgłaszać problemów z tą wersją: nie pochodzą one od BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="pl_PL">
+			<Text>Zgłaszanie błędów jest wyłączone: BetterGameExperience nie obsługuje wersji gry {1} i żadna z jego poprawek nie jest aktywna. Zaktualizuj grę na Steamie do aktualnej wersji.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

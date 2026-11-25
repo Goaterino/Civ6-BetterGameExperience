@@ -2,6 +2,274 @@
 
 [English](../CHANGELOG.md) · weitere Sprachen: siehe das [englische Protokoll](../CHANGELOG.md).
 
+## BetterGameExperience 0.15.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.15.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.14.0 und 0.15.0 mischt, schaltet sie ab.
+
+### Installation und Updates
+- **Linux (Steam Play / Proton)**: BetterGameExperience lässt sich jetzt unter Linux installieren
+  und aktualisieren, für die Windows-Version des Spiels über Proton. Ein Terminalbefehl lädt die
+  Release herunter, prüft ihre Signatur und den SHA-256 jeder Datei und installiert sie dann (siehe
+  README). Beitrag von etbala.
+- **Update-Prüfung ohne curl**: Update-Prüfung und Fehlerberichte nutzen jetzt die
+  Netzwerkfunktionen von Windows statt curl.exe und funktionieren daher auch unter Wine und Proton.
+  Beitrag von etbala.
+
+### Spielversionen
+- **Civilization VI 1.0.12.72 wird nicht mehr unterstützt**: Ihre Spieler sind auf 1.0.12.74
+  umgestiegen. Unter 1.0.12.72 installiert BetterGameExperience keine Korrektur und sagt das im
+  Hauptmenü, in der Lobby und beim Fehlerbericht-Button.
+- **1.0.12.58 mit den Spieldateien vom Juni 2024**: Seit 0.14.0 bekam diese Kombination gar keine
+  Korrektur mehr. Sie wird wieder erkannt.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Zug eines abwesenden Spielers**: Wenn ein anderer Spieler den Zug eines Abwesenden beendete,
+  konnte das Spiel ihn von selbst wieder öffnen (eine Einheit mit restlicher Bewegung), und niemand
+  beendete ihn mehr: Der Zug hing fest. Ein von einem anderen Spieler beendeter Zug bleibt jetzt
+  beendet.
+- **Sicht eines Stadtstaats nach einem Krieg**: Ein Spieler, der nach einem Krieg gegen einen
+  Stadtstaat wieder dessen Suzerän wurde (häufig in Teamer-Partien), bekam dessen Sicht nie zurück.
+  Die Sicht kommt jetzt zurück, und bereits betroffene Partien werden in der nächsten Runde repariert.
+- **Unsichtbare Stammesdörfer nach dem Neuladen**: Seit 0.14.0 verschwanden Stammesdörfer im Nebel
+  nach einem Neuladen oder einer Resynchronisation von der Karte. Sie werden wieder angezeigt.
+- **Größere Netzwerkstücke**: Große Netzwerknachrichten (Spielstände, Synchronisationsprüfungen)
+  werden jetzt in Stücken von 16 KB statt 1,2 KB gesendet, nur in einer Partie, in der jeder
+  verbundene Spieler 0.15.0 hat. Ein Spieler ohne BetterGameExperience oder mit einer anderen Version
+  stellt sofort die Größe des Spiels wieder her.
+
+### Mehrspieler
+- **Schnellere Synchronisationsprüfungen beim Host**: Am Ende jeder Runde berechnet der Host
+  dieselben Synchronisationsdaten nicht mehr für jeden Spieler neu. Dafür braucht nur der Host 0.15.0.
+- **Automatisches Neuladen, wenn ein Spieler nicht synchron bleibt**: Würde eine
+  Synchronisationsprüfung einem Spieler mehr als 500 KB an Reparaturen schicken oder 30 Objekte
+  reparieren (ein Spieler, der mitten in der Runde zurückkam, konnte jede Runde fast 6 MB bekommen),
+  lädt der Host die Partie jetzt für alle neu. Höchstens einmal alle 10 Runden; darüber hinaus sagt es
+  der Chat.
+- **Lange Rundenwechsel nach einem Wiedereintritt**: Die drei Änderungen oben zielen auf die langen
+  Rundenwechsel nach dem Wiedereintritt eines Spielers (bis zu 45 s pro Runde). Der Gewinn muss sich
+  in echten Partien noch bestätigen: Sagt uns, was ihr beobachtet.
+- **Weniger Desynchronisationen nach einer Reparatur**: Schickt der Host ein Objekt erneut, um eine
+  Desynchronisation zu reparieren, liest das Spiel des Spielers es jetzt genau so, wie der Host es
+  geschrieben hat. Einheitenoperationen, Forschungs- und Kultur-Boosts der KI und eine Analyse des
+  Weltkongresses behielten einen Teil ihres alten Inhalts, und KI-Verhaltensbäume blieben unverknüpft.
+  In einem Test mit KI-Zivilisationen sanken die vollständigen Neuladevorgänge von 2 auf 0. Dafür
+  braucht nur der Spieler 0.15.0. Einstellung in den erweiterten Optionen, standardmäßig aktiviert.
+  Beitrag von OzrielTheLost.
+- **Platztausch mit einem Spieler ohne BetterGameExperience**: Ein Platztausch in der Lobby konnte den
+  Host einen Spieler ohne BetterGameExperience als ausgerüstet zählen lassen und die Korrekturen für
+  ihn einschalten. Jede Ankündigung ist jetzt an das Steam-Konto des Spielers gebunden.
+- **Bereit bleibt in der Lobby**: Eine Änderung des Hosts, die die Spieleinstellungen unverändert
+  lässt, nimmt den Spielern nicht mehr ihr Bereit. Weichen die Einstellungen eines Spielers noch von
+  denen des Hosts ab, sobald der Host bereit ist, sagt der Chat das und bittet diesen Spieler,
+  wieder beizutreten.
+- **Lobby nach einem abgebrochenen Neustart (MPH)**: Nach einem abgebrochenen Neustart aus der Lobby
+  ließ die nächste aus der Lobby erstellte oder geladene Partie jeden Spieler sie zweimal laden. Sie
+  wird jetzt einmal geladen.
+- **Lobby eines Spielstands**: Beim Beitreten konnte für Anführer aus DLCs oder Mods „ungültige
+  Spieleroptionen" erscheinen, bis die Spieleinrichtung erneut geöffnet wurde. Die Spielerliste wird
+  jetzt neu aufgebaut.
+
+### Weltkongress
+- **Zweite Rückkehr zur Abstimmung**: Ein Spieler, der ein zweites Mal zur Abstimmung zurückkehrte,
+  konnte nicht mehr alle seine Stimmen abgeben. Die bereits gesendeten Stimmen bleiben jetzt erhalten.
+
+### Schnelleres Laden
+- **Prozessorlast im Ladebildschirm**: Seit 0.14.0 konnte der Ladebildschirm nach dem Fertigstellen
+  der Karte ohne Bildpause und ohne VSync weiterlaufen, mit voller Prozessorlast. Diese schnelle
+  Phase endet jetzt, sobald das Gelände fertig ist (höchstens 3 s).
+
+### Oberfläche
+- **Erfolgschance von Spionen**: Die bei der Wahl einer Spionagemission angezeigte Chance berücksichtigt
+  jetzt die Flucht: Ein Erfolg, der eine Flucht verlangt, zahlt sich nur aus, wenn der Spion
+  entkommt. Sie nimmt den besten Fluchtweg und keinen Gegenspion an, wie das Spiel. Standardmäßig
+  aktiviert (Oberflächeneinstellungen).
+- **Team-Pings**: Lautstärke und Tastenbelegung der Pings bleiben über Ladevorgänge und Neustarts
+  des Spiels erhalten.
+- **Einstellungsreiter**: Beim erneuten Öffnen des BetterGameExperience-Reiters konnten alte Werte
+  erscheinen.
+
+## BetterGameExperience 0.14.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.14.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.13.0 und 0.14.0 mischt, schaltet sie ab.
+
+### Installation und Updates
+- **Signierte Dateien**: Das Installationsprogramm und beide DLLs von BetterGameExperience tragen
+  jetzt ein Codesignaturzertifikat (Certum, Open-Source-Entwickler). Windows zeigt den Herausgeber in
+  den Dateieigenschaften und in der Abfrage des Installationsprogramms an, und Warnungen von
+  SmartScreen und Virenscannern sollten seltener werden.
+
+### Spielversionen
+- **Civilization VI 1.0.12.58**: BetterGameExperience erkennt jetzt diese ältere Version des Spiels,
+  DX12 und DX11. Jede Spielversion hat ihre eigenen Adressen, und ein Spiel, dessen Dateien nicht zu
+  seiner Version passen, installiert keine Korrektur.
+- **Nicht unterstützte Spielversion**: Ein Spieler, dessen Spielversion von BetterGameExperience
+  nicht unterstützt wird, wird beim Betreten im Chat angekündigt (die Meldung sagte bisher, seine
+  Kopie sei nicht die aktuelle Steam-Version).
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Weniger Desyncs nach einem Neuladen**: Ein auf einem Rechner geladenes Spiel rechnete etwas
+  anders als das laufende Spiel auf den anderen. Die gemerkten Verbesserungen der Spieler wurden beim
+  Laden neu geschrieben, Ereignis-Listener liefen in anderer Reihenfolge, die KI behielt die
+  Vorlieben ihres Anführers dauerhaft (Sejong: -75 % Punkte für Große Propheten), und die Einheiten,
+  die beim Bau eines Bezirks entstehen (Schwierigkeitsboni der KI, Start in späteren Zeitaltern),
+  wurden in anderer Reihenfolge erzeugt. Ein geladenes Spiel rechnet jetzt wie ein laufendes.
+  Beitrag von OzrielTheLost.
+- **Gleiche Berechnungen auf jedem Prozessor**: Manche Berechnungen (Exponentialfunktionen, Potenzen)
+  konnten auf Prozessoren mit und ohne FMA3-Befehle unterschiedlich runden. Alle Rechner berechnen
+  sie jetzt gleich. Beitrag von OzrielTheLost.
+- **Einheitentausch**: Der Tausch zweier Einheiten konnte eine davon auf halbem Weg stehen lassen,
+  gestapelt auf einem Feld mit einer anderen Einheit (ein Schwertkämpfer auf einem Hockenden Tiger).
+  Beide Einheiten beenden jetzt ihre Bewegung.
+
+### Mehrspieler
+- **Desyncs ohne Neuladen repariert**: Wenn ein Objekt desynchronisiert bleibt, schickt der Host
+  jetzt alle seine Daten, und das Spiel des Spielers repariert es an Ort und Stelle, statt bis zu
+  einem vollständigen Neuladen abzudriften. Dafür braucht nur der Host 0.14.0. Beitrag von
+  OzrielTheLost.
+
+### Weltkongress
+- **Kongressrunde nach einem erzwungenen Rundenende**: Wenn das gleichzeitige Rundenende die Runde
+  eines Spielers beendete, konnte die Kongressrunde zwei Sekunden nach dem Öffnen ohne Abstimmung
+  enden. Die Kongressrunde beginnt jetzt mit vollem Timer, das Abstimmungsfenster öffnet sich wieder,
+  wenn die Runde ohne Abstimmung endete, und die Kongress-Schaltfläche zeigt die aktuelle Sitzung.
+
+### Schnelleres Laden
+- **Schnelleres Neuladen**: Bei gleichen Mods behält ein Neuladen den Konfigurationsschritt und lässt
+  die Texte der Mods unverändert, die letzte Ladephase wartet nicht mehr zwischen ihren Schritten,
+  und das Warten auf VSync entfällt auch in DX11. Gemessen auf einer kleinen Karte: von 13 s auf 9 s.
+  Einstellungen in den erweiterten Optionen, standardmäßig an. Beitrag von OzrielTheLost.
+
+### Oberfläche
+- **Kürzel im Abkommensbildschirm**: In der Spalte „verfügbar“ fügt Umschalt+Klick so viel hinzu, wie
+  das Abkommen zulässt, und Strg+Klick zehnmal einen Klick, für Ressourcen, Gold, Gold pro Runde und
+  Gunst. Standardmäßig an. Beitrag von huchenlei.
+- **Rabattabzeichen der Bezirke**: Nachdem ein Bezirk mit Rabatt in einer Stadt platziert wurde,
+  zeigte eine andere, bereits angesehene Stadt den Rabatt weiter an, obwohl er den vollen Preis
+  kostete.
+- **Produktionsüberschuss**: Das „+N“ im Stadtbanner blieb stehen, nachdem die Runde es verbraucht
+  hatte.
+
+### Einstellungen
+- **Neue Oberflächenfunktionen aus Updates**: eine neue Einstellung oben im Abschnitt
+  Benutzeroberfläche. Auf „Deaktiviert“ kommen die Oberflächenfunktionen späterer Updates
+  ausgeschaltet an, und die vorhandenen behalten ihren aktuellen Zustand.
+
+## BetterGameExperience 0.13.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.13.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.12.0 und 0.13.0 mischt, schaltet sie ab.
+
+### Spielupdate 1.0.12.74
+- **Civilization-VI-Update vom 19. November (1.0.12.74)**: BetterGameExperience erkennt jetzt das
+  aktualisierte Spiel, DX12 und DX11. Frühere Versionen installieren darauf keine ihrer Korrekturen.
+  Beitrag von yodha.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Spieler, der die Verbindung verliert**: Das Spiel übergab einen getrennten Spieler auf jedem
+  Rechner einzeln an die KI, ohne Nachricht zwischen ihnen, sodass die Rechner diese Runde
+  unterschiedlich spielen und auseinanderlaufen konnten. Der Platz bleibt jetzt menschlich, und der
+  Host beendet die Runde des abwesenden Spielers, sobald alle verbundenen Menschen ihre beendet
+  haben. Ein gekickter Spieler wird weiterhin von der KI übernommen. Beitrag von yodha.
+- **Neuladen für alle**: Wenn das Spiel eines Spielers nicht mehr übereinstimmt, startet der Host
+  das Neuladen jetzt selbst, und alle Spieler laden dieselbe Kopie seines Spiels; die Runde beginnt
+  erst, wenn jeder Spieler sie geladen hat und sein Spiel geprüft wurde. Ein Spieler, der danach
+  noch abweicht, wird noch einmal neu geladen. Beitrag von yodha.
+
+## BetterGameExperience 0.12.0
+
+Im Mehrspielermodus brauchen alle menschlichen Spieler 0.12.0 für die Korrekturen **[alle
+Spieler]**: Eine Lobby, die 0.11.0 und 0.12.0 mischt, schaltet sie ab.
+
+### Mehrspieler-Korrekturen [alle Spieler]
+- **Desync nach einem Wiederbeitritt**: Ein Spieler, der wieder beitrat oder allein neu geladen
+  wurde, spielte ein frisch geladenes Spiel gegen die laufenden Spiele der anderen. Beide
+  unterscheiden sich in Daten, die die Synchronisationsprüfung nicht abdeckt: Das Spiel lief wieder
+  auseinander und lud diesen Spieler immer wieder neu. Wenn das Spiel eines Spielers nicht mehr
+  übereinstimmt, nennt der Host jetzt den Grund im Chat und alle laden sofort das Spiel des Hosts
+  neu; der Host wartet auf die Prüfung jedes Spielers am neu geladenen Spiel, dann beginnt die Runde
+  für alle. Beitrag von yodha.
+- **Wiederbeitritt am Rundenende**: Ein Spieler, der während eines Rundenendes wieder beitrat, wurde
+  mit der nächsten Runde verglichen. Das führte zu einer unnötigen Reparatur und dann zu einem
+  Neuladen alle zwei Runden. Beitrag von yodha.
+- **Remap von Multiplayer Helper**: Nach einem Remap spielte der Host das gerade erzeugte Spiel,
+  alle anderen Spieler dasselbe Spiel aus dem Spielstand des Hosts geladen, und die KI traf auf
+  beiden Seiten leicht unterschiedliche Entscheidungen (Reparaturen von mehreren MB pro Runde in
+  einem Spiel mit 8 Spielern). Der Host lädt jetzt ebenfalls seinen eigenen Spielstand, sodass alle
+  Rechner dasselbe Spiel spielen. Kosten: ein zusätzlicher Ladebildschirm für den Host, einmal pro
+  Remap. Beitrag von yodha.
+- **Jedes Spiel beginnt sauber**: Einige Zähler des Spiels wurden innerhalb derselben Sitzung von
+  einem Spiel ins nächste übernommen, sodass Objekte anders nummeriert wurden als bei den anderen
+  Spielern. Beitrag von yodha.
+
+### Mehrspieler
+- **Doppeltes Laden beim Start eines Spielstands**: Der Host schickt Spielern, die noch laden, keine
+  zweite Kopie des Spiels mehr, durch die einige zweimal luden. Wird noch eine Kopie abgelehnt, zeigt
+  der Chat „Doppeltes Laden verhindert“. Beitrag von yodha.
+- **Beschädigte Netzwerknachrichten**: Eine Nachricht, die die Spieleinstellungen löschen würde,
+  wird jetzt ebenfalls abgelehnt. Der Chat nennt den Spieler und was verhindert wurde („Einfrieren
+  des Spiels verhindert“, „Löschen der Spieleinstellungen verhindert“). Beitrag von yodha.
+- **Abgeschnittene Nachrichten am Ende eines Ladevorgangs**: Eine während des Ladens zurückgehaltene
+  Nachricht wird nicht mehr an eine Nachricht angehängt, die noch stückweise ankommt. Beitrag von
+  yodha.
+- **Korrekturen von BetterGameExperience beim Laden entschieden**: Die Entscheidung, die Korrekturen
+  **[alle Spieler]** einzuschalten, wird beim Laden und beim Schließen des Ladebildschirms erneut
+  geprüft, ein neuer Host nach einer Host-Migration übernimmt sie (Spieler, die nach einer Migration
+  beitraten, spielten bisher ohne sie), und ignorierte Spieler bleiben nach einem Neuladen
+  ignoriert. Beitrag von yodha.
+- **Veraltete Spielversion**: Ein Spieler, dessen Spiel nicht die aktuelle Steam-Version ist, wird
+  bei seiner Ankunft im Chat gemeldet, da die Netzwerkkorrekturen von BetterGameExperience auf
+  seinem PC nicht funktionieren können.
+- **Popup „Spiel pausiert“**: Es stapelt sich während des Ladens nicht mehr und erscheint nicht mehr
+  über dem Ladebildschirm.
+- **Spieleinrichtung**: Team-Pings lassen sich nach Spielbeginn nicht mehr ein- oder ausschalten
+  (die Änderung bewirkte nichts oder ließ die Pings aktiv), auch bei geladenen Spielständen. No
+  First/Last moves und Team-Pings lassen sich in einer Lobby, in der einem Spieler
+  BetterGameExperience oder die richtige Version fehlt, nicht mehr einschalten, aber weiterhin
+  ausschalten. Beitrag von mariusbw.
+
+### No First/Last moves
+- Die Option bleibt eingeschaltet, sobald sie aktiv ist. Der Host wartet nicht mehr auf einen
+  Spieler, der zwei Runden hintereinander nicht bereit war, und sagt das im Chat. Ein Spieler, der
+  75 s lang kein Startsignal vom Host erhält, beginnt seine Runde allein. Beitrag von yodha.
+- **Ruhigerer Chat**: Die Aktivierungsmeldung ist auf „No First/Last moves aktiv.“ gekürzt, und die
+  Zeilen zum Zurückhalten der Befehle und zum Start erscheinen einmal pro Spiel statt jede Runde. Die
+  Ankündigung, dass BetterGameExperience aktiv ist, wird einmal pro Lobby gesendet und nicht bei
+  jedem erneuten Öffnen des Lobby-Bildschirms.
+
+### Schnelleres Laden
+- Neue Einstellungen im Reiter BetterGameExperience, alle standardmäßig eingeschaltet, die das
+  Laden verkürzen, ohne das Spiel zu ändern: schnellere Suche nach Grafikdateien (mehrere Sekunden
+  aus dem Hauptmenü), Gameplay-Datenbank und Mod-Texte bleiben zwischen Ladevorgängen erhalten, wenn
+  die Mods gleich sind (je etwa 1,5 s), kein Warten auf VSync auf Ladebildschirmen (etwa 2 s, nur
+  bei eingeschaltetem VSync), eine einzige Lua-Bereinigung beim Schließen der Oberfläche (etwa 2 s
+  vor einem Remap), ein leichterer erster Ladevorgang für den Host beim Remap (etwa 10 s) und eine
+  schnellere Engpassanalyse bei der Kartenerzeugung (etwa 2 s, gleiches Ergebnis). Das
+  Engpass-Protokoll der KI (AI_ChokePoint.csv, 12 MB) wird standardmäßig nicht mehr geschrieben.
+- **Job-Threads**: Untätige Threads verschwenden beim Warten weniger Prozessorzeit (Einstellungen im
+  selben Reiter).
+
+### Oberfläche
+- **Höchste Formation zuerst**: In der Produktionsliste bildet die Hauptschaltfläche einer Einheit
+  die höchste Formation aus, die die Stadt ausbilden kann (Armee, sonst Korps; auf See Armada, sonst
+  Flotte), und die Einzeleinheit wandert in das Aufklappmenü darunter. Käufe mit Gold und Glauben
+  bleiben unverändert. Standardmäßig eingeschaltet. Beitrag von huchenlei.
+- **Frühe Wohnraum-Warnung**: Die Banner deiner Städte zeigen ein oranges Haus, wenn eine Stadt
+  einen Wohnraum unter der Grenze liegt (Wachstum -50 %), und das rote Haus, sobald sie die Grenze
+  erreicht (-75 %); das Spiel zeigte das rote Haus erst oberhalb der Grenze. Standardmäßig
+  eingeschaltet. Beitrag von huchenlei.
+- **Politikkarten**: Ihre Effekte verschwinden nicht mehr für den Rest des Spiels, wenn der
+  Regierungsbildschirm zum ersten Mal in einem ungünstigen Moment gezeichnet wird (beobachtet nach
+  dem Neuladen eines Spiels); sie kamen erst nach einem weiteren Neuladen zurück.
+- **Einheitenflaggen**: Kampfeinheiten mit Ladungen (römische Legion, Toa, Nau …) zeigen wieder ihre
+  Beförderungen statt ihrer Ladungen; Bautrupps, Militäringenieure und andere Zivil- und
+  Unterstützungseinheiten zeigen weiterhin ihre Ladungen.
+
+### Fehlerbericht
+- Protokolle mit Anmeldetokens (FiraxisLive.log, EOS.log) werden ausgelassen, und lange Protokolle
+  behalten ihren Anfang und ihr Ende. Beitrag von yodha.
+
 ## BetterGameExperience 0.11.0
 
 Im Mehrspielermodus brauchen alle menschlichen Spieler 0.11.0 für die Korrekturen **[alle
@@ -13,6 +281,31 @@ Spieler]**: Eine Lobby, die 0.10.0 und 0.11.0 mischt, schaltet sie ab.
   Einheitentyp) zog etwas mehr ab, als er hinzugefügt hatte, jedes Mal etwa 0,4 %, und der Verlust
   wuchs mit jedem Tausch der Karte. Das Entfernen eines Bonus zieht jetzt genau ab, was er
   hinzugefügt hat. Spielstände behalten den bereits angesammelten Verlust. Beitrag von Serianol.
+
+### Mehrspieler
+- **Spiel friert direkt nach dem Laden ein**: Ein Spieler mit langsamer Verbindung konnte das Spiel
+  kurz nach dem Ende seines Ladevorgangs ein zweites Mal vom Host erhalten, es von der Karte aus neu
+  laden und einfrieren. Diese verspätete zweite Kopie wird jetzt abgelehnt; Beitreten,
+  Wiederverbinden und Resynchronisierungen funktionieren wie bisher.
+- **Absturz beim Laden eines Spielstands nach einem anderen Spiel**: Die Wiederverbindung von über
+  den Host weitergeleiteten Spielern (0.10.0) konnte die bereits geschlossene Verbindung des
+  vorherigen Spiels lesen und das Spiel beim Laden des nächsten abstürzen lassen. Beitrag von yodha.
+- **Spieleinrichtung**: Die von BetterGameExperience hinzugefügten Spieloptionen sind ausgegraut,
+  wenn der Host BetterGameExperience ausgeschaltet hat.
+
+### Teamsignale
+- Neue Grafiken und Klänge für das Rad, die Markierungen und jeden Ruf, mit BetterGameExperience
+  installiert. Sie werden einem Spiel nur hinzugefügt, wenn der Host Teamsignale einschaltet und alle
+  Spieler BetterGameExperience haben: Ein Spieler ohne BGE kann der Lobby weiterhin beitreten.
+  Beitrag von mariusbw.
+- Die **Lautstärke der Teamsignale** steht direkt unter den Soundeffekten in den Audio-Optionen, im
+  Hauptmenü wie im Spiel, und die Tastenkürzel der Signale bleiben in den Tastenbelegungs-Optionen
+  aufgeführt. Beitrag von mariusbw.
+
+### Einstellungen
+- **Reiter BetterGameExperience**: Das Ein- oder Ausschalten von BetterGameExperience fordert immer
+  zum Neustart des Spiels auf. Eine Einstellung ohne erneutes Öffnen des Bildschirms auf ihren
+  vorherigen Wert zurückzusetzen, wird wieder gespeichert; das wurde bisher ignoriert.
 
 ## BetterGameExperience 0.10.0
 

@@ -1,0 +1,2 @@
+# Scripts shell : LF même dans une copie Windows (core.autocrlf), sinon sh les refuse.
+*.sh text eol=lf

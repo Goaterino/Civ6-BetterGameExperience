@@ -17,12 +17,98 @@ const TEXT: &str = concat!(
 );
 const MAP: &str = concat!(
     include_str!("mods/pings/bindings.lua"), "\n",
+    include_str!("mods/pings/prefs.lua"), "\n",
     include_str!("mods/pings/limits.lua"),
     "\n",
     include_str!("mods/pings/map.lua")
 );
 const FILTER: &str = include_str!("mods/pings/filter.lua");
-const CHAT: &str = include_str!("mods/pings/chat.lua");
+const CHAT: &str = concat!(
+    include_str!("mods/pings/bindings.lua"), "\n",
+    include_str!("mods/pings/prefs.lua"), "\n",
+    include_str!("mods/pings/chat.lua")
+);
+
+// ---------------------------------------------------------------------------------------------
+// Ping volume and keyboard chords kept in rollover_proxy.cfg (prefs.lua): Civ's
+// UserConfiguration is emptied by every game load. Only `ping_*` keys with integer values.
+
+const CFG_NAME: &str = "rollover_proxy.cfg";
+
+fn pref_key(key: &str) -> bool {
+    key.len() > 5 && key.starts_with("ping_") && key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+}
+
+/// The value of `key` in the settings text, last occurrence winning as in `read_config`.
+pub fn pref(cfg: &str, key: &str) -> Option<i32> {
+    if !pref_key(key) {
+        return None;
+    }
+    cfg.lines()
+        .filter_map(|l| l.split_once('='))
+        .filter(|(k, _)| k.trim() == key)
+        .last()
+        .and_then(|(_, v)| v.trim().parse().ok())
+}
+
+/// The settings text with `changes` (`ping_key=integer`, one per line): each key takes its
+/// first line and loses the later ones, other lines stay, missing keys go at the end.
+pub fn merge_prefs(existing: &str, changes: &str) -> Result<String, String> {
+    let mut pending: Vec<(String, i32)> = Vec::new();
+    for line in changes.lines().map(str::trim).filter(|l| !l.is_empty()) {
+        let (k, v) = line.split_once('=').ok_or_else(|| format!("line without '=': {line}"))?;
+        let k = k.trim();
+        if !pref_key(k) {
+            return Err(format!("not a ping setting: {k}"));
+        }
+        let v: i32 = v.trim().parse().ok().filter(|v| *v >= 0).ok_or_else(|| format!("invalid value for {k}"))?;
+        pending.retain(|(pk, _)| pk != k);
+        pending.push((k.to_string(), v));
+    }
+    let mut done: Vec<String> = Vec::new();
+    let mut out: Vec<String> = Vec::new();
+    for line in existing.lines() {
+        let key = line.split_once('=').map(|(k, _)| k.trim());
+        if key.is_some_and(|k| done.iter().any(|d| d == k)) {
+            continue;
+        }
+        match key.and_then(|k| pending.iter().position(|(pk, _)| pk == k)) {
+            Some(i) => {
+                let (k, v) = pending.remove(i);
+                out.push(format!("{k}={v}"));
+                done.push(k);
+            }
+            None => out.push(line.to_string()),
+        }
+    }
+    out.extend(pending.into_iter().map(|(k, v)| format!("{k}={v}")));
+    let mut text = out.join("\r\n");
+    text.push_str("\r\n");
+    Ok(text)
+}
+
+fn cfg_path() -> Option<std::path::PathBuf> {
+    crate::self_dir().map(|d| d.join(CFG_NAME))
+}
+
+pub fn read_pref(key: &str) -> Option<i32> {
+    pref(&std::fs::read_to_string(cfg_path()?).ok()?, key)
+}
+
+pub fn save_prefs(changes: &str) -> Result<(), String> {
+    let path = cfg_path().ok_or("game folder not found")?;
+    let existing = match std::fs::read_to_string(&path) {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(e) => return Err(format!("cannot read {CFG_NAME}: {e}")),
+    };
+    let text = merge_prefs(&existing, changes)?;
+    if text != existing {
+        std::fs::write(&path, text).map_err(|e| format!("cannot write {CFG_NAME}: {e}"))?;
+        crate::log(&format!("pings : {CFG_NAME} saved ({})", changes.lines().collect::<Vec<_>>().join(", ")));
+    }
+    Ok(())
+}
 
 // Keep the mod's locals out of the host script, including its limit on locals per chunk.
 fn block(out: &mut Vec<u8>, body: &str) {
@@ -194,6 +280,20 @@ mod tests {
             assert_ne!(with_gain(wav, 25).unwrap(), *wav);
         }
     }
+    #[test]
+    fn saved_ping_preferences() {
+        let cfg = "actif=on\r\nping_volume=50\r\n# note\r\nping_volume=75\r\n";
+        assert_eq!(pref(cfg, "ping_volume"), Some(75), "last occurrence wins");
+        assert_eq!(pref(cfg, "ping_key_TeamPingWheel_0"), None);
+        assert_eq!(pref(cfg, "actif"), None, "only ping_* keys");
+        let merged = merge_prefs(cfg, "ping_volume=25\nping_key_TeamPingWheel_1=267").unwrap();
+        assert_eq!(merged, "actif=on\r\nping_volume=25\r\n# note\r\nping_key_TeamPingWheel_1=267\r\n");
+        assert_eq!(merge_prefs("", "ping_volume=0").unwrap(), "ping_volume=0\r\n");
+        assert!(merge_prefs(cfg, "actif=off").is_err(), "other settings are not the pings' to change");
+        assert!(merge_prefs(cfg, "ping_volume=-1").is_err());
+        assert!(merge_prefs(cfg, "ping_volume=1\r\nping_x=y").is_err());
+    }
+
     #[test]
     fn preserves_context_and_installs_filters_before_subscribers() {
         let xml = xml(b"<Context><Container ID=\"Stock\"/></Context>").unwrap();

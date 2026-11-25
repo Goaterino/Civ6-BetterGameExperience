@@ -6,6 +6,7 @@ use std::ffi::c_void;
 pub type HMODULE = *mut c_void;
 
 pub const PAGE_EXECUTE_READWRITE: u32 = 0x40;
+pub const PAGE_READWRITE: u32 = 0x04;
 pub const MEM_COMMIT: u32 = 0x1000;
 pub const MEM_RESERVE: u32 = 0x2000;
 pub const DLL_PROCESS_DETACH: u32 = 0;
@@ -26,6 +27,9 @@ extern "system" {
     pub fn QueryPerformanceFrequency(freq: *mut i64) -> i32;
     pub fn DisableThreadLibraryCalls(module: HMODULE) -> i32;
     pub fn GetLastError() -> u32;
+    // Startup proxy only: releases the previous game's GameCore (chargeur.rs).
+    #[allow(dead_code)]
+    pub fn FreeLibrary(module: HMODULE) -> i32;
     // Proxy de démarrage seulement : relais de winmm et chargement du proxy de GameCore.
     #[allow(dead_code)]
     pub fn GetSystemDirectoryW(buffer: *mut u16, size: u32) -> u32;

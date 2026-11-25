@@ -14,5 +14,8 @@ empire_yields/runs/
 analyses/lobby/runs/
 /rapport_worker/node_modules/
 /rapport_worker/.wrangler/
+/rapport_worker/.cle_admin
 /rapports/
 /binaires/
+/binaires_jeu/
+/temp_do_not_include_in_commits/

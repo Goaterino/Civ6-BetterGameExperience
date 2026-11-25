@@ -102,7 +102,7 @@ fn reset_config_file(keys: &str) -> Result<(), String> {
 // Fonctions natives posées dans le contexte Lua des options.
 
 /// HavokScript n'exporte ni `lua_pushlstring` ni `lua_pushboolean` : les chaînes passent par
-/// `lua_pushfstring("%s")`, les booléens par `lua_pushinteger`.
+/// `lua_pushfstring("%s")` (en morceaux, voir `push_str`), les booléens par `lua_pushinteger`.
 const LUA_GLOBALSINDEX: i32 = -10002;
 pub(crate) type LuaCFn = unsafe extern "C-unwind" fn(*mut c_void) -> i32;
 
@@ -115,6 +115,7 @@ pub(crate) struct Hks {
     set_field: unsafe extern "C-unwind" fn(*mut c_void, i32, *const c_char),
     cpcall: unsafe extern "C-unwind" fn(*mut c_void, LuaCFn, *mut c_void) -> i32,
     set_top: unsafe extern "C-unwind" fn(*mut c_void, i32),
+    concat: unsafe extern "C-unwind" fn(*mut c_void, i32),
 }
 
 static HKS: std::sync::OnceLock<Option<Hks>> = std::sync::OnceLock::new();
@@ -138,14 +139,34 @@ pub(crate) unsafe fn hks() -> Option<&'static Hks> {
             set_field: std::mem::transmute(get(b"?lua_setfield@@YAXPEAUlua_State@@HPEBD@Z\0")?),
             cpcall: std::mem::transmute(get(b"?lua_cpcall@@YAHPEAUlua_State@@P6AH0@ZPEAX@Z\0")?),
             set_top: std::mem::transmute(get(b"?lua_settop@@YAXPEAUlua_State@@H@Z\0")?),
+            concat: std::mem::transmute(get(b"?lua_concat@@YAXPEAUlua_State@@H@Z\0")?),
         })
     })
     .as_ref()
 }
 
+/// `lua_pushfstring` de HavokScript formate dans un tampon de 512 octets sur la pile
+/// (`vsnprintf(buf, 0x200, …)`, 1.0.12.58 et 1.0.12.74) : une chaîne plus longue est coupée à 511
+/// octets. On pousse donc des morceaux plus courts, recollés au fur et à mesure par `lua_concat`
+/// (deux places de pile au plus). Les octets sont gardés tels quels : un morceau peut couper un
+/// caractère UTF-8, le recollage le rétablit.
+const PUSH_CHUNK: usize = 400;
+
+pub(crate) fn chunks(s: &str) -> Vec<std::ffi::CString> {
+    let bytes: Vec<u8> = s.bytes().filter(|&b| b != 0).collect();
+    if bytes.is_empty() {
+        return vec![std::ffi::CString::default()];
+    }
+    bytes.chunks(PUSH_CHUNK).map(|c| std::ffi::CString::new(c).unwrap_or_default()).collect()
+}
+
 pub(crate) unsafe fn push_str(h: &Hks, l: *mut c_void, s: &str) {
-    let c = std::ffi::CString::new(s.replace('\0', "")).unwrap_or_default();
-    (h.push_fstring)(l, b"%s\0".as_ptr() as *const c_char, c.as_ptr());
+    for (i, c) in chunks(s).iter().enumerate() {
+        (h.push_fstring)(l, b"%s\0".as_ptr() as *const c_char, c.as_ptr());
+        if i > 0 {
+            (h.concat)(l, 2);
+        }
+    }
 }
 
 /// `Civ6Proxy_LireReglages()` → texte du fichier (vide s'il n'existe pas), 1|0 selon que le proxy
@@ -281,6 +302,10 @@ unsafe extern "C" fn hook_loadbuffer(l: *mut c_void, buf: *const u8, size: usize
         crate::maj::SCRIPT => (crate::maj::prepare(l, src), "maj : notification de mise à jour ajoutée"),
         crate::salon::SCRIPT_OPTION => (crate::salon::prepare_option(l, src), "option : « No First/Last moves (BGE) » ajoutée"),
         crate::rapport::SCRIPT => (crate::rapport::prepare(l, src), "rapport : bouton « Signaler un bug » du menu Échap ajouté"),
+        crate::remap::SCRIPT => match crate::remap::prepare(l, src) {
+            Some(text) => (text, "remap : the host loads its own game before the clients (Multiplayer Helper's remap)"),
+            None => return real(l, buf, size, name),
+        },
         _ => return real(l, buf, size, name),
     };
     let r = real(l, text.as_ptr(), text.len(), name);
@@ -469,6 +494,20 @@ mod tests {
         assert!(patch_tick_intervals(b"x = 1").is_none());
     }
 
+    /// Chaque morceau tient dans le tampon de `lua_pushfstring` (511 octets), et leur recollage
+    /// rend la chaîne, NUL retirés, accents coupés compris.
+    #[test]
+    fn morceaux_pousses() {
+        let long: String = (0..300).map(|i| format!("clé_{i}=é\r\n")).collect();
+        for s in ["", "a=1", long.as_str(), "a\0b"] {
+            let parts = chunks(s);
+            assert!(!parts.is_empty() && parts.iter().all(|c| c.as_bytes().len() <= 511));
+            let joined: Vec<u8> = parts.iter().flat_map(|c| c.as_bytes().to_vec()).collect();
+            assert_eq!(joined, s.replace('\0', "").into_bytes());
+        }
+        assert!(chunks(&long).len() > 1);
+    }
+
     #[test]
     fn fusion_du_fichier() {
         let old = "mode=coalesce\r\n# note\r\nui_boutons=on\r\nwmd_accel=20\r\n";
@@ -500,16 +539,61 @@ mod tests {
         let mut lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib_windows.rs")).unwrap();
         lib += include_str!("maj.rs");
         lib += include_str!("zones.rs");
+        lib += include_str!("debit_steam.rs");
         lib += include_str!("messages.rs");
+        lib += include_str!("assets.rs");
+        lib += include_str!("ramasse_miettes.rs");
+        lib += include_str!("bdd.rs");
+        lib += include_str!("config_gardee.rs");
+        lib += include_str!("vsync.rs");
+        lib += include_str!("fin_chargement.rs");
+        lib += include_str!("pool.rs");
+        lib += include_str!("remap_leger.rs");
+        lib += include_str!("maths_communes.rs");
+        lib += include_str!("resynchro_volume.rs");
+        // Correctifs de stabilité (POL) : pas de réglage joueur. Leurs clés ne sont lues que par les
+        // builds de diagnostic (feature `diag`), pour comparer avec le jeu d'origine. Les seuils de
+        // la resynchro au volume (hôte seulement) se règlent dans le fichier, sans onglet.
+        const SANS_ONGLET: [&str; 9] = [
+            "unites_promises",
+            "visibilite_chargee",
+            "ecouteurs_charges",
+            "preferences_chargees",
+            "maths_communes",
+            "vision_guerre",
+            "resynchro_volume",
+            "resynchro_volume_ko",
+            "resynchro_volume_archives",
+        ];
         let read: Vec<&str> = lib.split("strip_prefix(\"").skip(1).map(|s| s.split("=\")").next().unwrap()).collect();
         let tab: Vec<&str> = LUA_BLOCK.split("cle = \"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
         assert!(read.len() >= 12, "{read:?}");
         for k in &read {
-            assert!(tab.contains(k), "{k} lu par le proxy, absent de l'onglet");
+            assert!(tab.contains(k) != SANS_ONGLET.contains(k), "{k} lu par le proxy : dans l'onglet si et seulement si ce n'est pas un correctif POL");
         }
         for k in &tab {
             assert!(read.contains(k), "{k} dans l'onglet, inconnu du proxy");
         }
+    }
+
+    /// Les ajouts d'interface coupés par `ui_nouveautes=off` : ceux de `NOUVEAUTES_UI`
+    /// (proxy/src/lib_windows.rs) sont exactement ceux que l'onglet marque `nouveaute_ui`, sinon l'onglet
+    /// en gèlerait un que le proxy ne coupe pas, ou montrerait activé un ajout coupé.
+    #[test]
+    fn nouveautes_ui_communes_avec_le_proxy() {
+        let lib = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../proxy/src/lib_windows.rs")).unwrap();
+        let table = lib.split("const NOUVEAUTES_UI").nth(1).unwrap().split("];").next().unwrap();
+        let mut proxy: Vec<&str> = table.split("(\"").skip(1).map(|s| s.split('"').next().unwrap()).collect();
+        let mut tab: Vec<&str> = LUA_BLOCK
+            .split("{ cle = \"")
+            .skip(1)
+            .filter(|s| s.lines().next().unwrap().contains("nouveaute_ui = true"))
+            .map(|s| s.split('"').next().unwrap())
+            .collect();
+        proxy.sort_unstable();
+        tab.sort_unstable();
+        assert!(proxy.len() >= 10, "{proxy:?}");
+        assert_eq!(proxy, tab);
     }
 
     /// Chaque réglage de l'onglet a son nom et son aide dans les textes (textes/en_US.xml), et

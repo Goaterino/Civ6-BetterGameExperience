@@ -21,7 +21,6 @@
 
 use crate::debordement::{hks, LUA_GLOBALSINDEX};
 use crate::log;
-use crate::patch::IMAGE_BASE;
 use std::ffi::{c_char, c_void};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
@@ -48,7 +47,7 @@ const SIGNATURES: [(u64, usize, &[u8]); 3] = [
 ];
 
 fn gc(addr: u64) -> usize {
-    BASE.load(Ordering::Relaxed) + (addr - IMAGE_BASE) as usize
+    BASE.load(Ordering::Relaxed) + crate::patch::rva(addr)
 }
 
 unsafe fn rd<T: Copy>(addr: usize) -> T {
@@ -148,8 +147,8 @@ pub unsafe fn publier(l: *mut c_void) -> bool {
 /// Appelé quand l'originale vient d'être chargée : vérifie la version, rien n'est modifié.
 pub unsafe fn on_gamecore_loaded(base: usize) {
     for (addr, decalage, octets) in SIGNATURES {
-        let at = base + (addr - IMAGE_BASE) as usize + decalage;
-        if std::slice::from_raw_parts(at as *const u8, octets.len()) != octets {
+        let at = base + crate::patch::rva(addr) + decalage;
+        if crate::patch::as_known(addr + decalage as u64, std::slice::from_raw_parts(at as *const u8, octets.len())) != octets {
             log(&format!("avancement : version inattendue en {addr:#x}, excédents de science et de culture non lus"));
             return;
         }
@@ -203,7 +202,7 @@ mod tests {
         let n = u16::from_le_bytes(b[pe + 6..pe + 8].try_into().unwrap()) as usize;
         let opt = u16::from_le_bytes(b[pe + 20..pe + 22].try_into().unwrap()) as usize;
         let fichier = |addr: u64| {
-            let rva = (addr - IMAGE_BASE) as usize;
+            let rva = crate::patch::rva(addr);
             (0..n).find_map(|i| {
                 let s = pe + 24 + opt + i * 40;
                 let (taille, va, brut) = (u32_at(s + 8), u32_at(s + 12), u32_at(s + 20));
@@ -212,7 +211,7 @@ mod tests {
         };
         for (addr, decalage, octets) in SIGNATURES {
             let o = fichier(addr).unwrap() + decalage;
-            assert_eq!(&b[o..o + octets.len()], octets, "{addr:#x}");
+            assert_eq!(crate::patch::as_known(addr + decalage as u64, &b[o..o + octets.len()]), octets, "{addr:#x}");
         }
     }
 }

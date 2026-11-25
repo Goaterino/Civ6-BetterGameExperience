@@ -1,7 +1,9 @@
 # Releases
 
-Les releases sont construites par GitHub Actions ([release.yml](../.github/workflows/release.yml)),
-jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui l'a produit.
+Les releases sont compilées par GitHub Actions ([release.yml](../.github/workflows/release.yml)),
+jamais depuis un PC. Seule la signature Authenticode des binaires se fait depuis un PC
+([signer.ps1](signer.ps1), voir « Signature Authenticode ») : elle ajoute une signature aux
+fichiers compilés par le workflow, sans les recompiler.
 
 ## Contenu d'une release
 
@@ -12,6 +14,9 @@ jamais depuis un PC : n'importe qui peut relier un binaire publié au commit qui
 | `BetterGameExperience_V<version>.exe` | l'installeur ([updater/](../updater/README.md)), hors manifeste : c'est lui qui le lit |
 | `manifest.json` | version, version du salon (`proxy/src/version.rs`), commit, et pour chaque fichier : dossier de destination, taille, SHA-256 |
 | `manifest.json.sig` | signature ed25519 du manifeste, en base64 |
+| `BetterGameExperience-linux-x86_64` | l'installeur Linux (même crate, [updater/](../updater/README.md#linux-proton)), hors manifeste |
+| `BetterGameExperience-linux-x86_64.sig` | sa signature ed25519 (même clé, `manifest.py sign-file`), en base64 : `install.sh` la vérifie avec openssl avant de le lancer. `signer.ps1` ne touche ni l'un ni l'autre |
+| `install.sh` | télécharge l'installeur Linux et sa signature, la vérifie, puis lance `install` (`curl … \| sh`) |
 | `manifest-macos.json`, `.sig` | macOS, plus tard : les dylibs `libBGE_Chargeur.dylib` et `BGD_GameCore_XP2.dylib` (`build --platform macos`), lues par le lanceur macOS ([updater/README.md](../updater/README.md#macos)) |
 
 Les scripts Lua et XML sont compilés dans les DLL (`include_str!`) : aucun autre fichier à installer.
@@ -69,15 +74,57 @@ faut recompiler et réinstaller pour les retrouver.
    git tag v0.2.0
    git push origin v0.2.0
    ```
-5. Le workflow vérifie les textes traduits ([textes/](../textes/README.md)), teste, compile, signe et
-   crée une release **en brouillon**. La relire sur GitHub, puis
-   la publier : l'updater ne voit que les releases publiées.
+5. Le workflow vérifie les textes traduits ([textes/](../textes/README.md)), teste, compile, signe le
+   manifeste et crée une release **en brouillon**, titrée « BetterGameExperience X.Y.Z (à signer) ».
+6. Signer le brouillon depuis le PC qui a accès au certificat (« Signature Authenticode ») :
+   ```
+   .\release\signer.ps1 v0.2.0
+   ```
+   Le titre perd « (à signer) ». Ne jamais publier un brouillon qui le porte encore.
+7. Relire le brouillon sur GitHub, puis le publier : l'updater ne voit que les releases publiées.
    Pour une version de test, cocher *Set as a pre-release* : seuls les joueurs qui ont coché
    « Pré-release » dans l'installeur la reçoivent, par l'installeur comme par la notification du jeu.
    Garder un tag `vX.Y.Z` simple : la notification du jeu ne compare que ces numéros-là.
 
-Lancé à la main (onglet Actions, *Run workflow*), le workflow compile et signe sans créer de release ;
-les fichiers sont dans l'artefact du run.
+Lancé à la main (onglet Actions, *Run workflow*), le workflow compile et signe le manifeste sans créer
+de release ; les fichiers sont dans l'artefact du run. `.\release\signer.ps1 -Dossier <dossier>` signe
+un tel artefact décompressé, sans passer par GitHub.
+
+## Signature Authenticode
+
+Les deux DLL et l'installeur sont signés avec un certificat de signature de code open source
+(Certum). Windows affiche alors l'éditeur dans les propriétés du fichier et dans l'invite de
+l'installeur, et la réputation SmartScreen et antivirus s'attache au certificat au lieu de repartir
+de zéro à chaque binaire.
+
+La clé du certificat est dans le coffre distant de Certum (SimpliSign). L'application de bureau
+SimpliSign Desktop, connectée avec le code à usage unique de l'application mobile, la présente à
+Windows comme une carte à puce. La CI ne peut donc pas signer : c'est [signer.ps1](signer.ps1), lancé
+depuis le PC, qui :
+1. télécharge les fichiers du brouillon et vérifie le manifeste signé par la CI ;
+2. signe `BGD_GameCore_XP2.dll`, `winmm.dll` et `BetterGameExperience_V<version>.exe` (signtool,
+   SHA-256, horodatage `http://time.certum.pl` : la signature reste valide après l'expiration du
+   certificat) ;
+3. recalcule le manifeste (`manifest.py rehash` : taille et SHA-256 changent, version et commit
+   non), le re-signe en ed25519 et le vérifie ;
+4. renvoie les fichiers dans le brouillon et retire « (à signer) » du titre.
+
+Relancé sur un brouillon déjà signé, il ne re-signe pas les fichiers qui portent déjà la signature du
+même certificat. Il refuse une release publiée : ses fichiers sont déjà chez les joueurs.
+
+Prérequis, une fois par PC :
+- SimpliSign Desktop, connecté, et le certificat importé (le `.pem` téléchargé chez Certum) : il
+  doit apparaître, relié à sa clé, dans `Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert` ;
+- signtool : Windows SDK, composant « Signing Tools for Desktop Apps » (le script le trouve hors du
+  PATH) ;
+- Python avec `cryptography`, `gh` connecté, et la clé du manifeste (« Clé de signature »).
+
+Rien de personnel n'est dans le dépôt. Le script choisit le seul certificat de signature de code de
+l'utilisateur qui a sa clé ; s'il y en a plusieurs, son empreinte se donne par `-Empreinte`,
+`$env:BGE_EMPREINTE_SIGNATURE` ou `%USERPROFILE%\.bgd\empreinte_signature.txt`.
+
+Le certificat se renouvelle chaque année chez Certum. Les binaires déjà publiés restent valides
+grâce à l'horodatage.
 
 ## Clé de signature
 
@@ -90,7 +137,8 @@ les fichiers sont dans l'artefact du run.
   À sauvegarder ailleurs (gestionnaire de mots de passe) : perdue, il faudrait publier un updater
   avec une nouvelle clé publique.
 
-Vérifier une release téléchargée (dossier contenant les 4 fichiers) :
+Vérifier une release téléchargée (dossier contenant les 5 fichiers) :
 ```
 python release/manifest.py verify <dossier>/manifest.json
+Get-AuthenticodeSignature <dossier>\*.dll, <dossier>\*.exe
 ```

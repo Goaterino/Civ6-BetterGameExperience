@@ -51,7 +51,7 @@ local seats={0,1,2,3,4,5,6,7}
 local peers,packets={},{}
 local now=1
 local function peer(id,setting,skin)
-    local p={cues={}, markers={},choices={},prefs={},events=events(),luaEvents=events(),shared={},mapControls=controls()}
+    local p={cues={}, markers={},choices={},prefs={},file={},events=events(),luaEvents=events(),shared={},mapControls=controls()}
     local env=setmetatable({
         Controls=p.mapControls, Events=p.events,LuaEvents=p.luaEvents,ExposedMembers=p.shared,PlayerConfigurations=configs,
         Modding={IsModActive=function(guid) return skin and guid=="6471536e-c80a-4db4-8ddf-58cceaab9308" end},
@@ -68,6 +68,12 @@ local function peer(id,setting,skin)
         UserConfiguration={GetValue=function(k) return p.prefs[k] end,SetValue=function(k,v) p.prefs[k]=v end},
         Options={GetAudioOption=function(_,key) return key=="Mute Focus" and 0 or 100 end},
         Civ6Proxy_PingSound=function(name,gain) table.insert(p.cues,{name,gain}) end,
+        -- rollover_proxy.cfg of this machine, kept across game loads (prefs.lua).
+        Civ6Proxy_PingPref=function(key) return p.file[key] end,
+        Civ6Proxy_PingPrefsSave=function(lines)
+            for k,v in lines:gmatch("(ping_[%w_]+)=(%d+)") do p.file[k]=tonumber(v) end
+            return 1
+        end,
         Input={GetActiveContext=function() return 1 end,GetActionCount=function() return p.native and 1 or 0 end,
             GetActionId=function(k) if p.native and (k==0 or k=="TeamPingWheel") then return 7 end end,
             GetGestureDisplayString=function(_,slot) return slot==0 and p.native or nil end},InputContext={World=1}, Keys={X=24, K=11, J=10, U=21, R=18, ["1"]=28, ["2"]=29, ["3"]=30, ["4"]=31, VK_ESCAPE=99,VK_SHIFT=80,VK_CONTROL=81,VK_ALT=82},
@@ -93,13 +99,13 @@ local function peer(id,setting,skin)
         SetInputHandler=function(_,f) p.input=f end,SetUpdate=function(_,f) p.update=f end,ClearUpdate=function() p.update=nil end,
         SetAppLostFocusHandler=function(_,f) p.blur=f end,SetShutdown=function(_,f) p.shutdown=f end,LookUpControl=function() end
     }
-    run(env, common .. read("bindings") .. read("limits") .. read("map"))
+    run(env, common .. read("bindings") .. read("prefs") .. read("limits") .. read("map"))
     p.events.LoadGameViewStateDone()
     p.chat=setmetatable({Controls=controls(),Events=p.events,SendChat=function(text) p.sent=text end,
         OnChat=function(_,_,text) p.status=text end}, {__index=env})
     run(p.chat, common .. read("filter"))
     p.chat.Events.MultiplayerChat.Add(function() p.unread=(p.unread or 0)+1 end)
-    run(p.chat, common .. read("chat"))
+    run(p.chat, common .. read("bindings") .. read("prefs") .. read("chat"))
     return p
 end
 for i=0,7 do peers[i]=peer(i,true) end
@@ -146,6 +152,16 @@ bob.chat.Controls.ChatEntry.submit("ordinary outgoing message")
 assert(bob.sent=="ordinary outgoing message")
 bob.chat.Controls.ChatEntry.submit("/pingvolume 25")
 assert(bob.cues[#bob.cues][1]=="Play_TeamPing_Look_25")
+assert(bob.file.ping_volume==25 and host.file.ping_volume==nil)
+-- MPH's remap reloads the game, which empties UserConfiguration: the saved volume and
+-- chords come back when the load screen closes.
+bob.prefs.BGD_Key_TeamPingWheel_1=256+11
+bob.chat.Controls.ChatEntry.submit("/pingvolume 50")
+assert(bob.file.ping_volume==50 and bob.file.ping_key_TeamPingWheel_1==267)
+bob.prefs={}
+bob.events.LoadScreenClose()
+assert(bob.prefs.TeamPings_Volume==50 and bob.prefs.BGD_Key_TeamPingWheel_1==267)
+bob.chat.Controls.ChatEntry.submit("/pingvolume 25")
 now=15
 for i=1,6 do flick(host,450,450,0,-70) end
 local before,heard=#packets,#host.cues

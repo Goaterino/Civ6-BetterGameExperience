@@ -12,11 +12,16 @@ mod patch;
 mod win;
 #[path = "../../proxy/src/noms.rs"]
 mod noms;
+#[path = "../../proxy/src/pe.rs"]
+mod pe;
 
+mod absent_turn;
 mod chargeur;
 mod options_texte;
 mod salon_texte;
 mod xml_texte;
+mod http;
+mod wine;
 mod relais;
 mod options;
 mod maj;
@@ -26,9 +31,30 @@ mod messages;
 mod relink;
 mod pings;
 mod snapshots;
+mod reparation_synchro;
+mod cache_synchro;
+mod relecture_sur_place;
+mod maths_communes;
 mod medias;
+mod rejoin;
+mod flush;
+mod sync_notes;
+mod remap;
+mod reload_all;
+mod resynchro_volume;
+mod motifs;
+mod assets;
+mod ramasse_miettes;
+mod bdd;
+mod config_gardee;
+mod localisation;
+mod vsync;
+mod fin_chargement;
+mod pool;
+mod remap_leger;
 #[cfg(feature = "diag")]
 mod zones;
+mod debit_steam;
 #[path = "../../proxy/src/version.rs"]
 mod version;
 
@@ -50,6 +76,38 @@ pub extern "system" fn StartupProxyStatus() -> u32 {
 #[no_mangle]
 pub extern "system" fn BgdPolActifs() -> u32 {
     salon::pol_actifs() as u32
+}
+
+/// Export lu par le proxy de GameCore : 1 si la partie chargée est une partie en réseau en direct
+/// (ni solo, ni hotseat, ni PlayByCloud), posé à chaque écran de chargement (voir `salon`).
+#[no_mangle]
+pub extern "system" fn BgdPartieReseau() -> u32 {
+    salon::partie_reseau() as u32
+}
+
+/// Exports lus par le proxy de GameCore (`executions`) : le compteur des messages qu'il exécute, et
+/// l'état de ses détours (voir `cache_synchro`).
+#[no_mangle]
+pub extern "system" fn BgdMessagesGameCore() -> *const std::sync::atomic::AtomicU64 {
+    cache_synchro::messages_counter()
+}
+
+#[no_mangle]
+pub extern "system" fn BgdSuiviMessages(on: u32) {
+    cache_synchro::messages_tracked(on)
+}
+
+/// Tests: path of the exe a table index stands for, in the order of the tables: 0 and 1 the
+/// 1.0.12.74 build (`CIV6_EXE_74_DIR`, or the installed game when unset), 2 and 3 the 1.0.12.58
+/// build (`CIV6_EXE_58_DIR`). A build whose folder is not set or lacks the file is skipped.
+#[cfg(test)]
+pub(crate) fn test_exe(installed: &str, index: usize, name: &str) -> String {
+    let var = ["CIV6_EXE_74_DIR", "CIV6_EXE_58_DIR"][index / 2];
+    match std::env::var(var) {
+        Ok(dir) => format!(r"{dir}\{name}"),
+        Err(_) if index / 2 == 0 => format!(r"{installed}\{name}"),
+        Err(_) => format!("{var} not set"),
+    }
 }
 
 pub(crate) fn log(msg: &str) {
@@ -92,6 +150,15 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
         // Hors de l'exe du jeu (tests), on ne pose rien.
         let name = exe.rsplit(['/', '\\']).next().unwrap_or("").to_ascii_lowercase();
         if name.starts_with("civilizationvi") {
+            if let Some(v) = patch::unsupported_game() {
+                // Version du jeu non prise en charge (1.0.12.72 depuis le 2026-11-23) : aucun
+                // correctif. Restent le chargement du proxy de GameCore, qui refuse lui-même cette
+                // version, et l'accroche du Lua, pour le dire au joueur (menu, salon, rapport de bug).
+                log(&format!("démarrage : jeu {v} non pris en charge par BetterGameExperience, aucun correctif posé"));
+                chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
+                options::install();
+                return 1;
+            }
             // Avant que le jeu ne cherche ses mods (DLC\BGEPings).
             medias::installer();
             chargeur::install(win::GetModuleHandleW(std::ptr::null()) as usize);
@@ -100,8 +167,30 @@ pub unsafe extern "system" fn DllMain(module: win::HMODULE, reason: u32, _reserv
             relink::install();
             pings::install();
             snapshots::install();
+            rejoin::install();
+            reload_all::install();
+            absent_turn::install();
+            flush::install();
+            // Avant sync_notes et reparation_synchro : il reconnaît le gestionnaire comme ce dernier,
+            // sur des appels encore intacts, même avec `sync_notes=off`. Ses sites ne recouvrent pas
+            // les leurs.
+            cache_synchro::install();
+            sync_notes::install();
+            // Après sync_notes : il redirige les deux mêmes appels, reparation_synchro s'enchaîne au sien.
+            reparation_synchro::install();
+            relecture_sur_place::install();
+            let exe_base = win::GetModuleHandleW(std::ptr::null()) as usize;
+            assets::install(exe_base);
+            ramasse_miettes::install(exe_base);
+            bdd::install(exe_base);
+            config_gardee::install(exe_base);
+            vsync::install(exe_base);
+            fin_chargement::install(exe_base);
+            pool::install(exe_base);
+            remap_leger::install(exe_base);
             #[cfg(feature = "diag")]
             zones::install();
+            debit_steam::install();
         }
     }
     1

@@ -171,6 +171,9 @@ local function NewJeu(options)
 		include = function() error("PopupDialog déjà défini, include inattendu"); end,
 	});
 	function menu.PopupDialog:new(id) m.popupId = id; return popup; end
+	if options.inconnue then
+		menu.Civ6Proxy_VersionNonPriseEnCharge = function() return options.inconnue, 0; end
+	end
 	if not options.sansNatives then
 		menu.Civ6Proxy_RapportEnvoyer = function(lignes)
 			table.insert(m.envois, lignes);
@@ -208,6 +211,16 @@ local function Traduit(texte)
 	local env = setmetatable({ Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end } }, { __index = _G });
 	assert(load(TEXTES, "textes", "t", env))();
 	return env.BGD_TxtChat(texte);
+end
+
+-- 0. Version du jeu non prise en charge : ni formulaire, ni chat, ni envoi ; un popup l'explique.
+do
+	local m = NewJeu({ inconnue = "1.0.12.72" });
+	m.Clic();
+	check(not m.Formulaire() and #m.chat == 0 and #m.envois == 0, "non pris en charge : rien n'est ouvert ni envoyé");
+	check(m.popup.open and m.popup.title == "Version du jeu non prise en charge", "popup : " .. tostring(m.popup.title));
+	check(m.popup.texts[1]:find("rapports de bug sont désactivés", 1, true) and m.popup.texts[1]:find("1.0.12.72", 1, true), "texte : " .. tostring(m.popup.texts[1]));
+	check(m.popup:Click("Fermer") and not m.popup.open, "Fermer");
 end
 
 -- 1. Multijoueur : pas de pause, le chat prévenu, puis annulation.

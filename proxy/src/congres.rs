@@ -17,7 +17,7 @@
 //!   vote). Le compteur de faveur gagnée (`+0xd8` du joueur), que le crédit augmente, est remis à sa
 //!   valeur.
 
-use crate::patch::{self, IMAGE_BASE};
+use crate::patch::{self};
 use crate::congres_regle::{decision, WC_1, WC_2};
 use crate::{log, pol};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -86,7 +86,7 @@ unsafe fn rd<T: Copy>(at: usize) -> T {
 }
 
 fn adresse(base: usize, a: u64) -> usize {
-    base + (a - IMAGE_BASE) as usize
+    base + crate::patch::rva(a)
 }
 
 unsafe fn est_segment(base: usize, h: u32) -> bool {
@@ -228,7 +228,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         return;
     }
     for (a, octets) in APPELEES {
-        let have = std::slice::from_raw_parts(adresse(base, a) as *const u8, octets.len());
+        let have = crate::patch::as_known(a, std::slice::from_raw_parts(adresse(base, a) as *const u8, octets.len()));
         if have != octets {
             log(&format!("congrès : version inattendue en {a:#x} ({have:02x?}), aucun détour"));
             return;

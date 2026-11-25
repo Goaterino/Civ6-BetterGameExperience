@@ -1,5 +1,7 @@
 //! Lecture d'une release : manifeste signé, puis fichiers contrôlés par leur SHA-256 (voir
-//! release/README.md). Les téléchargements passent par WinHTTP (`http.rs`).
+//! release/README.md). Commun à Windows, Linux et macOS : seuls les dossiers (`work_dir`, `data_dir`)
+//! et le nom du manifeste (`MANIFEST`) diffèrent. Les téléchargements passent par `http` : WinHTTP
+//! sous Windows, ureq sous Linux et macOS.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -37,13 +39,40 @@ pub struct File {
 }
 
 /// Dossier de travail, où le manifeste et les fichiers sont téléchargés avant l'installation.
+/// Windows : `%TEMP%\BetterGameExperience` ; macOS : `$TMPDIR/BetterGameExperience`, déjà privé à
+/// l'utilisateur.
+#[cfg(not(target_os = "linux"))]
 pub fn work_dir() -> PathBuf {
     std::env::temp_dir().join("BetterGameExperience")
 }
 
+/// Linux : `$XDG_CACHE_HOME/BetterGameExperience` (`~/.cache` par défaut), privé à l'utilisateur.
+/// Pas de dossier prévisible dans `/tmp` : un autre utilisateur pourrait le créer avant.
+#[cfg(target_os = "linux")]
+pub fn work_dir() -> PathBuf {
+    crate::sys::xdg_dir("XDG_CACHE_HOME", ".cache", &crate::sys::env)
+        .unwrap_or_else(std::env::temp_dir)
+        .join("BetterGameExperience")
+}
+
+/// Crée `dir` et ses parents ; sous Linux, privé à l'utilisateur (mode 0700).
+#[cfg(not(target_os = "linux"))]
+pub fn create_private_dir(dir: &Path) -> Result<(), String> {
+    fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))
+}
+
+#[cfg(target_os = "linux")]
+pub fn create_private_dir(dir: &Path) -> Result<(), String> {
+    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+    let err = |e: std::io::Error| format!("{}: {e}", dir.display());
+    fs::DirBuilder::new().recursive(true).mode(0o700).create(dir).map_err(err)?;
+    fs::set_permissions(dir, fs::Permissions::from_mode(0o700)).map_err(err)
+}
+
 /// Manifeste de la release pour cette plateforme. Celui de Windows ne liste que les deux DLL (un
 /// installeur Windows déjà distribué refuse tout autre fichier) : macOS a le sien.
-#[cfg(windows)]
+/// Linux pose les mêmes DLL que Windows (le jeu Windows sous Proton) : même manifeste.
+#[cfg(not(target_os = "macos"))]
 pub const MANIFEST: &str = "manifest.json";
 #[cfg(target_os = "macos")]
 pub const MANIFEST: &str = "manifest-macos.json";
@@ -52,6 +81,13 @@ pub const MANIFEST: &str = "manifest-macos.json";
 #[cfg(windows)]
 pub fn data_dir() -> Option<PathBuf> {
     Some(PathBuf::from(std::env::var_os("LOCALAPPDATA")?).join("BetterGameExperience"))
+}
+
+/// Linux : `$XDG_DATA_HOME/BetterGameExperience` (`~/.local/share` par défaut). Le proxy de
+/// démarrage y cherche `bge-launch.sh` (startup_proxy/src/wine.rs).
+#[cfg(target_os = "linux")]
+pub fn data_dir() -> Option<PathBuf> {
+    Some(crate::sys::xdg_dir("XDG_DATA_HOME", ".local/share", &crate::sys::env)?.join("BetterGameExperience"))
 }
 
 /// Sous macOS : `~/Library/Application Support/BetterGameExperience`, qui reçoit aussi les dylibs
@@ -66,7 +102,9 @@ pub fn data_dir() -> Option<PathBuf> {
 }
 
 /// Jusqu'à la v0.5.0 le projet s'appelait BetterGameDLLs : au premier lancement, les choix gardés
-/// dans `%LOCALAPPDATA%\BetterGameDLLs` (langue, canal, version posée) sont repris.
+/// dans `%LOCALAPPDATA%\BetterGameDLLs` (langue, canal, version posée) sont repris. Windows seulement :
+/// l'installeur Linux est arrivé après le changement de nom.
+#[cfg(windows)]
 pub fn migrate_data_dir() {
     let (Some(new), Some(local)) = (data_dir(), std::env::var_os("LOCALAPPDATA")) else { return };
     let old = PathBuf::from(local).join("BetterGameDLLs");
@@ -79,8 +117,9 @@ pub fn migrate_data_dir() {
     }
 }
 
-/// Choix du canal, gardé dans `%LOCALAPPDATA%\BetterGameExperience\canal.txt` : `prerelease`, sinon le
-/// canal release. L'option de lancement Steam et la notification du jeu le suivent aussi.
+/// Choix du canal, gardé dans `canal.txt` du dossier de données : `prerelease`, sinon le canal
+/// release. La notification du jeu le suit aussi (startup_proxy/src/maj.rs), et sous Windows l'ancienne
+/// option de lancement Steam.
 fn channel_file() -> Option<PathBuf> {
     Some(data_dir()?.join("canal.txt"))
 }
@@ -97,7 +136,7 @@ pub fn set_prerelease(on: bool) {
     }
 }
 
-/// Version posée par la dernière installation, gardée dans `%LOCALAPPDATA%\BetterGameExperience\installe.txt`
+/// Version posée par la dernière installation, gardée dans `installe.txt` du dossier de données
 /// (les DLL d'une compilation locale n'ont pas de numéro) : sert à reconnaître une pré-release posée.
 fn installed_file() -> Option<PathBuf> {
     Some(data_dir()?.join("installe.txt"))
@@ -124,7 +163,7 @@ pub fn is_newer(a: &str, b: &str) -> bool {
 /// Télécharge dans `work` le manifeste de la dernière release du canal choisi, et vérifie sa
 /// signature.
 pub fn fetch_manifest(work: &Path) -> Result<Manifest, String> {
-    fs::create_dir_all(work).map_err(|e| format!("{}: {e}", work.display()))?;
+    create_private_dir(work)?;
     // Avec BGD_DIST, le dossier local tient lieu de release, quel que soit le canal.
     let base = if prerelease() && std::env::var_os("BGD_DIST").is_none() {
         format!("{RELEASES}/download/{}", newest_tag(work)?)
@@ -294,7 +333,14 @@ mod network {
     #[ignore]
     fn deux_canaux_sur_github() {
         let dir = std::env::temp_dir().join("bgd_test_canaux");
-        std::env::set_var(if cfg!(windows) { "LOCALAPPDATA" } else { "BGE_DATA_DIR" }, &dir);
+        let var = if cfg!(windows) {
+            "LOCALAPPDATA"
+        } else if cfg!(target_os = "macos") {
+            "BGE_DATA_DIR"
+        } else {
+            "XDG_DATA_HOME"
+        };
+        std::env::set_var(var, &dir);
         for on in [false, true] {
             set_prerelease(on);
             assert_eq!(prerelease(), on);

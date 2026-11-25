@@ -1,7 +1,8 @@
-//! Dossier de Civilization VI : bibliothèques Steam, ou chemin de la commande de lancement.
+//! Dossier de Civilization VI sous macOS : bibliothèques Steam, ou chemin de la commande de
+//! lancement ; option de lancement Steam du lanceur (`localconfig.vdf`). L'équivalent de
+//! windows/game.rs.
 //!
-//! Sous Windows, le dossier contient `DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll`.
-//! Sous macOS (port d'Aspyr), le même dossier Steam contient `Civ6.app`, dont
+//! Le port d'Aspyr : le dossier Steam du jeu contient `Civ6.app`, dont
 //! `Contents/MacOS/GameCore_XP2.dll` est le GameCore (un bundle Mach-O, malgré l'extension).
 
 use std::fs;
@@ -10,9 +11,6 @@ use std::path::{Path, PathBuf};
 use crate::sys;
 
 /// GameCore de Gathering Storm, relatif au dossier du jeu.
-#[cfg(windows)]
-const GAMECORE: &str = "DLC/Expansion2/Binaries/Win64/GameCore_XP2_FinalRelease.dll";
-#[cfg(target_os = "macos")]
 const GAMECORE: &str = "Civ6.app/Contents/MacOS/GameCore_XP2.dll";
 
 /// Un dossier est celui du jeu s'il contient le GameCore de Gathering Storm.
@@ -58,49 +56,38 @@ pub fn from_command(exe: &Path) -> Option<PathBuf> {
     exe.ancestors().find(|dir| is_game_dir(dir)).map(Path::to_path_buf)
 }
 
-/// Civilization VI est lancé : `CivilizationVI.exe`, `CivilizationVI_DX12.exe`… sous Windows ;
-/// `Civ6_Exe` (lanceur d'Aspyr) et `Civ6_Exe_Child` (le jeu) sous macOS.
+/// Civilization VI est lancé : `Civ6_Exe` (lanceur d'Aspyr) et `Civ6_Exe_Child` (le jeu).
 pub fn running() -> bool {
     sys::process_names().iter().any(|n| is_game_process(n))
 }
 
 fn is_game_process(name: &str) -> bool {
-    let name = name.to_lowercase();
-    if cfg!(target_os = "macos") {
-        name.starts_with("civ6_exe")
-    } else {
-        name.starts_with("civilizationvi")
-    }
+    name.to_lowercase().starts_with("civ6_exe")
 }
 
 /// Bloc des jeux dans `localconfig.vdf` : `UserLocalConfigStore > Software > Valve > Steam > apps`,
 /// où `"289070"` (Civilization VI) garde ses `LaunchOptions`.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const APPS: [&str; 5] = ["UserLocalConfigStore", "Software", "Valve", "Steam", "apps"];
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const CIV6: &str = "289070";
 
 /// `localconfig.vdf` de chaque compte Steam de la machine (`userdata/<compte>/config`).
-#[cfg(target_os = "macos")]
 fn local_configs() -> Vec<PathBuf> {
     let Some(steam) = sys::steam_path() else { return Vec::new() };
     let Ok(users) = fs::read_dir(steam.join("userdata")) else { return Vec::new() };
     users.flatten().map(|u| u.path().join("config/localconfig.vdf")).filter(|p| p.is_file()).collect()
 }
 
-/// macOS : l'option de lancement Steam de Civilization VI désigne le lanceur, pour l'un des comptes
+/// L'option de lancement Steam de Civilization VI désigne le lanceur, pour l'un des comptes
 /// Steam de la machine.
-#[cfg(target_os = "macos")]
 pub fn launch_option_set() -> bool {
     local_configs().iter().any(|p| fs::read_to_string(p).is_ok_and(|vdf| has_launch_option(&vdf)))
 }
 
-/// macOS : écrit (`Some(exe)`) ou retire (`None`) l'option de lancement du lanceur dans la
+/// Écrit (`Some(exe)`) ou retire (`None`) l'option de lancement du lanceur dans la
 /// configuration de chaque compte Steam qui a un bloc des jeux. Steam doit être fermé : il relit
 /// ce fichier au démarrage et le réécrit en quittant. L'ancien fichier est gardé à côté
 /// (`localconfig.vdf.bge`), et le nouveau le remplace d'un coup (fichier temporaire, puis
 /// renommage). Rend le nombre de comptes configurés.
-#[cfg(target_os = "macos")]
 pub fn write_launch_option(exe: Option<&Path>) -> Result<usize, String> {
     let exe = exe.map(|e| e.to_string_lossy().into_owned());
     let mut done = 0;
@@ -125,7 +112,6 @@ pub fn write_launch_option(exe: Option<&Path>) -> Result<usize, String> {
 }
 
 /// Dans le bloc `"289070"` des jeux, une ligne `"LaunchOptions"` qui cite le lanceur.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 fn has_launch_option(vdf: &str) -> bool {
     Blocks::of(vdf).options.is_some_and(|(_, v)| v.contains("BetterGameExperience"))
 }
@@ -151,7 +137,6 @@ fn tokens(line: &str) -> Vec<String> {
     out
 }
 
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 fn escape(s: &str) -> String {
     s.replace('\\', "\\\\").replace('"', "\\\"")
 }
@@ -199,7 +184,6 @@ impl Blocks {
 
 /// L'option de lancement `current`, avec le lanceur devant `%command%` (`Some(exe)`) ou sans lui
 /// (`None`). Les autres options du joueur restent.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 fn launch_option_value(current: &str, exe: Option<&str>) -> String {
     let mut rest = current.to_string();
     // Retire `"…BetterGameExperience…" ` (ancien emplacement compris).
@@ -230,7 +214,6 @@ fn launch_option_value(current: &str, exe: Option<&str>) -> String {
 
 /// `vdf` avec l'option de lancement de Civilization VI changée, ou `None` s'il n'y a rien à changer
 /// (ou pas de bloc des jeux où l'écrire).
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 fn with_launch_option(vdf: &str, exe: Option<&str>) -> Option<String> {
     let b = Blocks::of(vdf);
     let current = b.options.as_ref().map_or("", |(_, v)| v.as_str());
@@ -351,14 +334,9 @@ mod tests {
 
     #[test]
     fn processus_du_jeu() {
-        if cfg!(target_os = "macos") {
-            assert!(is_game_process("Civ6_Exe"));
-            assert!(is_game_process("Civ6_Exe_Child"));
-            assert!(!is_game_process("CivilizationVI.exe"));
-        } else {
-            assert!(is_game_process("CivilizationVI_DX12.exe"));
-            assert!(!is_game_process("Civ6_Exe"));
-        }
+        assert!(is_game_process("Civ6_Exe"));
+        assert!(is_game_process("Civ6_Exe_Child"));
+        assert!(!is_game_process("CivilizationVI.exe"));
         assert!(!is_game_process("Steam"));
     }
 
@@ -368,7 +346,7 @@ mod tests {
         let core = dir.join(GAMECORE);
         fs::create_dir_all(core.parent().unwrap()).unwrap();
         fs::write(&core, b"x").unwrap();
-        let exe = if cfg!(target_os = "macos") { "Civ6.app/Contents/MacOS/Civ6_Exe_Child" } else { "Base/Binaries/Win64Steam/CivilizationVI.exe" };
+        let exe = "Civ6.app/Contents/MacOS/Civ6_Exe_Child";
         assert_eq!(from_command(&dir.join(exe)).as_deref(), Some(dir.as_path()));
         assert_eq!(from_command(Path::new("/nulle/part/jeu")), None);
         fs::remove_dir_all(&dir).unwrap();

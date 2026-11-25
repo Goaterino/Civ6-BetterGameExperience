@@ -1,8 +1,9 @@
 //! Langues de l'installeur : celles de Better Balanced Game. Les textes sont dans `textes`, généré
 //! par `textes/gen_textes.py` depuis `textes/<langue>.xml` : un tableau `Texts` par texte, une entrée
-//! par langue de `LANGUAGES`, dans le même ordre. Le choix du joueur (liens en bas des fenêtres) est
-//! gardé dans `langue.txt`, dans le dossier de BetterGameExperience (`release::data_dir`) ; sans
-//! choix, la langue du système (Windows, ou la première langue préférée de macOS), sinon l'anglais.
+//! par langue de `LANGUAGES`, dans le même ordre. Le choix du joueur (liens en bas des fenêtres sous
+//! Windows et macOS, commande `lang` sous Linux) est gardé dans `langue.txt` du dossier de données
+//! (`release::data_dir`) ; sans choix, la langue du système (Windows : langue de l'interface ; Linux :
+//! `LC_ALL`, puis `LC_MESSAGES`, puis `LANG` ; macOS : la première langue préférée), sinon l'anglais.
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -43,11 +44,38 @@ extern "system" {
     fn GetUserDefaultUILanguage() -> u16;
 }
 
+fn choice_file() -> Option<PathBuf> {
+    Some(crate::release::data_dir()?.join("langue.txt"))
+}
+
 /// Langue de l'interface de Windows.
 #[cfg(windows)]
 fn system_language() -> Option<usize> {
     let primary = unsafe { GetUserDefaultUILanguage() } & 0x3FF;
     LANGUAGES.iter().position(|l| l.primary == primary)
+}
+
+/// Linux : langue de la locale POSIX.
+#[cfg(target_os = "linux")]
+fn system_language() -> Option<usize> {
+    system_locale(&|name| std::env::var_os(name)).and_then(|l| from_locale(&l))
+}
+
+/// Langue d'une locale POSIX (`fr_FR.UTF-8`, `pt_BR`, `zh_CN@x`) : le préfixe avant `_`, `.` ou `@`.
+/// Compilé partout, pour que ses tests tournent aussi sous Windows et macOS.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn from_locale(locale: &str) -> Option<usize> {
+    let prefix = locale.split(['_', '.', '@']).next()?.to_ascii_lowercase();
+    LANGUAGES.iter().position(|l| l.code == prefix)
+}
+
+/// Première variable de locale définie et non vide, dans l'ordre de priorité POSIX.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn system_locale(env: &dyn Fn(&str) -> Option<std::ffi::OsString>) -> Option<String> {
+    ["LC_ALL", "LC_MESSAGES", "LANG"]
+        .iter()
+        .find_map(|v| env(v).filter(|s| !s.is_empty()))
+        .map(|s| s.to_string_lossy().into_owned())
 }
 
 /// Première des langues préférées de macOS que l'installeur connaît (`fr-FR` → `fr`).
@@ -61,10 +89,6 @@ fn system_language() -> Option<usize> {
 fn from_tag(tag: &str) -> Option<usize> {
     let code = tag.split(['-', '_']).next()?.to_ascii_lowercase();
     LANGUAGES.iter().position(|l| l.code == code)
-}
-
-fn choice_file() -> Option<PathBuf> {
-    Some(crate::release::data_dir()?.join("langue.txt"))
 }
 
 pub fn init() {
@@ -131,6 +155,27 @@ mod tests {
         let codes: Vec<&str> = crate::textes::LANGUES.iter().map(|l| &l[..2]).collect();
         let ours: Vec<&str> = LANGUAGES.iter().map(|l| l.code).collect();
         assert_eq!(codes, ours);
+    }
+
+    #[test]
+    fn locale_vers_langue() {
+        assert_eq!(from_locale("fr_FR.UTF-8"), Some(1));
+        assert_eq!(from_locale("pt_BR"), Some(8));
+        assert_eq!(from_locale("zh_CN@x"), Some(10));
+        assert_eq!(from_locale("de"), Some(2));
+        assert_eq!(from_locale("C"), None);
+        assert_eq!(from_locale(""), None);
+    }
+
+    #[test]
+    fn ordre_des_variables_de_locale() {
+        let env = |v: &str| match v {
+            "LC_ALL" => Some("".into()),
+            "LC_MESSAGES" => Some("it_IT.UTF-8".into()),
+            "LANG" => Some("fr_FR".into()),
+            _ => None,
+        };
+        assert_eq!(system_locale(&env).as_deref(), Some("it_IT.UTF-8"));
     }
 
     #[test]

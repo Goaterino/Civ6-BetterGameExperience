@@ -5,7 +5,8 @@ edition = "2021"
 license = "MIT"
 description = "Installe, met à jour, répare ou retire les proxys de BetterGameExperience à partir des releases GitHub"
 
-# Paquet autonome, comme proxy/ : Windows x64, et macOS (arm64 et x86_64) pour le lanceur Mac.
+# Paquet autonome, comme proxy/. Trois cibles : Windows x64 (exe, chaîne MSVC), Linux x86_64 (binaire
+# statique musl, pour Steam Play) et macOS (arm64 et x86_64, le lanceur Mac), voir src/main.rs.
 [workspace]
 
 [[bin]]
@@ -19,7 +20,12 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
 
-# macOS : fenêtres AppKit (NSAlert), HTTPS par la pile TLS du système (Security.framework).
+# Linux : HTTPS par ureq 3 (rustls, certificats racine embarqués) ; Windows passe par WinHTTP. Pas
+# `cfg(unix)` : macOS a ses propres dépendances, ci-dessous.
+[target.'cfg(target_os = "linux")'.dependencies]
+ureq = "3"
+
+# macOS : fenêtres AppKit (NSAlert), HTTPS par ureq 2 et la pile TLS du système (Security.framework).
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 objc2-foundation = "0.3"

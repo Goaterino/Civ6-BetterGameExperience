@@ -16,6 +16,11 @@ Digits 1–9 define default Alt shortcuts. Players can rebind the wheel and dire
 Saved native actions remain visible under **Team pings (BGE)** when their original
 mod is disabled. **Team ping volume** appears below sound effects in the shared
 Audio options, both at the main menu and in a match.
+Civ's `UserConfiguration` lives in memory only: any game load (MPH's remap
+included) or game restart empties it. [prefs.lua](prefs.lua) therefore also keeps
+the volume and the DLL-only chords as `ping_*` lines of `rollover_proxy.cfg`.
+Options writes them on Confirm, `/pingvolume` at once. The map, when it is built and when the load screen closes,
+and Options, when it opens, restore only the values that `UserConfiguration` has lost.
 
 - Set `icon` to text or a Civ font icon such as `[ICON_Movement]`. Use `texture`
   for a DDS available to Civ’s texture manager. The map and wheel use the same entry.

@@ -89,6 +89,90 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="en_US">
 			<Text>Remembers tile yields during the AI's parallel computations, while the map cannot change.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="en_US">
+			<Text>Faster asset loading</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="en_US">
+			<Text>When a game loads, the game checks for each art file whether it exists in every asset folder (about 55). These checks are answered from a listing of each folder, read once per load. Saves several seconds when loading from the main menu. Local only, no effect on the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="en_US">
+			<Text>One Lua cleanup when closing the interface</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="en_US">
+			<Text>When the game closes its interface (leaving a game, Multiplayer Helper remap), it runs a full Lua garbage collection for every released script function. A single one is run at the end instead. Saves about 2 s before a remap. Interface only, no effect on the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="en_US">
+			<Text>Keep the gameplay database between loads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="en_US">
+			<Text>When the next game uses exactly the same mods, the gameplay database built for the previous one is kept instead of being rebuilt (about 1.5 s per load). GameCore is still reloaded for every game. The content is the same as after a rebuild: no desync. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="en_US">
+			<Text>Keep the mods' in-game texts between loads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="en_US">
+			<Text>The in-game texts of the mods are recorded at the first load, then written back from memory at the next ones when the mods are the same, instead of being read again from their files (about 1.5 s per load). Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="en_US">
+			<Text>No VSync on loading screens</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="en_US">
+			<Text>When VSync is on, the game waits for each screen refresh, and this also slows down the creation of the 3D terrain during a load. It is lifted during loading screens only, and stays as set in game (about 2 s per load). No effect when VSync is off. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="en_US">
+			<Text>Keep the unchanged configuration on reloads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="en_US">
+			<Text>On a reload, the game rebuilds its configuration database and reverts its texts even when nothing changed since the last load. Both are kept when unchanged; the game rules are still reloaded as usual (about 3 s per reload). Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="en_US">
+			<Text>No pause at the end of a load</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="en_US">
+			<Text>At the end of a load, the game prepares the 3D terrain a few tiles at a time and pauses between steps (LoadGameTickIntervalInMS, 16 ms by default). The pause is lifted during that last phase only (about 1.5 s per load). Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="en_US">
+			<Text>Host's first remap load without terrain</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="en_US">
+			<Text>At a Multiplayer Helper remap, the host loads the new game, then reloads it at once from its own save. The first load skips the 3D terrain, which would be thrown away (about 10 s). The game, the interface and the clients are unchanged. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="en_US">
+			<Text>Idle job threads: yields before sleeping</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="en_US">
+			<Text>A job thread without work yields its processor 100 times before going to sleep, hundreds of times per second during the end of turn. Fewer yields: less processor time wasted waiting, the same work done. Disabled = 100, as in the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="en_US">
+			<Text>Idle job threads: tries before the first yield</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="en_US">
+			<Text>A job thread without work retries 2 × (threads + 1) times, spinning in place, before yielding its processor. A smaller fixed value shortens this busy wait, especially with many threads. Disabled = as in the game. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="en_US">
+			<Text>Sleep while waiting for the job threads</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="en_US">
+			<Text>The thread that waits for a batch of jobs to end spins on the processor until the last job thread leaves, about 1 s of processor per load. It sleeps instead after a short wait, and is woken when a job thread leaves. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="en_US">
+			<Text>Write the AI choke point log</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="en_US">
+			<Text>When a map is generated, the game writes its whole choke point graph to AI_ChokePoint.csv (about 12 MB, 0.35 s). Off: the file is not written. No effect on the map or the game.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="en_US">
+			<Text>Fast choke point analysis</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="en_US">
+			<Text>Map generation: the triangulation used to find choke points is computed by a faster equivalent, with exactly the same result (about 2 s per generated map). Verification: computes both, keeps the game's result and logs any difference.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="en_US">
+			<Text>New interface additions from updates</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="en_US">
+			<Text>Disabled: interface additions from future BetterGameExperience updates arrive disabled, and you can turn them on here whenever you like. Your current interface options keep their values. Fixes are not affected. Enabled again: additions that arrived in the meantime and that you have not set yourself turn on. Local only: no effect on other players.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="en_US">
 			<Text>Nuclear strike animation speed-up</Text>
 		</Row>
@@ -143,11 +227,35 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="en_US">
 			<Text>In the production list, districts whose cost is currently reduced (fewer of that district than your average) show their discount, updated as soon as a district is placed. Display only.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="en_US">
+			<Text>Highest unit formation first</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="en_US">
+			<Text>In the production list, a unit's main button trains the highest formation the city can train (Army, otherwise Corps), and the single unit moves to the drop-down under it. The game does the reverse. Gold and Faith purchases are unchanged.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="en_US">
 			<Text>Stored production</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="en_US">
 			<Text>Shows the production a city keeps in reserve (overflow, at most one turn), which is added to its production next turn: on the city banner, in the city panel and in the production panel. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="en_US">
+			<Text>Early housing warning on the city banner</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="en_US">
+			<Text>On your city banners, an orange house appears when a city is one Housing below its cap (growth slowed by 50%), and the red house as soon as it is at the cap (75%). Without this option, the game only shows the red house once the city is over the cap. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="en_US">
+			<Text>Spy success chance that counts the escape</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="en_US">
+			<Text>The success chance shown for a spy mission also counts the escape: a success where the spy must escape only counts if the spy gets away, since the loot is only delivered then. Assumes the best escape route and does not count an enemy counterspy. Display only.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="en_US">
+			<Text>Shift+click and Ctrl+click in the deal screen</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="en_US">
+			<Text>In the deal screen, on an available resource, gold, gold per turn or Diplomatic Favor, Shift+click puts as much in the deal as the deal accepts, and Ctrl+click adds ten times a normal click: 10 of a resource, 1000 gold, 100 gold per turn, 10 Diplomatic Favor. Without this option, a larger amount has to be typed in the amount box. Local only: no effect on other players.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="en_US">
 			<Text>District discount: -{1}% (you have fewer of this district than your average).</Text>
@@ -161,11 +269,17 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="en_US">
 			<Text>The top bar updates after a governor title, a governor move or a great person, without changing a citizen. Display only: no desync.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="en_US">
+			<Text>Repaired data read back exactly</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="en_US">
+			<Text>When the host resends data that went out of sync, the game reads it back exactly as the host wrote it: unit operations and the boosts the AI tracks are no longer doubled, World Congress analyses keep their values, AI behavior trees stay linked, and data that already matches the host's is left untouched (fewer desyncs that end in a full reload). Works even if other players don't have this version.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="en_US">
 			<Text>Builder charges on their flag</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="en_US">
-			<Text>Based on Better Builder Charges Tracking (wltk). The flag of a unit with charges (builder, military engineer, Roman legion…) shows them instead of promotions. Replaces the mod if it is active.</Text>
+			<Text>Based on Better Builder Charges Tracking (wltk). The flag of a unit with charges (builder, military engineer…) shows them instead of promotions, except combat units (land, naval or air: Roman legion, nau…), which keep their promotions. Replaces the mod if it is active.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="en_US">
 			<Text>Trade route turns remaining</Text>
@@ -227,6 +341,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="en_US">
 			<Text>Writes to Lua.log the deal proposals sent and received, and what the deal screen shows, to understand crossed deals between humans.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="en_US">
+			<Text>Production overflow and district discount diagnostics</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="en_US">
+			<Text>Writes to the proxy log how the production kept in reserve (overflow) is read for each city, and to Lua.log how the district discount badge is computed, to analyze reports BGE-E6DF54 and BGE-36E0D7.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="en_US">
 			<Text>Show simultaneous turn start and end signals</Text>
 		</Row>
@@ -238,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="en_US">
 			<Text>Records the duration of every zone the game times (frame, interface, scripts, events) to %LOCALAPPDATA%\Civ6RolloverProxy\zones, for performance analysis. About 1 MB per second of play. Takes effect the next time the game starts.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="en_US">
+			<Text>Steam network trace</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="en_US">
+			<Text>Every 500 ms, writes the packets and bytes sent to and received from each player through Steam, the sends Steam refuses, and Steam's send queue (bytes, packets, relay or direct) to %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. To measure the network throughput between players. Takes effect at the next game launch.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="en_US">
+			<Text>Network chunk size</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="en_US">
+			<Text>Size of the pieces large network messages are cut into when sent: 1166 bytes in the game, 16384 in the BGE release. Bigger pieces are only sent in a game, while every connected player announces the same BGE version; every machine enlarges its receive buffer at launch. Off: the game's size. Takes effect at the next game launch.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="en_US">
 			<Text>Network message guard</Text>
@@ -345,7 +477,7 @@
 			<Text>{1}: joined without BetterGameExperience (or with another version) while POL fixes are enabled. Their game will desync.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="en_US">
-			<Text>No First/Last moves enabled: every player starts their turn together, and the turn ends for everyone when the host's timer runs out.</Text>
+			<Text>No First/Last moves enabled.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="en_US">
 			<Text>No First/Last moves: simultaneous turn start enabled; simultaneous turn end unavailable (exe timer not hooked).</Text>
@@ -355,6 +487,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="en_US">
 			<Text>{1} has BetterGameExperience {2} enabled.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="en_US">
+			<Text>{1}'s game settings differ from the host's. {1}, please leave the lobby and join it again before the game starts.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="en_US">
 			<Text>BGE Check: every player has BetterGameExperience {1} enabled ({2}).</Text>
@@ -373,6 +508,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="en_US">
 			<Text>started without {1} (not ready after {2} s).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="en_US">
+			<Text>{1} was never ready two turns in a row: turn starts no longer wait for them.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="en_US">
+			<Text>no start signal from the host after {1} s: your turn starts now.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="en_US">
 			<Text>turn over: the host's turn timer ran out.</Text>
@@ -409,6 +550,27 @@
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="en_US">
 			<Text>Civilization VI was not found in the Steam libraries.\n\nRun the installer again with --game-dir "&lt;game folder&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="en_US">
+			<Text>Civilization VI was not found in the Steam libraries:\n{1}\n\nThe game must be the Windows version run through Steam Play (Proton). A library marked (?) could not be read: check that its drive is mounted. Otherwise run again with --game-dir "&lt;game folder&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="en_US">
+			<Text>Cannot write to {1}.\n\nCheck that the folder is not on a read-only drive, is not owned by root, and that the drive's permissions (NTFS, for example) allow writing.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="en_US">
+			<Text>To load BetterGameExperience in Proton, set the launch options in Steam yourself:\n\n1. In your Steam library, right-click Civilization VI, then Properties.\n2. In General, type this in Launch Options:\n   {1}\n3. In Compatibility, check that a Proton version is forced for the game (BetterGameExperience needs the Windows version).\n\nIf Launch Options already has text, add WINEDLLOVERRIDES="winmm=n,b" at the very start and keep %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="en_US">
+			<Text>Civilization VI's launch options in Steam do not contain {1} before %command%: without it, BetterGameExperience does not load. If you have just set it, Steam may not have saved it yet (it saves it when it closes).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="en_US">
+			<Text>Run BetterGameExperience from a terminal.\n\nCommands: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;code&gt;\nOptions: --game-dir &lt;folder&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="en_US">
+			<Text>Choose a number (empty to quit):</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="en_US">
+			<Text>Show the Steam launch option to set</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="en_US">
 			<Text>Looking for the latest version…</Text>
@@ -636,7 +798,25 @@
 			<Text>{1}: the bug report could not be sent, it was kept on their computer.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="en_US">
-			<Text>Blocked a damaged network message that would have frozen my game.</Text>
+			<Text>Game freeze prevented for {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="en_US">
+			<Text>Game settings wipe prevented for {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="en_US">
+			<Text>Double load prevented for {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="en_US">
+			<Text>{1}'s game is missing {2} objects and has {3} extra compared to the host's: everyone reloads the host's game to prevent {1}'s desync.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="en_US">
+			<Text>{1} received {2} archives ({3} KB) of repairs at the end of the turn: the host reloaded everyone's game so that {1} stops falling out of sync.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="en_US">
+			<Text>{1} still receives {2} archives ({3} KB) of repairs after the reload of everyone: no automatic reload before turn {4}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="en_US">
+			<Text>{1}'s game version is not supported by BGE: BGE's fixes are inactive on their PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="en_US">
 			<Text>{1} and {2} are linked through the host (0 ms). Trying to connect them directly during the turn change.</Text>
@@ -700,6 +880,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="en_US">
 			<Text>Unmuted {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="en_US">
+			<Text>BGE: game {1} not supported</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="en_US">
+			<Text>Game version not supported</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="en_US">
+			<Text>BetterGameExperience does not support version {1} of the game: none of its fixes are active.[NEWLINE][NEWLINE]Update the game on Steam to its current version. Please do not report problems seen with this version: they do not come from BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="en_US">
+			<Text>Bug reports are turned off: BetterGameExperience does not support version {1} of the game, and none of its fixes are active. Update the game on Steam to its current version.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

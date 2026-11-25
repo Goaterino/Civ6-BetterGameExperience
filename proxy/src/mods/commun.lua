@@ -65,18 +65,33 @@ if BGD_Lookup == nil then
 		end
 	end
 
+	-- Essais sans CalculateModifierEffect : au-delà de BGD_RMA_ESSAIS, la table vide est gardée,
+	-- pour ne pas recompiler RMA à chaque carte.
+	BGD_RMA_ECHECS = 0;
+	BGD_RMA_ESSAIS = 3;
+
 	function BGD_ChargerRMA()
 		if BGD_RMA ~= nil then return BGD_RMA; end
 		local t = {};
-		BGD_RMA = t;
 		local fichier = Charger("RealModifierAnalysis");
 		if fichier ~= nil then
 			-- Dans l'environnement du contexte : HavokScript n'isole pas un chunk par setfenv (essai
 			-- en jeu du 8 novembre 2026, GetCityData de CitySupport écrasé). Les globales de RMA sont
 			-- donc toutes préfixées RMA_, et il garde sa propre copie de YieldTypes.
+			-- Ce contexte est celui qui tourne quand le chunk est compilé, pas forcément celui de
+			-- l'appelant : appelé pendant qu'un autre contexte tourne, RMA s'y installe, sans
+			-- BGD_RMA_Table ni BGD_Lookup (essai du 18 novembre 2026, InGamePopup).
 			BGD_RMA_Table = t;
 			local ok, err = pcall(fichier);
 			if not ok then Erreur("RealModifierAnalysis", err); end
+		end
+		-- Une table restée vide n'est pas gardée : l'appel suivant, peut-être dans le bon contexte,
+		-- recharge RMA (avant le 18 novembre 2026, elle l'était jusqu'au rechargement de la partie).
+		if t.CalculateModifierEffect ~= nil then
+			BGD_RMA = t;
+		else
+			BGD_RMA_ECHECS = BGD_RMA_ECHECS + 1;
+			if BGD_RMA_ECHECS >= BGD_RMA_ESSAIS then BGD_RMA = t; end
 		end
 		return t;
 	end

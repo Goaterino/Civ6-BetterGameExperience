@@ -89,6 +89,90 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="fr_FR">
 			<Text>Mémorise le rendement des cases pendant les calculs parallèles de l'IA, où la carte ne peut pas changer.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="fr_FR">
+			<Text>Chargement des assets accéléré</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="fr_FR">
+			<Text>Au chargement d'une partie, le jeu vérifie pour chaque fichier graphique s'il existe dans chacun des dossiers d'assets (environ 55). Ces vérifications sont servies par un listage de chaque dossier, lu une fois par chargement. Fait gagner plusieurs secondes au chargement depuis le menu principal. Local, sans effet sur la partie. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="fr_FR">
+			<Text>Un seul nettoyage Lua à la fermeture de l'interface</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="fr_FR">
+			<Text>Quand le jeu ferme son interface (sortie de partie, remap de Multiplayer Helper), il fait un ramasse-miettes Lua complet pour chaque fonction de script libérée. Un seul est fait à la fin. Fait gagner environ 2 s avant un remap. Interface seulement, sans effet sur la partie. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="fr_FR">
+			<Text>Garder la base de gameplay d'un chargement à l'autre</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="fr_FR">
+			<Text>Quand la partie suivante utilise exactement les mêmes mods, la base de gameplay construite pour la précédente est gardée au lieu d'être reconstruite (environ 1,5 s par chargement). GameCore est toujours rechargé à chaque partie. Le contenu est celui d'une reconstruction : pas de désynchro. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="fr_FR">
+			<Text>Garder les textes des mods d'un chargement à l'autre</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="fr_FR">
+			<Text>Les textes en jeu des mods sont relevés au premier chargement, puis réécrits depuis la mémoire aux suivants quand les mods sont les mêmes, au lieu d'être relus dans leurs fichiers (environ 1,5 s par chargement). Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="fr_FR">
+			<Text>Pas de VSync sur les écrans de chargement</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="fr_FR">
+			<Text>Quand la VSync est activée, le jeu attend chaque rafraîchissement de l'écran, ce qui ralentit aussi la création du terrain 3D pendant un chargement. Elle est levée pendant les écrans de chargement seulement, et reste telle que réglée en jeu (environ 2 s par chargement). Sans effet si la VSync est désactivée. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="fr_FR">
+			<Text>Garder la configuration inchangée aux rechargements</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="fr_FR">
+			<Text>À un rechargement, le jeu reconstruit sa base de configuration et rétablit ses textes même si rien n'a changé depuis le dernier chargement. Les deux sont gardés s'ils n'ont pas changé ; les règles du jeu sont rechargées comme d'habitude (environ 3 s par rechargement). Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="fr_FR">
+			<Text>Pas de pause à la fin d'un chargement</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="fr_FR">
+			<Text>À la fin d'un chargement, le jeu prépare le terrain 3D quelques cases à la fois et fait une pause entre chaque étape (LoadGameTickIntervalInMS, 16 ms par défaut). La pause est levée pendant cette dernière phase seulement (environ 1,5 s par chargement). Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="fr_FR">
+			<Text>Premier chargement du remap de l'hôte sans terrain</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="fr_FR">
+			<Text>Au remap de Multiplayer Helper, l'hôte charge la nouvelle partie, puis la recharge aussitôt depuis sa propre sauvegarde. Le premier chargement saute le terrain 3D, qui serait jeté (environ 10 s). La partie, l'interface et les clients ne changent pas. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="fr_FR">
+			<Text>Threads de tâches inactifs : cessions avant le sommeil</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="fr_FR">
+			<Text>Un thread de tâches sans travail cède son processeur 100 fois avant de s'endormir, des centaines de fois par seconde pendant le passage de tour. Moins de cessions : moins de processeur perdu à attendre, le même travail fait. Désactivé = 100, comme le jeu. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="fr_FR">
+			<Text>Threads de tâches inactifs : tentatives avant la première cession</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="fr_FR">
+			<Text>Un thread de tâches sans travail réessaie 2 × (threads + 1) fois en patientant sur place avant de céder son processeur. Une valeur fixe et plus petite raccourcit cette attente active, surtout avec beaucoup de threads. Désactivé = comme le jeu. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="fr_FR">
+			<Text>Dormir en attendant les threads de tâches</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="fr_FR">
+			<Text>Le thread qui attend la fin d'un lot de tâches tourne sur le processeur jusqu'à ce que le dernier thread de tâches en sorte, environ 1 s de processeur par chargement. Il dort à la place après une courte attente, et il est réveillé quand un thread de tâches sort. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="fr_FR">
+			<Text>Écrire le journal des goulets de l'IA</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="fr_FR">
+			<Text>À la génération d'une carte, le jeu écrit tout son graphe de goulets dans AI_ChokePoint.csv (environ 12 Mo, 0,35 s). Désactivé : le fichier n'est pas écrit. Sans effet sur la carte ni sur la partie.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="fr_FR">
+			<Text>Analyse des goulets rapide</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="fr_FR">
+			<Text>Génération de la carte : la triangulation qui sert à trouver les goulets est calculée par un équivalent plus rapide, au résultat identique (environ 2 s par carte générée). Vérification : calcule les deux, garde le résultat du jeu et note toute différence.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="fr_FR">
+			<Text>Nouveautés d'interface des mises à jour</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="fr_FR">
+			<Text>Désactivé : les ajouts d'interface des prochaines mises à jour de BetterGameExperience arrivent désactivés, et vous les activez ici quand vous voulez. Les options d'interface actuelles gardent leur valeur. Les correctifs ne sont pas concernés. Réactivé : les ajouts arrivés entre-temps que vous n'avez pas réglés vous-même s'activent. Purement local : sans effet sur les autres joueurs.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="fr_FR">
 			<Text>Accélération de l'animation des armes nucléaires</Text>
 		</Row>
@@ -143,11 +227,35 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="fr_FR">
 			<Text>Dans la liste de production, les quartiers dont le coût est réduit (moins de quartiers de ce type que votre moyenne) affichent leur réduction, mise à jour dès qu'un quartier est posé. Affichage seulement.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="fr_FR">
+			<Text>Formation la plus haute en premier</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="fr_FR">
+			<Text>Dans la liste de production, le bouton principal d'une unité forme la plus haute formation que la ville peut former (armée, sinon régiment), et l'unité seule passe dans le menu déroulant en dessous. Le jeu fait l'inverse. Les achats en or et en foi ne changent pas.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="fr_FR">
 			<Text>Production en réserve</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="fr_FR">
 			<Text>Affiche la production qu'une ville garde en réserve (débordement, au plus un tour), ajoutée à sa production du tour suivant : sur le bandeau de ville, dans le panneau de la ville et dans le panneau de production. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="fr_FR">
+			<Text>Alerte d'habitations sur le bandeau de ville</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="fr_FR">
+			<Text>Sur le bandeau de vos villes, une maison orange apparaît quand il ne reste qu'une habitation avant la limite (croissance ralentie de 50 %), et la maison rouge dès que la limite est atteinte (75 %). Sans cette option, le jeu n'affiche la maison rouge qu'une fois la limite dépassée. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="fr_FR">
+			<Text>Chance de succès des espions avec l'évasion</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="fr_FR">
+			<Text>La chance de succès affichée pour une mission d'espionnage tient compte de l'évasion : un succès où l'espion doit s'échapper ne compte que s'il s'en sort, car le butin n'est versé qu'à ce moment. Suppose le meilleur itinéraire de fuite et ne compte pas un contre-espion ennemi. Affichage seulement.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="fr_FR">
+			<Text>Maj+clic et Ctrl+clic dans l'écran d'accord</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="fr_FR">
+			<Text>Dans l'écran d'accord, sur une ressource, l'or, l'or par tour ou la faveur diplomatique disponibles, Maj+clic en met autant que l'accord en accepte, et Ctrl+clic ajoute dix fois un clic normal : 10 d'une ressource, 1000 d'or, 100 d'or par tour, 10 de faveur diplomatique. Sans cette option, une quantité plus grande doit être saisie dans la zone de quantité. Purement local : sans effet sur les autres joueurs.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="fr_FR">
 			<Text>Réduction de quartier : -{1} % (moins de quartiers de ce type que votre moyenne).</Text>
@@ -161,11 +269,17 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="fr_FR">
 			<Text>Le bandeau du haut se met à jour après un titre de gouverneur, un déplacement de gouverneur ou un personnage illustre, sans changer un citoyen. Affichage seulement : pas de désynchronisation.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="fr_FR">
+			<Text>Données réparées relues à l'identique</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="fr_FR">
+			<Text>Quand l'hôte renvoie des données désynchronisées, le jeu les relit exactement comme l'hôte les a écrites : les opérations des unités et les boosts suivis par l'IA ne sont plus doublés, les analyses du Congrès mondial gardent leurs valeurs, les arbres de comportement de l'IA restent liés et les données déjà identiques à celles de l'hôte ne sont pas touchées (moins de désynchronisations qui finissent en rechargement complet). Fonctionne même si les autres joueurs n'ont pas cette version.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="fr_FR">
 			<Text>Charges des bâtisseurs sur leur drapeau</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="fr_FR">
-			<Text>D'après Better Builder Charges Tracking (wltk). Le drapeau d'une unité qui a des charges (bâtisseur, ingénieur militaire, légion romaine…) les montre à la place des promotions. Remplace le mod s'il est actif.</Text>
+			<Text>D'après Better Builder Charges Tracking (wltk). Le drapeau d'une unité qui a des charges (bâtisseur, ingénieur militaire…) les montre à la place des promotions, sauf les unités de combat (terrestres, navales ou aériennes : légion romaine, nau…), qui gardent leurs promotions. Remplace le mod s'il est actif.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="fr_FR">
 			<Text>Tours restants des routes commerciales</Text>
@@ -227,6 +341,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="fr_FR">
 			<Text>Écrit dans Lua.log les propositions d'accord reçues et envoyées, et ce que montre l'écran d'accord, pour comprendre les accords croisés entre humains.</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="fr_FR">
+			<Text>Diagnostic de la réserve de production et des quartiers en réduction</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="fr_FR">
+			<Text>Écrit dans le journal du proxy comment la production en réserve (débordement) est lue pour chaque ville, et dans Lua.log comment le badge des quartiers en réduction est calculé, pour analyser les rapports BGE-E6DF54 et BGE-36E0D7.</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="fr_FR">
 			<Text>Afficher les signaux du départ et de la fin simultanés</Text>
 		</Row>
@@ -238,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="fr_FR">
 			<Text>Note la durée de chaque zone chronométrée par le jeu (image, interface, scripts, événements) dans %LOCALAPPDATA%\Civ6RolloverProxy\zones, pour l'analyse des performances. Environ 1 Mo par seconde de jeu. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="fr_FR">
+			<Text>Trace réseau Steam</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="fr_FR">
+			<Text>Toutes les 500 ms, écrit les paquets et octets envoyés à chaque joueur et reçus de lui par Steam, les envois que Steam refuse, et la file d'envoi de Steam (octets, paquets, relais ou direct) dans %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log. Pour mesurer le débit réseau entre joueurs. Prend effet au prochain lancement du jeu.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="fr_FR">
+			<Text>Taille des morceaux réseau</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="fr_FR">
+			<Text>Taille des morceaux en lesquels les gros messages réseau sont découpés à l'envoi : 1166 octets dans le jeu, 16384 dans la release de BGE. Les gros morceaux ne partent qu'en partie, tant que chaque joueur connecté annonce la même version de BGE ; chaque machine agrandit son tampon de réception au lancement. Off : la taille du jeu. Prend effet au prochain lancement du jeu.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="fr_FR">
 			<Text>Garde des messages réseau</Text>
@@ -345,7 +477,7 @@
 			<Text>{1} : arrivée sans BetterGameExperience (ou d'une autre version) alors que les correctifs POL sont actifs. Sa partie va se désynchroniser.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="fr_FR">
-			<Text>No First/Last moves actif : tous les joueurs commencent leur tour ensemble, et le tour se termine pour tous quand le minuteur de l'hôte arrive à zéro.</Text>
+			<Text>No First/Last moves actif.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="fr_FR">
 			<Text>No First/Last moves : départ de tour simultané actif ; fin simultanée indisponible (minuteur de l'exe non détourné).</Text>
@@ -355,6 +487,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="fr_FR">
 			<Text>{1} a BetterGameExperience {2} activé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="fr_FR">
+			<Text>Les réglages de partie de {1} diffèrent de ceux de l'hôte. {1}, quitte le salon et rejoins-le avant le lancement de la partie.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="fr_FR">
 			<Text>BGE Check : tous les joueurs ont BetterGameExperience {1} activé ({2}).</Text>
@@ -373,6 +508,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="fr_FR">
 			<Text>départ donné sans {1} (pas prêts après {2} s).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="fr_FR">
+			<Text>{1} ne s'est jamais signalé prêt deux tours de suite : les débuts de tour ne l'attendent plus.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="fr_FR">
+			<Text>aucun signal de départ de l'hôte après {1} s : votre tour commence maintenant.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="fr_FR">
 			<Text>fin du tour : le minuteur de l'hôte est écoulé.</Text>
@@ -409,6 +550,27 @@
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="fr_FR">
 			<Text>Civilization VI est introuvable dans les bibliothèques Steam.\n\nRelance l'installeur avec --game-dir "&lt;dossier du jeu&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="fr_FR">
+			<Text>Civilization VI est introuvable dans les bibliothèques Steam :\n{1}\n\nLe jeu doit être la version Windows, lancée par Steam Play (Proton). Une bibliothèque marquée (?) n'a pas pu être lue : vérifie que son disque est monté. Sinon relance avec --game-dir "&lt;dossier du jeu&gt;".</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="fr_FR">
+			<Text>Impossible d'écrire dans {1}.\n\nVérifie que le dossier n'est pas sur un disque en lecture seule, n'appartient pas à root, et que les permissions du disque (NTFS, par exemple) autorisent l'écriture.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="fr_FR">
+			<Text>Pour charger BetterGameExperience dans Proton, règle toi-même les options de lancement dans Steam :\n\n1. Dans ta bibliothèque Steam, clic droit sur Civilization VI, puis Propriétés.\n2. Dans Général, saisis ceci dans Options de lancement :\n   {1}\n3. Dans Compatibilité, vérifie qu'une version de Proton est imposée pour le jeu (BetterGameExperience a besoin de la version Windows).\n\nSi les options de lancement contiennent déjà du texte, ajoute WINEDLLOVERRIDES="winmm=n,b" tout au début et garde %command%.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="fr_FR">
+			<Text>Les options de lancement de Civilization VI dans Steam ne contiennent pas {1} avant %command% : sans elle, BetterGameExperience ne se charge pas. Si tu viens de la régler, Steam ne l'a peut-être pas encore enregistrée (il le fait en se fermant).</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="fr_FR">
+			<Text>Lance BetterGameExperience depuis un terminal.\n\nCommandes : status, install, uninstall, launch-option, channel release|prerelease, lang &lt;code&gt;\nOptions : --game-dir &lt;dossier&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="fr_FR">
+			<Text>Choisis un numéro (vide pour quitter) :</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="fr_FR">
+			<Text>Afficher l'option de lancement Steam à régler</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="fr_FR">
 			<Text>Recherche de la dernière version…</Text>
@@ -636,7 +798,25 @@
 			<Text>{1} : le rapport n'a pas pu être envoyé, il est gardé sur son ordinateur.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="fr_FR">
-			<Text>Message réseau abîmé bloqué : il aurait gelé la partie.</Text>
+			<Text>Gel de la partie évité pour {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="fr_FR">
+			<Text>Effacement des réglages de la partie évité pour {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="fr_FR">
+			<Text>Double chargement évité pour {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="fr_FR">
+			<Text>Il manque {2} objets à la partie de {1} et elle en a {3} en trop par rapport à celle de l'hôte : tout le monde recharge la partie de l'hôte pour éviter la désynchronisation de {1}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="fr_FR">
+			<Text>{1} a reçu {2} archives ({3} Ko) de réparations à la fin du tour : l'hôte a fait recharger la partie à tout le monde pour que {1} ne se désynchronise plus.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="fr_FR">
+			<Text>{1} reçoit encore {2} archives ({3} Ko) de réparations après le rechargement de tout le monde : pas de rechargement automatique avant le tour {4}.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="fr_FR">
+			<Text>La version du jeu de {1} n'est pas prise en charge par BGE : les correctifs de BGE sont inactifs sur son PC.</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="fr_FR">
 			<Text>{1} et {2} passent par l'hôte (0 ms). Tentative de lien direct pendant le changement de tour.</Text>
@@ -700,6 +880,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="fr_FR">
 			<Text>{1} réactivé.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="fr_FR">
+			<Text>BGE : jeu {1} non pris en charge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="fr_FR">
+			<Text>Version du jeu non prise en charge</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="fr_FR">
+			<Text>BetterGameExperience ne prend pas en charge la version {1} du jeu : aucun de ses correctifs n'est actif.[NEWLINE][NEWLINE]Mettez le jeu à jour sur Steam, à sa version actuelle. Merci de ne pas signaler les problèmes vus avec cette version : ils ne viennent pas de BetterGameExperience.</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="fr_FR">
+			<Text>Les rapports de bug sont désactivés : BetterGameExperience ne prend pas en charge la version {1} du jeu, et aucun de ses correctifs n'est actif. Mettez le jeu à jour sur Steam, à sa version actuelle.</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

@@ -305,26 +305,20 @@ touche pas au passage de tour. Contexte et mesures : [nuke/README.md](../nuke/RE
 - **DX12 et DX11.** Les deux exe sont compilés des mêmes sources, avec les mêmes fonctions à
   d'autres adresses. La table `EXES` donne un agencement par exe :
 
-  | build 15296837 | DX12 | DX11 |
+  | 1.0.12.74 | DX12 | DX11 |
   |---|---|---|
-  | CombatVisBegin / End | `1400f0400` / `1400f0460` | `1400eff70` / `1400effd0` |
-  | configuration utilisateur, IsQuickCombat | `140118ca0`, `140119880` | `1401182e0`, `140118ec0` |
-  | objet application, échelle de temps | `[1412fa2c8]` + `0x559c` | `[1412c2c88]` + `0x557c` |
-
-  | build 26407122 (exe du 2026-11-02) | DX12 | DX11 |
-  |---|---|---|
-  | CombatVisBegin / End | `1400f0390` / `1400f03f0` | `1400ef640` / `1400ef6a0` |
-  | configuration utilisateur, IsQuickCombat | `140118a50`, `140119630` | `140117b60`, `140118740` |
+  | CombatVisBegin / End | `1400f0550` / `1400f05b0` | `1400ef630` / `1400ef690` |
+  | configuration utilisateur, IsQuickCombat | `140118be0`, `1401197c0` | `1401180c0`, `140118ca0` |
   | objet application, échelle de temps | `[1412fb2c8]` + `0x559c` | `[1412c3c88]` + `0x557c` |
 
-  Les adresses DX11 du premier build viennent du projet Ghidra `civ6exe11`. Elles ont été
-  retrouvées par les chaînes `SerialEvent::CombatVis*` (fonctions d'enregistrement), `IsQuickCombat`
-  (sa closure Lua) et `timescale` (commande de console). Celles du second build, par le même chemin
-  dans [tests/wmd_sites.py](tests/wmd_sites.py), qui retrouve en plus l'objet application par son
-  constructeur (celui qui pose 1.0 à l'échelle de temps). Le module prend l'agencement dont tous
-  les octets vérifiés correspondent. Avec un autre build, il ne pose rien et le note dans le
-  journal. Le test `wmd::tests::agencement_des_exe_installes` échoue alors : il faut relancer le
-  script et ajouter un agencement à `EXES`.
+  La 1.0.12.58 est aussi dans `EXES`. Les adresses ont été retrouvées
+  par les chaînes `SerialEvent::CombatVis*` (fonctions d'enregistrement), `IsQuickCombat` (sa
+  closure Lua) et `timescale` (commande de console), et l'objet application par son constructeur
+  (celui qui pose 1.0 à l'échelle de temps), dans [tests/wmd_sites.py](tests/wmd_sites.py). Chaque
+  agencement porte le nom de sa version : le module ne garde que ceux de la version de l'exe, puis
+  prend celui dont tous les octets vérifiés correspondent. Avec une autre version, il ne pose rien
+  et le note dans le journal. Le test `wmd::tests::agencement_des_exe_installes` échoue alors : il
+  faut relancer le script et ajouter un agencement à `EXES`.
 - **Les garde-fous.** L'échelle d'origine revient à `CombatVisEnd`, ou au bout de 5 s. Elle revient
   aussi à chaque nouvelle partie et au déchargement du proxy.
 - **Le journal.** Une ligne `wmd : visualisation accélérée` par frappe, puis
@@ -342,6 +336,7 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
 
 | réglage | défaut | effet |
 |---|---|---|
+| `ui_nouveautes=on\|off` (`-UiNouveautes`) | on | off : les ajouts d'interface absents du fichier sont coupés (`NOUVEAUTES_UI` et `nouveautes_coupees`, [src/lib.rs](src/lib.rs)). Quand le joueur confirme ce choix, l'onglet écrit la valeur de chaque ajout qui n'est pas encore dans le fichier. Seuls les ajouts livrés par les mises à jour suivantes y manquent donc, et ils arrivent désactivés. Sont des ajouts : `wmd_accel`, `ui_boutons`, `ui_carte_entiere`, `ui_banniere_annuler`, `ui_reduction_quartiers`, `ui_formations`, `ui_debordement`, `ui_logement`, `ui_accord_quantites`, `ui_avancement` et les mods d'interface repris. Les correctifs n'en sont pas (`ui_epingles`, `tours_production`, `ui_merveilles`, `ui_rendements`), ni `ui_recentrage`, dont « off » est le comportement de BGE. Un nouvel ajout d'interface réglable va dans `NOUVEAUTES_UI` et porte `nouveaute_ui = true` dans l'onglet ; sa valeur `off` doit être le jeu sans l'ajout. Un test du proxy de démarrage vérifie que les deux listes concordent |
 | `ui_boutons=on\|off` (`-UiBoutons`) | on | boutons d'attaque (ville, campement) et de frappe nucléaire (silo) au-dessus des drapeaux d'unités ; `ConsumeMouse` sur les boutons nucléaires |
 | `ui_recentrage=on\|off` (`-UiRecentrage`) | off | off : plus de recentrage de la caméra au clic sur ces boutons |
 | `ui_journal=on\|off` (`-UiJournal`) | off | note chaque script Lua et chaque XML lus |
@@ -349,9 +344,14 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
 | `ui_carte_entiere=on\|off` (`-UiCarteEntiere`) | on | [src/carte.rs](src/carte.rs) : minimap et caméra sur la carte entière dès le premier tour, sans épingles aux bords. Deux octets de l'exe (le `jnc` qui garde le rectangle des cases révélées devient deux `nop`), site trouvé par signature dans les exe DX12 et DX11, remis au déchargement du proxy. Purement local, sans effet en multijoueur (voir [minimap](../minimap/README.md)) ; test : `cargo test` (signature unique dans les deux exe) |
 | `ui_merveilles=on\|off` (`-UiMerveilles`) | on | ajoute [src/ui_merveilles.lua](src/ui_merveilles.lua) à `ProductionHelper.lua` : une merveille retirée de la file par un échange est remise en tête par des commandes du jeu (rajout, puis échanges), rejouées à l'identique chez tous les joueurs, proxy ou non (voir [wonder_queue](../wonder_queue/README.md)) ; test hors jeu : `lua proxy/tests/test_ui_merveilles.lua` |
 | `ui_banniere_annuler=on\|off` (`-UiBanniereAnnuler`) | on | ajoute [src/ui_banniere_annuler.lua](src/ui_banniere_annuler.lua) à `CityBannerManager.lua` (XP2 ou BSM) : un clic droit sur l'icône de production du bandeau d'une de ses villes retire l'élément en tête (`BUILD`, `VALUE_REMOVE_AT`, commande ordinaire du jeu) ; test hors jeu : `lua proxy/tests/test_ui_banniere.lua` |
-| `ui_reduction_quartiers=on\|off` (`-UiReductionQuartiers`) | on | ajoute [src/ui_quartiers.lua](src/ui_quartiers.lua) à `ProductionPanel.lua` : badge « -40% » sur les quartiers dont le coût est réduit, modèle `COST_PROGRESSION_NUM_UNDER_AVG_PLUS_TECH`. Le badge suit le coût que le jeu a enregistré (`BuildQueue:GetDistrictCost`), comparé au coût plein recalculé comme `1803703c0` (escalade, avancement technos/dogmes, vitesse, `DistrictProductionRate` de l'ère de départ). GameCore ne recalcule ce coût (`1802c4f10`) que pour tous les types à une techno, un dogme ou une ville fondée, et pour le seul type concerné à la pose ou à l'achèvement d'un quartier : la règle recalculée à chaque instant annonçait des réductions que le jeu n'appliquait pas encore. Test hors jeu : `lua proxy/tests/test_ui_quartiers.lua` |
+| `ui_reduction_quartiers=on\|off` (`-UiReductionQuartiers`) | on | ajoute [src/ui_quartiers.lua](src/ui_quartiers.lua) à `ProductionPanel.lua` : badge « -40% » sur les quartiers dont le coût est réduit, modèle `COST_PROGRESSION_NUM_UNDER_AVG_PLUS_TECH`. Le badge suit le coût que le jeu a enregistré, lu en direct dans la table du joueur (`BGD_CoutQuartier`, posée par [src/debordement.rs](src/debordement.rs) : joueur `+ 0x6e8`, puis `+ 0x120`), et `BuildQueue:GetDistrictCost` à défaut. Ce dernier vient du cache de la file de la ville (`18006b860` → `1800fd620`), reconstruit seulement quand cette file change : après la pose d'un campus ailleurs, une ville déjà vue gardait l'ancien coût réduit (BGE-36E0D7). Coût lu comparé au coût plein recalculé comme `1803703c0` (escalade, avancement technos/dogmes, vitesse, `DistrictProductionRate` de l'ère de départ). GameCore ne recalcule ce coût (`1802c4f10`) que pour tous les types à une techno, un dogme ou une ville fondée, et pour le seul type concerné à la pose ou à l'achèvement d'un quartier : la règle recalculée à chaque instant annonçait des réductions que le jeu n'appliquait pas encore. Test hors jeu : `lua proxy/tests/test_ui_quartiers.lua` |
+| `ui_formations=on\|off` (`-UiFormations`) | on | ajoute [src/ui_formations.lua](src/ui_formations.lua) à `ProductionPanel.lua` : dans la liste de production, le bouton principal d'une unité forme la plus haute formation que la ville peut former (armée, sinon régiment ; armada et flotte en mer), et le tiroir en dessous contient les formations inférieures, l'unité seule en dernier : l'inverse du jeu, qui demande d'ouvrir le tiroir par la petite flèche pour chaque régiment ou armée, alors qu'une ville qui les propose (École militaire, Port maritime) les forme 25 % moins cher. Le jeu remplit la ligne, puis ses contrôles sont rhabillés (nom et suffixe du jeu, tours, infobulle, progression, clic) ; les clics appellent `BuildUnit`, `BuildUnitCorps` et `BuildUnitArmy` du jeu, donc les mêmes commandes. Une formation désactivée (ressources manquantes) ne prend pas le bouton principal ; les listes d'achat (or, foi) et le tutoriel ne changent pas. Test hors jeu : `lua proxy/tests/test_ui_formations.lua` |
+| `ui_logement=on\|off` (`-UiLogement`) | on | ajoute [src/ui_logement.lua](src/ui_logement.lua) à `CityBannerManager.lua` (XP2 ou BSM) : alerte d'habitations sur le bandeau des villes du joueur local, une couleur par palier du modificateur de croissance (le jeu ne montre son icône rouge qu'au-delà de la limite, `GetHousing() < GetPopulation()`). Maison orange à une habitation de la limite (croissance -50 %) : l'icône `ICON_HOUSING` du panneau de ville, à la couleur `WarningMajor`. Maison rouge dès la limite (-75 %) : l'icône du jeu elle-même (`ICON_CITY_EFFECTS_HOUSING`), la même qu'au-delà de la limite. Le niveau est lu dans `CityGrowth:GetHousingGrowthModifier`, pas recalculé ; infobulle faite des textes du jeu. Affichage seulement ; test hors jeu : `lua proxy/tests/test_ui_logement.lua` |
+| `ui_espions=on\|off` (`-UiEspions`) | on | ajoute [src/ui_espions.lua](src/ui_espions.lua) à `EspionageSupport.lua`, inclus par le choix de mission et par la fenêtre de mission : la chance de succès affichée compte l'évasion, `P(succès non détecté) + P(succès, doit s'échapper) × P(évasion)`, avec la meilleure sortie et sans contre-espion ([analyses/espions](../analyses/espions/plan_affichage.md)). Dans ce contexte seulement, `UnitManager` devient une table qui renvoie tout à l'original sauf `GetResultProbability` ; la part retirée rejoint « capturé ou tué » dans la fenêtre. Affichage seulement ; test hors jeu : `lua proxy/tests/test_ui_espions.lua` |
+| `ui_accord_quantites=on\|off` (`-UiAccordQuantites`) | on | ajoute [src/ui_accord_quantites.lua](src/ui_accord_quantites.lua) à `DiplomacyDealView.lua`, après le bouton d'or : dans la colonne « disponible » de l'écran d'accord, sur une ressource, l'or, l'or par tour ou la faveur diplomatique, Maj+clic en met autant que l'accord en accepte, Ctrl+clic ajoute dix fois ce qu'ajoute un clic (10 d'une ressource, 1000 d'or, 100 d'or par tour, 10 de faveur), là où le jeu ajoute 1, 100, 10 et 1 par clic (un stock entier demandait un clic, un clic sur l'icône de l'accord, un nombre saisi et une validation). **Or et faveur** : `OnClickAvailableOneTimeGold`, `OnClickAvailableMultiTurnGold` et `OnClickAvailableOneTimeFavor` (XP2) reçoivent du bouton la quantité à ajouter et la bornent elles-mêmes par `GetMaxAmount` ; le bloc les enveloppe et ne change que cette quantité (fois 10 avec Ctrl, plus qu'aucun trésor avec Maj). **Ressources** : `OnClickAvailableResource` (celle du jeu, de XP2 ou d'un mod, incluse par le joker avant le bloc) ne reçoit pas de quantité. Le clic du jeu s'exécute d'abord et décide de tout (accord non modifiable, élément qui reçoit l'unité, durée, son), puis la quantité de l'élément qu'il a créé ou augmenté est portée à la cible, bornée par `GetMaxAmount` comme la saisie du jeu ; si l'élément n'est pas valide à cette quantité (plafond de stock de l'autre joueur), la plus grande quantité valide est gardée, trouvée par dichotomie. `UpdateDealPanel` et `UpdateProposedWorkingDeal` sont retenues pendant le clic du jeu et lancées une fois ensuite : face à une IA, l'accord part en inspection avec la quantité finale, pas avec une unité. L'état de Maj et de Ctrl est lu sur chaque entrée du contexte (`InputHandler` enveloppé, `IsShiftDown`, `IsControlDown`), dont les événements du clic lui-même. Local, l'accord part par les appels du jeu ; test hors jeu : `lua proxy/tests/test_ui_accord_quantites.lua` |
 | `ui_avancement=on\|off` (`-UiAvancement`) | on | ajoute [src/ui_avancement.lua](src/ui_avancement.lua) à `WorldTracker.lua` (jeu ou BSM), et un libellé `BGD_Avancement` à `WorldTrackerResearch.xml` et `WorldTrackerCivic.xml` : « x/y (+z) » à droite du nom de la technologie et du dogme en cours, dans le panneau en haut à gauche : science ou culture placée / coût, puis l'excédent gardé par le jeu après une technologie ou un dogme terminé avec plus que son coût. L'excédent est lu dans GameCore par [src/avancement.rs](src/avancement.rs) (`m_xResearchOverflow` en `PlayerTechs + 0x108`, `m_xCulturalOverflow` en `PlayerCulture + 0x430`, 24.8), rendu au Lua par `BGD_Excedent(joueur, 0|1)`, montré dès 0,1 point. Rien pour une technologie ou un dogme terminé ; le nom est raccourci, avec infobulle, s'il chevaucherait le compteur. Rien non plus quand l'hôte a coché l'option de partie « Disable Advanced UI indicators (BGE) » (`BGD_INDICATEURS_OFF`, lue à chaque redessin : une partie suivante dans la même session du jeu suit sa propre valeur). Lecture seule ; test hors jeu : `lua proxy/tests/test_ui_avancement.lua` |
-| `ui_debordement=on\|off` (`-UiDebordement`) | on | [src/debordement.rs](src/debordement.rs) relève la production en réserve de chaque ville (`file + 0x1f4`) à chaque mise à jour du cache de la file (appel `18006b8d1` redirigé), et la rend au Lua par `BGD_Debordement(joueur, ville)` ; [src/ui_debordement.lua](src/ui_debordement.lua), ajouté au bandeau de ville, au panneau de la ville (CityPanel) et au panneau de production, affiche la réserve dès 1 point : infobulle du bandeau (« +N » à la place des tours si la file est vide), ligne dans le panneau de la ville, « +N » après la progression du panneau de production. Rien quand l'hôte a coché l'option de partie « Disable Advanced UI indicators (BGE) » (`BGD_INDICATEURS_OFF`, lue à chaque redessin). Lecture seule ; test : `cargo test`, `lua proxy/tests/test_ui_banniere.lua` |
+| `ui_debordement=on\|off` (`-UiDebordement`) | on | [src/debordement.rs](src/debordement.rs) relève la production en réserve de chaque ville (`file + 0x1f4`) à chaque mise à jour du cache de la file (appel `18006b8d1` redirigé), et la rend au Lua par `BGD_Debordement(joueur, ville)`, relue en direct dans la file relevée (adresse vérifiée : mémoire lisible, file qui désigne toujours la ville) : le cache n'est pas reconstruit quand le tour verse la réserve, le « +N » restait jusqu'à un changement de production (BGE-E6DF54). Les bandeaux sont redessinés au début du tour local ; [src/ui_debordement.lua](src/ui_debordement.lua), ajouté au bandeau de ville, au panneau de la ville (CityPanel) et au panneau de production, affiche la réserve dès 1 point : infobulle du bandeau (« +N » à la place des tours si la file est vide), ligne dans le panneau de la ville, « +N » après la progression du panneau de production. Rien quand l'hôte a coché l'option de partie « Disable Advanced UI indicators (BGE) » (`BGD_INDICATEURS_OFF`, lue à chaque redessin). Lecture seule ; test : `cargo test`, `lua proxy/tests/test_ui_banniere.lua` |
+| `diag_production=on\|off` (`-DiagProduction`) | off | diagnostic de la réserve et du badge des quartiers (BGE-E6DF54, BGE-36E0D7) : lignes `debordement diag` dans RolloverProxy.log (objet lu, ville, valeur brute, cohérence de la file) et `BGD diag quartiers` dans Lua.log (coût du panneau, coût de GameCore, coûts plein et réduit recalculés, règle). Test : `lua proxy/tests/test_ui_quartiers.lua` |
 | `ui_mesure_epingles=on\|off` (`-UiMesureEpingles`) | off | ajoute [src/ui_epingles.lua](src/ui_epingles.lua) aux scripts reconstruits à chaque `PlayerInfoChanged` (épingles, liste des épingles, bandeau des dirigeants, DMT) : durées dans `Lua.log`, voir [map_pins](../map_pins/README.md) ; test hors jeu : `lua proxy/tests/test_ui_epingles.lua` |
 | `ui_diag_accords=on\|off` (`-UiDiagAccords`) | off | ajoute [src/ui_diag_accords.lua](src/ui_diag_accords.lua) à `DiplomacyDealView.lua` : événements d'accord et de session, et état de l'écran d'accord, dans `Lua.log` (lignes `BGD accords`). Diagnostic des accords croisés, voir [docs/netcode](../docs/netcode/README.md) ; test hors jeu : `lua proxy/tests/test_ui_diag_accords.lua` |
 
@@ -451,7 +451,7 @@ que dans les builds locaux : la release est compilée sans la feature `diag`
   `ui : …CityPanel.lua : owningPlayerID corrigé, compilation réussie`, et
   `ui : …UnitFlagManager.lua : clic sur un drapeau en visée d'une ville ou d'un quartier, compilation réussie`, et
   `ui : …ProductionPanel.lua : production en cours affichée au changement de ville, compilation réussie`, et
-  `ui : …DiplomacyDealView.lua : bouton d'or disponible réactivé, pas d'accord vers un humain pendant le passage de tour, compilation réussie`.
+  `ui : …DiplomacyDealView.lua : bouton d'or disponible réactivé, Maj+clic et Ctrl+clic sur les ressources, l'or et la faveur disponibles, pas d'accord vers un humain pendant le passage de tour, compilation réussie`.
   `Lua.log` doit contenir
   `Civ6RolloverProxy : boutons d'attaque au-dessus des drapeaux d'unités`.
 - **Tests hors jeu** (`cargo test --release`) : les remplacements de texte sur les fichiers du jeu et
@@ -611,6 +611,26 @@ humain vivant dont le leader est `LEADER_SPECTATOR`.
   chaque partie (prévisualisations comprises).
 - **Tests.** `cargo test` (règle d'excédent, hachages des classes) ; `check_hooks.py` vérifie les
   octets des deux sites, la redirection et sa restauration.
+
+## Échange d'unités qui laisse une unité en chemin (correctif POL)
+
+[src/echange.rs](src/echange.rs). Analyse :
+[analyses/unites_superposees/README.md](../analyses/unites_superposees/README.md) (rapport BGE-DAA7E7).
+
+- **Le bug.** L'exécution de `UNITOPERATION_SWAP_UNITS` (`18067c860`) ne fait qu'un pas du chemin
+  A* (`1801a82a0`) pour chaque unité. Quand l'A* passe par une case voisine au lieu d'aller droit
+  (zone de contrôle, rivière, route), la première unité s'arrête sur cette case, même occupée.
+- **Le détour.** L'entrée de vtable `180a2ce28` (`.rdata`) mène au proxy, qui appelle l'original puis
+  fait continuer, pas à pas et avec les mêmes drapeaux, chaque unité qui n'est pas sur sa case
+  d'arrivée, tant qu'elle avance (deux tours, 8 pas au plus par unité). Si elle reste empilée, elle
+  est placée sur sa case d'arrivée (`1803b11b0`, mode 1, comme le filet de `MoveTo` : case de repli
+  si elle est prise).
+- **Correctif POL, sans réglage** (`BgdPolActifs`) : bug pur.
+- **Garde-fou.** Premiers octets des six fonctions appelées, et l'entrée de vtable doit pointer sur
+  `18067c860` ; sinon rien n'est posé. L'entrée d'origine revient au déchargement.
+- **Le journal.** `echange : exécution de SWAP_UNITS détournée (vtable 0x180a2ce28)`, puis les 30
+  premières corrections de chaque partie : unité, cases, ce qui a été fait, mouvements restants.
+- **Tests.** `check_hooks.py` (entrée détournée, puis restaurée). Pas encore essayé en partie.
 
 ## Diplomatie reçue pendant le passage de tour (correctif POL)
 
@@ -835,11 +855,88 @@ raccourcis et lentille du colon : encore à confirmer.
   `LOC_OPTIONS_KEY_RETURN` (sinon Entrée serait coupée pour tous, la ligne du journal le dira) ; que
   `Plot:GetArea()` existe côté interface (sinon repli sur le continent).
 
+## Partie rechargée identique à la partie en cours (correctifs POL, contribution d'OzrielTheLost)
+
+Deux modules, actifs seulement quand POL l'est, sans réglage joueur (les clés ne sont lues que par
+les builds de diagnostic, pour comparer avec le jeu d'origine) :
+
+- [unites_promises](src/unites_promises.rs) : la table des unités promises à la création d'un
+  quartier (`MajorStartingUnits` avec `OnDistrictCreated` : bonus de difficulté de l'IA, départs en
+  ère avancée) est écrite et parcourue dans l'ordre des clés. Avant, son ordre dépendait de
+  l'histoire de chaque machine : après un rechargement, le hash de synchro différait sans réparation
+  possible, et le colon et le bâtisseur étaient créés dans l'ordre inverse (identifiants échangés).
+  Les unités données ne changent pas, seul leur ordre de création est fixé.
+- [partie_chargee](src/partie_chargee.rs) : la passe d'après chargement n'écrit plus les
+  améliorations mémorisées des joueurs (seule la machine qui charge le faisait) ; les écouteurs
+  d'événements connectés en fin de lecture d'un joueur le sont à son début, comme sur une machine qui
+  n'a pas rechargé ; les préférences de grande stratégie de l'IA sont remises à zéro après la lecture,
+  comme dans une nouvelle partie (Sejong gardait −75 % de points de prophète).
+
+Côté client, avec un réglage (`relecture_fidele`, options avancées, section Performances, activé par défaut) : pas POL,
+un joueur peut le couper sans gêner les autres.
+
+- [relecture](src/relecture.rs) : quand l'hôte renvoie une variable d'AutoArchive (delta ou données
+  de création), le client la relit dans l'objet qu'il a déjà. Trois de ces lectures, écrites pour un
+  objet neuf, ne rendaient pas ce que l'hôte avait écrit : les opérations d'une unité et les boosts
+  suivis par l'IA (`AI::Research`, `AI::CultureAi`) s'ajoutaient à ceux déjà là, et un analyseur de
+  résolution du Congrès mondial remettait ses quatre derniers champs à zéro après les avoir lus. Les
+  listes sont vidées avant la lecture, la remise à zéro est sautée. Le chargement d'une partie, qui
+  lit dans des objets neufs, ne change pas.
+
+Voir aussi `reparation_synchro`, `relecture_sur_place` et `maths_communes` dans
+[startup_proxy](../startup_proxy/README.md).
+
+## Tour d'un joueur absent qui reste fini (POL)
+
+[absent_reactivation](src/absent_reactivation.rs), rapport BGE-4EB5B0. Quand l'hôte finit le tour
+d'un joueur déconnecté (`absent_turn` du proxy de démarrage), l'automatisation de fin de tour de
+GameCore peut rendre ce joueur actif de nouveau (une unité qui garde des mouvements), et plus
+personne ne finit son tour. Pendant l'exécution d'un `PlayerTurnComplete` envoyé par un autre
+joueur, et pour ce joueur seulement, la porte que GameCore consulte avant `AppRequestTurnUnready`
+répond « non ». Correctif POL, parties réseau seulement.
+
+- **Sites** (1.0.12.58, identiques en 1.0.12.74) : réception `180037b50`,
+  `PlayerTurnComplete::Execute` `180039920`, appel de la porte `18005c98a`. La porte (`18005b640`,
+  `18005b650` en .74) est la fonction que `congres` réécrit : l'appel détourné passe par sa
+  version.
+- Vérifié hors jeu par `check_hooks.py` sur les GameCore .58, du 2024-06-26 et .74 ; pas encore
+  essayé en partie.
+
+## Messages exécutés comptés, pour le cache des contrôles de synchro
+
+[executions](src/executions.rs) ne change rien au jeu. Il compte les messages que GameCore exécute,
+pour le cache des hachages de l'hôte de [cache_synchro](../startup_proxy/README.md) (proxy de
+démarrage).
+
+- **Le site.** GameCore n'exécute un message que dans sa fonction de réception, celle qui écrit
+  « GameCore RECV (%i): %s ». Elle a deux appelants, en 2020 comme en 1.0.12.58 :
+  - la boucle qui vide la file (`ProcessMessages`), par un `call` ;
+  - la méthode du contexte que l'exe appelle pour un message immédiat, par un `jmp`.
+
+  `BroadcastMessage` (« GameCore SEND ») n'exécute rien : il remet le message à l'exe, qui le
+  renvoie par l'un de ces deux chemins.
+- **La recherche, sans table d'adresses** ([src/pe.rs](src/pe.rs)) :
+  - la chaîne, unique ;
+  - la fonction qui la désigne, d'après la table des exceptions ;
+  - exactement un `call` et un `jmp` vers elle, le `jmp` précédé de `mov ecx,edx ; mov rdx,r8`.
+
+  Le moindre écart, et rien n'est posé.
+- **Le compteur** est augmenté avant et après chaque exécution. C'est celui du proxy de démarrage
+  (exports `BgdMessagesGameCore` et `BgdSuiviMessages`). Le déchargement du proxy coupe le cache
+  avant de remettre les deux appels.
+
 ## Limites du prototype
 
-- **Un seul build du jeu.** Les adresses sont celles de GameCore_XP2 FinalRelease
-  (TimeDateStamp `0x667c6f5b`). Une mise à jour désactive le proxy, qui le note dans le journal ;
-  il faudrait alors retrouver les sites par motif d'octets.
+- **Versions du jeu connues seulement.** Le proxy lit la version du jeu dans l'exe (ressource de
+  version) et la date d'édition de liens de GameCore. Les versions connues sont dans `BUILDS`
+  ([src/patch.rs](src/patch.rs)) : 1.0.12.58 (deux GameCore : celui du 2023-11-11 et celui du
+  2024-06-26, même code) et 1.0.12.74. La 1.0.12.72 n'est plus prise en charge depuis le
+  2026-11-23 (ses joueurs sont passés à la 1.0.12.74) ; les adresses de GameCore écrites dans les
+  modules restent celles de son GameCore, le même code que celui de la 1.0.12.58. Avec une autre
+  version, ou un GameCore qui ne correspond pas à la version de l'exe, aucun correctif n'est posé
+  et le journal le dit ; le proxy de démarrage le dit au joueur (voir
+  [startup_proxy](../startup_proxy/README.md)). Un nouveau build demande de traduire ses adresses
+  (`MOVED`, `FIXUPS`).
 - **Multijoueur.** Testé avec deux joueurs seulement, le proxy étant chez l'hôte. Le cas où seul
   l'invité a le proxy n'a pas été essayé.
 - **Un seul thread suivi.** Si un instantané était demandé depuis un autre thread pendant la

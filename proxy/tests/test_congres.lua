@@ -318,6 +318,68 @@ v.OnAccept();
 v.Events.LocalPlayerTurnUnready.Fire();
 Check(v.hidden == 2, "hors du vote : une annulation ne rouvre rien");
 
+-- Retour au vote, tour reparti sans nouvel envoi, puis nouvelle annulation (BGE-61FC66) : les votes
+-- envoyés et la faveur à rendre restent ceux du premier envoi.
+v = NewVoter();
+v.SetupWorldCongress(1, true);
+v.voteA.votes = 3;
+v.voteA.cost = 30;
+v.UpdateWorkingFavor();
+v.OnAccept();
+v.favor = 70;	-- débitée par GameCore
+v.Events.LocalPlayerTurnEnd.Fire();
+v.Events.LocalPlayerTurnUnready.Fire();
+v.ops = {};
+v.Events.LocalPlayerTurnEnd.Fire();	-- fin de tour sans OnAccept
+v.voteA = nil;
+v.Events.LocalPlayerTurnUnready.Fire();
+Check(v.hidden == 2, "seconde annulation sans envoi : écran d'attente fermé");
+Check(v.voteA ~= nil and v.voteA.votes == 3, "seconde annulation sans envoi : votes envoyés remis dans la fenêtre");
+Check(v.lookups.LOC_WORLD_CONGRESS_FAVOR_TITLE == 70,
+	"seconde annulation sans envoi : faveur à rendre gardée (" .. tostring(v.lookups.LOC_WORLD_CONGRESS_FAVOR_TITLE) .. ")");
+Check(Ops(v) == "", "seconde annulation sans envoi : rien envoyé (" .. Ops(v) .. ")");
+
+-- Tour du congrès parti sans vote (minuteur de l'exe, BGE-9E21BE), puis fin de tour annulée :
+-- la fenêtre se rouvre, votes vides.
+v = NewVoter();
+v.SetupWorldCongress(1, true);
+v.voteA.votes = 2;
+v.Events.LocalPlayerTurnEnd.Fire();
+v.voteA = nil;
+v.Events.LocalPlayerTurnUnready.Fire();
+Check(v.hidden == 1, "sans vote envoyé : écran d'attente fermé");
+Check(v.voteA ~= nil and v.voteA.votes == 0, "sans vote envoyé : fenêtre repeuplée, votes vides");
+local fermes = v.dequeued;
+v.Events.WorldCongressStage1.Fire(0);
+Check(v.dequeued == fermes, "retour au vote : l'événement de session relancé ne ferme pas la fenêtre");
+
+-- Hors retour au vote, l'événement de session garde le comportement du jeu (fermeture, l'intro ouvre).
+v = NewVoter();
+fermes = v.dequeued;
+v.Events.WorldCongressStage1.Fire(0);
+Check(v.dequeued == fermes + 1, "ouverture de session : comportement du jeu");
+
+-- Bouton du congrès pendant le vote, tour actif : la fenêtre est repeuplée avec la session en cours.
+v = NewVoter();
+v.SetupWorldCongress(1, true);
+v.Events.LocalPlayerTurnEnd.Fire();
+v.voteA = nil;
+v.resolutions = { Stage = 1, [2] = { Type = "WC_RES_Y", FavoredPlayerIDs = {}, DisfavoredPlayerIDs = {}, PossibleTargets = {} } };
+v.OnResumeCongress();
+Check(v.voteA ~= nil and v.voteA.votes == 0, "bouton du congrès : session en cours repeuplée");
+v.turnActive = false;
+v.voteA = nil;
+v.PopulateLeaderStack = function() end;	-- liste des dirigeants : hors du test
+v.OnResumeCongress();
+Check(v.voteA == nil, "bouton du congrès, tour fini : comportement du jeu, sans repeuplement");
+
+-- Récapitulatif sur des votes perdus (T74 de BGE-9E21BE) : retour aux résolutions, sans erreur.
+v = NewVoter();
+v.SetupWorldCongress(1, true);
+v.Events.LocalPlayerTurnEnd.Fire();
+local okRecap, errRecap = pcall(v.SetPhase, 2);
+Check(okRecap, "récapitulatif incomplet : pas d'erreur (" .. tostring(errRecap) .. ")");
+
 -- ---------------------------------------------------------------------------------------------
 -- Écran d'attente : bouton de retour au vote (ui_congres_attente.lua).
 local ATTENTE_PATH = POPUP_PATH:gsub("WorldCongressPopup%.lua$", "WorldCongressBetweenTurns.lua");

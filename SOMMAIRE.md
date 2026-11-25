@@ -19,8 +19,10 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   proxy de GameCore, onglet d'options, salon multijoueur, notification de mise à jour, bouton
   « Signaler un bug » du menu Échap, garde des messages réseau contre le gel à la déconnexion
   d'un joueur ; [rapport_worker](rapport_worker/README.md) : le relais
-  Cloudflare qui reçoit les rapports et les publie dans le forum Discord ;
-- [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe`, et [release](release/README.md) :
+  Cloudflare qui reçoit les rapports et les publie dans le forum Discord, et
+  [ANALYSE.md](rapport_worker/ANALYSE.md) : récupérer un rapport (`rapports.ps1`) et l'analyser ;
+- [updater](updater/README.md) : l'installeur `BetterGameExperience_V<version>.exe` et l'installeur
+  Linux (même crate, [Linux](updater/README.md#linux-proton), [install.sh](install.sh)), et [release](release/README.md) :
   le manifeste signé des releases ;
 - [rollover](rollover/README.md) : mesure du passage de tour (capture WPR, lecteur ETL, analyse) et
   [cascade d'une déclaration de guerre](rollover/cascade_guerre.md) ;
@@ -35,7 +37,8 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   échanges, rattrapée par l'interface du proxy sans désynchro ;
 - production dans l'interface du proxy (voir [proxy/README.md](proxy/README.md)) : clic droit
   sur la production en cours (onglet Production) et sur l'icône du bandeau de ville pour la
-  retirer, badge des quartiers en réduction, production en réserve (débordement) sur le bandeau ;
+  retirer, badge des quartiers en réduction, production en réserve (débordement) sur le bandeau,
+  régiment ou armée sur le bouton principal d'une unité quand la ville peut les former ;
 - [empire_yields](empire_yields/README.md) : rendements d'empire du bandeau figés après un gouverneur ou
   un personnage illustre, rafraîchis par le proxy sans désynchro ;
 - [map_pins](map_pins/README.md) : lag des épingles de carte en multijoueur, reconstructions inutiles
@@ -54,13 +57,20 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   votes ignorés ; retour au vote après la fin de tour (correctif POL, pas encore essayé en
   partie) ;
 - [espions](analyses/espions/README.md) : chances de succès annoncées sans le contre-espion du défenseur, et
-  succès avec fuite comptés comme des succès (analyse statique) ;
+  succès avec fuite comptés comme des succès (analyse statique) ; [plan](analyses/espions/plan_affichage.md),
+  implémenté par `ui_espions` (chance affichée qui compte l'évasion)
+  d'un affichage qui compte la fuite réussie (pas encore implémenté) ;
 - [lobby](analyses/lobby/README.md) : création du salon multijoueur, format de la config, presets MPH
   réappliqués par chaque machine, et swaps d'emplacement (réseau compris, courses pendant une arrivée) ;
   hook Frida et décodeur de config (analyse statique) ; créer et rejoindre un salon depuis un site
   de draft par des liens `civ6bge://` ([hook_externe](analyses/lobby/hook_externe.md), conception),
   et la sonde Steam qui doit en fournir le lien du salon ([sonde_steam](analyses/lobby/sonde_steam.md),
   conception) ;
+- [chargement](analyses/chargement/README.md) : temps de chargement d'une partie (salon, reprise,
+  remap de MPH), ventilé par phases et par piles CPU (capture du 2026-11-16) : reconstruction de la
+  base, test d'existence des assets, génération de carte, terrain 3D ; leviers classés ; étape de
+  configuration gardée et fin de chargement sans pause aux rechargements (`config_gardee`,
+  `fin_chargement`, voir [startup_proxy](startup_proxy/README.md)) ;
 - [personnages_illustres](analyses/personnages_illustres/README.md) : ville d'arrivée d'un personnage
   illustre (ville la plus peuplée avec le district de la classe, port pour l'amiral) (analyse statique) ;
 - [teleportation](analyses/teleportation/README.md) : téléportation vers une ville au départ d'un district
@@ -70,6 +80,11 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
 - [garde_messages](analyses/garde_messages/README.md) : revue de la garde des messages réseau contre
   le gel à la déconnexion d'un joueur (branche `yodha-desync-issue`, corrigée et mergée), points
   Ghidra vérifiés (lecture des drapeaux juste), reste à essayer en partie ;
+- [passage_de_tour_reseau](analyses/passage_de_tour_reseau/README.md) : passages de tour longs
+  après le retour d'un joueur qui ne se resynchronise jamais, débit réseau fixé par la couche P2P
+  de Steam (pas de limiteur dans le jeu), et quatre pistes : cache des hachages de l'hôte au
+  contrôle de synchro, resynchro générale au-delà d'un seuil, morceaux plus gros (POL), nouvelle
+  pile Steam (analyse statique et journaux) ;
 - défauts d'interface corrigés dans le proxy (émissaires, Entrée et zone de déplacement confirmés en
   partie ; raccourcis et colon encore à confirmer) :
   [raccourcis](analyses/raccourcis/README.md) coupés en cours de partie,
@@ -79,9 +94,21 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   [Entrée](analyses/raccourci_entree/README.md) active une fois retirée des touches,
   [zone de déplacement](analyses/quartier_capture_mouvements/README.md) sur un quartier ennemi ;
 - [unites_superposees](analyses/unites_superposees/README.md) : deux unités sur la même case après
-  un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ;
+  un déplacement (analyse statique, détour POL proposé, pas encore corrigé) ou un échange d'unités
+  (rapport BGE-DAA7E7, correctif POL, pas encore essayé en partie) ;
+- [huttes_invisibles](analyses/huttes_invisibles/README.md) : villages tribaux invisibles après un
+  rechargement, causés par le correctif « améliorations mémorisées » de la 0.14.0 (rapports
+  BGE-2C7D19, BGE-E8B107, BGE-93D8D4 ; analyse statique, fonctions retrouvées sur .58 et .74, pas
+  encore corrigé) ;
+- [gamecore_2024](analyses/gamecore_2024/README.md) : GameCore du 2024-06-26 refusé avec l'exe
+  1.0.12.58 depuis la 0.14.0 (aucun correctif posé, signaux `.bgd_` visibles dans le chat), et
+  correctifs POL annoncés à tort à la première partie ; même code que celui de la .58, accepté et
+  prédit par le salon (corrigé en local, pas encore publié) ;
 - [empilement_combat](empilement_combat/README.md) : unités empilées en excédent retirées du soutien
   et du contournement (correctif POL, essayé en partie avec des unités terrestres) ;
+- [vision_cites_etats](vision_cites_etats/README.md) : vision des unités d'une cité-État perdue quand
+  on en reprend la suzeraineté après une guerre (surtout en Teamer), listes de partage suspendu
+  laissées par la paix (correctif POL, essayé sur une sauvegarde) ;
 - [spectateurs](spectateurs/README.md) : spectateurs de BSM hors du tourisme et du vote du congrès,
   qu'ils peuvent toujours consulter (correctif POL) ;
 - [depart_tour](depart_tour/README.md) : départ de tour simultané pour tous (anti first/last move),
@@ -91,7 +118,10 @@ Aucun fichier du jeu n'est remplacé, et Steam ne retire donc pas les proxys :
   (un fichier XML par langue, au format de Civ6), et messages du chat affichés dans la langue de
   chacun ;
 - [netcode](netcode/README.md) : reconnexions et boucles de désynchro (hooks Frida, empreintes), analyse dans
-  [docs/netcode](docs/netcode/README.md) ;
+  [docs/netcode](docs/netcode/README.md) ; archives désynchronisées réparées sur place par l'hôte
+  (`reparation_synchro`), données renvoyées par l'hôte relues à l'identique chez le client
+  (`relecture`, `relecture_sur_place`), partie rechargée identique à la partie en cours
+  (`unites_promises`, `partie_chargee`, correctifs POL) ;
 - [macos](analyses/macos/README.md) : portage macOS, binaires du jeu inspectés (Mach-O universels,
   hardened runtime, GameCore chargé par `dlopen`) et essai de patch du code sur les machines macOS
   de la CI (passe, mais SIP y est désactivé : à refaire sur un Mac ordinaire) ;
@@ -118,3 +148,22 @@ depuis la racine), ceux du [relais des rapports](rapport_worker/README.md#tests)
 `textes/gen_textes.py --check --strict`. Les tests Lua qui lisent des fichiers du jeu les cherchent
 dans le dossier Steam par défaut (ou le chemin passé en argument) et sont sautés sans eux
 (« test sauté ») : la CI ne les exécute pas, ils restent à lancer sur une machine qui a le jeu.
+
+## Binaires des versions prises en charge
+
+`binaires_jeu/<version>/` (ignoré par git, à garder en local) : les exe DX11/DX12, les DLL de
+`Base\Binaries\Win64Steam` et `GameCore_XP2_FinalRelease.dll` de chaque version du jeu prise en
+charge, pour vérifier une nouvelle fonctionnalité sur toutes. Au 2026-11-23 : 1.0.12.58 (complet),
+`1.0.12.58_gamecore_2024-06-26` (le GameCore du 2024-06-26, même code que celui de la .58, voir
+[gamecore_2024](analyses/gamecore_2024/README.md)), 1.0.12.72 (exe DX12 seul, gardé pour
+mémoire : version plus prise en charge depuis le 2026-11-23), 1.0.12.74 (complet, copié du jeu
+installé). Les tests Rust des deux
+proxys lisent les exe par `CIV6_EXE_58_DIR` et `CIV6_EXE_74_DIR` (par défaut, le
+jeu installé pour la 1.0.12.74) et sautent une version absente ; `check_hooks.py` prend le GameCore
+en argument :
+
+```powershell
+$env:CIV6_EXE_58_DIR = "$PWD\binaires_jeu\1.0.12.58"
+cargo test --release --manifest-path startup_proxy\Cargo.toml
+python proxy\tests\check_hooks.py proxy\target\release\BGD_GameCore_XP2.dll binaires_jeu\1.0.12.58\GameCore_XP2_FinalRelease.dll $env:TEMP\ch58
+```

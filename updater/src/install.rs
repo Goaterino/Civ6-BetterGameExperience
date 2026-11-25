@@ -6,19 +6,26 @@
 //! Jusqu'à la v0.3.0, chaque proxy prenait le nom de l'original, renommé `<nom>_orig.dll`.
 //! L'installation et la désinstallation remettent ces originaux en place.
 //!
+//! Commun à Windows, Linux et macOS ; `run` diffère : relance en administrateur sous Windows, erreur
+//! qui nomme le dossier sous Linux.
+//!
 //! Sous macOS, rien n'est posé dans le jeu : `Civ6.app` est scellé par sa signature. Les deux dylibs
 //! vont dans `dylib/` du dossier de BetterGameExperience (`root`), sans droits d'administrateur, et
-//! le lanceur les injecte au lancement du jeu (main.rs, `launch`). Les fonctions de ce module
-//! prennent la racine de pose : le dossier du jeu sous Windows, celui de BetterGameExperience sous
-//! macOS.
+//! le lanceur les injecte au lancement du jeu (macos/app.rs, `launch`). Les fonctions de ce module
+//! prennent la racine de pose : le dossier du jeu sous Windows et Linux, celui de
+//! BetterGameExperience sous macOS.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[cfg(windows)]
+use crate::game;
 use crate::lang::f;
 use crate::textes as tx;
 use crate::noms;
 use crate::release::{self, Manifest};
+#[cfg(windows)]
+use crate::win;
 
 pub struct Target {
     pub name: &'static str,
@@ -27,7 +34,8 @@ pub struct Target {
     marker: &'static [u8],
 }
 
-#[cfg(windows)]
+/// Windows, et Linux (le jeu Windows sous Proton) : à côté des fichiers du jeu.
+#[cfg(not(target_os = "macos"))]
 pub const TARGETS: [Target; 2] = [
     Target { name: noms::GAMECORE_PROXY, dest: "DLC/Expansion2/Binaries/Win64", marker: b"RolloverProxyStatus" },
     Target { name: noms::DEMARRAGE, dest: "Base/Binaries/Win64Steam", marker: b"StartupProxyStatus" },
@@ -40,13 +48,8 @@ pub const TARGETS: [Target; 2] = [
     Target { name: noms::MAC_CHARGEUR, dest: noms::MAC_DOSSIER_DYLIBS, marker: b"StartupProxyStatus" },
 ];
 
-/// Racine de pose : le dossier du jeu sous Windows.
-#[cfg(windows)]
-pub fn root(game: &Path) -> PathBuf {
-    game.to_path_buf()
-}
-
-/// Racine de pose : le dossier de BetterGameExperience sous macOS (le jeu n'est pas touché).
+/// Racine de pose sous macOS : le dossier de BetterGameExperience (le jeu n'est pas touché). Sous
+/// Windows et Linux, c'est le dossier du jeu lui-même.
 #[cfg(target_os = "macos")]
 pub fn root(_game: &Path) -> PathBuf {
     release::data_dir().unwrap_or_else(release::work_dir)
@@ -58,8 +61,8 @@ pub fn target_path(root: &Path, name: &str) -> Option<PathBuf> {
     TARGETS.iter().find(|t| t.name == name).map(|t| t.path(root))
 }
 
-/// Anciennes installations (v0.3.0 et avant) : Windows seulement.
-#[cfg(windows)]
+/// Anciennes installations (v0.3.0 et avant) : Windows et Linux, pas macOS.
+#[cfg(not(target_os = "macos"))]
 const ANCIENS: [(&str, &str); 2] = noms::ANCIENS;
 #[cfg(target_os = "macos")]
 const ANCIENS: [(&str, &str); 0] = [];
@@ -81,7 +84,8 @@ const MEDIAS: [&str; 13] = [
 /// Marques des anciens proxys, posés sous le nom des originaux.
 const ANCIENNES_MARQUES: [&[u8]; 2] = [b"RolloverProxyStatus", b"StartupProxyStatus"];
 
-/// Fichier où le processus administrateur laisse son erreur.
+/// Fichier où le processus administrateur laisse son erreur (Windows).
+#[cfg(windows)]
 const ERROR_FILE: &str = "erreur.txt";
 
 #[derive(Clone, Copy, PartialEq)]
@@ -162,14 +166,9 @@ pub fn status(game: &Path, m: Option<&Manifest>) -> Vec<(&'static str, State)> {
 
 /// Installe la release téléchargée dans `work`, ou retire les proxys ; en administrateur si le
 /// dossier du jeu n'est pas modifiable (Program Files).
-#[cfg(target_os = "macos")]
-pub fn run(action: Action, root: &Path, work: &Path) -> Result<(), String> {
-    apply(action, root, work)
-}
-
 #[cfg(windows)]
 pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
-    if writable(game) {
+    if not_writable(game).is_none() {
         return apply(action, game, work);
     }
     let _ = fs::remove_file(work.join(ERROR_FILE));
@@ -179,18 +178,35 @@ pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     };
     let params = format!("--apply {arg} \"{}\" \"{}\"", work.display(), game.display());
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    match crate::sys::run_elevated(&exe, &params)? {
+    match win::run_elevated(&exe, &params)? {
         0 => Ok(()),
         code => Err(fs::read_to_string(work.join(ERROR_FILE)).unwrap_or(f(tx::FAILURE_CODE_X, &[&code]))),
     }
 }
 
-/// Point d'entrée du processus administrateur (Windows) : son erreur va dans `work`. Ses arguments
-/// viennent du processus utilisateur : le dossier du jeu est revérifié avant toute écriture.
-#[cfg_attr(not(windows), allow(dead_code))]
+/// Linux : jamais de `sudo`. Un dossier du jeu en lecture seule (disque monté en lecture seule,
+/// bibliothèque appartenant à root, permissions NTFS) est une erreur qui le nomme.
+#[cfg(target_os = "linux")]
+pub fn run(action: Action, game: &Path, work: &Path) -> Result<(), String> {
+    if let Some(dir) = not_writable(game) {
+        return Err(f(tx::LINUX_FOLDER_NOT_WRITABLE_X, &[&dir.display()]));
+    }
+    apply(action, game, work)
+}
+
+/// macOS : la racine de pose est le dossier de BetterGameExperience, toujours modifiable par
+/// l'utilisateur.
+#[cfg(target_os = "macos")]
+pub fn run(action: Action, root: &Path, work: &Path) -> Result<(), String> {
+    apply(action, root, work)
+}
+
+/// Point d'entrée du processus administrateur : son erreur va dans `work`. Ses arguments viennent
+/// du processus utilisateur : le dossier du jeu est revérifié avant toute écriture.
+#[cfg(windows)]
 pub fn apply_elevated(action: &str, work: &Path, game: &Path) -> i32 {
     let action = if action == "uninstall" { Action::Uninstall } else { Action::Install };
-    let result = if crate::game::is_game_dir(game) {
+    let result = if game::is_game_dir(game) {
         apply(action, game, work)
     } else {
         Err(f(tx::X_IS_NOT_THE_CIVILIZATION_VI, &[&game.display()]))
@@ -216,13 +232,14 @@ fn apply(action: Action, game: &Path, work: &Path) -> Result<(), String> {
     }
 }
 
-#[cfg(windows)]
-fn writable(game: &Path) -> bool {
-    TARGETS.iter().all(|t| {
-        let probe = game.join(t.dest).join(".bgd_test");
+/// Le premier dossier de destination où l'on ne peut pas écrire, s'il y en a un (Windows, Linux).
+#[cfg(not(target_os = "macos"))]
+fn not_writable(game: &Path) -> Option<PathBuf> {
+    TARGETS.iter().map(|t| game.join(t.dest)).find(|dir| {
+        let probe = dir.join(".bgd_test");
         let ok = fs::write(&probe, b"").is_ok();
         let _ = fs::remove_file(&probe);
-        ok
+        !ok
     })
 }
 
@@ -367,7 +384,7 @@ mod tests {
         format!("{}/{}", TARGETS[i].dest, TARGETS[i].name)
     }
 
-    #[cfg(windows)]
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn ancienne_installation_remise() {
         let dir = game(
@@ -389,7 +406,7 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
     }
 
-    #[cfg(windows)]
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn ancien_proxy_sans_orig() {
         let dir = game("sans_orig", &[("Base/Binaries/Win64Steam/DatabaseDLL_FinalRelease.dll", b"proxy StartupProxyStatus")]);
@@ -454,6 +471,34 @@ mod tests {
         fs::remove_dir_all(dir).unwrap();
     }
 
+    /// Linux : un dossier du jeu en lecture seule est nommé dans l'erreur, sans `sudo`.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn dossier_en_lecture_seule_nomme() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = game("lecture_seule", &[]);
+        let win64 = dir.join("DLC/Expansion2/Binaries/Win64");
+        fs::set_permissions(&win64, fs::Permissions::from_mode(0o555)).unwrap();
+        // root écrit quand même : le test ne vérifie alors rien.
+        if let Some(refused) = not_writable(&dir) {
+            assert_eq!(refused, win64);
+            let err = run(Action::Install, &dir, &dir).unwrap_err();
+            assert!(err.contains(&win64.display().to_string()), "{err}");
+        }
+        fs::set_permissions(&win64, fs::Permissions::from_mode(0o755)).unwrap();
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    #[test]
+    fn dossiers_modifiables() {
+        let dir = game("modifiable", &[]);
+        assert_eq!(not_writable(&dir), None);
+        assert!(!dir.join("DLC/Expansion2/Binaries/Win64/.bgd_test").exists(), "sonde retirée");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[cfg(windows)]
     #[test]
     fn administrateur_hors_du_jeu() {
         let work = std::env::temp_dir().join(format!("bgd_install_work_{}", std::process::id()));

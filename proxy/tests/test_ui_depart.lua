@@ -48,7 +48,8 @@ local function NewGame(opts)
 		-- Événements du jeu seulement : un nom inconnu vaut nil, comme en partie (relevés dans l'UI du jeu).
 		local Events = {};
 		for _, k in ipairs({ "LocalPlayerTurnBegin", "TurnBegin", "TurnEnd", "GameCoreEventPublishComplete", "LoadScreenClose",
-			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated" }) do
+			"MultiplayerChat", "MultiplayerPostPlayerDisconnected", "MultiplayerHostMigrated", "TurnTimerUpdated",
+			"ExitToMainMenu", "MultiplayerGameAbandoned" }) do
 			Events[k] = NewEvent();
 		end
 		local LuaEvents = setmetatable({}, { __index = function(t, k)
@@ -61,7 +62,7 @@ local function NewGame(opts)
 		local cfg = G.config;
 		local env = {
 			pcall = pcall, print = function() end, tostring = tostring, tonumber = tonumber, type = type,
-			ipairs = ipairs, pairs = pairs, table = table, string = string, os = { clock = function() return G.clock; end },
+			ipairs = ipairs, pairs = pairs, table = table, string = string, math = math, os = { clock = function() return G.clock; end },
 			Events = Events, LuaEvents = LuaEvents,
 			Locale = { GetCurrentLanguage = function() return { Type = "fr_FR" }; end, Lookup = function(s) return s; end },
 			GameConfiguration = {
@@ -137,6 +138,15 @@ local function NewGame(opts)
 				return m.natives.attente and 1 or 0, m.natives.rejets or 0, 0, m.natives.retenu and 1 or 0;
 			end,
 			Civ6RolloverProxy_DepartJournal = function(t) table.insert(m.journal, t); end,
+			-- Kept by the proxy, across interfaces of the same machine.
+			Civ6RolloverProxy_DepartMemoriser = function(session, masque)
+				G.memoire = G.memoire or {};
+				G.memoire[id] = { session = session, masque = masque };
+			end,
+			Civ6RolloverProxy_DepartMemoire = function(session)
+				local r = G.memoire and G.memoire[id];
+				return (r ~= nil and session ~= "" and r.session == session) and r.masque or 0;
+			end,
 		};
 		m.journal = {};
 		-- ContextPtr:ClearUpdate() s'appelle avec « : ».
@@ -346,6 +356,57 @@ do
 end
 
 do
+	-- A player whose BGE never signals (inactive on their side): after two turns started without
+	-- them, the host stops waiting; a ready signal makes them waited for again.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	G.machines[2] = nil;
+	for _, m in pairs(G.machines) do m.Charger(); end
+	for tour = 11, 12 do
+		G.tour = tour;
+		h.Debut(); h.Publie(); a.Debut(); a.Publie();
+		G.clock = G.clock + 61; h.Tic();
+	end
+	Check("never ready: started without them twice", not h.natives.attente and not a.natives.attente);
+	local annonce = false;
+	for _, t in ipairs(h.locaux) do if t:find("J2") and t:find("attendent plus") then annonce = true; end end
+	Check("never ready: the host says it no longer waits", annonce);
+	G.tour = 13;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("never ready: the next turn starts without waiting", not h.natives.attente and not a.natives.attente);
+	h.Events.MultiplayerChat(2, 0, ".bgd_pret 13", 3);
+	G.tour = 14;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("ready again: waited for again", h.natives.attente and a.natives.attente);
+end
+
+do
+	-- Leaving the game during a hold: released at once, not by the proxy's safety timer.
+	local G = NewGame({ option = true, players = { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
+	local a = G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.tour = 11;
+	a.Debut(); a.Publie();
+	Check("hold before leaving", a.natives.attente);
+	a.Events.ExitToMainMenu();
+	Check("leaving the game releases the hold", not a.natives.attente and a.natives.partir == 1);
+end
+
+do
+	-- A game configuration wiped mid-game (bad network message) does not turn the start off.
+	local G = NewGame({ option = true, players = { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
+	local a = G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.config.BGD_DEPART_SIMULTANE = nil;
+	G.sent = {};
+	G.tour = 11;
+	a.Debut(); a.Publie();
+	Check("configuration wiped: the client still signals ready", #G.sent == 1 and G.sent[1].text == ".bgd_pret 11");
+end
+
+do
 	-- Un joueur se déconnecte pendant l'attente : il n'est plus attendu.
 	local G = NewGame({ option = true, players = { [0] = { version = V, connecte = true }, [1] = { version = V, connecte = true } } });
 	local h = G.machines[0];
@@ -410,6 +471,13 @@ do
 	Check("une seule ligne d'avertissement", #a.locaux == 1 and a.locaux[1]:find("ordres retenus") ~= nil);
 	h.Debut(); h.Publie();
 	Check("puis « c'est parti »", #a.locaux == 2 and a.locaux[2]:find("parti") ~= nil);
+	-- Tour suivant, ordres de nouveau retenus : plus rien d'affiché (une fois par partie).
+	G.tour = 12;
+	a.Debut(); a.Publie();
+	a.natives.rejets = 1; a.Tic();
+	h.Debut(); h.Publie();
+	Check("tour suivant : pas de nouvel avertissement", #a.locaux == 2);
+	Check("tour suivant : départ quand même", not a.natives.attente);
 end
 
 -- Début de tour retenu avant l'interface (publication détournée) ---------------------------------
@@ -541,6 +609,80 @@ do
 	h.Minuteur(5, 60); h.Minuteur(60, 60);
 	Check("départ puis fin : fin reçue", a.natives.forcer == 1);
 	Check("depart_signaux=on : ligne locale de la fin", a.locaux[#a.locaux]:find("minuteur de l'hôte") ~= nil);
+end
+
+do
+	-- The host stops waiting for a player never ready two turns in a row, and still does not wait
+	-- after its interface is reloaded (remap, resync); a ready signal restores the wait.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true }, [2] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	G.machines[2] = nil;   -- player 2 announces BGE but its turn start is inactive: it never signals
+	h.Charger(); a.Charger();
+	for tour = 11, 12 do
+		G.tour = tour;
+		h.Debut(); h.Publie(); a.Debut(); a.Publie();
+		G.clock = G.clock + 61; h.Tic(1);
+		Check("silent player: turn " .. tour .. " started after the delay", not h.natives.attente);
+	end
+	G.tour = 13;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("silent player: no longer waited for", not h.natives.attente);
+	-- The host's interface is reloaded: a new block on the same machine.
+	h = G.NewMachine(0);
+	h.Charger();
+	G.tour = 14;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("after a reload of the host: still not waited for", not h.natives.attente);
+	-- The player signals ready: waited for again, in this interface and the next.
+	h.Events.MultiplayerChat(2, 0, ".bgd_pret 14", 3);
+	G.tour = 15;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("ready again: waited for", h.natives.attente);
+	h = G.NewMachine(0);
+	h.Charger();
+	G.tour = 16;
+	h.Debut(); h.Publie(); a.Debut(); a.Publie();
+	Check("ready again, after a reload: waited for", h.natives.attente);
+end
+
+do
+	-- The host gives no start: the client starts alone after 75 s and says so once; then after 5 s
+	-- on the following turns, until the host gives a start again.
+	local G = NewGame({ option = true, players = {
+		[0] = { version = V, connecte = true }, [1] = { version = V, connecte = true },
+	} });
+	local h, a = G.machines[0], G.machines[1];
+	for _, m in pairs(G.machines) do m.Charger(); end
+	G.tour = 11;
+	a.Debut(); a.Publie();
+	G.clock = 74; a.Tic(1);
+	Check("silent host: still waiting at 74 s", a.natives.attente);
+	G.clock = 76; a.Tic(1);
+	Check("silent host: client starts alone after 75 s", not a.natives.attente and a.natives.partir == 1);
+	local lines = #a.locaux;
+	Check("silent host: said once", lines >= 1 and a.locaux[lines]:find("75") ~= nil or a.locaux[lines]:find("76") ~= nil);
+	G.tour = 12;
+	a.Debut(); a.Publie();
+	G.clock = 80; a.Tic(1);
+	Check("silent host, next turn: still waiting at 4 s", a.natives.attente);
+	G.clock = 82; a.Tic(1);
+	Check("silent host, next turn: starts after 5 s, nothing more said", not a.natives.attente and #a.locaux == lines);
+	-- The host is back: its start restores the full wait.
+	G.tour = 13;
+	a.Debut(); a.Publie();
+	h.Debut(); h.Publie();
+	Check("host back: start received", not a.natives.attente);
+	G.tour = 14;
+	a.Debut(); a.Publie();
+	G.clock = 100; a.Tic(1);
+	Check("host back: full wait again", a.natives.attente);
+	-- The host itself never uses this timer.
+	G.tour = 15;
+	h.Debut(); h.Publie();
+	G.clock = 130; h.Tic(1);
+	Check("host: waits for its own delay only", h.natives.attente);
 end
 
 do

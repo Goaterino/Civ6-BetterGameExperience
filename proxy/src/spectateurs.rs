@@ -113,7 +113,7 @@ unsafe fn rd<T: Copy>(at: usize) -> T {
 }
 
 unsafe fn adresse(base: usize, a: u64) -> usize {
-    base + (a - patch::IMAGE_BASE) as usize
+    base + crate::patch::rva(a)
 }
 
 unsafe fn est_spectateur(base: usize, id: u32) -> bool {
@@ -287,8 +287,8 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
     BASE.store(base, Ordering::Relaxed);
     // 18027ce10 lit GlobalParameters relativement à RIP : le trampoline le refait en absolu
     // (movabs rax,[adresse] : 48 A1 imm64).
-    let at = base + (TOURISTES.address - patch::IMAGE_BASE) as usize;
-    let mut prologue = TOURISTES.expected[TOURISTES.copy.0..TOURISTES.copy.1].to_vec();
+    let at = base + crate::patch::rva(TOURISTES.address);
+    let mut prologue = crate::patch::as_loaded(TOURISTES.address, TOURISTES.expected)[TOURISTES.copy.0..TOURISTES.copy.1].to_vec();
     prologue.extend_from_slice(&[0x48, 0xa1]);
     prologue.extend_from_slice(&(adresse(base, PARAMETRES) as u64).to_le_bytes());
     let poses = [

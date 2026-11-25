@@ -10,12 +10,22 @@
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0) : 0 à chaque
 --                                         ouverture du salon, puis notre conclusion du verdict
 --   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
+--   Civ6Proxy_ExeInconnu()             -> 1 if the game version has no address table: the fixes
+--                                         are not installed, said to everyone on arrival
+--   Civ6Proxy_RemapOublier()           -> drops a remap request of a game that is gone
+--                                         (startup_proxy/src/remap.rs), at each lobby opening
 --
 -- Les configurations de joueur sont enregistrées avec la partie : une sauvegarde rechargée rapporte
 -- les annonces et le verdict d'une session précédente, peut-être chez des joueurs qui n'ont plus le
 -- proxy. D'où deux jetons, tirés à chaque ouverture du salon (et à chaque migration d'hôte) :
 -- - chaque joueur écrit dans sa configuration BGD_VERSION = "<version>@<jeton de l'hôte>#<son
---   jeton>". Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte pas ;
+--   jeton>~<son identité>". Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte pas ;
+-- - l'identité est l'identifiant Steam du joueur (BGD_Identite). Elle compte parce qu'un swap
+--   d'emplacements n'échange que le nom réseau et l'état « prêt » : l'emplacement garde ses autres
+--   valeurs, annonce comprise (analyses/lobby/README.md). Sans elle, un joueur sans le proxy qui
+--   prend l'emplacement d'un joueur équipé hérite de son annonce, valide pour ce salon (rapport
+--   BGE-141E15). Une annonce dont l'identité n'est pas celle de l'occupant actuel ne compte pas, ni
+--   un jeton personnel présent sur deux emplacements (complément, quand l'identité manque) ;
 -- - l'hôte tient à jour BGD_VERDICT = "<version>@<son jeton>:<1|0>:<jetons des joueurs vus>" : 1 si
 --   tous les humains connectés annoncent sa version avec son jeton ; les jetons de tous ceux dont il
 --   a reçu une annonce de ce salon, quelle que soit leur version. Un client ne croit le verdict que
@@ -33,9 +43,12 @@
 --   client dont l'annonce a changé depuis l'ouverture du salon : une annonce restée d'une
 --   sauvegarde ne change pas. Un client arrivé après l'annonce d'un autre ne la voit pas changer :
 --   tous deux peuvent alors écrire, le même message. Il n'en manque jamais.
--- À chaque ouverture du salon (pas à une migration d'hôte), une machine équipée et active dit à tous,
+-- À l'ouverture du salon (pas à une migration d'hôte), une machine équipée et active dit à tous,
 -- en vert, qu'elle a BetterGameExperience et sa version exacte (« BGE - Bob has BetterGameExperience
 -- 0.9.0 enabled. »), une demi-seconde après l'ouverture (premier tic du minuteur, voir plus bas).
+-- Une seule fois par session réseau (Network.GetSessionID, comme StagingRoom.lua pour son « fresh
+-- session ») : le salon se rouvre dans la même session (l'hôte à la création, un joueur qui revient)
+-- sans redire bonjour.
 -- Le BGE Check : un bouton de l'hôte, placé comme le « MOD CHECK » de MPH mais à gauche (symétrique
 -- par rapport au centre de l'écran), demande à chaque humain connecté sa version par un message
 -- privé caché « .bgd_check <jeton> ». Le bloc de chaque machine équipée répond, même désactivée, par
@@ -44,6 +57,11 @@
 -- ne s'affichent pas chez qui a BetterGameExperience (enveloppe d'OnChat). Le proxy a ajouté au XML du
 -- salon le bouton (BGD_CheckButton) et un minuteur (BGD_SalonMinuteur, environ 0,5 s) ; sans eux,
 -- l'annonce part tout de suite et le bouton n'existe pas.
+-- At the countdown, a line that depends on a message possibly still on its way (the host does not
+-- see us yet, or misses an announcement) is said BGD_AVIS_TICS timer ticks later, if still true. A
+-- player joining a game in progress says nothing about the host: that game's state is decided.
+-- After the countdown and until the game is loaded, a hidden lobby still follows the host's
+-- verdict, towards "on" only.
 -- Les messages partent en anglais (BGD_TxtAnglais), lisibles par ceux qui n'ont pas BetterGameDLLs ;
 -- chaque machine équipée les affiche dans sa langue (BGD_TxtChat, enveloppe d'OnChat en fin de bloc).
 -- On ne s'appuie que sur les événements du jeu et sur StartLaunchCountdown, présents dans
@@ -58,13 +76,17 @@ local BGD = {
 	version = nil,     -- notre version, nil si cette machine n'appliquerait pas les correctifs POL
 	raison = nil,      -- pourquoi, dans ce cas
 	jeton = nil,       -- hôte : son jeton de cette ouverture du salon
-	perso = nil,       -- notre jeton de cette ouverture du salon
+	perso = nil,       -- notre jeton de cette ouverture du salon, avec notre identité
+	persoJeton = nil,  -- sa partie tirée au hasard
 	instantane = {},   -- annonces de chaque joueur à l'ouverture du salon
 	message = nil,     -- dernier message envoyé dans le chat
 	ouvert = false,    -- salon ouvert : de l'ouverture au chargement de la partie (ou au départ)
 	annonce = false,   -- annonce « BetterGameExperience activé » à envoyer au prochain tic
+	session = nil,     -- session réseau de la dernière annonce envoyée
 	check = nil,       -- hôte : BGE Check en cours { jeton, ordre, attendus, reponses, tics }
+	avis = nil,        -- timer ticks left before the countdown line is said
 };
+local BGD_AVIS_TICS = 4;
 
 local BGD_CHECK_DEMANDE = ".bgd_check ";
 local BGD_CHECK_REPONSE = ".bgd_version ";
@@ -89,10 +111,55 @@ local function BGD_Concerne()
 end
 
 -- Annonce "<version>@<jeton de l'hôte>#<jeton du joueur>" -> les trois ; nil si la valeur manque
--- ou n'a pas cette forme.
+-- ou n'a pas cette forme. Le jeton du joueur porte son identité : "<jeton>~<identité>" (une
+-- annonce d'une version précédente n'en a pas). Mêmes lecture et règle dans option_partie.lua
+-- (SetupParameters.BGD_PolDisponible), partie.lua, proxy/src/ui_depart.lua et
+-- proxy/src/mods/pings/common.lua : changer le format partout.
 local function BGD_LireAnnonce(valeur)
 	if type(valeur) ~= "string" then return nil; end
 	return string.match(valeur, "^([^@#:]*)@([^@#:]*)#([^@#:,]*)$");
+end
+
+-- Identité de l'occupant actuel de l'emplacement : l'identifiant Steam qui suit le nom réseau
+-- (NETWORK_NAME = "<nom>@<identifiant>", échangé avec le joueur par un swap), sinon
+-- GetNetworkIdentifer ; "" si aucun (partie en réseau local, par exemple).
+local function BGD_Identite(id)
+	local cfg = PlayerConfigurations[id];
+	if cfg == nil then return ""; end
+	local nom = cfg:GetValue("NETWORK_NAME");
+	local ident = type(nom) == "string" and string.match(nom, "@(%w+)$") or nil;
+	if ident == nil and cfg.GetNetworkIdentifer ~= nil then
+		local ok, v = pcall(cfg.GetNetworkIdentifer, cfg);
+		ident = ok and v ~= nil and tostring(v) or nil;
+	end
+	return string.sub(string.gsub(ident or "", "[^%w]", ""), 1, 32);
+end
+
+-- Nombre d'emplacements qui annoncent chaque jeton personnel.
+local function BGD_Occurrences()
+	local n = {};
+	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
+		local cfg = PlayerConfigurations[id];
+		local _, _, perso = BGD_LireAnnonce(cfg and cfg:GetValue(BGD_CLE_VERSION));
+		if perso ~= nil and perso ~= "" then n[perso] = (n[perso] or 0) + 1; end
+	end
+	return n;
+end
+
+-- L'annonce de l'emplacement `id`, si elle est de son occupant actuel, sinon nil (restée d'un autre
+-- joueur après un swap ou un départ) :
+-- - une identité non vide doit être celle de l'occupant, et suffit : le vrai propriétaire d'une
+--   annonce recopiée sur un autre emplacement reste compté ;
+-- - sans identité (réseau local, ou annonce d'une version précédente), si `occurrences` est
+--   donné, le jeton personnel ne doit être sur aucun autre emplacement.
+local function BGD_AnnonceDe(id, occurrences)
+	local cfg = PlayerConfigurations[id];
+	local version, jeton, perso = BGD_LireAnnonce(cfg and cfg:GetValue(BGD_CLE_VERSION));
+	if version == nil then return nil; end
+	local ident = string.match(perso, "~(%w*)$");
+	if ident ~= nil and ident ~= BGD_Identite(id) then return nil; end
+	if (ident == nil or ident == "") and occurrences ~= nil and (occurrences[perso] or 0) > 1 then return nil; end
+	return version, jeton, perso;
 end
 
 -- Verdict "<version>@<jeton de l'hôte>:<1|0>:<jetons>" -> version, jeton de l'hôte, actif
@@ -139,13 +206,15 @@ local function BGD_AutresHumains()
 	return ids;
 end
 
--- Hôte : ceux sans le proxy (ou sans le jeton de ce salon), ceux d'une autre version avec leur
--- version, et les jetons de tous ceux dont l'annonce porte le jeton de ce salon.
+-- Hôte : ceux sans le proxy (ou sans le jeton de ce salon, ou dont l'annonce est restée d'un autre
+-- joueur), ceux d'une autre version avec leur version, et les jetons de tous ceux dont l'annonce
+-- porte le jeton de ce salon.
 local function BGD_Bilan()
 	local sans, autres, jetons = {}, {}, {};
+	local occurrences = BGD_Occurrences();
 	for _, id in ipairs(BGD_AutresHumains()) do
 		local nom = Locale.Lookup(PlayerConfigurations[id]:GetPlayerName());
-		local version, jeton, perso = BGD_LireAnnonce(BGD_Valeur(id, BGD_CLE_VERSION));
+		local version, jeton, perso = BGD_AnnonceDe(id, occurrences);
 		if version == nil or jeton ~= BGD.jeton then
 			table.insert(sans, nom);
 		else
@@ -177,15 +246,31 @@ local function BGD_PolActifs()
 	return BGD_HoteNousVoit();
 end
 
+-- Les contrôles suivent le verdict et le roster, sans modifier les valeurs de la partie.
+local function BGD_ActualiserOptions()
+	if not BGD.ouvert or ContextPtr:IsHidden() or SetupParameters == nil
+		or SetupParameters.BGD_PolDisponible == nil then return; end
+	local pol = SetupParameters.BGD_PolDisponible(false);
+	local pings = SetupParameters.BGD_PolDisponible(true);
+	if BGD.optionsPol ~= pol or BGD.optionsPings ~= pings then
+		BGD.optionsPol, BGD.optionsPings = pol, pings;
+		-- Rafraîchissement local seulement : aucun BroadcastGameConfig ni changement de Prêt.
+		if GameSetup_RefreshParameters ~= nil then GameSetup_RefreshParameters(); end
+	end
+end
+
 -- Écrit notre annonce, et pour l'hôte le verdict, dans notre configuration de joueur ; ne la
 -- diffuse que si elle a changé, sinon chaque PlayerInfoChanged en relancerait un.
 local function BGD_Publier()
 	if not BGD_Concerne() then return; end
 	local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
 	if cfg == nil then return; end
-	if BGD.perso == nil then
-		BGD.perso = Civ6Proxy_Jeton();
+	-- Jeton tiré une fois par ouverture du salon ; l'identité relue à chaque fois, au cas où le nom
+	-- réseau arriverait après la première annonce.
+	if BGD.persoJeton == nil then
+		BGD.persoJeton = Civ6Proxy_Jeton();
 	end
+	BGD.perso = BGD.persoJeton .. "~" .. BGD_Identite(Network.GetLocalPlayerID());
 	local jetonHote = BGD_JetonDeLHote();
 	local annonce = BGD.version .. "@" .. jetonHote .. "#" .. BGD.perso;
 	local change = false;
@@ -218,6 +303,7 @@ local function BGD_Publier()
 	end
 	-- L'état lu par le proxy de GameCore suit le verdict jusqu'au lancement.
 	Civ6Proxy_FixerPol(BGD_PolActifs() and 1 or 0, "verdict de l'hôte");
+	BGD_ActualiserOptions();
 end
 
 -- Un message dans le chat, pour tous, une fois par contenu.
@@ -254,11 +340,20 @@ local function BGD_MessageDUnClient()
 	local hote = Network.GetGameHostPlayerID();
 	for _, id in ipairs(BGD_AutresHumains()) do
 		local valeur = BGD_Valeur(id, BGD_CLE_VERSION);
-		if id < moi and id ~= hote and BGD_LireAnnonce(valeur) ~= nil and valeur ~= BGD.instantane[id] then
+		if id < moi and id ~= hote and BGD_AnnonceDe(id) ~= nil and valeur ~= BGD.instantane[id] then
 			return;  -- un client équipé avant nous s'en charge
 		end
 	end
 	BGD_Dire("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_HOTE_SANS") .. "[ENDCOLOR]");
+end
+
+local function BGD_MessageDuLancement()
+	BGD.avis = nil;
+	if Network.IsGameHost() then
+		BGD_MessageDeLHote();
+	else
+		BGD_MessageDUnClient();
+	end
 end
 
 -- Au démarrage du compte à rebours, sur chaque machine : annonce et verdict à jour, message, et la
@@ -266,10 +361,22 @@ end
 local function BGD_AvantLancement()
 	if not BGD_Concerne() then return; end
 	BGD_Publier();
+	local doute;
 	if Network.IsGameHost() then
-		BGD_MessageDeLHote();
+		local sans, autres = BGD_Bilan();
+		doute = #sans > 0 or #autres > 0;
 	else
-		BGD_MessageDUnClient();
+		doute = not BGD_HoteNousVoit();
+		if doute and Network.IsPlayerHotJoining ~= nil and Network.IsPlayerHotJoining(Network.GetLocalPlayerID()) then
+			BGD_Journal("lancement : game in progress, the host's verdict does not name this machine yet");
+			BGD.avis = nil;
+			return;
+		end
+	end
+	if doute and Controls ~= nil and Controls.BGD_SalonMinuteur ~= nil then
+		BGD.avis = BGD_AVIS_TICS;
+	else
+		BGD_MessageDuLancement();
 	end
 	BGD_Journal("lancement : correctifs POL " .. (BGD_PolActifs() and "actifs" or "désactivés"));
 end
@@ -299,10 +406,37 @@ local function BGD_Nom(id)
 end
 
 -- Annonce d'arrivée : cette machine a BetterGameExperience actif, à telle version.
+local function BGD_Session()
+	local ok, id = pcall(function() return Network.GetSessionID(); end);
+	return ok and id or nil;
+end
+
+-- Version du jeu sans table d'adresses : aucun correctif ne se pose. La machine ne s'annonce pas
+-- (Civ6Proxy_Version rend nil), mais le dit à tous, pour que personne ne prenne un défaut de son jeu
+-- pour un défaut de BetterGameExperience.
+local function BGD_VersionNonPriseEnCharge()
+	return Civ6Proxy_ExeInconnu ~= nil and Civ6Proxy_ExeInconnu() == 1;
+end
+
 local function BGD_Annoncer()
 	BGD.annonce = false;
-	if not BGD_Concerne() then return; end
-	BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+	local inconnue = BGD_VersionNonPriseEnCharge();
+	if not BGD_Concerne() and not (inconnue and BGD.ouvert and GameConfiguration.IsNetworkMultiplayer()
+		and not GameConfiguration.IsHotseat() and not GameConfiguration.IsPlayByCloud()) then
+		return;
+	end
+	local session = BGD_Session();
+	if session ~= nil and session == BGD.session then
+		BGD_Journal("annonce déjà faite dans la session " .. tostring(session));
+		return;
+	end
+	BGD.session = session;
+	if BGD.version ~= nil then
+		BGD_Envoyer("[COLOR_GREEN]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_ANNONCE", BGD_Nom(Network.GetLocalPlayerID()), BGD.version) .. "[ENDCOLOR]");
+	end
+	if inconnue then
+		BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_EXE", BGD_Nom(Network.GetLocalPlayerID())) .. "[ENDCOLOR]");
+	end
 end
 
 -- Salon d'une partie en réseau en direct, que BetterGameExperience soit actif ou non (réponse au BGE Check).
@@ -385,6 +519,9 @@ local function BGD_CheckChat(fromPlayer, toPlayer, text)
 	if type(text) ~= "string" or string.sub(text, 1, 5) ~= ".bgd_" then return; end
 	if fromPlayer == Network.GetLocalPlayerID() or not BGD_SalonEnReseau() then return; end
 	local hote = Network.GetGameHostPlayerID();
+	if BGD.ConfigChat ~= nil and BGD.ConfigChat(fromPlayer, text) then
+		return;  -- the host's settings fingerprint (.bgd_cfg)
+	end
 	if string.sub(text, 1, #BGD_CHECK_DEMANDE) == BGD_CHECK_DEMANDE then
 		local jeton = string.match(string.sub(text, #BGD_CHECK_DEMANDE + 1), "^(%w+)$");
 		if jeton == nil or fromPlayer ~= hote then return; end
@@ -466,8 +603,16 @@ end
 -- Un tic du minuteur (environ 0,5 s), tant que le salon est ouvert : annonce différée, bouton,
 -- délai du BGE Check.
 local function BGD_Tic()
+	BGD_ActualiserOptions();
 	if BGD.annonce then
 		BGD_Annoncer();
+	end
+	if BGD.avis ~= nil then
+		BGD.avis = BGD.avis - 1;
+		if BGD.avis <= 0 then
+			BGD_Publier();
+			BGD_MessageDuLancement();
+		end
 	end
 	local c = BGD.check;
 	if c ~= nil then
@@ -475,6 +620,12 @@ local function BGD_Tic()
 		if c.tics >= BGD_CHECK_DELAI or BGD_CheckComplet(c) then
 			BGD_CheckBilan();
 		end
+	end
+	if BGD.ConfigTic ~= nil then
+		BGD.ConfigTic();
+	end
+	if BGD.ReconstruireTic ~= nil then
+		BGD.ReconstruireTic();
 	end
 	BGD_CheckBouton();
 	BGD.MiseEnPage();
@@ -498,6 +649,17 @@ end
 -- nouveau jeton de l'hôte.
 local function BGD_Ouverture(migration)
 	BGD.ouvert = true;
+	BGD.openedSession = BGD_Session();
+	-- A remap request left by a game that is gone (startup_proxy/src/remap.rs) must not reach the
+	-- next game created or loaded from this lobby.
+	if Civ6Proxy_RemapOublier ~= nil then
+		Civ6Proxy_RemapOublier();
+	end
+	-- Game settings as this machine has them now: the next GameConfigChanged that brings the same
+	-- settings keeps the "Ready" (see BGD.Empreinte, below).
+	if BGD.ConfigOuverture ~= nil then
+		BGD.ConfigOuverture();
+	end
 	-- Correctifs POL coupés jusqu'au verdict ; disponibilité relue, elle change quand le proxy de
 	-- GameCore se charge (première partie) ou que ses réglages changent.
 	Civ6Proxy_FixerPol(0, "ouverture du salon");
@@ -507,15 +669,31 @@ local function BGD_Ouverture(migration)
 	end
 	BGD.jeton = nil;
 	BGD.perso = nil;
+	BGD.persoJeton = nil;
 	BGD.message = nil;
 	BGD.instantane = {};
 	BGD.check = nil;
+	BGD.avis = nil;
+	BGD.optionsPol, BGD.optionsPings = nil, nil;
 	BGD.annonce = (migration ~= true);
 	if BGD_Concerne() then
 		for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 			BGD.instantane[id] = BGD_Valeur(id, BGD_CLE_VERSION);
 		end
 	end
+	BGD_Publier();
+	BGD_Armer();
+end
+
+-- Back from the lobby's Game Setup tab (HostGame_ShowStagingRoom, offered only inside a session):
+-- same lobby, so tokens and POL are kept, and the announcement and verdict catch up on what changed
+-- while the lobby was hidden. Anything else opens the lobby as new.
+local function BGD_BackToStagingRoom()
+	if not BGD.ouvert or BGD_Session() ~= BGD.openedSession then
+		BGD_Ouverture();
+		return;
+	end
+	BGD_Journal("back from Game Setup, tokens kept");
 	BGD_Publier();
 	BGD_Armer();
 end
@@ -586,6 +764,41 @@ local function BGD_DecrireErreur(id, err)
 	end
 	return table.concat(t, " ; ");
 end
+-- Correctif : en rejoignant le salon d'une partie chargée, les paramètres des joueurs sont créés
+-- avant que la base de configuration n'ait les dirigeants des DLC et des mods (22 dirigeants
+-- seulement). Le salon ne les recrée qu'en reconstruisant sa liste de joueurs, et un joueur n'est
+-- rafraîchi qu'à un changement de ses propres infos : les IA gardaient « Opt. joueur invalides. »,
+-- Prêt grisé, jusqu'à un aller-retour par l'écran de configuration (parties du 2026-11-23, chez le
+-- client seulement). Une civilisation majeure dont le dirigeant est hors de la liste : la liste des
+-- joueurs est reconstruite au tic suivant, comme au retour de cet écran (BuildPlayerList), une fois
+-- par état de la base de configuration, pour ne jamais boucler.
+function BGD.ReconstruireSiDirigeantHorsListe(id, err)
+	if type(err) ~= "table" or err.Id ~= "MissingDomainValue" or BGD_PasMajeur(id) then
+		return;
+	end
+	local pp = GetPlayerParameters and GetPlayerParameters(id);
+	if pp == nil or pp.Parameters == nil or pp.Parameters["PlayerLeader"] == nil then
+		return;
+	end
+	local base = DB.ConfigurationChanges ~= nil and DB.ConfigurationChanges() or 0;
+	if BGD.reconstruitBase ~= base then
+		BGD.reconstruire = { base = base, joueur = id };
+	end
+end
+
+function BGD.ReconstruireTic()
+	local r = BGD.reconstruire;
+	if r == nil then return; end
+	BGD.reconstruire = nil;
+	if type(BuildPlayerList) ~= "function" or BGD.reconstruitBase == r.base
+		or (ContextPtr ~= nil and ContextPtr.IsHidden ~= nil and ContextPtr:IsHidden()) then
+		return;
+	end
+	BGD.reconstruitBase = r.base;
+	BGD_Journal("joueur " .. tostring(r.joueur) .. " : dirigeant hors de la liste, liste des joueurs reconstruite (base " .. tostring(r.base) .. ")");
+	BuildPlayerList();
+end
+
 local function BGD_DiagErreurs()
 	if GetPlayerParameterError == nil then
 		return;
@@ -598,6 +811,7 @@ local function BGD_DiagErreurs()
 	end
 	for _, id in ipairs(GameConfiguration.GetMultiplayerPlayerIDs()) do
 		local err = GetPlayerParameterError(id);
+		BGD.ReconstruireSiDirigeantHorsListe(id, err);
 		cle = err and (tostring(err.Id) .. "/" .. tostring(err.Reason));
 		if cle ~= BGD_ErreurVue[id] then
 			BGD_ErreurVue[id] = cle;
@@ -615,6 +829,249 @@ if type(UpdateReadyButton) == "function" then
 	end
 end
 
+-- ===========================================================================
+-- Game settings: "Ready" kept when nothing changed, and the host's fingerprint check.
+-- StagingRoom.lua (and MPH's) unreadies the local player at every GameConfigChanged, even when the
+-- configuration received is the one this machine already had. Here the handler of StagingRoom.lua
+-- runs inside an envelope that compares the game settings with those of the last GameConfigChanged:
+-- SetLocalReady(false) called by it is ignored when they are the same.
+-- When the host turns Ready, it sends the configuration to everyone again (BroadcastGameConfig:
+-- nobody loses their "Ready", the settings did not change), then the fingerprint of its settings in
+-- a hidden private message ".bgd_cfg <fingerprint>". A player who joins while the host is Ready gets
+-- the same, BGD_CFG_TICS timer ticks after their arrival (after the configuration the game sends at
+-- the arrival). Each client compares with its own settings, again at each GameConfigChanged and
+-- for BGD_CFG_TICS timer ticks (the configuration may still be on its way); still different after
+-- that, it says so to everyone and asks to leave the lobby and join again. Game of 2026-11-21:
+-- two clients kept the city-state count (12) of the previous game while the host had 9; the map
+-- generated differently on their machines and their first turn never came.
+-- Settings: every Game and Map value named by the Parameters table of the configuration database,
+-- the ruleset, the map script and the enabled mods (but the team pings' media mod, added by the
+-- host just before the launch).
+-- ===========================================================================
+BGD.CFG_TICS = 4;
+BGD.CFG_CHAT = ".bgd_cfg ";
+BGD.CFG_MODS_EXCLUS = { ["863cf39b-8e3e-4dd9-aab1-1b4d4a66dabd"] = true };
+
+-- Keys of the settings, read once per state of the configuration database.
+function BGD.ConfigCles()
+	local base = DB.ConfigurationChanges ~= nil and DB.ConfigurationChanges() or 0;
+	if BGD.cfgCles ~= nil and BGD.cfgClesBase == base then
+		return BGD.cfgCles;
+	end
+	local cles = {};
+	local lignes = DB.ConfigurationQuery("SELECT DISTINCT ConfigurationGroup, ConfigurationId FROM Parameters"
+		.. " WHERE ConfigurationGroup IN ('Game', 'Map') AND ConfigurationId IS NOT NULL"
+		.. " ORDER BY ConfigurationGroup, ConfigurationId");
+	for _, r in ipairs(lignes or {}) do
+		table.insert(cles, { r.ConfigurationGroup, r.ConfigurationId });
+	end
+	BGD.cfgCles, BGD.cfgClesBase = cles, base;
+	return cles;
+end
+
+-- A value as text, tables with sorted keys (a few levels at most).
+function BGD.ConfigTexte(v, out, profondeur)
+	local t = type(v);
+	if t == "table" then
+		if profondeur > 4 then table.insert(out, "{...}"); return; end
+		local cles = {};
+		for k in pairs(v) do table.insert(cles, k); end
+		table.sort(cles, function(a, b) return tostring(a) < tostring(b); end);
+		table.insert(out, "{");
+		for _, k in ipairs(cles) do
+			table.insert(out, tostring(k) .. "=");
+			BGD.ConfigTexte(v[k], out, profondeur + 1);
+			table.insert(out, ",");
+		end
+		table.insert(out, "}");
+	else
+		table.insert(out, string.sub(t, 1, 1) .. tostring(v));
+	end
+end
+
+-- The settings of this machine, as one text; nil if they cannot be read.
+function BGD.Empreinte()
+	local ok, texte = pcall(function()
+		local out = {};
+		for _, c in ipairs(BGD.ConfigCles()) do
+			local v;
+			if c[1] == "Game" then v = GameConfiguration.GetValue(c[2]); else v = MapConfiguration.GetValue(c[2]); end
+			table.insert(out, c[1] .. "." .. c[2] .. "=");
+			BGD.ConfigTexte(v, out, 0);
+			table.insert(out, ";");
+		end
+		table.insert(out, "ruleset=" .. tostring(GameConfiguration.GetRuleSet ~= nil and GameConfiguration.GetRuleSet()) .. ";");
+		table.insert(out, "script=" .. tostring(MapConfiguration.GetScript ~= nil and MapConfiguration.GetScript()) .. ";");
+		local mods = {};
+		if GameConfiguration.GetEnabledMods ~= nil then
+			for _, mod in ipairs(GameConfiguration.GetEnabledMods() or {}) do
+				if not BGD.CFG_MODS_EXCLUS[mod.Id] then table.insert(mods, tostring(mod.Id)); end
+			end
+		end
+		table.sort(mods);
+		table.insert(out, "mods=" .. table.concat(mods, ","));
+		return table.concat(out);
+	end);
+	if not ok then
+		if not BGD.cfgErreurDite then
+			BGD.cfgErreurDite = true;
+			BGD_Journal("config: settings not readable: " .. tostring(texte));
+		end
+		return nil;
+	end
+	return texte;
+end
+
+-- Fingerprint sent in the chat: two Adler-like sums and a third one, and the length; small integers,
+-- the same on every machine.
+function BGD.Hacher(texte)
+	local a, b, c = 1, 0, 0;
+	for i = 1, #texte do
+		local o = string.byte(texte, i);
+		a = (a + o) % 65521;
+		b = (b + a) % 65521;
+		c = (c * 7 + o) % 65519;
+	end
+	return tostring(a) .. "-" .. tostring(b) .. "-" .. tostring(c) .. "-" .. tostring(#texte);
+end
+
+function BGD.ConfigOuverture()
+	BGD.cfgVue = BGD.Empreinte();
+	BGD.cfgAttente = nil;
+	BGD.cfgDit = nil;
+	BGD.cfgRenvoi = nil;
+end
+
+-- Host: the configuration to everyone again, then its fingerprint, privately to each player.
+function BGD.HoteEnvoieConfig(raison)
+	if not BGD_Concerne() or not Network.IsGameHost() then return; end
+	local texte = BGD.Empreinte();
+	if texte == nil then return; end
+	BGD.cfgRenvoi = nil;
+	Network.BroadcastGameConfig();
+	local empreinte = BGD.Hacher(texte);
+	local ids = BGD_AutresHumains();
+	for _, id in ipairs(ids) do
+		BGD_Prive(BGD.CFG_CHAT .. empreinte, id);
+	end
+	BGD_Journal("config: sent again with fingerprint " .. empreinte .. " to " .. #ids .. " player(s) (" .. raison .. ")");
+end
+
+local function BGD_HotePret()
+	local cfg = PlayerConfigurations[Network.GetLocalPlayerID()];
+	return cfg ~= nil and cfg:GetReady() == true;
+end
+
+-- Client: still different from the host's fingerprint?
+function BGD.ConfigComparer(final)
+	local attente = BGD.cfgAttente;
+	if attente == nil then return; end
+	local texte = BGD.Empreinte();
+	if texte == nil then
+		BGD.cfgAttente = nil;
+		return;
+	end
+	local locale = BGD.Hacher(texte);
+	if locale == attente.empreinte then
+		BGD.cfgAttente = nil;
+		BGD_Journal("config: same settings as the host (" .. locale .. ")" .. (attente.ecart and ", after a wait" or ""));
+		return;
+	end
+	if not attente.ecart then
+		attente.ecart = true;
+		BGD_Journal("config: settings differ from the host's (" .. locale .. " here, " .. attente.empreinte .. " at the host), waiting for its configuration");
+	end
+	if not final then return; end
+	BGD.cfgAttente = nil;
+	if BGD.cfgDit == attente.empreinte then return; end
+	BGD.cfgDit = attente.empreinte;
+	BGD_Journal("config: still different from the host's; settings here: " .. texte);
+	local nom = BGD_Nom(Network.GetLocalPlayerID());
+	BGD_Envoyer("[COLOR_RED]BGE - " .. BGD_TxtAnglais("LOC_BGD_CHAT_CONFIG_DIFFERENTE", nom) .. "[ENDCOLOR]");
+end
+
+-- ".bgd_cfg <fingerprint>" from the host (BGD_CheckChat). True if the message was this one.
+function BGD.ConfigChat(fromPlayer, text)
+	if string.sub(text, 1, #BGD.CFG_CHAT) ~= BGD.CFG_CHAT then return false; end
+	local empreinte = string.match(string.sub(text, #BGD.CFG_CHAT + 1), "^([%d%.%-]+)$");
+	if empreinte == nil or fromPlayer ~= Network.GetGameHostPlayerID() or Network.IsGameHost()
+		or not BGD_Concerne() then return true; end
+	local minuteur = Controls ~= nil and Controls.BGD_SalonMinuteur ~= nil;
+	BGD.cfgAttente = { empreinte = empreinte, tics = BGD.CFG_TICS };
+	BGD.ConfigComparer(not minuteur);
+	return true;
+end
+
+function BGD.ConfigTic()
+	if BGD.cfgRenvoi ~= nil then
+		BGD.cfgRenvoi = BGD.cfgRenvoi - 1;
+		if BGD.cfgRenvoi <= 0 then
+			BGD.cfgRenvoi = nil;
+			if BGD_HotePret() then
+				BGD.HoteEnvoieConfig("a player joined while the host is ready");
+			end
+		end
+	end
+	local attente = BGD.cfgAttente;
+	if attente ~= nil then
+		attente.tics = attente.tics - 1;
+		BGD.ConfigComparer(attente.tics <= 0);
+	end
+end
+
+do
+	local dansConfig = false;  -- inside StagingRoom.lua's GameConfigChanged handler
+	local change = true;       -- the settings of that GameConfigChanged differ from the last ones
+
+	-- The handler of StagingRoom.lua, registered before this block, runs again inside an envelope.
+	local evenement = Events ~= nil and Events.GameConfigChanged;
+	if type(OnGameConfigChanged) == "function" and evenement ~= nil and type(evenement.Remove) == "function" then
+		local base = OnGameConfigChanged;
+		local ok, err = pcall(function()
+			evenement.Remove(base);
+			evenement.Add(function(...)
+				local texte = BGD.Empreinte();
+				change = texte == nil or BGD.cfgVue == nil or texte ~= BGD.cfgVue;
+				if texte ~= nil then BGD.cfgVue = texte; end
+				dansConfig = true;
+				local ok2, err2 = pcall(base, ...);
+				dansConfig = false;
+				if BGD.cfgAttente ~= nil then
+					BGD_Protege(BGD.ConfigComparer)(false);
+				end
+				if not ok2 then error(err2, 0); end
+			end);
+		end);
+		if not ok then BGD_Journal("config: GameConfigChanged handler not wrapped: " .. tostring(err)); end
+	else
+		BGD_Journal("config: GameConfigChanged handler not found, Ready lost at every configuration received");
+	end
+
+	if type(SetLocalReady) == "function" then
+		local base = SetLocalReady;
+		SetLocalReady = function(pret, ...)
+			if pret == false and dansConfig and not change then
+				BGD_Journal("config: « Prêt » gardé (configuration identique)");
+				return;
+			end
+			local avant = Network.IsGameHost() and pret == true and not BGD_HotePret();
+			local r = base(pret, ...);
+			if avant and BGD_HotePret() then
+				BGD_Protege(BGD.HoteEnvoieConfig)("host ready");
+			end
+			return r;
+		end
+	end
+
+	if Events ~= nil and Events.MultiplayerPlayerConnected ~= nil then
+		Events.MultiplayerPlayerConnected.Add(BGD_Protege(function()
+			if Network.IsGameHost() and BGD_Concerne() and BGD_HotePret() then
+				BGD.cfgRenvoi = BGD.CFG_TICS;
+			end
+		end));
+	end
+end
+
 if Civ6Proxy_FixerPol == nil or Civ6Proxy_Version == nil then
 	BGD_Journal("fonctions natives absentes : pas d'annonce");
 else
@@ -628,7 +1085,7 @@ else
 	else
 		BGD_Journal("StartLaunchCountdown introuvable : pas de message avant le lancement");
 	end
-	LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
+	LuaEvents.HostGame_ShowStagingRoom.Add(BGD_Protege(BGD_BackToStagingRoom));
 	LuaEvents.JoiningRoom_ShowStagingRoom.Add(BGD_Protege(BGD_Ouverture));
 	Events.MultiplayerHostMigrated.Add(BGD_Protege(function()
 		if BGD.ouvert then
@@ -660,12 +1117,27 @@ else
 	local function fermeture()
 		BGD.ouvert = false;
 	end
+	-- A verdict that arrives after this lobby is hidden is handled at load (chargement.lua).
 	Events.LoadScreenContentReady.Add(fermeture);
 	Events.LeaveGameComplete.Add(fermeture);
 	Events.MultiplayerPlayerConnected.Add(BGD_Protege(BGD_Publier));
+	-- Salon visible seulement, comme PlayerInfoChanged : après le compte à rebours, le salon est
+	-- caché mais encore ouvert jusqu'à l'écran de chargement, et les données de lancement sont
+	-- parties avec le verdict d'alors. Un bilan refait ici (déconnexion pendant le lancement)
+	-- changerait POL chez l'hôte seul. Au retour de l'onglet Game Setup, BGD_BackToStagingRoom
+	-- republie.
+	local function publierSiVisible()
+		if not ContextPtr:IsHidden() then
+			BGD_Publier();
+		end
+	end
+	Events.MultiplayerPostPlayerDisconnected.Add(BGD_Protege(publierSiVisible));
+	Events.GameConfigChanged.Add(BGD_Protege(publierSiVisible));
 	Events.PlayerInfoChanged.Add(BGD_Protege(function()
 		if not ContextPtr:IsHidden() then
 			BGD_Publier();
+		elseif BGD_PolActifs() then
+			Civ6Proxy_FixerPol(1, "host verdict after the countdown");
 		end
 	end));
 	-- Redimensionnement de MPH (changement de résolution) : il recalcule la hauteur du tableau
@@ -757,6 +1229,9 @@ do
 
 	-- Hôte, juste avant le lancement.
 	local function Ajouter()
+		if BGD.avis ~= nil and Network.IsGameHost() and BGD_Concerne() then
+			BGD_MessageDuLancement();
+		end
 		if not Network.IsGameHost() or DansConfig() then return; end
 		local pings = GameConfiguration.GetValue("BGD_TEAM_PINGS");
 		if not (pings == true or pings == 1) then return; end
@@ -770,8 +1245,9 @@ do
 		if Civ6Proxy_MediasPings == nil or Civ6Proxy_MediasPings() ~= 1 then
 			table.insert(manquants, "hôte");
 		end
+		local occurrences = BGD_Occurrences();
 		for _, id in ipairs(BGD_AutresHumains()) do
-			local _, _, perso = BGD_LireAnnonce(BGD_Valeur(id, BGD_CLE_VERSION));
+			local _, _, perso = BGD_AnnonceDe(id, occurrences);
 			if perso == nil or BGD_Valeur(id, BGD_CLE_MEDIAS) ~= perso then
 				table.insert(manquants, Locale.Lookup(PlayerConfigurations[id]:GetPlayerName()));
 			end

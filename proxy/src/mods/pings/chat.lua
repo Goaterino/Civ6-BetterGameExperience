@@ -7,6 +7,7 @@ if enabled() and Controls.ChatEntry and SendChat and not BGD_PingCommands then
             local level = tonumber(name)
             if level and level >= 0 and level <= 100 and level % 25 == 0 then
                 UserConfiguration.SetValue("TeamPings_Volume", level)
+                savePingPrefs()
                 LuaEvents.BGD_PingVolumeChanged()
                 play(calls[1])
             end

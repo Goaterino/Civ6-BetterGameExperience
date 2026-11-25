@@ -33,6 +33,12 @@
 //! l'identifiant du joueur (seulement -1) : un identifiant hors des emplacements n'est pas appliqué
 //! non plus (voir `MESSAGES`).
 //!
+//! A failed read leaves its destination untouched, so at the seven sites the destination is set
+//! before the read: no leftover count. A message whose root map count cannot be read is damaged. A
+//! `NetGameConfig` with no changed key and an empty map would replace the whole game configuration
+//! with nothing (every player's civ, leader and level): it is never applied. Such messages come from
+//! the game's queue flush after a load, when a chunked snapshot is still arriving.
+//!
 //! Names: Ghidra project `civ6-netcode`, bookmarks "Gel 2026-11-09" (DX12 addresses above). The
 //! same rules, installed by an external hook during development, ran over two whole ten-player
 //! games (162 turns, 108,000 messages received) without a false alarm.
@@ -93,6 +99,10 @@ const SITES: [(&str, Regle); 7] = [
 ];
 /// The read where test mode injects the freeze count: "carte : entrées".
 const SITE_INJECTION: usize = 1;
+/// The root map count of `NetGameConfig` and `NetPlayerInfo`: "carte nommée : compte".
+const SITE_RACINE: usize = 2;
+/// Written before that read; still there after it, the read failed. Not a possible count.
+const NON_LU: u32 = 0x7fff_fffe;
 /// `call qword ptr [rax+30h]`, juste avant chaque adresse de retour.
 const APPEL: [u8; 3] = [0xff, 0x50, 0x30];
 
@@ -119,6 +129,12 @@ const LIRE: usize = 3;
 const TRAITER: usize = 4;
 /// The configuration's player slots, 0x40 bytes each, run from `[+0x2e0]` to `[+0x2e8]`.
 const EMPLACEMENTS: usize = 0x2e0;
+/// `NetGameConfig`: number of changed keys (0: the whole configuration is replaced), received map.
+const CONFIG_CHANGED_KEYS: usize = 0x458;
+const CONFIG_MAP: usize = 0x468;
+/// Map: end marker, first entry (equal when the map is empty).
+const MAP_END: usize = 0x30;
+const MAP_FIRST: usize = 0x38;
 
 /// Everything that depends on the exe: Ghidra addresses (base `0x140000000`) and bytes that contain
 /// a relative displacement.
@@ -145,45 +161,77 @@ struct Exe {
 
 /// Both exes of 2026-11-05. DX11 was found function by function: the same bytes as DX12 except
 /// relative displacements, the same size (`.pdata` table), and the same context around each read.
-const EXES: [Exe; 2] = [
+const EXES: [Exe; 4] = [
     Exe {
-        nom: "DX12",
-        lecture: 0x1_4099_f9d0,
-        retours: [0x1_407a_1f44, 0x1_407a_209f, 0x1_407a_dfe3, 0x1_407a_e03a, 0x1_407a_d901, 0x1_407a_34f4, 0x1_4026_619b],
-        fonctions: [0x1_407a_1e20, 0x1_407a_3450, 0x1_407a_df50, 0x1_407a_d890, 0x1_4026_6140],
+        nom: "DX12 1.0.12.74",
+        lecture: 0x1_409a_0240,
+        retours: [0x1_407a_1f04, 0x1_407a_205f, 0x1_407a_dfa3, 0x1_407a_dffa, 0x1_407a_d8c1, 0x1_407a_34b4, 0x1_4026_67fb],
+        fonctions: [0x1_407a_1de0, 0x1_407a_3410, 0x1_407a_df10, 0x1_407a_d850, 0x1_4026_67a0],
         vtables: [
-            (0x1_40fe_0020, [0x1_4026_69c0, 0x1_4026_6ca0, 0x1_4026_7680, 0x1_4026_79d0, 0x1_4026_6e00]),
-            (0x1_40fe_0048, [0x1_4026_6aa0, 0x1_4026_6da0, 0x1_4026_7810, 0x1_4026_7c40, 0x1_4026_7330]),
+            (0x1_40fe_0100, [0x1_4026_7020, 0x1_4026_7300, 0x1_4026_7ce0, 0x1_4026_8030, 0x1_4026_7460]),
+            (0x1_40fe_0128, [0x1_4026_7100, 0x1_4026_7400, 0x1_4026_7e70, 0x1_4026_82a0, 0x1_4026_7990]),
         ],
         configuration: 0x1_4231_00a0,
-        singleton: (0x1_4010_08b0, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0xf7, 0x20, 0x02]),
+        singleton: (0x1_4010_0980, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0x15, 0xf7, 0x20, 0x02]),
         traitement_joueur: (
-            0x1_4026_7340,
+            0x1_4026_79a0,
             [
                 0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89,
-                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x53, 0x95, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
+                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0xc3, 0x8f, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
                 0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
             ],
         ),
     },
     Exe {
-        nom: "DX11",
-        lecture: 0x1_4099_2530,
-        retours: [0x1_4079_fc34, 0x1_4079_fd8f, 0x1_407a_be73, 0x1_407a_beca, 0x1_407a_b791, 0x1_407a_12b4, 0x1_4026_466b],
-        fonctions: [0x1_4079_fb10, 0x1_407a_1210, 0x1_407a_bde0, 0x1_407a_b720, 0x1_4026_4610],
+        nom: "DX11 1.0.12.74",
+        lecture: 0x1_4099_2190,
+        retours: [0x1_407a_0bb4, 0x1_407a_0d0f, 0x1_407a_cbc3, 0x1_407a_cc1a, 0x1_407a_c4e1, 0x1_407a_20c4, 0x1_4026_576b],
+        fonctions: [0x1_407a_0a90, 0x1_407a_2020, 0x1_407a_cb30, 0x1_407a_c470, 0x1_4026_5710],
         vtables: [
-            (0x1_40fd_0cc0, [0x1_4026_4e90, 0x1_4026_5170, 0x1_4026_5b40, 0x1_4026_5e90, 0x1_4026_52d0]),
-            (0x1_40fd_0ce8, [0x1_4026_4f70, 0x1_4026_5270, 0x1_4026_5cd0, 0x1_4026_6100, 0x1_4026_5800]),
+            (0x1_40fd_0c00, [0x1_4026_5fe0, 0x1_4026_62c0, 0x1_4026_6c90, 0x1_4026_6fe0, 0x1_4026_6420]),
+            (0x1_40fd_0c28, [0x1_4026_60c0, 0x1_4026_63c0, 0x1_4026_6e20, 0x1_4026_7250, 0x1_4026_6950]),
         ],
         configuration: 0x1_422d_8a20,
-        singleton: (0x1_400f_fa30, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0xe5, 0x8f, 0x1d, 0x02]),
+        singleton: (0x1_400f_ffc0, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0x55, 0x8a, 0x1d, 0x02]),
         traitement_joueur: (
-            0x1_4026_5810,
+            0x1_4026_6960,
             [
                 0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89,
-                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x03, 0xa2, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
+                0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x43, 0x96, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40,
                 0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00,
             ],
+        ),
+    },
+    Exe {
+        nom: "DX12 1.0.12.58",
+        lecture: 0x1_4099_a760,
+        retours: [0x1_4079_c424, 0x1_4079_c57f, 0x1_407a_86a3, 0x1_407a_86fa, 0x1_407a_7fc1, 0x1_4079_dba4, 0x1_4026_14bb],
+        fonctions: [0x1_4079_c300, 0x1_4079_db00, 0x1_407a_8610, 0x1_407a_7f50, 0x1_4026_1460],
+        vtables: [
+            (0x1_40fd_ae20, [0x1_4026_1ce0, 0x1_4026_1fc0, 0x1_4026_2990, 0x1_4026_2ce0, 0x1_4026_2120]),
+            (0x1_40fd_ae48, [0x1_4026_1dc0, 0x1_4026_20c0, 0x1_4026_2b20, 0x1_4026_2f50, 0x1_4026_2650]),
+        ],
+        configuration: 0x1_4230_afa0,
+        singleton: (0x1_400f_c630, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0x65, 0xe9, 0x20, 0x02]),
+        traitement_joueur: (
+            0x1_4026_2660,
+            [0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89, 0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0xb3, 0x9f, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40, 0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00],
+        ),
+    },
+    Exe {
+        nom: "DX11 1.0.12.58",
+        lecture: 0x1_4098_cd90,
+        retours: [0x1_4079_bb74, 0x1_4079_bccf, 0x1_407a_7d83, 0x1_407a_7dda, 0x1_407a_76a1, 0x1_4079_d284, 0x1_4025_ffdb],
+        fonctions: [0x1_4079_ba50, 0x1_4079_d1e0, 0x1_407a_7cf0, 0x1_407a_7630, 0x1_4025_ff80],
+        vtables: [
+            (0x1_40fc_a970, [0x1_4026_0800, 0x1_4026_0ae0, 0x1_4026_14b0, 0x1_4026_1800, 0x1_4026_0c40]),
+            (0x1_40fc_a998, [0x1_4026_08e0, 0x1_4026_0be0, 0x1_4026_1640, 0x1_4026_1a70, 0x1_4026_1170]),
+        ],
+        configuration: 0x1_422d_29a0,
+        singleton: (0x1_400f_aa30, [0x48, 0x83, 0xec, 0x38, 0x48, 0x8b, 0x05, 0x65, 0x7f, 0x1d, 0x02]),
+        traitement_joueur: (
+            0x1_4026_1180,
+            [0x83, 0x79, 0x38, 0xff, 0x48, 0x8b, 0xf2, 0x48, 0x8b, 0xd9, 0x0f, 0x84, 0x62, 0x02, 0x00, 0x00, 0x48, 0x89, 0xbc, 0x24, 0x90, 0x20, 0x00, 0x00, 0xe8, 0x93, 0x98, 0xe9, 0xff, 0x8b, 0x4b, 0x38, 0x48, 0x8d, 0x53, 0x40, 0x48, 0xc1, 0xe1, 0x06, 0x45, 0x33, 0xc0, 0x48, 0x8b, 0xf8, 0x48, 0x03, 0x88, 0xe0, 0x02, 0x00, 0x00],
         ),
     },
 ];
@@ -209,10 +257,18 @@ static RETOURS: [AtomicUsize; 7] = [
 static CONFIGURATION: AtomicUsize = AtomicUsize::new(0);
 static TRAMP: AtomicUsize = AtomicUsize::new(0);
 static CORRECTIONS: AtomicU32 = AtomicU32::new(0);
-/// Corrections pas encore annoncées dans le chat (`a_annoncer`).
+/// Impossible counts not yet said in the chat (`a_annoncer`): each would have frozen the game.
 static A_ANNONCER: AtomicU32 = AtomicU32::new(0);
+/// Configuration wipes refused, not yet said in the chat (`wipes_to_announce`).
+static WIPES: AtomicU32 = AtomicU32::new(0);
 /// Mode test : injection du compte du gel encore à faire.
 static INJECTION: AtomicBool = AtomicBool::new(false);
+/// The game version is not supported (no line in `patch::BUILDS`, or unreadable): BGE installs
+/// nothing (`DllMain`), and says so. An exe of a supported version that only fails the fingerprints
+/// of a module is not counted: the log says it, the chat does not.
+pub fn unknown_exe() -> bool {
+    crate::patch::unsupported_game().is_some()
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Mode {
@@ -257,16 +313,38 @@ pub fn joueur_valide(id: i32, emplacements: usize) -> bool {
     id == -1 || usize::try_from(id).is_ok_and(|i| i < emplacements)
 }
 
-/// Une correction de plus (journal, chat) ; le total.
+/// Would this `NetGameConfig` wipe the game configuration? No changed key (whole replacement) and an
+/// empty map (first entry = end marker).
+pub fn wipes_configuration(changed_keys: u32, first: usize, end: usize) -> bool {
+    changed_keys == 0 && first == end
+}
+
+unsafe fn config_wipes(msg: *mut u8) -> bool {
+    let changed_keys = std::ptr::read_unaligned(msg.add(CONFIG_CHANGED_KEYS) as *const u32);
+    let map = msg as usize + CONFIG_MAP;
+    wipes_configuration(changed_keys, std::ptr::read_unaligned((map + MAP_FIRST) as *const usize), map + MAP_END)
+}
+
+/// An impossible count replaced (log, chat: a freeze prevented); the total of corrections.
 fn compter() -> u32 {
     A_ANNONCER.fetch_add(1, Ordering::Relaxed);
+    compter_seul()
+}
+
+/// A correction logged only; the total.
+fn compter_seul() -> u32 {
     CORRECTIONS.fetch_add(1, Ordering::Relaxed) + 1
 }
 
-/// Les corrections faites depuis le dernier appel, remises à 0 : `Civ6Proxy_GardeMessages()`, que
-/// `partie.lua` interroge en jeu pour le dire dans le chat.
+/// Freezes prevented since the last call, reset to 0: `Civ6Proxy_GardeMessages()`, which
+/// `partie.lua` asks in game to say it in the chat.
 pub fn a_annoncer() -> u32 {
     A_ANNONCER.swap(0, Ordering::Relaxed)
+}
+
+/// Configuration wipes refused since the last call, reset to 0: `Civ6Proxy_GardeWipes()`.
+pub fn wipes_to_announce() -> u32 {
+    WIPES.swap(0, Ordering::Relaxed)
 }
 
 // `C-unwind` : si la lecture d'origine levait une exception C++, elle traverserait ces cadres au
@@ -279,25 +357,36 @@ type Lecture = unsafe extern "C-unwind" fn(*mut c_void, *mut c_void, *mut u8, us
 /// désérialiseur. Après la lecture d'origine, une valeur impossible à l'un des sept sites devient 0.
 unsafe extern "C-unwind" fn lecture(lecteur: *mut c_void, desc: *mut c_void, dest: *mut u8, n: usize, retour: usize) -> usize {
     let real: Lecture = std::mem::transmute(TRAMP.load(Ordering::Relaxed));
+    let site = if n == 4 && !dest.is_null() { RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) } else { None };
+    let Some(i) = site else {
+        return real(lecteur, desc, dest, n);
+    };
+    // A failed read leaves the destination as it was: start from a known value, not from a leftover
+    // one. A message whose root map count cannot be read is damaged (not applied); elsewhere 0, as
+    // the game itself does for the changed keys.
+    let racine = i == SITE_RACINE;
+    std::ptr::write_unaligned(dest as *mut u32, if racine { NON_LU } else { 0 });
     let r = real(lecteur, desc, dest, n);
-    if n == 4 && !dest.is_null() {
-        if let Some(i) = RETOURS.iter().position(|r| r.load(Ordering::Relaxed) == retour) {
-            let (nom, regle) = SITES[i];
-            if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
-                std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
-                log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
-            }
-            let valeur = std::ptr::read_unaligned(dest as *const u32);
-            let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
-            if let Some(motif) = absurde(regle, valeur, drapeaux) {
-                std::ptr::write_unaligned(dest as *mut u32, 0);
-                let total = compter();
-                if total <= 20 || total % 100 == 0 {
-                    log(&format!(
-                        "messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"
-                    ));
-                }
-            }
+    let (nom, regle) = SITES[i];
+    if racine && std::ptr::read_unaligned(dest as *const u32) == NON_LU {
+        std::ptr::write_unaligned(dest as *mut u32, 0);
+        let total = compter();
+        if total <= 20 || total % 100 == 0 {
+            log(&format!("messages: {nom}: read failed, count set to 0 ({total} corrections)"));
+        }
+        return r;
+    }
+    if i == SITE_INJECTION && INJECTION.swap(false, Ordering::Relaxed) {
+        std::ptr::write_unaligned(dest as *mut u32, 0x6174_6143);
+        log("messages : test : compte du gel (0x61746143) injecté à la lecture « carte : entrées », la garde doit le remplacer");
+    }
+    let valeur = std::ptr::read_unaligned(dest as *const u32);
+    let drapeaux = if regle == Regle::Longueur { std::ptr::read_unaligned(dest.add(4) as *const u32) } else { 0 };
+    if let Some(motif) = absurde(regle, valeur, drapeaux) {
+        std::ptr::write_unaligned(dest as *mut u32, 0);
+        let total = compter();
+        if total <= 20 || total % 100 == 0 {
+            log(&format!("messages : {nom} : {motif} impossible ({valeur:#x}, drapeaux {drapeaux:#x}) remplacé par 0 ({total} corrections)"));
         }
     }
     r
@@ -372,11 +461,17 @@ unsafe fn traiter(i: usize, msg: *mut u8, contexte: *mut c_void) {
         log(&format!("messages: damaged {} not applied, the configuration is kept", MESSAGES[i]));
         return;
     }
+    if i == 0 && config_wipes(msg) {
+        WIPES.fetch_add(1, Ordering::Relaxed);
+        let total = compter_seul();
+        log(&format!("messages: NetGameConfig replacing the whole configuration with nothing, not applied ({total} corrections)"));
+        return;
+    }
     if i == 1 {
         let id = std::ptr::read_unaligned(msg.add(0x38) as *const i32);
         if let Some(n) = emplacements() {
             if !joueur_valide(id, n) {
-                let total = compter();
+                let total = compter_seul();
                 log(&format!("messages : NetPlayerInfo : joueur {id} hors des {n} emplacements, non appliqué ({total} corrections)"));
                 return;
             }
@@ -495,10 +590,10 @@ pub unsafe fn install() {
     }
     let exe = win::GetModuleHandleW(std::ptr::null()) as usize;
     let mut raisons = Vec::new();
-    let Some(table) = EXES.iter().find(|t| verifier(exe, t).map_err(|e| raisons.push(format!("{}: {e}", t.nom))).is_ok()) else {
+    let Some(table) = EXES.iter().find(|t| crate::exe::for_this_game(t.nom) && verifier(exe, t).map_err(|e| raisons.push(format!("{}: {e}", t.nom))).is_ok()) else {
         log(&format!(
-            "messages: unknown exe ({}), guard not installed (DX12 or DX11 exe of 2026-11-05 expected)",
-            raisons.join("; ")
+            "messages: unknown exe ({}), guard not installed",
+            crate::exe::no_table(&raisons)
         ));
         return;
     };
@@ -541,6 +636,17 @@ mod tests {
         A_ANNONCER.store(3, Ordering::Relaxed);
         assert_eq!(a_annoncer(), 3);
         assert_eq!(a_annoncer(), 0, "une correction n'est annoncée qu'une fois");
+        WIPES.store(2, Ordering::Relaxed);
+        assert_eq!(wipes_to_announce(), 2);
+        assert_eq!(wipes_to_announce(), 0, "a wipe is said once");
+    }
+
+    #[test]
+    fn empty_whole_replacement_wipes() {
+        let end = 0x1000_0030;
+        assert!(wipes_configuration(0, end, end), "no changed key, empty map");
+        assert!(!wipes_configuration(0, 0x2000_0000, end), "whole replacement with entries");
+        assert!(!wipes_configuration(3, end, end), "only the changed keys are touched");
     }
 
     #[test]
@@ -584,7 +690,7 @@ mod tests {
     }
 
     /// The file of each exe, in the order of `EXES`.
-    const FICHIERS: [&str; 2] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe"];
+    const FICHIERS: [&str; 4] = ["CivilizationVI_DX12.exe", "CivilizationVI.exe", "CivilizationVI_DX12.exe", "CivilizationVI.exe"];
 
     /// The table applied to an exe file. In the file, the vtables hold addresses at the preferred
     /// base (0x140000000), without relocation.
@@ -597,7 +703,7 @@ mod tests {
     #[test]
     fn octets_dans_les_exes() {
         for (i, nom) in FICHIERS.iter().enumerate() {
-            let Ok(fichier) = std::fs::read(format!(r"{EXE_DIR}\{nom}")) else {
+            let Ok(fichier) = std::fs::read(crate::test_exe(EXE_DIR, i, nom)) else {
                 eprintln!("{nom} missing, test skipped");
                 continue;
             };

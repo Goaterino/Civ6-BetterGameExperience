@@ -4,9 +4,14 @@
 //                            R2, ouvre un fil dans le forum Discord des rapports et rend
 //                            {"id": "BGE-XXXXXX"}.
 // GET  /rapport/<id>?cle=… : télécharge le zip ; la clé n'est donnée que dans le fil Discord.
+// GET  /admin/rapports?n=… : les derniers rapports, du plus récent au plus ancien (équipe).
+// GET  /admin/rapport/<id> : le zip, sans la clé du fil (équipe).
+//   Les routes /admin demandent l'en-tête « Authorization: Bearer <CLE_ADMIN> » ; sans le secret
+//   CLE_ADMIN, elles n'existent pas (404). Script : rapport_worker/rapports.ps1.
 //
 // Liaisons (wrangler.toml) : RAPPORTS (bucket R2), LIMITE (limite par IP, facultative).
-// Secret : DISCORD_WEBHOOK (webhook du salon forum). Variables facultatives : DISCORD_TAG (ID d'un
+// Secrets : DISCORD_WEBHOOK (webhook du salon forum), CLE_ADMIN (routes /admin, facultatif).
+// Variables facultatives : DISCORD_TAG (ID d'un
 // tag du forum, posé sur chaque fil), PLAFOND_OCTETS (taille maximale du bucket, 9,5 Go par défaut),
 // QUOTA_RAPPORTS et QUOTA_OCTETS (rapports acceptés sur 24 heures glissantes).
 
@@ -132,6 +137,8 @@ export function resume(id, meta, octets, lien) {
 			steam ? `**Steam:** ${steam} <https://steamcommunity.com/profiles/${steam}>` : "**Steam:** unknown",
 			`**Game:** ${partie}`,
 			`**BGE:** ${brut(m.bge_release, 20)} (${brut(m.bge_version, 20)}), ${brut(m.exe, 40)}, language ${brut(m.langue, 12)}`,
+			// Reports from before the field have no `systeme`.
+			m.systeme ? `**System:** ${brut(m.systeme, 80)}` : "**System:** unknown",
 		);
 	}
 	lignes.push(
@@ -145,12 +152,15 @@ function nombre(v, defaut) {
 	return Number(v) > 0 ? Number(v) : defaut;
 }
 
-// Les rapports du bucket (1 000 par page) : clé, taille, date de dépôt.
-export async function listerRapports(env) {
+// Les rapports du bucket (1 000 par page) : clé, taille, date de dépôt, et les métadonnées
+// (`customMetadata`) si `meta` est vrai.
+export async function listerRapports(env, { meta = false } = {}) {
 	const objets = [];
 	let cursor;
 	do {
-		const page = await env.RAPPORTS.list({ prefix: "rapports/", cursor, limit: 1000 });
+		const options = { prefix: "rapports/", cursor, limit: 1000 };
+		if (meta) options.include = ["customMetadata"];
+		const page = await env.RAPPORTS.list(options);
 		objets.push(...page.objects);
 		cursor = page.truncated ? page.cursor : undefined;
 	} while (cursor);
@@ -272,10 +282,18 @@ async function recevoir(request, env) {
 	if (id == null) return json({ erreur: "numéro de rapport indisponible" }, 503);
 	await faireDeLaPlace(env, zip.byteLength, objets);
 	const cle = aleatoire(16);
-	await env.RAPPORTS.put(`rapports/${id}.zip`, zip, {
+	const base = { cle, version: request.headers.get("x-bge-version") ?? "", recu: new Date().toISOString() };
+	const ranger = (customMetadata) => env.RAPPORTS.put(`rapports/${id}.zip`, zip, {
 		httpMetadata: { contentType: "application/zip" },
-		customMetadata: { cle, version: request.headers.get("x-bge-version") ?? "", recu: new Date().toISOString() },
+		customMetadata,
 	});
+	try {
+		await ranger({ ...base, resume: resumeAdmin(meta) });
+	} catch (e) {
+		// Le résumé ne doit jamais coûter le rapport : rangé sans lui.
+		console.error(`rapport ${id} : résumé non rangé (${e.message})`);
+		await ranger(base);
+	}
 	const lien = `${new URL(request.url).origin}/rapport/${id}?cle=${cle}`;
 	try {
 		await publierDiscord(env, id, meta, zip.byteLength, lien);
@@ -296,12 +314,85 @@ async function telecharger(url, env, id) {
 	});
 }
 
+// Résumé gardé dans les métadonnées R2 du rapport, pour la liste de l'équipe sans ouvrir les zips :
+// JSON encodé en URI (ASCII), sous 1 500 octets (R2 en accepte 2 048 pour toutes les métadonnées).
+export const MAX_RESUME = 1500;
+export function resumeAdmin(meta) {
+	const m = meta ?? {};
+	const champ = (v, n) => String(v ?? "").replace(/[\r\n]+/g, " ").slice(0, n);
+	let description = champ(m.description, 300);
+	for (;;) {
+		const r = encodeURIComponent(JSON.stringify({
+			joueur: champ(m.joueur, 40), tour: champ(m.tour, 6), hote: champ(m.hote, 1), humains: champ(m.humains, 3),
+			multijoueur: champ(m.multijoueur, 1), bge: champ(m.bge_release || m.bge_version, 20), description,
+		}));
+		if (r.length <= MAX_RESUME || description === "") return r.length <= MAX_RESUME ? r : "";
+		description = description.slice(0, Math.floor(description.length / 2));
+	}
+}
+
+function lireResume(s) {
+	try {
+		const r = JSON.parse(decodeURIComponent(s ?? ""));
+		return r != null && typeof r === "object" ? r : {};
+	} catch {
+		return {};
+	}
+}
+
+// Comparaison en temps constant (pour des chaînes de même longueur).
+function egal(a, b) {
+	if (a.length !== b.length) return false;
+	let d = 0;
+	for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	return d === 0;
+}
+
+function admis(request, env) {
+	// Trim : un secret passé par un tube (wrangler secret put) garde le retour à la ligne.
+	const attendu = (env.CLE_ADMIN ?? "").trim();
+	const recu = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+	return attendu.length >= 32 && egal(recu, attendu);
+}
+
+async function adminListe(url, env) {
+	const n = Math.min(Math.max(Math.trunc(Number(url.searchParams.get("n")) || 20), 1), 1000);
+	const objets = await listerRapports(env, { meta: true });
+	objets.sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded));
+	return json({
+		total: objets.length,
+		octets: objets.reduce((t, o) => t + o.size, 0),
+		rapports: objets.slice(0, n).map((o) => ({
+			id: o.key.replace(/^rapports\/|\.zip$/g, ""),
+			octets: o.size,
+			recu: new Date(o.uploaded).toISOString(),
+			version: o.customMetadata?.version ?? "",
+			...lireResume(o.customMetadata?.resume),
+		})),
+	});
+}
+
+async function adminTelecharger(env, id) {
+	if (!ID.test(id)) return json({ erreur: "numéro inconnu" }, 404);
+	const objet = await env.RAPPORTS.get(`rapports/${id}.zip`);
+	if (objet == null) return json({ erreur: "numéro inconnu" }, 404);
+	return new Response(objet.body, {
+		headers: { "content-type": "application/zip", "content-disposition": `attachment; filename="${id}.zip"` },
+	});
+}
+
 export default {
 	async fetch(request, env) {
 		const url = new URL(request.url);
 		if (url.pathname === "/rapport" && request.method === "POST") return recevoir(request, env);
 		const m = url.pathname.match(/^\/rapport\/([^/]+)$/);
 		if (m && request.method === "GET") return telecharger(url, env, m[1]);
+		if (url.pathname.startsWith("/admin/") && request.method === "GET") {
+			if (!admis(request, env)) return json({ erreur: "introuvable" }, 404);
+			if (url.pathname === "/admin/rapports") return adminListe(url, env);
+			const a = url.pathname.match(/^\/admin\/rapport\/([^/]+)$/);
+			if (a) return adminTelecharger(env, a[1]);
+		}
 		return json({ erreur: "introuvable" }, 404);
 	},
 };

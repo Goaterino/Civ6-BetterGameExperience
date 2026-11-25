@@ -16,7 +16,12 @@ param(
     [int]$Duration = 0,
     # Capture légère, à laisser tourner une partie entière : seulement le profil Frames de civ6.wprp
     # (présentations DXGI, trafic réseau). L'échantillonnage CPU avec piles fait ramer le jeu.
-    [switch]$Light
+    [switch]$Light,
+    # Chargements de parties (salon → partie, reprise, remap de MPH), un ou plusieurs à la suite :
+    # lancer la capture avant le premier, Entrée une fois la main revenue après le dernier. Entre deux
+    # parties, revenir au menu principal sans quitter le jeu : l'exe réécrit ses journaux à chaque
+    # lancement. analyze.py --chargement détaille chaque chargement de la capture.
+    [switch]$Chargement
 )
 $ErrorActionPreference = "Stop"
 
@@ -61,6 +66,11 @@ if ($Duration -gt 0) {
     Write-Host "Capture légère en cours. Joue la partie, puis appuie sur Entrée ici à la fin," -ForegroundColor Yellow
     Write-Host "avant de quitter le jeu." -ForegroundColor Yellow
     [void](Read-Host)
+} elseif ($Chargement) {
+    Write-Host "Capture en cours. Fais tes chargements (reprise, remap, nouvelle partie) ; entre deux parties,"
+    Write-Host "reviens au menu principal sans quitter le jeu. Une fois la main revenue après le dernier,"
+    Write-Host "appuie sur Entrée ici." -ForegroundColor Yellow
+    [void](Read-Host)
 } else {
     Write-Host "Capture en cours. Termine le tour dans le jeu, attends d'avoir de nouveau la main,"
     Write-Host "puis appuie sur Entrée ici." -ForegroundColor Yellow
@@ -73,7 +83,8 @@ if ($LASTEXITCODE -ne 0) { throw "wpr n'a pas écrit la trace (code $LASTEXITCOD
 
 # Les journaux du jeu sont réécrits à chaque lancement : on garde la copie de cette session.
 $logs = Join-Path $env:LOCALAPPDATA "Firaxis Games\Sid Meier's Civilization VI\Logs"
-foreach ($f in "Profile.csv", "net_message_debug.log", "net_connection_debug.log", "Lua.log", "Modding.log") {
+foreach ($f in "Profile.csv", "net_message_debug.log", "net_connection_debug.log", "Lua.log", "Modding.log",
+               "LoadGameViewState.log", "UserInterface.log", "Database.log", "GameCore.log", "SynthesisLog.log") {
     Copy-Item (Join-Path $logs $f) $dir -ErrorAction SilentlyContinue
 }
 # Réglages graphiques et threads du jeu (MaxJobThreads…), et ceux du proxy : deux captures ne se

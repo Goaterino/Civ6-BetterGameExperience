@@ -629,10 +629,48 @@ unsafe extern "C-unwind" fn lua_ping_sound(l: *mut c_void) -> i32 {
     0
 }
 
+/// `Civ6Proxy_PingPref(key)` → the integer saved for this `ping_*` key, or nothing.
+unsafe extern "C-unwind" fn lua_ping_pref(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let key = (h.to_lstring)(l, 1, std::ptr::null_mut());
+    if key.is_null() {
+        return 0;
+    }
+    match crate::pings::read_pref(&CStr::from_ptr(key).to_string_lossy()) {
+        Some(v) => {
+            (h.push_integer)(l, v);
+            1
+        }
+        None => 0,
+    }
+}
+
+/// `Civ6Proxy_PingPrefsSave(lines)`, lines `ping_*=integer` → 1, or nothing (error logged).
+unsafe extern "C-unwind" fn lua_ping_prefs_save(l: *mut c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    let mut len = 0usize;
+    let p = (h.to_lstring)(l, 1, &mut len);
+    if p.is_null() {
+        return 0;
+    }
+    match crate::pings::save_prefs(&String::from_utf8_lossy(std::slice::from_raw_parts(p as *const u8, len))) {
+        Ok(()) => {
+            (h.push_integer)(l, 1);
+            1
+        }
+        Err(e) => {
+            log(&format!("pings : {e}"));
+            0
+        }
+    }
+}
+
 unsafe extern "C-unwind" fn installer(l: *mut c_void) -> i32 {
     if let Some(h) = hks() {
         for (name, f) in [(&b"Civ6Proxy_Charger\0"[..], lua_charger as LuaCFn), (&b"Civ6Proxy_FinRoute\0"[..], lua_fin_route as LuaCFn),
-                          (&b"Civ6Proxy_PingSound\0"[..], lua_ping_sound as LuaCFn)] {
+                          (&b"Civ6Proxy_PingSound\0"[..], lua_ping_sound as LuaCFn),
+                          (&b"Civ6Proxy_PingPref\0"[..], lua_ping_pref as LuaCFn),
+                          (&b"Civ6Proxy_PingPrefsSave\0"[..], lua_ping_prefs_save as LuaCFn)] {
             (h.push_closure)(l, f, 0, name.as_ptr() as *const c_char, 0);
             (h.set_field)(l, LUA_GLOBALSINDEX, name.as_ptr() as *const c_char);
         }
@@ -698,7 +736,7 @@ unsafe fn fin_route(a: [i32; 6]) -> Option<(i32, i32)> {
     if base == 0 {
         return None;
     }
-    let at = |s: &Site| base + s.address - crate::patch::IMAGE_BASE as usize;
+    let at = |s: &Site| base + crate::patch::rva(s.address as u64);
     let manager: unsafe extern "system" fn() -> usize = std::mem::transmute(at(&TRADE_MANAGER));
     let find: unsafe extern "system" fn(usize, *const CityKey, *const CityKey) -> usize = std::mem::transmute(at(&FIND_ROUTE));
     let end: unsafe extern "system" fn(usize, i32) -> i32 = std::mem::transmute(at(&ROUTE_END));
@@ -740,8 +778,8 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         return;
     }
     for s in [&TRADE_MANAGER, &FIND_ROUTE, &ROUTE_END] {
-        let at = base + s.address - crate::patch::IMAGE_BASE as usize;
-        let have = std::slice::from_raw_parts(at as *const u8, s.expected.len());
+        let at = base + crate::patch::rva(s.address as u64);
+        let have = crate::patch::as_known(s.address as u64, std::slice::from_raw_parts(at as *const u8, s.expected.len()));
         if have != s.expected {
             log(&format!("mods : octets inattendus en {:#x} ({have:02x?}), pas de tours des routes commerciales", s.address));
             return;
@@ -881,8 +919,8 @@ mod tests {
             })
         };
         for s in [&TRADE_MANAGER, &FIND_ROUTE, &ROUTE_END] {
-            let o = offset(s.address - crate::patch::IMAGE_BASE as usize).unwrap();
-            assert_eq!(&d[o..o + s.expected.len()], &s.expected, "{:#x}", s.address);
+            let o = offset(crate::patch::rva(s.address as u64)).unwrap();
+            assert_eq!(crate::patch::as_known(s.address as u64, &d[o..o + s.expected.len()]), s.expected, "{:#x}", s.address);
         }
     }
 

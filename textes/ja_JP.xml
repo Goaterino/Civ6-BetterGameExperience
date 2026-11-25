@@ -89,6 +89,90 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="ja_JP">
 			<Text>マップが変化しない AI の並列計算の間、タイルの産出量を記憶します。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="ja_JP">
+			<Text>アセット読み込みの高速化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="ja_JP">
+			<Text>ゲームの読み込み時、ゲームは各グラフィックファイルがすべてのアセットフォルダー（約55）に存在するかを確認します。この確認を、読み込みごとに1回読み取る各フォルダーの一覧から答えます。メインメニューからの読み込みで数秒短縮されます。ローカルのみで、ゲームには影響しません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="ja_JP">
+			<Text>UI終了時のLuaクリーンアップを1回に</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="ja_JP">
+			<Text>ゲームがUIを閉じるとき（ゲームの終了、Multiplayer Helperのリマップ）、解放されるスクリプト関数ごとにLuaの完全なガベージコレクションを実行します。代わりに最後に1回だけ実行します。リマップ前に約2秒短縮されます。UIのみで、ゲームには影響しません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="ja_JP">
+			<Text>ゲームプレイデータベースを読み込み間で保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="ja_JP">
+			<Text>次のゲームがまったく同じMODを使う場合、前のゲーム用に構築したゲームプレイデータベースを再構築せずに保持します（読み込みごとに約1.5秒）。GameCoreはゲームごとに引き続き再読み込みされます。内容は再構築後と同じで、非同期は起きません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="ja_JP">
+			<Text>MODのゲーム内テキストを読み込み間で保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="ja_JP">
+			<Text>MODのゲーム内テキストを最初の読み込みで記録し、MODが同じなら以降の読み込みではファイルから読み直さずにメモリから書き戻します（読み込みごとに約1.5秒）。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="ja_JP">
+			<Text>ロード画面で垂直同期を無効化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="ja_JP">
+			<Text>垂直同期が有効な場合、ゲームは画面の更新ごとに待機し、ロード中の3D地形の作成も遅くなります。ロード画面の間だけ解除され、ゲーム中は設定どおりのままです（ロード1回あたり約2秒）。垂直同期が無効なら影響はありません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="ja_JP">
+			<Text>再読み込み時に変更のない構成を保持</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="ja_JP">
+			<Text>再読み込みのたびに、前回のロードから何も変わっていなくても、ゲームは構成データベースを作り直し、テキストを元に戻します。変更がなければ両方を保持します。ゲームのルールは通常どおり読み込み直されます（再読み込み1回あたり約3秒）。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="ja_JP">
+			<Text>ロードの最後に待機しない</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="ja_JP">
+			<Text>ロードの最後に、ゲームは3D地形を数タイルずつ準備し、各ステップの間で待機します（LoadGameTickIntervalInMS、既定値16ミリ秒）。この最後の段階の間だけ待機をなくします（ロード1回あたり約1.5秒）。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="ja_JP">
+			<Text>リマップ時のホストの初回ロードで地形を省略</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="ja_JP">
+			<Text>Multiplayer Helperのリマップでは、ホストが新しいゲームをロードし、すぐに自分のセーブから再ロードします。最初のロードでは、破棄されるだけの3D地形の作成を省きます（約10秒）。ゲーム、UI、クライアントは変わりません。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="ja_JP">
+			<Text>待機中のジョブスレッド：スリープ前の譲渡回数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="ja_JP">
+			<Text>仕事のないジョブスレッドは、スリープする前にプロセッサを100回譲ります。ターン終了処理中は毎秒数百回起こります。回数を減らすと、待機で無駄になるプロセッサ時間が減り、処理内容は同じです。無効 = ゲームと同じ100。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="ja_JP">
+			<Text>待機中のジョブスレッド：最初の譲渡までの試行回数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="ja_JP">
+			<Text>仕事のないジョブスレッドは、プロセッサを譲る前にその場で待ちながら 2 × (スレッド数 + 1) 回再試行します。小さい固定値にすると、特にスレッドが多いときにこのビジーウェイトが短くなります。無効 = ゲームと同じ。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="ja_JP">
+			<Text>ジョブスレッドの完了待ちでスリープ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="ja_JP">
+			<Text>ジョブのまとまりの完了を待つスレッドは、最後のジョブスレッドが抜けるまでプロセッサ上で回り続け、ロード1回あたり約1秒のプロセッサ時間を使います。代わりに短い待機の後スリープし、ジョブスレッドが抜けると起こされます。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="ja_JP">
+			<Text>AIの隘路ログを書き込む</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="ja_JP">
+			<Text>マップ生成時、ゲームは隘路グラフ全体を AI_ChokePoint.csv に書き込みます（約12 MB、0.35秒）。オフ：ファイルを書き込みません。マップやゲームには影響しません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="ja_JP">
+			<Text>隘路分析の高速化</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="ja_JP">
+			<Text>マップ生成：隘路を見つけるための三角形分割を、まったく同じ結果になる高速な同等処理で計算します（生成マップごとに約2秒）。検証：両方を計算し、ゲームの結果を使い、違いがあれば記録します。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="ja_JP">
+			<Text>アップデートによるインターフェースの新機能</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="ja_JP">
+			<Text>無効：今後のBetterGameExperienceのアップデートで追加されるインターフェース機能は無効の状態で届き、ここでいつでも有効にできます。現在のインターフェース設定はそのまま保たれます。修正には影響しません。再び有効にすると、その間に追加され、自分で設定していない機能が有効になります。ローカルのみ：他のプレイヤーには影響しません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="ja_JP">
 			<Text>核攻撃アニメーションの高速化</Text>
 		</Row>
@@ -143,11 +227,35 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="ja_JP">
 			<Text>生産リストで、コストが割引されている区域 (その種類の区域数が平均より少ない) に割引率を表示します。区域を配置するとすぐに更新されます。表示のみ。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="ja_JP">
+			<Text>最上位の編成を優先表示</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="ja_JP">
+			<Text>生産リストで、ユニットのメインボタンが都市で訓練できる最上位の編成 (大軍団、なければ軍団) を訓練するようになり、単独ユニットはその下のドロップダウンに移ります。ゲーム本来の並びとは逆です。ゴールドと信仰力による購入は変わりません。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="ja_JP">
 			<Text>蓄えられた生産力</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="ja_JP">
 			<Text>都市が蓄えている生産力 (余剰分、最大 1 ターン分) を、都市バナー、都市パネル、生産パネルに表示します。これは次のターンの生産力に加算されます。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="ja_JP">
+			<Text>都市バナーの住宅の早期警告</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="ja_JP">
+			<Text>自分の都市バナーに、住宅の上限まであと 1 になるとオレンジ色の家 (人口増加率 50% 鈍化)、上限に達した時点で赤い家 (75% 鈍化) を表示します。このオプションがない場合、ゲームは上限を超えてからしか赤い家を表示しません。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="ja_JP">
+			<Text>脱出を考慮したスパイの成功率</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="ja_JP">
+			<Text>スパイ任務に表示される成功率に脱出も含めます。脱出が必要な成功は、スパイが逃げ切った場合にのみ成功とみなします (戦利品はその時点でのみ得られるため)。最適な脱出ルートを前提とし、敵の防諜は考慮しません。表示のみ。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="ja_JP">
+			<Text>取引画面の Shift+クリックと Ctrl+クリック</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="ja_JP">
+			<Text>取引画面で、提供可能な資源、ゴールド、ターン毎のゴールド、外交的支持を Shift+クリックすると取引に入れられる上限まで、Ctrl+クリックすると通常のクリックの 10 倍 (資源 10、ゴールド 1000、ターン毎のゴールド 100、外交的支持 10) を追加します。このオプションがない場合、それより多い数量は数量欄に入力する必要があります。ローカルのみ：他のプレイヤーには影響しません。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="ja_JP">
 			<Text>区域の割引: -{1}% (この種類の区域数が平均より少ない)。</Text>
@@ -161,11 +269,17 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="ja_JP">
 			<Text>総督の称号、総督の移動、偉人の後に、市民を動かさなくても上部バーが更新されます。表示のみで、同期ずれは起きません。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="ja_JP">
+			<Text>修復データを正確に再読み込み</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="ja_JP">
+			<Text>ホストが同期ずれしたデータを再送したとき、ゲームはホストが書いたとおりに正確に読み直します。ユニットの作戦やAIが追跡するブーストが二重にならず、世界会議の分析は値を保ち、AIの行動ツリーはリンクされたままで、すでにホストと同じデータには手を加えません（完全な再読み込みに至る同期ずれが減ります）。他のプレイヤーがこのバージョンでなくても機能します。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="ja_JP">
 			<Text>労働者の残り回数を旗に表示</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="ja_JP">
-			<Text>Better Builder Charges Tracking (wltk) に基づきます。残り回数を持つユニット (労働者、工兵、レギオンなど) の旗に、昇進の代わりにそれを表示します。MOD が有効な場合はそれに置き換わります。</Text>
+			<Text>Better Builder Charges Tracking (wltk) に基づきます。残り回数を持つユニット (労働者、工兵など) の旗に、昇進の代わりにそれを表示します。戦闘ユニット (陸上・海上・航空: レギオン、ナウなど) は昇進の表示のままです。MOD が有効な場合はそれに置き換わります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="ja_JP">
 			<Text>交易路の残りターン</Text>
@@ -227,6 +341,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="ja_JP">
 			<Text>送受信した取引の提案と取引画面の表示内容を Lua.log に書き込み、人間同士の取引の行き違いを調べます。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="ja_JP">
+			<Text>生産の繰越と割引区域の診断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="ja_JP">
+			<Text>各都市の繰越生産力（オーバーフロー）の読み取りをプロキシのログに、割引区域バッジの計算をLua.logに書き込み、報告 BGE-E6DF54 と BGE-36E0D7 を分析します。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="ja_JP">
 			<Text>同時開始・同時終了の信号を表示</Text>
 		</Row>
@@ -238,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="ja_JP">
 			<Text>ゲームが計測する各区間 (フレーム、インターフェース、スクリプト、イベント) の所要時間を、パフォーマンス分析のため %LOCALAPPDATA%\Civ6RolloverProxy\zones に記録します。プレイ1秒あたり約1MB。次回のゲーム起動時から有効です。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="ja_JP">
+			<Text>Steamネットワークのトレース</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="ja_JP">
+			<Text>500ミリ秒ごとに、Steam経由で各プレイヤーに送信・受信したパケットとバイト数、Steamが拒否した送信、Steamの送信キュー（バイト、パケット、リレーまたは直接）を%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.logに書き込みます。プレイヤー間のネットワーク速度を測るためのものです。次回のゲーム起動時に有効になります。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="ja_JP">
+			<Text>ネットワーク分割サイズ</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="ja_JP">
+			<Text>大きなネットワークメッセージを送信時に分割する単位のサイズです。ゲームでは1166バイト、BGEのリリースでは16384バイト。大きな単位は、接続中の全プレイヤーが同じBGEのバージョンを通知している間、ゲーム中にのみ送信されます。各マシンは起動時に受信バッファを拡大します。オフ：ゲームのサイズ。次回のゲーム起動時に有効になります。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="ja_JP">
 			<Text>ネットワークメッセージの保護</Text>
@@ -345,7 +477,7 @@
 			<Text>{1}: POL 修正が有効なのに、BetterGameExperience なし (または別のバージョン) で参加しました。このプレイヤーのゲームは同期がずれます。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="ja_JP">
-			<Text>No First/Last moves 有効: 全プレイヤーが一緒にターンを開始し、ホストのタイマーがゼロになると全員のターンが終わります。</Text>
+			<Text>No First/Last moves 有効。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="ja_JP">
 			<Text>No First/Last moves: 同時開始は有効、同時終了は利用不可 (ゲームのタイマーをフックできません)。</Text>
@@ -355,6 +487,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="ja_JP">
 			<Text>{1} は BetterGameExperience {2} を有効にしています。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="ja_JP">
+			<Text>{1} のゲーム設定がホストと異なります。{1} はゲーム開始前にロビーを退出して再参加してください。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="ja_JP">
 			<Text>BGE Check: 全プレイヤーが BetterGameExperience {1} を有効にしています ({2})。</Text>
@@ -373,6 +508,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="ja_JP">
 			<Text>{1} を待たずに開始しました ({2} 秒経っても準備ができていません)。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="ja_JP">
+			<Text>{1} が2ターン連続で準備完了を送信しませんでした。今後、ターン開始時に待ちません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="ja_JP">
+			<Text>{1} 秒経ってもホストから開始の合図がありません。あなたのターンを開始します。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="ja_JP">
 			<Text>ターン終了: ホストのタイマーが切れました。</Text>
@@ -409,6 +550,27 @@
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="ja_JP">
 			<Text>Steam ライブラリに Civilization VI が見つかりません。\n\n--game-dir "&lt;ゲームのフォルダー&gt;" を付けてインストーラーを再実行してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="ja_JP">
+			<Text>Steam ライブラリに Civilization VI が見つかりません:\n{1}\n\nゲームは Steam Play（Proton）で実行する Windows 版である必要があります。(?) が付いたライブラリは読み取れませんでした。そのドライブがマウントされているか確認してください。それでも見つからない場合は --game-dir "&lt;ゲームのフォルダー&gt;" を付けて再実行してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="ja_JP">
+			<Text>{1} に書き込めません。\n\nフォルダーが読み取り専用のドライブにないこと、root の所有になっていないこと、ドライブの権限（たとえば NTFS）で書き込みが許可されていることを確認してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="ja_JP">
+			<Text>BetterGameExperience を Proton で読み込むには、Steam の起動オプションを自分で設定してください:\n\n1. Steam ライブラリで Civilization VI を右クリックし、プロパティを選びます。\n2. 「一般」の起動オプションに次を入力します:\n   {1}\n3. 「互換性」で、このゲームに Proton のバージョンが強制されていることを確認します（BetterGameExperience には Windows 版が必要です）。\n\n起動オプションにすでに文字列がある場合は、先頭に WINEDLLOVERRIDES="winmm=n,b" を追加し、%command% はそのまま残してください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="ja_JP">
+			<Text>Steam の Civilization VI の起動オプションで、%command% の前に {1} がありません。これがないと BetterGameExperience は読み込まれません。設定したばかりの場合は、Steam がまだ保存していない可能性があります（Steam の終了時に保存されます）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="ja_JP">
+			<Text>BetterGameExperience をターミナルから実行してください。\n\nコマンド: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;コード&gt;\nオプション: --game-dir &lt;フォルダー&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="ja_JP">
+			<Text>番号を選んでください（空で終了）:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="ja_JP">
+			<Text>設定する Steam の起動オプションを表示</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="ja_JP">
 			<Text>最新バージョンを確認中…</Text>
@@ -636,7 +798,25 @@
 			<Text>{1}: バグレポートを送信できなかったため、本人のコンピューターに保存されました。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="ja_JP">
-			<Text>破損したネットワークメッセージをブロックしました。ゲームがフリーズするところでした。</Text>
+			<Text>{1} のゲームのフリーズを防ぎました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="ja_JP">
+			<Text>{1} のゲーム設定の消去を防ぎました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="ja_JP">
+			<Text>{1} の二重読み込みを防ぎました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="ja_JP">
+			<Text>{1} のゲームにはホストと比べて {2} 個のオブジェクトが不足し、{3} 個が余分です。{1} の非同期を防ぐため、全員がホストのゲームを再読み込みします。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="ja_JP">
+			<Text>{1} はターン終了時に {2} 個のアーカイブ（{3} KB）の修復を受け取りました。{1} の非同期を止めるため、ホストが全員のゲームを再読み込みしました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="ja_JP">
+			<Text>全員の再読み込み後も {1} は {2} 個のアーカイブ（{3} KB）の修復を受け取っています。ターン {4} まで自動再読み込みは行いません。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="ja_JP">
+			<Text>{1} のゲームのバージョンは BGE に対応していません。この PC では BGE の修正が無効です。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="ja_JP">
 			<Text>{1}と{2}はホスト経由で接続されています（0 ms）。ターン切り替え中に直接接続を試みます。</Text>
@@ -700,6 +880,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="ja_JP">
 			<Text>{1}のミュートを解除しました。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="ja_JP">
+			<Text>BGE: ゲーム {1} は非対応</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="ja_JP">
+			<Text>非対応のゲームバージョン</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="ja_JP">
+			<Text>BetterGameExperience はゲームのバージョン {1} に対応していません。修正はどれも有効になっていません。[NEWLINE][NEWLINE]Steam でゲームを最新バージョンに更新してください。このバージョンで起きた問題は BetterGameExperience によるものではないため、報告しないでください。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="ja_JP">
+			<Text>バグ報告は無効です。BetterGameExperience はゲームのバージョン {1} に対応しておらず、修正はどれも有効になっていません。Steam でゲームを最新バージョンに更新してください。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

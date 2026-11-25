@@ -89,6 +89,90 @@
 		<Row Tag="LOC_BGD_OPT_RENDEMENTS_AIDE" Language="zh_Hans_CN">
 			<Text>在 AI 并行计算期间（地图不会变化）记住单元格的产出。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_NOM" Language="zh_Hans_CN">
+			<Text>加快素材加载</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CACHE_ASSETS_AIDE" Language="zh_Hans_CN">
+			<Text>加载游戏时，游戏会检查每个图形文件是否存在于每个素材文件夹（约 55 个）中。这些检查改由每个文件夹的文件列表回答，每次加载只读取一次。从主菜单加载时可节省数秒。仅限本地，不影响游戏。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_NOM" Language="zh_Hans_CN">
+			<Text>关闭界面时只清理一次 Lua</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_GC_EN_LOT_AIDE" Language="zh_Hans_CN">
+			<Text>游戏关闭界面时（退出游戏、Multiplayer Helper 重新生成地图），会为每个释放的脚本函数执行一次完整的 Lua 垃圾回收。改为在最后只执行一次。重新生成地图前可节省约 2 秒。仅限界面，不影响游戏。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_NOM" Language="zh_Hans_CN">
+			<Text>在两次加载之间保留游戏数据库</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_BDD_GARDEE_AIDE" Language="zh_Hans_CN">
+			<Text>当下一局使用完全相同的模组时，保留为上一局构建的游戏数据库，而不是重新构建（每次加载约 1.5 秒）。每局仍会重新加载 GameCore。内容与重新构建后相同：不会不同步。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_NOM" Language="zh_Hans_CN">
+			<Text>在两次加载之间保留模组的游戏内文本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TEXTES_GARDES_AIDE" Language="zh_Hans_CN">
+			<Text>首次加载时记录模组的游戏内文本，之后模组相同时直接从内存写回，而不是重新从文件读取（每次加载约 1.5 秒）。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>加载画面不使用垂直同步</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_VSYNC_CHARGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>开启垂直同步时，游戏会等待每次屏幕刷新，这也会拖慢加载时 3D 地形的创建。仅在加载画面期间解除，游戏中仍按设置保持（每次加载约 2 秒）。关闭垂直同步时无影响。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_NOM" Language="zh_Hans_CN">
+			<Text>重新加载时保留未更改的配置</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_CONFIG_GARDEE_AIDE" Language="zh_Hans_CN">
+			<Text>重新加载时，即使自上次加载以来没有任何变化，游戏也会重建其配置数据库并还原其文本。两者未变化时将予以保留；游戏规则仍照常重新加载（每次重新加载约 3 秒）。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>加载末尾不暂停</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_PAUSE_FIN_CHARGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>加载末尾，游戏每次只准备几个单元格的 3D 地形，并在每步之间暂停（LoadGameTickIntervalInMS，默认 16 毫秒）。仅在这最后阶段取消暂停（每次加载约 1.5 秒）。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_NOM" Language="zh_Hans_CN">
+			<Text>重新生成地图时主机首次加载跳过地形</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_REMAP_LEGER_AIDE" Language="zh_Hans_CN">
+			<Text>使用 Multiplayer Helper 重新生成地图时，主机先加载新游戏，随后立即从自己的存档重新加载。首次加载跳过本会被丢弃的 3D 地形（约 10 秒）。游戏、界面和客户端均不变。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_NOM" Language="zh_Hans_CN">
+			<Text>空闲任务线程：休眠前的让出次数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_CESSIONS_AIDE" Language="zh_Hans_CN">
+			<Text>没有任务的任务线程在休眠前会让出处理器 100 次，回合结算时每秒发生数百次。减少让出次数：等待浪费的处理器时间更少，完成的工作不变。关闭 = 100，与游戏相同。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_NOM" Language="zh_Hans_CN">
+			<Text>空闲任务线程：首次让出前的尝试次数</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_PAUSES_AIDE" Language="zh_Hans_CN">
+			<Text>没有任务的任务线程在让出处理器之前，会原地等待并重试 2 × (线程数 + 1) 次。较小的固定值可缩短这种忙等待，线程多时尤其明显。关闭 = 与游戏相同。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_NOM" Language="zh_Hans_CN">
+			<Text>等待任务线程时休眠</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_POOL_ATTENTE_FIN_AIDE" Language="zh_Hans_CN">
+			<Text>等待一批任务结束的线程会在处理器上空转，直到最后一个任务线程退出，每次加载约耗费 1 秒处理器时间。改为短暂等待后休眠，并在任务线程退出时被唤醒。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_NOM" Language="zh_Hans_CN">
+			<Text>写入 AI 咽喉要道日志</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_JOURNAL_CHOKEPOINTS_AIDE" Language="zh_Hans_CN">
+			<Text>生成地图时，游戏会把整个咽喉要道图写入 AI_ChokePoint.csv（约 12 MB，0.35 秒）。关闭：不写入该文件。不影响地图和游戏。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_NOM" Language="zh_Hans_CN">
+			<Text>快速咽喉要道分析</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DELAUNAY_RAPIDE_AIDE" Language="zh_Hans_CN">
+			<Text>地图生成：用于寻找咽喉要道的三角剖分改用更快的等效算法计算，结果完全相同（每张生成的地图约 2 秒）。验证：两者都计算，保留游戏的结果并记录任何差异。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_NOM" Language="zh_Hans_CN">
+			<Text>更新带来的界面新功能</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_NOUVEAUTES_AIDE" Language="zh_Hans_CN">
+			<Text>禁用：BetterGameExperience 今后更新加入的界面功能将以禁用状态到达，你可以随时在此启用。当前的界面选项保持不变。修复不受影响。重新启用：期间加入且你未自行设置的功能将被启用。仅限本地：不影响其他玩家。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_WMD_ACCEL_NOM" Language="zh_Hans_CN">
 			<Text>加速核打击动画</Text>
 		</Row>
@@ -143,11 +227,35 @@
 		<Row Tag="LOC_BGD_OPT_UI_REDUCTION_QUARTIERS_AIDE" Language="zh_Hans_CN">
 			<Text>在生产列表中，成本降低的区域（该类区域数量少于你的平均值）会显示折扣，放置区域后立即更新。仅影响显示。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_NOM" Language="zh_Hans_CN">
+			<Text>优先显示最高编制</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_FORMATIONS_AIDE" Language="zh_Hans_CN">
+			<Text>在生产列表中，单位的主按钮会训练城市可训练的最高编制（军队，否则为军团），单个单位则移到下方的下拉菜单中。游戏原本的顺序与此相反。金币和信仰值购买不受影响。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_NOM" Language="zh_Hans_CN">
 			<Text>储备的生产力</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_DEBORDEMENT_AIDE" Language="zh_Hans_CN">
 			<Text>在城市横幅、城市面板和生产面板中显示城市储备的生产力（溢出部分，最多一回合），它会加到下一回合的生产中。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_NOM" Language="zh_Hans_CN">
+			<Text>城市横幅上的住房预警</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_LOGEMENT_AIDE" Language="zh_Hans_CN">
+			<Text>在你的城市横幅上，距住房上限只差 1 时显示橙色房屋（人口增速减缓 50%），一达到上限就显示红色房屋（减缓 75%）。不启用此选项时，游戏要到超出上限后才会显示红色房屋。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_NOM" Language="zh_Hans_CN">
+			<Text>计入撤离的间谍成功率</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ESPIONS_AIDE" Language="zh_Hans_CN">
+			<Text>间谍任务显示的成功率会计入撤离：需要撤离的成功只有在间谍成功逃脱时才算成功，因为战利品只在那时发放。假定选择最佳撤离路线，不计算敌方反间谍。仅影响显示。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_NOM" Language="zh_Hans_CN">
+			<Text>交易界面的 Shift+单击和 Ctrl+单击</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_UI_ACCORD_QUANTITES_AIDE" Language="zh_Hans_CN">
+			<Text>在交易界面中，对可用的资源、金币、每回合金币或外交支持，按住 Shift 单击会加入交易所能接受的最大数量，按住 Ctrl 单击则加入普通单击的 10 倍：10 个资源、1000 金币、每回合 100 金币、10 点外交支持。没有此选项时，更大的数量需要在数量框中输入。仅限本地：不影响其他玩家。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_QUARTIER_REDUCTION" Language="zh_Hans_CN">
 			<Text>区域折扣：-{1}%（该类区域数量少于你的平均值）。</Text>
@@ -161,11 +269,17 @@
 		<Row Tag="LOC_BGD_OPT_UI_RENDEMENTS_AIDE" Language="zh_Hans_CN">
 			<Text>在总督头衔、总督调任或伟人之后，无需调整公民，顶部栏也会更新。仅影响显示：不会不同步。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_NOM" Language="zh_Hans_CN">
+			<Text>按原样重读修复的数据</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_RELECTURE_FIDELE_AIDE" Language="zh_Hans_CN">
+			<Text>当主机重新发送不同步的数据时，游戏会完全按照主机写入的内容重新读取：单位行动和 AI 追踪的加速不再重复，世界议会分析保留其数值，AI 行为树保持链接，已与主机一致的数据保持不变（减少以完全重新载入告终的不同步）。即使其他玩家没有此版本也有效。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_NOM" Language="zh_Hans_CN">
 			<Text>在旗帜上显示建造者次数</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_CHARGES_AIDE" Language="zh_Hans_CN">
-			<Text>基于 Better Builder Charges Tracking（wltk）。有可用次数的单位（建造者、军事工程师、罗马军团……）的旗帜上显示次数，代替晋升。如果该模组已启用，则取代它。</Text>
+			<Text>基于 Better Builder Charges Tracking（wltk）。有可用次数的单位（建造者、军事工程师……）的旗帜上显示次数，代替晋升；作战单位（陆地、海上、空中：罗马军团、纳乌战舰……）仍显示晋升。如果该模组已启用，则取代它。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_UI_ROUTES_NOM" Language="zh_Hans_CN">
 			<Text>贸易路线剩余回合</Text>
@@ -227,6 +341,12 @@
 		<Row Tag="LOC_BGD_OPT_UI_DIAG_ACCORDS_AIDE" Language="zh_Hans_CN">
 			<Text>将发送和收到的交易提议以及交易界面显示的内容写入 Lua.log，用于分析人类玩家之间交错的交易。</Text>
 		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_NOM" Language="zh_Hans_CN">
+			<Text>生产储备与折扣区域诊断</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_DIAG_PRODUCTION_AIDE" Language="zh_Hans_CN">
+			<Text>将各城市储备生产力（溢出）的读取过程写入代理日志，将折扣区域徽章的计算过程写入 Lua.log，用于分析报告 BGE-E6DF54 和 BGE-36E0D7。</Text>
+		</Row>
 		<Row Tag="LOC_BGD_OPT_DEPART_SIGNAUX_NOM" Language="zh_Hans_CN">
 			<Text>显示同时开始与结束回合的信号</Text>
 		</Row>
@@ -238,6 +358,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_OPT_PROFIL_ZONES_AIDE" Language="zh_Hans_CN">
 			<Text>将游戏计时的每个区段（帧、界面、脚本、事件）的耗时记录到 %LOCALAPPDATA%\Civ6RolloverProxy\zones，用于性能分析。每秒游戏约 1 MB。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_NOM" Language="zh_Hans_CN">
+			<Text>Steam 网络追踪</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_TRACE_STEAM_AIDE" Language="zh_Hans_CN">
+			<Text>每 500 毫秒将通过 Steam 发送给每位玩家和从其接收的数据包与字节、被 Steam 拒绝的发送，以及 Steam 的发送队列（字节、数据包、中继或直连）写入 %LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-&lt;pid&gt;.log。用于测量玩家之间的网络速度。下次启动游戏时生效。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_NOM" Language="zh_Hans_CN">
+			<Text>网络分块大小</Text>
+		</Row>
+		<Row Tag="LOC_BGD_OPT_MORCEAUX_RESEAU_AIDE" Language="zh_Hans_CN">
+			<Text>发送时大型网络消息被切分成的块的大小：游戏中为 1166 字节，BGE 正式版为 16384 字节。只有在游戏中、且所有已连接玩家都通告相同的 BGE 版本时才发送大块；每台电脑在启动时扩大其接收缓冲区。关闭：游戏的大小。下次启动游戏时生效。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_OPT_GARDE_MESSAGES_NOM" Language="zh_Hans_CN">
 			<Text>网络消息保护</Text>
@@ -345,7 +477,7 @@
 			<Text>{1}：在 POL 修正已启用时未安装 BetterGameExperience（或版本不同）加入。该玩家的游戏将会不同步。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_ACTIF" Language="zh_Hans_CN">
-			<Text>No First/Last moves 已启用：所有玩家一起开始回合，主机计时器归零时所有人的回合结束。</Text>
+			<Text>No First/Last moves 已启用。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_NFLM_DEPART_SEUL" Language="zh_Hans_CN">
 			<Text>No First/Last moves：同时开始回合已启用；同时结束不可用（未能挂接游戏计时器）。</Text>
@@ -355,6 +487,9 @@
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_ANNONCE" Language="zh_Hans_CN">
 			<Text>{1} 已启用 BetterGameExperience {2}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_CONFIG_DIFFERENTE" Language="zh_Hans_CN">
+			<Text>{1} 的游戏设置与主机不同。{1}，请在游戏开始前退出大厅并重新加入。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_CHECK_OK" Language="zh_Hans_CN">
 			<Text>BGE Check：所有玩家都已启用 BetterGameExperience {1}（{2}）。</Text>
@@ -373,6 +508,12 @@
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_SANS" Language="zh_Hans_CN">
 			<Text>已在没有 {1} 的情况下开始（{2} 秒后仍未准备好）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_IGNORE" Language="zh_Hans_CN">
+			<Text>{1} 连续两个回合未发出准备信号：回合开始将不再等待。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_DEPART_SANS_HOTE" Language="zh_Hans_CN">
+			<Text>{1} 秒后仍未收到主机的开始信号：你的回合现在开始。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_DEPART_FIN_HOTE" Language="zh_Hans_CN">
 			<Text>回合结束：主机的计时器已到。</Text>
@@ -409,6 +550,27 @@
 		</Row>
 		<Row Tag="LOC_BGD_INST_CIVILIZATION_VI_WAS_NOT_FOUND_IN" Language="zh_Hans_CN">
 			<Text>在 Steam 库中找不到 Civilization VI。\n\n请使用 --game-dir "&lt;游戏文件夹&gt;" 重新运行安装程序。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_GAME_NOT_FOUND_X" Language="zh_Hans_CN">
+			<Text>在 Steam 库中找不到 Civilization VI:\n{1}\n\n游戏必须是通过 Steam Play（Proton）运行的 Windows 版。标有 (?) 的库无法读取：请检查其磁盘是否已挂载。否则请使用 --game-dir "&lt;游戏文件夹&gt;" 重新运行。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_FOLDER_NOT_WRITABLE_X" Language="zh_Hans_CN">
+			<Text>无法写入 {1}。\n\n请检查该文件夹不在只读磁盘上、不属于 root，并且磁盘权限（例如 NTFS）允许写入。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_STEPS_X" Language="zh_Hans_CN">
+			<Text>要让 BetterGameExperience 在 Proton 中加载，请自行在 Steam 中设置启动选项:\n\n1. 在 Steam 库中右键单击 Civilization VI，然后选择“属性”。\n2. 在“通用”的“启动选项”中输入:\n   {1}\n3. 在“兼容性”中，检查该游戏已强制使用某个 Proton 版本（BetterGameExperience 需要 Windows 版）。\n\n如果启动选项中已有内容，请在最开头添加 WINEDLLOVERRIDES="winmm=n,b"，并保留 %command%。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_LAUNCH_OPTION_MISSING_X" Language="zh_Hans_CN">
+			<Text>Steam 中 Civilization VI 的启动选项在 %command% 之前没有 {1}：没有它，BetterGameExperience 不会加载。如果你刚刚设置，Steam 可能还没有保存（它在关闭时保存）。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_RUN_FROM_A_TERMINAL" Language="zh_Hans_CN">
+			<Text>请在终端中运行 BetterGameExperience。\n\n命令: status, install, uninstall, launch-option, channel release|prerelease, lang &lt;代码&gt;\n选项: --game-dir &lt;文件夹&gt;, --yes</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_CHOOSE_A_NUMBER" Language="zh_Hans_CN">
+			<Text>请选择编号（留空退出）:</Text>
+		</Row>
+		<Row Tag="LOC_BGD_INST_LINUX_SHOW_THE_LAUNCH_OPTION" Language="zh_Hans_CN">
+			<Text>显示需要设置的 Steam 启动选项</Text>
 		</Row>
 		<Row Tag="LOC_BGD_INST_LOOKING_FOR_THE_LATEST_VERSION" Language="zh_Hans_CN">
 			<Text>正在查找最新版本…</Text>
@@ -636,7 +798,25 @@
 			<Text>{1}：错误报告未能发送，已保存在该玩家的电脑上。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_GARDE" Language="zh_Hans_CN">
-			<Text>已拦截一条损坏的网络消息，否则游戏会卡死。</Text>
+			<Text>已为 {1} 防止游戏卡死。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_GARDE_CONFIG" Language="zh_Hans_CN">
+			<Text>已为 {1} 防止游戏设置被清空。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_DOUBLE_LOAD" Language="zh_Hans_CN">
+			<Text>已为 {1} 防止重复加载。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_ALL" Language="zh_Hans_CN">
+			<Text>{1} 的游戏与主机相比缺少 {2} 个对象，多出 {3} 个：所有人重新加载主机的游戏，以防止 {1} 不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_VOLUME" Language="zh_Hans_CN">
+			<Text>{1} 在回合结束时收到了 {2} 个存档（{3} KB）的修复：主机已让所有人重新加载游戏，以免 {1} 继续不同步。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_SYNC_RELOAD_PAUSE" Language="zh_Hans_CN">
+			<Text>所有人重新加载后，{1} 仍收到 {2} 个存档（{3} KB）的修复：第 {4} 回合之前不再自动重新加载。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_CHAT_EXE" Language="zh_Hans_CN">
+			<Text>BGE 不支持 {1} 的游戏版本：BGE 的修复在其电脑上未启用。</Text>
 		</Row>
 		<Row Tag="LOC_BGD_CHAT_RELINK_DETECTED" Language="zh_Hans_CN">
 			<Text>{1} 和 {2} 通过主机连接（0 ms）。将在回合切换时尝试直接连接。</Text>
@@ -700,6 +880,18 @@
 		</Row>
 		<Row Tag="LOC_BGD_PINGS_UNMUTED" Language="zh_Hans_CN">
 			<Text>已取消屏蔽{1}。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_COURT" Language="zh_Hans_CN">
+			<Text>BGE：不支持游戏 {1}</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TITRE" Language="zh_Hans_CN">
+			<Text>不支持的游戏版本</Text>
+		</Row>
+		<Row Tag="LOC_BGD_VERSION_NON_SUPPORTEE_TEXTE" Language="zh_Hans_CN">
+			<Text>BetterGameExperience 不支持游戏版本 {1}：它的修复均未启用。[NEWLINE][NEWLINE]请在 Steam 上将游戏更新到当前版本。请勿报告在此版本中遇到的问题：它们并非由 BetterGameExperience 引起。</Text>
+		</Row>
+		<Row Tag="LOC_BGD_RAPPORT_VERSION_NON_SUPPORTEE" Language="zh_Hans_CN">
+			<Text>错误报告已关闭：BetterGameExperience 不支持游戏版本 {1}，它的修复均未启用。请在 Steam 上将游戏更新到当前版本。</Text>
 		</Row>
 	</LocalizedText>
 </GameData>

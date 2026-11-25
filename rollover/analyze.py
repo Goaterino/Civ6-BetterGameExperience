@@ -11,7 +11,11 @@ Sans passage de tour dans la capture (scénario à durée fixe, capture.ps1 -Dur
 couvre toute la capture.
 
 Usage :
-    python -I rollover/analyze.py <dossier de capture ou dossier Logs du jeu> [--tout]
+    python -I rollover/analyze.py <dossier de capture ou dossier Logs du jeu> [--tout | --chargement]
+
+Avec --chargement, le rapport porte sur les écrans de chargement (entrée en partie, reprise, remap) :
+tous ceux de la capture, un par un, ou le dernier pour un dossier Logs du jeu. Pour chacun, la
+ventilation par phases (chargement.py), puis l'analyse de la trace bornée à ce chargement.
 
 Écrit rapport.md dans le dossier analysé (ou dans --out).
 """
@@ -28,6 +32,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import etl as etl_reader  # noqa: E402
+import chargement  # noqa: E402
 import zones as zones_reader  # noqa: E402
 import zones_long  # noqa: E402
 
@@ -138,8 +143,18 @@ def fmt(x):
 
 # --- trace WPR ------------------------------------------------------------------------------
 
+_TRACES = {}
+
+
 def load_trace(etl):
-    """Lit la trace une fois, puis la garde en cache (trace.pkl) : la relire prend plusieurs minutes."""
+    """Lit la trace une fois, puis la garde en cache (trace.pkl) : la relire prend plusieurs minutes.
+    Gardée aussi en mémoire : --chargement analyse plusieurs fenêtres de la même trace."""
+    if etl not in _TRACES:
+        _TRACES[etl] = _load_trace(etl)
+    return _TRACES[etl]
+
+
+def _load_trace(etl):
     cache = etl.with_suffix(".pkl")
     if cache.exists() and cache.stat().st_mtime >= etl.stat().st_mtime:
         with cache.open("rb") as f:
@@ -717,7 +732,29 @@ def main():
     ap.add_argument("dossier", type=pathlib.Path)
     ap.add_argument("--out", type=pathlib.Path)
     ap.add_argument("--tout", action="store_true", help="toute la capture, pas seulement le dernier passage de tour")
+    ap.add_argument("--chargement", action="store_true", help="les écrans de chargement de la capture, pas un passage de tour")
     args = ap.parse_args()
+
+    if args.chargement:
+        # Chaque chargement de la capture (reprise, remap, nouvelle partie…) : ses phases, puis la
+        # trace bornée à ce chargement. Sans capture.json (dossier Logs du jeu), le dernier seulement.
+        lines = [f"# Chargements : {args.dossier.name}\n"]
+        j = chargement.Journaux(args.dossier)
+        j.resume(lines)
+        etl = args.dossier / "trace.etl"
+        choisis = j.dans(capture_window(args.dossier)) or j.blocs[-1:]
+        for bloc in choisis:
+            j.detail(bloc, lines)
+            if etl.exists():
+                window = (bloc["debut"] - dt.timedelta(seconds=1),
+                          (bloc["fin"] or bloc["debut"]) + dt.timedelta(seconds=1))
+                trace_report(etl, lines, window, [], args.dossier)
+        if etl.exists() and not choisis:
+            trace_report(etl, lines, capture_window(args.dossier), [], args.dossier)
+        out = args.out or args.dossier / "rapport.md"
+        out.write_text("\n".join(lines), encoding="utf-8")
+        print(out)
+        return 0
 
     lines = [f"# Passage de tour : {args.dossier.name}\n"]
     trans = log_report(args.dossier, lines)

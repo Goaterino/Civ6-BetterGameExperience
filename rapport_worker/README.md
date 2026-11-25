@@ -4,8 +4,8 @@ Un Cloudflare Worker entre le bouton « Signaler un bug (BGE) » du jeu
 ([startup_proxy](../startup_proxy/README.md#le-signalement-dun-bug)) et Discord :
 
 ```
-proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus)
-                                  └─► webhook ──► forum Discord : un fil par rapport
+proxy (WinHTTP) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus)
+                                 └─► webhook ──► forum Discord : un fil par rapport
 ```
 
 - **`POST /rapport`** : le zip arrive dans le champ `archive` d'un formulaire multipart, avec
@@ -20,6 +20,12 @@ proxy (curl.exe) ──zip──► Worker ──► R2 (les zips, 50 Mo au plus
   `{"id": "BGE-XXXXXX"}`, que le jeu montre au joueur.
 - **`GET /rapport/BGE-XXXXXX?cle=…`** : le zip. La clé, tirée au hasard pour chaque rapport, n'est
   écrite que dans le fil Discord. Sans elle, le Worker répond 404.
+- **`GET /admin/rapports?n=…`** et **`GET /admin/rapport/BGE-XXXXXX`** : la liste des derniers
+  rapports (avec le résumé de `meta.json` gardé dans les métadonnées R2 : joueur, tour, hôte,
+  humains, version, description coupée à 300 caractères) et le zip sans la clé du fil. Réservés à
+  l'équipe : en-tête `Authorization: Bearer <CLE_ADMIN>`, secret du Worker. Sans ce secret (32
+  caractères au moins) ou avec une autre clé, 404. Le script [rapports.ps1](rapports.ps1) les
+  appelle : voir [ANALYSE.md](ANALYSE.md), qui explique aussi comment analyser un rapport.
 - **Pourquoi un relais** plutôt que le webhook dans la DLL : une URL de webhook gravée dans la DLL
   se lit avec `strings` et servirait à spammer le salon, et un webhook n'accepte que 10 Mo de pièces
   jointes, moins qu'une sauvegarde tardive avec ses journaux. Le Worker garde le webhook secret.
@@ -90,6 +96,14 @@ jusqu'à 100 000 requêtes par jour).
 
    Pour essayer avant une release, avec une DLL déjà installée : ajouter
    `rapport_url=https://bge-rapports.<compte>.workers.dev/rapport` à `rollover_proxy.cfg`.
+6. **La clé de l'équipe**, pour les routes `/admin`, depuis la racine du dépôt :
+
+   ```powershell
+   .\rapport_worker\rapports.ps1 -NouvelleCle
+   ```
+
+   Elle tire une clé au hasard, la pose comme secret `CLE_ADMIN` du Worker (`wrangler secret put`)
+   et la garde dans `rapport_worker\.cle_admin` (ignoré par git).
 
 ## Quota par jour
 
@@ -150,4 +164,6 @@ Ils couvrent la lecture de `meta.json` dans le zip (brut ou en deflate, bombe de
 le refus d'un zip sans `meta.json` lisible, le quota de 24 heures, le plafond du bucket (plus anciens supprimés
 d'abord, pagination de la liste), le rangement, le fil Discord (titre, résumé,
 tag, mentions coupées), le téléchargement avec et sans la clé, Discord en panne, et les refus
-(limite, pas un zip, trop gros, mauvaise route). Le workflow de release les lance.
+(limite, pas un zip, trop gros, mauvaise route). Pour les routes `/admin` : liste triée avec le
+résumé, téléchargement, 404 sans la bonne clé ou sans le secret, résumé borné en ASCII, et rapport
+rangé sans résumé si R2 refuse les métadonnées. Le workflow de release les lance.

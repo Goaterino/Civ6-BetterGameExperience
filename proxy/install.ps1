@@ -64,9 +64,31 @@ param(
     # Badge des quartiers dont le coût est réduit, dans la liste de production (BET-22).
     [ValidateSet("on", "off")]
     [string]$UiReductionQuartiers = "on",
+    # Highest formation the city can train (army, else corps) on the main button of a unit, in the
+    # production list; the lower ones in the drawer.
+    [ValidateSet("on", "off")]
+    [string]$UiFormations = "on",
     # Production en réserve (débordement) sur le bandeau d'une ville sans production (BET-21).
     [ValidateSet("on", "off")]
     [string]$UiDebordement = "on",
+    # Diagnostic de la réserve et du badge des quartiers (rapports BGE-E6DF54, BGE-36E0D7) :
+    # lignes « debordement diag » dans RolloverProxy.log, « BGD diag quartiers » dans Lua.log.
+    [ValidateSet("on", "off")]
+    [string]$DiagProduction = "off",
+    # Ajouts d'interface des mises à jour suivantes coupés tant qu'ils manquent au fichier. Ce
+    # script écrit toutes les clés : il ne coupe donc rien tant qu'il est relancé à chaque version.
+    [ValidateSet("on", "off")]
+    [string]$UiNouveautes = "on",
+    # Early housing warning on the city banner: orange house at -50% growth, red at -75%.
+    [ValidateSet("on", "off")]
+    [string]$UiLogement = "on",
+    # Spy mission success chance that counts the escape (best exit, no counterspy).
+    [ValidateSet("on", "off")]
+    [string]$UiEspions = "on",
+    # Deal screen: Shift+click on an available resource, gold or favor puts as much as the deal accepts,
+    # Ctrl+click ten times what a click adds.
+    [ValidateSet("on", "off")]
+    [string]$UiAccordQuantites = "on",
     # Science (culture) placée / coût de la technologie et du dogme en cours, en haut à gauche.
     [ValidateSet("on", "off")]
     [string]$UiAvancement = "on",
@@ -99,6 +121,47 @@ param(
     # Garde des messages réseau (diagnostic, lu par le proxy de démarrage ; la release l'a toujours).
     [ValidateSet("on", "off", "test")]
     [string]$GardeMessages = "on",
+    # Chargement des parties (analyses/chargement/README.md). Lus par le proxy de démarrage :
+    # existence des fichiers SHARED_DATA servie par un listage des dossiers, un seul ramasse-miettes
+    # Lua par fermeture de l'interface, base de gameplay et textes des mods gardés d'un chargement
+    # à l'autre quand les mods sont les mêmes.
+    [ValidateSet("on", "off")]
+    [string]$CacheAssets = "on",
+    [ValidateSet("on", "off")]
+    [string]$GcEnLot = "on",
+    [ValidateSet("on", "off")]
+    [string]$BddGardee = "on",
+    [ValidateSet("on", "off")]
+    [string]$TextesGardes = "on",
+    # Lu par le proxy de démarrage : VSync levée pendant l'écran de chargement si le jeu la demande
+    # (voir startup_proxy/src/vsync.rs).
+    [ValidateSet("on", "off")]
+    [string]$VsyncChargement = "on",
+    # Lus par le proxy de démarrage : étape de configuration gardée aux rechargements, phase de
+    # fin de chargement sans pause (voir startup_proxy/src/config_gardee.rs et fin_chargement.rs).
+    [ValidateSet("on", "off")]
+    [string]$ConfigGardee = "on",
+    [ValidateSet("on", "off")]
+    [string]$PauseFinChargement = "on",
+    # Lus par le proxy de démarrage : premier chargement de l'hôte au remap sans terrain, pool de
+    # tâches (voir startup_proxy/src/remap_leger.rs et startup_proxy/src/pool.rs).
+    [ValidateSet("on", "off")]
+    [string]$RemapLeger = "on",
+    [ValidateSet("100", "16", "8", "4")]
+    [string]$PoolCessions = "16",
+    [ValidateSet("0", "8", "4", "2")]
+    [string]$PoolPauses = "0",
+    [ValidateSet("on", "off")]
+    [string]$PoolAttenteFin = "on",
+    # Lus par ce proxy : journal AI_ChokePoint.csv à la génération de la carte, triangulation
+    # rapide de l'analyse des goulets (voir src/journal_chokepoints.rs et src/delaunay.rs).
+    [ValidateSet("on", "off")]
+    [string]$JournalChokepoints = "off",
+    [ValidateSet("on", "off", "verifier")]
+    [string]$DelaunayRapide = "on",
+    # Correctif de désynchronisation côté client, pas POL (relecture, relecture_sur_place).
+    [ValidateSet("on", "off")]
+    [string]$RelectureFidele = "on",
     [switch]$Uninstall,
     [string]$GameDir = "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI"
 )
@@ -146,6 +209,6 @@ if ($Uninstall) {
 $built = Join-Path $PSScriptRoot "target\release\BGD_GameCore_XP2.dll"
 if (-not (Test-Path $built)) { throw "Compile d'abord : cargo build --release dans $PSScriptRoot" }
 Copy-Item $built $proxy -Force
-Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_banniere_annuler=$UiBanniereAnnuler", "ui_reduction_quartiers=$UiReductionQuartiers", "ui_debordement=$UiDebordement", "ui_avancement=$UiAvancement", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones", "garde_messages=$GardeMessages"
-Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_banniere_annuler $UiBanniereAnnuler, ui_reduction_quartiers $UiReductionQuartiers, ui_debordement $UiDebordement, ui_avancement $UiAvancement, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones, garde_messages $GardeMessages) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
+Set-Content -Encoding ascii $cfg "actif=$Actif", "mode=$Mode", "portee=$Portee", "ameliorations=$Ameliorations", "rendements=$Rendements", "wmd_accel=$WmdAccel", "ui_nouveautes=$UiNouveautes", "ui_boutons=$UiBoutons", "ui_recentrage=$UiRecentrage", "ui_journal=$UiJournal", "ui_mesure_epingles=$UiMesureEpingles", "ui_mesure_mouvements=$UiMesureMouvements", "ui_diag_accords=$UiDiagAccords", "depart_signaux=$DepartSignaux", "ui_epingles=$UiEpingles", "ui_carte_entiere=$UiCarteEntiere", "ui_merveilles=$UiMerveilles", "ui_banniere_annuler=$UiBanniereAnnuler", "ui_reduction_quartiers=$UiReductionQuartiers", "ui_formations=$UiFormations", "ui_debordement=$UiDebordement", "diag_production=$DiagProduction", "ui_logement=$UiLogement", "ui_espions=$UiEspions", "ui_accord_quantites=$UiAccordQuantites", "ui_avancement=$UiAvancement", "ui_rendements=$UiRendements", "tours_production=$ToursProduction", "ui_charges=$UiCharges", "ui_routes=$UiRoutes", "ui_notifications=$UiNotifications", "ui_bandeau=$UiBandeau", "ui_politiques=$UiPolitiques", "ui_rapports=$UiRapports", "profil_zones=$ProfilZones", "garde_messages=$GardeMessages", "cache_assets=$CacheAssets", "gc_en_lot=$GcEnLot", "bdd_gardee=$BddGardee", "textes_gardes=$TextesGardes", "vsync_chargement=$VsyncChargement", "remap_leger=$RemapLeger", "pool_cessions=$PoolCessions", "pool_pauses=$PoolPauses", "pool_attente_fin=$PoolAttenteFin", "journal_chokepoints=$JournalChokepoints", "delaunay_rapide=$DelaunayRapide", "relecture_fidele=$RelectureFidele", "config_gardee=$ConfigGardee", "pause_fin_chargement=$PauseFinChargement"
+Write-Host "Proxy installé dans $bin (actif $Actif, mode $Mode, portée $Portee, ameliorations $Ameliorations, rendements $Rendements, wmd_accel $WmdAccel, ui_nouveautes $UiNouveautes, ui_boutons $UiBoutons, ui_recentrage $UiRecentrage, ui_journal $UiJournal, ui_mesure_epingles $UiMesureEpingles, ui_mesure_mouvements $UiMesureMouvements, ui_diag_accords $UiDiagAccords, depart_signaux $DepartSignaux, ui_epingles $UiEpingles, ui_carte_entiere $UiCarteEntiere, ui_merveilles $UiMerveilles, ui_banniere_annuler $UiBanniereAnnuler, ui_reduction_quartiers $UiReductionQuartiers, ui_formations $UiFormations, ui_debordement $UiDebordement, diag_production $DiagProduction, ui_logement $UiLogement, ui_espions $UiEspions, ui_accord_quantites $UiAccordQuantites, ui_avancement $UiAvancement, ui_rendements $UiRendements, tours_production $ToursProduction, ui_charges $UiCharges, ui_routes $UiRoutes, ui_notifications $UiNotifications, ui_bandeau $UiBandeau, ui_politiques $UiPolitiques, ui_rapports $UiRapports, profil_zones $ProfilZones, garde_messages $GardeMessages, cache_assets $CacheAssets, gc_en_lot $GcEnLot, bdd_gardee $BddGardee, textes_gardes $TextesGardes, vsync_chargement $VsyncChargement, remap_leger $RemapLeger, pool_cessions $PoolCessions, pool_pauses $PoolPauses, pool_attente_fin $PoolAttenteFin, journal_chokepoints $JournalChokepoints, delaunay_rapide $DelaunayRapide, relecture_fidele $RelectureFidele, config_gardee $ConfigGardee, pause_fin_chargement $PauseFinChargement) ; chargé par le proxy de démarrage (startup_proxy/install.ps1)."
 Write-Host "Journal : $env:LOCALAPPDATA\Civ6RolloverProxy\RolloverProxy.log"

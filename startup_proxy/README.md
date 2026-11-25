@@ -51,6 +51,25 @@ remis les originaux des deux anciens proxys.
   elle. Un export absent de la winmm de cette version de Windows rend 0, et le journal le compte.
 - Des renvois PE (*forwarders*) n'ont pas suffi : leur cible est un nom de module ou un chemin figé
   dans la DLL (`C:\Windows\System32\winmm`), faux si Windows est installé ailleurs.
+- **Versions du jeu.** Les modules qui visent des adresses fixes de l'exe (absent_turn, flush,
+  messages, pings, rejoin, relink, reload_all, snapshots, sync_notes) ont une table `EXES` dont
+  chaque entrée porte le nom de sa version : `DX12 1.0.12.74`. La version du jeu est lue dans la
+  ressource de version de l'exe (`exe::game_version`, commun aux deux proxys). Seules les entrées
+  de cette version sont essayées ; leurs empreintes départagent DX12 et DX11 et refusent un exe
+  différent sous le même numéro. Versions prises en charge : 1.0.12.58 et 1.0.12.74, celles de
+  `patch::BUILDS` (commun aux deux proxys). La 1.0.12.72 ne l'est plus depuis le 2026-11-23.
+- **Version non prise en charge** (`patch::unsupported_game`, version illisible comprise) :
+  `DllMain` ne pose aucun correctif, ceux par signature compris (assets, bdd, pool, vsync…), et
+  le journal dit `jeu … non pris en charge par BetterGameExperience`. Restent le chargeur (le
+  proxy de GameCore refuse lui-même cette version) et l'accroche du Lua, pour le dire au joueur :
+  - au menu principal, la version de BGE en bas à gauche est remplacée par « BGE : jeu … non pris
+    en charge », en rouge, et un avertissement s'ouvre une fois par lancement du jeu, avant la
+    notification de mise à jour (`maj.lua`) ;
+  - dans le salon, un message rouge à tous à l'arrivée, sans annonce de version (`salon.lua`) ;
+  - « Signaler un bug (BGE) » n'ouvre pas le formulaire : un popup explique que les rapports sont
+    désactivés et invite à mettre le jeu à jour (`rapport.lua`).
+
+  Native `Civ6Proxy_VersionNonPriseEnCharge([« vu »])`, dans le menu et le menu Échap.
 - Au chargement, le proxy écrit `démarrage : proxy winmm chargé dans <exe>` puis
   `démarrage : exports relayés vers <winmm de System32>` dans le journal commun,
   `%LOCALAPPDATA%\Civ6RolloverProxy\RolloverProxy.log`.
@@ -178,6 +197,76 @@ dans les builds locaux : la release est compilée sans la feature `diag`
 `PROXY_REGLAGES` dans `options_proxy.lua`, ou l'inverse. Le libellé, l'aide et les choix se
 donnent en français et en anglais.
 
+## Débit Steam et taille des morceaux réseau (`trace_steam`, `morceaux_reseau`)
+
+**Depuis la 0.15.0, la release envoie des morceaux de 16 384 octets**, sans réglage joueur, aux
+conditions ci-dessous (tampon agrandi partout, même version annoncée par tous les joueurs
+connectés). Une machine dont le tampon n'a pas pu être agrandi annonce `<version>-t0` : elle ne
+compte pas comme équipée, et les correctifs POL se coupent aussi avec elle.
+
+Dans les builds locaux (feature `diag`), deux réglages de l'onglet, section Diagnostic, qui
+prennent effet au lancement suivant du jeu : `trace_steam` (off par défaut, absent de la release)
+et `morceaux_reseau` (16384 par défaut, pour essayer d'autres tailles). Ce sont les outils de la
+piste « morceaux plus gros »
+([analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md), piste 3). Code :
+[src/debit_steam.rs](src/debit_steam.rs).
+
+- **`trace_steam=on` : trace des envois et réceptions Steam. Aucune adresse de l'exe.**
+  - L'entrée de l'import `SteamInternal_FindOrCreateUserInterface` est redirigée. Quand le jeu
+    demande `SteamNetworking005`, `SendP2PPacket` et `ReadP2PPacket` sont détournés dans la table
+    virtuelle de l'interface.
+  - Toutes les 500 ms, une ligne par pair actif : paquets et octets envoyés et reçus, plus grand
+    paquet, envois refusés par Steam (le jeu n'en sait rien), paquets trop grands pour le tampon du
+    jeu. S'y ajoute la file d'envoi de Steam (`GetP2PSessionState` : octets et paquets en attente,
+    relais ou direct).
+  - Fichier : `%LOCALAPPDATA%\Civ6RolloverProxy\steam_debit-<pid>.log`. Il n'entre pas dans les
+    rapports de bug. Un pair y est noté par un numéro et l'identifiant de compte de son SteamID.
+- **`morceaux_reseau=off|4096|16384|60000` : morceaux plus gros (16384 en release).**
+  - Un receveur au tampon d'origine (2 Ko) plante sur un morceau plus gros. Le 2026-11-23, un
+    joueur sans BGE (`actif=off`) a planté en rejoignant un hôte réglé à 60 000.
+  - **Au lancement**, seul le tampon de réception Steam de 2 Ko est remplacé par un tampon de
+    128 Ko : il reçoit aussi bien les morceaux d'origine. Les envois gardent 1 166 octets. Il
+    l'est sur toute machine, même réglée à `off`.
+  - **En partie seulement**, la taille choisie s'applique quand les correctifs POL sont actifs et
+    que chaque joueur connecté annonce la même version (`partie.lua`, native
+    `Civ6Proxy_MorceauxReseau` : leurs SteamID). Un build de diagnostic annonce
+    `<version>-diag`, plus `-m<taille>` avec ce réglage (`salon::version_annoncee`) : ni la version
+    publiée, ni un build réglé autrement ne comptent comme lui. La release annonce sa version
+    seule, toutes ses machines envoient donc la même taille.
+  - **Retour à 1 166 octets** : correctifs POL coupés (salon), joueur non équipé, ou premier
+    paquet Steam, envoyé ou reçu, d'un pair hors de la liste. Un nouveau venu écrit avant que
+    l'hôte lui réponde. Un pair hors liste vu dans les 30 dernières secondes bloque aussi le
+    passage aux gros morceaux. Le journal dit `debit steam : morceaux de … octets (raison)`.
+  - **Injections à des adresses fixes, relevées sur 1.0.12.58 et 1.0.12.74** (table `EXES`, DX12 /
+    DX11). Chaque site est vérifié octet par octet avant d'écrire.
+    Sur une autre version, rien n'est posé et le journal dit `essai de morceaux non posé`.
+
+    | Site | DX12 .58 | DX11 .58 | DX12 .74 | DX11 .74 | Ce qui est écrit |
+    |---|---|---|---|---|---|
+    | Réglage de session de la taille (plafond 1 166) | `1407f7ab0` | `1407f7330` | `1407fd2e0` | `1407fc1e0` | `jmp` vers son écriture finale, dont la valeur devient la taille choisie |
+    | Remise à 1 166 | `1407f7780` | `1407f7000` | `1407fcfb0` | `1407fbeb0` | la valeur écrite |
+    | Globale de la taille | `14128f328` | `14127c328` | `141294328` | `141282328` | la taille choisie |
+    | `lea rbx,[tampon]` de `FSteamTransportThread::Update` | `14085dc4c` | `14085d96c` | `1408645ac` | `140861f9c` | l'adresse du nouveau tampon |
+    | `mov r8d,800h`, 27 octets plus loin | `14085dc67` | `14085d987` | `1408645c7` | `140861fb7` | 128 Ko |
+
+    Pour une nouvelle version, le test `chunk_sites_by_pattern` cherche les mêmes motifs dans
+    chaque exe présent (`CIV6_EXE_74_DIR` ou le jeu installé, `CIV6_EXE_58_DIR`) et affiche les
+    adresses : les recopier dans `EXES` avec le nom de la version.
+  - Le nombre de morceaux d'un message (`1407f7ae0` en DX12 .58 : `(taille − 1) / globale + 1`)
+    n'est calculé qu'à l'envoi, par le vidage de la file sortante (`FNetSession`, « Net Flushing
+    Outgoing Message Queue »). La lecture des morceaux à la réception n'est pas encore relue :
+    par prudence, seules des machines de même taille échangent des gros morceaux (voir plus haut).
+    Essai du 2026-11-23, deux machines à 60 000 : contrôle de synchro de 490 Ko en 9 morceaux,
+    sauvegarde de 2,9 Mo reçue en environ 4,5 s, autant de paquets et d'octets reçus qu'envoyés.
+- **Lecture.**
+  - Chronométrer l'envoi d'une sauvegarde ou d'un contrôle de synchro avec la taille du jeu, puis
+    avec des morceaux plus gros, en regardant la file d'envoi se vider.
+  - Si le débit en octets ne change pas, Steam limite en octets (fenêtre ÷ ping) : la piste ne
+    rapporte rien.
+  - S'il grandit avec la taille des paquets, Steam limite en messages, et la piste vaut un
+    correctif POL.
+- **Le journal.** `debit steam : …` dans `RolloverProxy.log`.
+
 ## Le salon multijoueur : qui a le proxy ?
 
 [src/salon.rs](src/salon.rs) et [src/salon.lua](src/salon.lua). Certains correctifs changent la
@@ -217,9 +306,20 @@ ne s'activent que si tous les humains ont BetterGameExperience à la même versi
   joueurs qui n'ont plus le proxy. Chaque ouverture du salon, et chaque migration d'hôte, tire donc
   un jeton pour l'hôte et un pour chaque joueur.
 - **L'annonce.** Chaque joueur écrit dans sa configuration de joueur `BGD_VERSION =
-  <version>@<jeton de l'hôte>#<son jeton>`, puis la diffuse (`Network.BroadcastPlayerInfo`, sans
-  effet sur le statut « prêt »). Une annonce qui ne porte pas le jeton actuel de l'hôte ne compte
-  pas.
+  <version>@<jeton de l'hôte>#<son jeton>~<son identité>`, puis la diffuse
+  (`Network.BroadcastPlayerInfo`, sans effet sur le statut « prêt »). Une annonce qui ne porte pas le
+  jeton actuel de l'hôte ne compte pas.
+- **L'identité.** C'est l'identifiant Steam du joueur, lu dans le nom réseau de son emplacement
+  (`NETWORK_NAME = <nom>@<identifiant>`, sinon `GetNetworkIdentifer`). Un swap d'emplacements
+  n'échange que le nom réseau et l'état « prêt » : l'emplacement garde ses autres valeurs, annonce
+  comprise ([analyses/lobby](../analyses/lobby/README.md)). Sans identité, un joueur sans le proxy
+  qui prenait l'emplacement d'un joueur équipé héritait de son annonce, valide pour ce salon, et le
+  salon le croyait équipé (rapport BGE-141E15 : swap de Mateo et StulioS, verdict passé à 1). Une
+  annonce compte donc seulement si son identité est celle de l'occupant actuel. Sans identité
+  (réseau local, annonce d'une version précédente), un jeton personnel présent sur deux
+  emplacements ne compte pour aucun. La même règle sert à l'hôte en partie (`partie.lua`, un remplaçant sur l'emplacement
+  d'un joueur parti), aux options de partie (`option_partie.lua`), au départ simultané
+  (`proxy/src/ui_depart.lua`) et aux signaux d'équipe (`proxy/src/mods/pings/common.lua`).
 - **Le verdict** est celui de l'hôte, le même pour toutes les machines : `BGD_VERDICT =
   <version>@<jeton de l'hôte>:<1|0>:<jetons>` dans sa configuration de joueur. 1 si tous les
   humains connectés annoncent sa version avec son jeton ; les jetons de tous ceux dont il a reçu une
@@ -337,9 +437,9 @@ inattendue`).
 [src/maj.rs](src/maj.rs) et [src/maj.lua](src/maj.lua).
 
 - **La vérification.** Au premier script Lua chargé par l'exe, bien avant le menu principal, un
-  thread lit `releases/latest/download/manifest.json` (le `curl.exe` de Windows, sans fenêtre, 20 s
-  au plus) et compare sa `version` à celle gravée dans ces DLL par le workflow de release
-  (`BGD_RELEASE`, `RELEASE` dans [proxy/src/version.rs](../proxy/src/version.rs)). Une compilation
+  thread lit `releases/latest/download/manifest.json` (WinHTTP, sans processus ni fenêtre, 20 s
+  au plus par étape ; sous Wine aussi, où `curl.exe` n'existe pas) et compare sa `version` à celle
+  gravée dans ces DLL par le workflow de release (`BGD_RELEASE`, `RELEASE` dans [proxy/src/version.rs](../proxy/src/version.rs)). Une compilation
   locale n'a pas de version de release : elle ne vérifie rien. Le manifeste n'est pas vérifié ici :
   il ne sert qu'à prévenir, et l'installeur vérifie sa signature avant d'installer.
 - **Le canal.** Elle suit la case « Pré-release » de l'installeur (`%LOCALAPPDATA%\BetterGameExperience\canal.txt`).
@@ -372,6 +472,15 @@ inattendue`).
     Sans installeur à cet endroit, la page de la release s'ouvre dans le navigateur, et le jeu reste
     ouvert.
   - **Plus tard** (ou Échap) : plus de notification jusqu'au prochain lancement du jeu.
+- **Sous Wine (Proton).** Détecté par `wine_get_version` de `ntdll.dll` ([src/wine.rs](src/wine.rs)).
+  L'installeur Linux ([updater/README.md](../updater/README.md#linux-proton)) remplace celui de
+  Windows : le canal se lit dans son `canal.txt` (`$XDG_DATA_HOME/BetterGameExperience`, par défaut
+  `~/.local/share/BetterGameExperience`, vu par le lecteur `Z:`), et **Mettre à jour** lance son
+  script `bge-launch.sh` avec `--after-game <dossier de l'exe, en chemin Unix>`. Le binaire ELF n'est
+  jamais lancé directement : Wine le prendrait pour un de ses modules. Le script retire de
+  l'environnement ce que Steam y met (`LD_PRELOAD`…) et détache l'installeur du jeu (`setsid`).
+  L'installeur met à jour une fois le jeu fermé, sans relancer le jeu : Steam le compterait encore
+  en cours (voir [updater/README.md](../updater/README.md#linux-proton)).
 - **Le journal** : `maj : version … disponible (installée : …)`, `maj : à jour …`,
   `maj : vérification impossible : …`, `maj : notification de la version …`, `maj : installeur
   lancé (…)`, et toute erreur du bloc, qui n'est jamais propagée au menu.
@@ -427,7 +536,9 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
     multijoueur, hôte, pause, humains, langue, description), la version de BGE, l'exe (DX11 ou
     DX12), le compte Steam connecté sur la machine (`steam_id_windows`, lu dans
     `HKCU\Software\Valve\Steam\ActiveProcess`, utile en solo où le jeu ne donne pas toujours le
-    Steam ID) et la liste des fichiers ;
+    Steam ID), le système (`systeme` : `Windows 10.0.22631` par `RtlGetVersion` ; sous Wine,
+    `Linux 6.12.1 (Wine 9.0, Windows 10.0.19045)`, par `wine_get_host_version` et
+    `wine_get_version`, affiché dans le fil Discord) et la liste des fichiers ;
   - `bge/RolloverProxy.log` et `bge/rollover_proxy.cfg` ;
   - `logs/` : le dossier `Logs` du jeu (`%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VI`),
     `AppOptions.txt` et `Mods.sqlite` ;
@@ -435,16 +546,23 @@ rapports et les publie sur Discord : [rapport_worker](../rapport_worker/README.m
     hotseat), dans `Documents\My Games\…\Saves` (dossier Documents de Windows, OneDrive compris).
 
   Les fichiers texte sont coupés à leurs 5 derniers Mo, et le nom d'utilisateur Windows est retiré
-  des chemins (`C:\Users\<utilisateur>`). Au-delà de 40 Mo, les autosaves sont retirés, du plus
+  des chemins (`C:\Users\<utilisateur>`). Sous Wine, où l'utilisateur Windows est `steamuser`, c'est
+  le nom d'utilisateur Linux, dernier élément du dossier personnel (`HOME`, sinon `WINEHOMEDIR`), qui
+  est retiré, sous ses deux formes : `/home/<utilisateur>` et `Z:\home\<utilisateur>` (`/var/home/…`
+  aussi), ainsi que dans les dossiers de montage automatique, où sont souvent les bibliothèques
+  Steam d'un autre disque : `/run/media/<utilisateur>` (udisks) et `/media/<utilisateur>` (Ubuntu).
+  Au-delà de 40 Mo, les autosaves sont retirés, du plus
   ancien au plus récent. Compression deflate ([miniz_oxide](https://crates.io/crates/miniz_oxide)).
   Les 5 derniers zips restent dans `%LOCALAPPDATA%\BetterGameExperience\rapports`.
-- **L'envoi** : `curl.exe` de Windows, sans fenêtre, 300 s au plus, champ `archive` d'un
-  formulaire multipart, vers l'URL du relais gravée à la compilation (`BGE_RAPPORT_URL`, variable
+- **L'envoi** : WinHTTP ([src/http.rs](src/http.rs)), sans processus ni fenêtre, 300 s au plus par
+  étape, champ `archive` d'un formulaire multipart, vers l'URL du relais gravée à la compilation (`BGE_RAPPORT_URL`, variable
   du dépôt GitHub lue par le workflow de release). `rapport_url=https://…` dans
   `rollover_proxy.cfg` la remplace, pour essayer un autre relais. L'en-tête `X-BGE-Cle` porte la
   clé que le relais exige (`CLE_CLIENT`, la même dans le Worker, un test le vérifie) : elle écarte
   les envois qui ne viennent pas de la DLL. Le relais rend `{"id": "BGE-…"}`.
-  Sans relais (compilation locale), ou s'il échoue, le zip est copié sur le Bureau.
+  Sans relais (compilation locale), ou s'il échoue, le zip est copié sur le Bureau. Sous Wine, celui
+  de Linux (`XDG_DESKTOP_DIR` de `user-dirs.dirs`, sinon `~/Desktop`) et non celui du préfixe, et le
+  chemin montré au joueur est le chemin Unix.
 - **Le journal** : `rapport : formulaire ouvert`, `message : …`, `envoi lancé
   (…)`, `<zip> écrit (… octets)`, `envoyé, numéro …` ou `envoi impossible : …`, et toute erreur du
   bloc, qui n'est jamais propagée au menu.
@@ -501,13 +619,13 @@ appliqué non plus, et compte comme une correction.
   puis une sur 100). Pour un message de configuration : `messages : NetPlayerInfo abîmé à la
   lecture, il ne sera pas appliqué`, puis `… abîmé non appliqué, la configuration est gardée` ; ou
   `messages : NetPlayerInfo : joueur <id> hors des <n> emplacements, non appliqué`.
-- Chat : en jeu, `partie.lua` interroge `Civ6Proxy_GardeMessages()` (les lectures corrigées depuis
-  le dernier appel) à chaque `GameCoreEventPublishComplete`. Après une correction, le joueur envoie
-  à tous `BGE - Blocked a damaged network message that would have frozen my game.`, en rouge
-  (`LOC_BGD_CHAT_GARDE`, traduit à l'arrivée par chaque machine équipée), qui s'affiche
-  `<joueur>: BGE - …`. Au plus une ligne par minute ; une correction faite au salon ou au chargement
-  est dite à l'arrivée en jeu. Sans chat (solo, hotseat, PlayByCloud), le journal seulement :
-  `partie : garde : n lecture(s) corrigée(s)`.
+- Chat: in game, `partie.lua` asks `Civ6Proxy_GardeMessages()` (impossible counts replaced) and
+  `Civ6Proxy_GardeWipes()` (configuration wipes refused) at each `GameCoreEventPublishComplete`, and
+  the player tells everyone, in green: `BGE - Game freeze prevented for <player>.` or `BGE - Game
+  settings wipe prevented for <player>.` (`LOC_BGD_CHAT_GARDE`, `LOC_BGD_CHAT_GARDE_CONFIG`,
+  translated on arrival). A refused `NetPlayerInfo` is logged only. At most one line of each kind
+  per minute; something prevented in the lobby or the load is said on arrival in game. Without chat
+  (solo, hotseat, PlayByCloud), the log only: `partie : freeze prevented for <player>`.
 - Avec l'interrupteur général `actif=off`, rien n'est posé, comme pour le reste du mod
   (`messages : garde non posée (actif=off)`). C'est un correctif de bug : en release, aucun
   réglage, la garde est toujours posée. Dans les builds de diagnostic (feature `diag`) seulement,
@@ -518,14 +636,15 @@ appliqué non plus, et compte comme une correction.
   gel (0x61746143) injecté…` puis `… remplacé par 0 (1 corrections)`, la ligne `BGE - Blocked…`
   doit arriver dans le chat à l'arrivée en jeu, et la partie continue (la carte visée est vidée,
   sans effet visible). En solo, il n'y a pas de chat : le journal seulement. Remettre `on` ensuite.
-- Addresses of both exes of 2026-11-05, `CivilizationVI_DX12.exe` and `CivilizationVI.exe` (DX11),
-  one table each (`EXES`). The loaded exe is checked byte by byte against each table (prologue of
+- Addresses of both exes, `CivilizationVI_DX12.exe` and `CivilizationVI.exe` (DX11), one table
+  each per game version (`EXES`). The loaded exe is checked byte by byte against each table of its
+  version (prologue of
   the read, start of the five functions, `call [rax+30h]` before each return, the five entries of
   both vtables, the configuration singleton and the displacement leading to it, the start of the
   `NetPlayerInfo` handler); the vtables and the singleton are touched only if everything matches.
-  The log says which table was used: `messages: guard installed (DX11, …)`. On another exe (another
-  build), nothing is installed and the log says `messages: unknown exe (DX12: …; DX11: …), guard
-  not installed`. `cargo test` checks that each table matches its own installed exe, and only that
+  The log says which table was used: `messages: guard installed (DX11, …)`. On another exe, nothing is
+  installed and the log says `messages: unknown exe (game …: DX12 …: …; DX11 …: …), guard not
+  installed`, or `(no table for game …)` for an unknown version. `cargo test` checks that each table matches its own installed exe, and only that
   one.
 - The DX11 table (added on 2026-11-10): before it, a player on DX11 had no guard, and that player
   froze, then crashed, at the disconnection of 2026-11-10 (20:09), while the players on DX12 were
@@ -689,6 +808,116 @@ Only the machine with BGE is protected; the others notice nothing.
 - `cargo test` checks that each table matches its own installed exe, and only that one.
 - Not tried in a game yet: it needs a client that finishes loading after the host by less than the
   snapshot's transfer time (a late game, a slow link).
+
+## Désynchros réparées sur place, rechargements plus rapides (contribution d'OzrielTheLost)
+
+Correctifs de stabilité, sans réglage joueur (les clés ne sont lues que par les builds de
+diagnostic) :
+
+- [reparation_synchro](src/reparation_synchro.rs), hôte seulement : quand une AutoArchive reste
+  désynchronisée (delta d'origine vide, ou déjà désynchronisée au contrôle précédent), l'hôte envoie
+  un delta qui liste toutes ses variables. Le client, avec le code d'origine, répare ainsi une
+  variable que personne n'a modifiée, que le delta d'origine n'envoie jamais, au lieu d'aller
+  jusqu'au rechargement. Après trois essais de suite sur une archive, retour au delta d'origine.
+  S'enchaîne au relais de `sync_notes`.
+- [maths_communes](src/maths_communes.rs), POL : l'UCRT calcule `exp`, `pow`… par la voie sans FMA3
+  sur toutes les machines ; remis à sa valeur de départ quand POL se désactive.
+- [relecture_sur_place](src/relecture_sur_place.rs), client seulement, avec un réglage
+  (`relecture_fidele`, options avancées, section Performances, comme `relecture` dans le proxy de GameCore ; pas POL) :
+  quand l'hôte renvoie en données de création une archive que le client a déjà, le client ne relit
+  que les variables dont les octets diffèrent de ceux de l'hôte, comme le chemin de delta d'origine,
+  puis lance leurs DeltaDesyncCallbacks. Le chemin sur place d'origine relisait tout et n'en lançait
+  aucune : relire une variable déjà égale changeait ensuite les décisions de l'IA, et un arbre de
+  comportement y restait sans liens.
+
+Rechargements (options avancées, section Performances) :
+
+- [config_gardee](src/config_gardee.rs) (`config_gardee`) : à un rechargement avec les mêmes mods,
+  l'étape de configuration prend son chemin « matches » ; l'étape de gameplay garde son chemin
+  complet, donc GameCore est toujours rechargé (la contrainte de
+  [analyses/chargement](../analyses/chargement/README.md)). `bdd` laisse alors la localisation
+  intacte (avec `textes_gardes`).
+- [fin_chargement](src/fin_chargement.rs) (`pause_fin_chargement`) : la phase d'après chargement
+  (cache du terrain) n'attend plus 16 ms entre ses ticks. L'intervalle est remis dès que
+  `WorldView_PostLoadUpdate` n'a plus rien à cuire, au plus tard 3 s après le premier appel, et la
+  levée de VSync de `vsync` s'arrête au même moment (si le jeu l'avait demandée). En
+  0.14.0, il restait à 0 jusqu'à `LoadGameViewState::End()` : toute l'attente qui suivait sur
+  l'écran de chargement tournait sans pause, VSync levée, CPU à fond (plaintes de joueurs). Journal :
+  `post-load: N step(s) without pause in X ms, tick interval back to Y ms (terrain done|time cap)`.
+- [vsync](src/vsync.rs) (`vsync_chargement`) : aussi en DX11.
+
+Mesure de l'auteur (client, petite carte, deux joueurs, DX11) : 13 s → 9 s. Les sites DX12 ne sont
+vérifiés que par les tests sur l'exe.
+
+## Rechargement de tout le monde quand les réparations deviennent trop grosses
+
+[resynchro_volume](src/resynchro_volume.rs), **hôte seulement**. À un contrôle de synchro de fin de
+tour, si l'hôte envoie à un joueur au moins `resynchro_volume_ko` Ko de deltas (500 par défaut) ou
+répare au moins `resynchro_volume_archives` archives (30 par défaut), il recharge tout le monde par
+le chemin de `reload_all`, dès ce contrôle. Un joueur sain reçoit 3 à 16 Ko et au plus une dizaine
+d'archives. Le joueur revenu en plein tour de BGE-2890AC recevait 5,5 à 5,9 Mo sur 74 à 83 archives à
+chaque tour, pendant 30 tours ([analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
+piste 2).
+
+- **Mesure** : `sync_notes` compte chaque archive ajoutée à la réparation, et lit la taille de son
+  delta dans le sérialiseur du gestionnaire, juste après sa copie (`[vtable+0x10]`, l'appel que le
+  jeu fait lui-même ; vérifié dans les quatre exe).
+- **Garde-fou** : au plus un rechargement par ce chemin tous les 10 tours. Un nouveau dépassement
+  pendant ces 10 tours, contrôle de la partie rechargée compris, ne recharge rien : c'est annoncé
+  une fois dans le chat, avec le tour de reprise. Si le chargement recréait lui-même l'écart, on ne
+  recharge donc pas en boucle. Un rechargement déjà en cours n'est ni compté ni gêné.
+- **Chat** (`partie.lua`, `Civ6Proxy_ResyncVolume(tour)`, en anglais comme les autres messages
+  `BGE -`) : après le rechargement, qui l'a causé, avec le nombre d'archives et les Ko
+  (`LOC_BGD_CHAT_SYNC_RELOAD_VOLUME`) ; la pause (`LOC_BGD_CHAT_SYNC_RELOAD_PAUSE`).
+- **Réglages**, dans `rollover_proxy.cfg` seulement (pas d'onglet) : `resynchro_volume=on|off`,
+  `resynchro_volume_ko`, `resynchro_volume_archives`, lus à chaque contrôle.
+- **Journal** : `resync volume: player N: A archive(s), K KB repaired at turn T: the host reloads
+  everyone`, puis `… again … no automatic reload before turn T` ou `(paused)`.
+
+Pas encore essayé en partie : le seuil n'a été vérifié que sur les chiffres des rapports.
+
+## Contrôles de synchro plus rapides : cache des hachages de l'hôte
+
+[cache_synchro](src/cache_synchro.rs) (`cache_synchro=on|verify|off`, `on` par défaut depuis la 0.15.0), **hôte
+seulement**, sans changer le protocole ni ce que reçoivent les clients. Pas un correctif POL.
+L'analyse est dans [analyses/passage_de_tour_reseau](../analyses/passage_de_tour_reseau/README.md),
+piste 1.
+
+- **Le constat.** Pour chaque contrôle reçu d'un client, l'hôte recalcule le hachage de chacune de
+  ses archives (`140dc5390` en DX12 1.0.12.58), alors que rien n'a changé depuis le contrôle
+  précédent du même tour. Avec dix clients, il fait dix fois le même calcul.
+- **Ce qui est redirigé.** Le seul appel au hachage fait par le gestionnaire du contrôle. Le relais
+  passe aussi le hachage annoncé par le client et la clé de l'archive. Les autres appels du hachage,
+  dont celui du client qui construit son propre contrôle, ne sont pas touchés.
+- **Quand une valeur gardée sert.** Seulement si elle est égale au hachage annoncé par le client,
+  pour la même archive sous la même clé, et dans la même **génération**. Un écart est toujours
+  recalculé : une réparation part d'une valeur fraîche, comme dans le jeu d'origine.
+- **La génération** change, et le cache est vidé, à chaque :
+  - début de contrôle (`StartGameSyncCheck`) ;
+  - inscription ou désinscription d'une archive : création ou destruction d'objets, chargement ;
+  - message exécuté par GameCore, compté avant et après son exécution par le proxy de GameCore
+    (`executions`). C'est le cache **périmé** : un ordre appliqué pendant la barrière le vide, et il
+    repart de valeurs fraîches ;
+  - création ou destruction d'un contexte de partie, pose ou retrait du proxy de GameCore.
+- **Sans le proxy de GameCore** (absent, ancien, `actif=off`, GameCore inattendu), le cache ne sert
+  jamais : chaque hachage est calculé comme dans le jeu d'origine.
+- **Sites, sans table d'adresses.**
+  - L'appel du hachage est trouvé par motif, dans le gestionnaire que reconnaît `reparation_synchro`.
+  - Le hachage doit avoir exactement deux appelants.
+  - Les trois fonctions du gestionnaire sont trouvées dans sa table virtuelle (+0x28, +0x30, +0x40),
+    chacune par une chaîne qu'elle seule écrit (`proxy/src/pe.rs`).
+  - Ces entrées pointent vers un relais qui augmente un compteur puis saute à la fonction du jeu.
+- **`verify`.** Recalcule même quand une valeur gardée servirait, rend la valeur fraîche et note
+  chaque écart. Le journal donne, par génération utilisée, les valeurs réutilisées, calculées,
+  vérifiées et différentes, et ce qui l'a close. Forme de la ligne (nombres pour l'exemple) :
+  `sync hash cache: 0 reused, N computed, verify: M checked, 0 differed; closed by new sync check`.
+  **`verify` est le défaut** : le cache ne fait rien gagner tant qu'une partie réelle, sans aucun
+  écart, n'a pas permis de passer à `on`.
+- **Vérifié hors jeu sur 1.0.12.58 et 1.0.12.74** (DX12 et DX11, et leurs GameCore, celui du
+  2024-06-26 compris) par `sites_in_known_exes` et `sites_in_known_gamecores`. En DX12 .74 :
+  appel du hachage `1407f6cd2`, hachage `140dca1b0`, gestionnaire `1407f65e0` (celui de
+  `sync_notes`), table `14104ead0` ; en DX11 .74 : `1407f5ac2`, `140dbc070`, `1407f53d0`,
+  `14103f590`.
 
 ## Compiler, tester, installer
 

@@ -119,11 +119,12 @@ qu'une traduction peut placer dans un autre ordre.
 
 ## macOS
 
-Le même code compile en lanceur macOS, `BetterGameExperience.app` (universel arm64 et x86_64, comme
-le jeu). La partie propre à chaque système est derrière `#[cfg]` : [src/win.rs](src/win.rs) ou
-[src/mac.rs](src/mac.rs) (`sys`), [src/gui.rs](src/gui.rs) ou [src/gui_mac.rs](src/gui_mac.rs),
-[src/http.rs](src/http.rs) ou [src/http_mac.rs](src/http_mac.rs). Le reste (manifeste signé, canaux,
-langues, états, pose et retour en arrière) est commun.
+La même crate compile en lanceur macOS, `BetterGameExperience.app` (universel arm64 et x86_64, comme
+le jeu). La partie propre à macOS est dans [src/macos/](src/macos/), sur le modèle de `src/windows/` :
+`app.rs` (le déroulé de `windows/app.rs`, plus l'option de lancement Steam et l'injection des
+dylibs), `game.rs`, `gui.rs` (NSAlert), `http.rs` (ureq 2 et le TLS du système) et `sys.rs`. Le
+reste (manifeste signé, canaux, langues, états, pose et retour en arrière) est commun. `cfg(unix)`
+couvrant aussi macOS, le code et les dépendances Linux sont sous `target_os = "linux"`.
 
 **État** : le lanceur est prêt, mais les dylibs qu'il pose (le chargeur et le proxy de GameCore pour
 macOS) ne sont pas encore écrites, voir [analyses/macos](../analyses/macos/README.md). Tant qu'aucune
@@ -198,3 +199,54 @@ sur un faux Steam et vérifie fichiers, configuration de Steam et injection. Voi
 ```
 $env:BGD_DIST = "C:\...\dist"; .\target\release\BetterGameExperience.exe --game-dir "C:\...\faux_jeu"
 ```
+
+## Linux (Proton)
+
+La même crate compile aussi l'installeur Linux, pour le jeu Windows lancé par Steam Play (Proton).
+Binaire statique (`x86_64-unknown-linux-musl`), publié avec chaque release sous le nom
+`BetterGameExperience-linux-x86_64`, avec sa signature `BetterGameExperience-linux-x86_64.sig`
+(ed25519, même clé que le manifeste, faite par le workflow de release) et [install.sh](../install.sh).
+`install.sh` télécharge le binaire et sa signature, vérifie la signature avec `openssl` (3.0 ou plus)
+et lance `install` (`curl -fsSL …/releases/latest/download/install.sh | sh`). Le binaire n'est pas
+dans le manifeste : un installeur déjà distribué refuse tout manifeste qui liste plus que les deux DLL.
+
+Organisation du code ([src/main.rs](src/main.rs)) : `release.rs`, `install.rs`, `lang.rs` et
+`textes.rs` (généré par [textes/gen_textes.py](../textes/gen_textes.py)) sont communs aux
+systèmes, avec quelques `#[cfg]` : même manifeste signé, mêmes contrôles, mêmes états. L'interface
+et le système sont dans `src/windows/` (TaskDialog, WinHTTP, registre, élévation), `src/linux/`
+(ligne de commande, ureq, racines de Steam, `vdf.rs`, `launch.rs`) et `src/macos/` (voir
+[macOS](#macos)). Ce qui change sous Linux :
+
+- **En ligne de commande** : `status`, `install`, `uninstall`, `launch-option`,
+  `channel release|prerelease`, `lang <code>`, avec `--game-dir "<dossier>"` et `--yes`. Sans
+  commande, dans un terminal, un menu numéroté (installer, désinstaller, pré-release, option de
+  lancement).
+- **Dossiers** : données dans `$XDG_DATA_HOME/BetterGameExperience` (`~/.local/share/` par défaut,
+  aussi quand la variable est vide ou relative, comme le veut la spécification XDG et comme le fait
+  le proxy de démarrage) :
+  `langue.txt`, `canal.txt`, `installe.txt`, la copie de l'installeur, `bge-launch.sh` et
+  `update.log`. Téléchargements dans `$XDG_CACHE_HOME/BetterGameExperience`, en mode 0700.
+- **Désinstallation** (`uninstall`, ou `install.sh` suivi de `uninstall` : `… | sh -s -- uninstall`) :
+  retire les proxys comme sous Windows, puis le dossier de téléchargement et, dans le dossier de
+  données, les seuls fichiers de l'installeur ; le dossier lui-même s'il est ensuite vide. L'option
+  de lancement peut rester : `winmm=n,b` reprend la `winmm` de Wine quand la nôtre n'est plus là.
+- **Jeu** : `libraryfolders.vdf` des racines de Steam connues (`~/.local/share/Steam`,
+  `~/.steam/steam` ; ni Flatpak ni Snap), et `installdir` de `appmanifest_289070.acf`. Une
+  bibliothèque listée mais introuvable (disque non monté) est signalée par `(?)`.
+- **Pas d'élévation** : un dossier du jeu non modifiable est une erreur qui le nomme.
+- **Option de lancement** : `WINEDLLOVERRIDES="winmm=n,b" %command%`, sans laquelle Wine charge sa
+  propre `winmm`. Jamais écrite dans `localconfig.vdf` : l'installation et `launch-option` donnent
+  les étapes au joueur.
+- **`--after-game [<dossier>]`** : lancé par la notification du jeu, par `bge-launch.sh`
+  ([startup_proxy](../startup_proxy/README.md#la-notification-de-mise-à-jour)). Sans question :
+  le résultat va dans `update.log`. Une réussite donne une notification du bureau (`notify-send`) ;
+  un échec, une boîte d'erreur (`zenity`, sinon `kdialog`), sinon une notification urgente. La
+  version d'avant reste alors en place. Le jeu n'est **pas** relancé : lancé par le jeu,
+  l'installeur reste sous le `reaper` de Steam, qui compte le jeu en cours tant qu'il tourne, et
+  ignore donc un `steam://rungameid` envoyé de là. Le joueur relance le jeu depuis Steam.
+- **Réseau** : ureq (rustls, certificats racine embarqués) au lieu de WinHTTP.
+
+Tests : `cargo test` dans `updater/`, sous Windows, Linux et macOS (les trois dans le workflow ci).
+Les modules communs, `vdf.rs` et la lecture des locales ont leurs tests sur chaque système.
+Depuis Windows, la partie Linux se vérifie avec `cargo check --target x86_64-unknown-linux-musl`
+(ring demande un compilateur C pour la cible). Signature d'install.sh : `sh release/test_install_sh.sh`.
