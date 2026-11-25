@@ -67,7 +67,12 @@ use std::io::Write;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Mutex;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+
+#[path = "debit_regle.rs"]
+mod regle;
+pub use regle::{decide, DEFAULT_CHUNK};
+use regle::{GAME_CHUNK, RECV_BUFFER, STRANGER_MEMORY};
 
 // ---------------------------------------------------------------------------------------------
 // Réglages
@@ -79,13 +84,9 @@ pub struct Config {
     pub chunk: Option<u32>,
 }
 
-/// Taille des morceaux de la release, et valeur de `morceaux_reseau` quand la clé manque.
-pub const DEFAULT_CHUNK: u32 = 16384;
 /// Bornes de `morceaux_reseau` : au-dessus de la taille du jeu, et dans le tampon de réception.
 pub const CHUNK_MIN: u32 = 1167;
 pub const CHUNK_MAX: u32 = 0x1_0000;
-/// Tampon de réception de l'essai : marge pour l'en-tête du transport.
-const RECV_BUFFER: u32 = 0x2_0000;
 
 pub fn parse(cfg: &str) -> Config {
     // Chaque clé est écrite en clair dans son appel à strip_prefix : le test
@@ -461,10 +462,6 @@ unsafe fn install_chunks(module: usize, chunk: u32) {
 // ---------------------------------------------------------------------------------------------
 // Gros morceaux en partie, entre machines équipées
 
-/// Taille des morceaux du jeu (0x48e).
-const GAME_CHUNK: u32 = 1166;
-/// Un pair hors liste vu depuis moins longtemps empêche les gros morceaux.
-const STRANGER_MEMORY: Duration = Duration::from_secs(30);
 
 /// Adresses absolues des écritures.
 struct Sites {
@@ -504,13 +501,7 @@ static BUFFER_OK: AtomicBool = AtomicBool::new(false);
 /// machine planterait sur les gros morceaux des autres) ; sinon rien en release, et `-m<taille>`
 /// avec `morceaux_reseau` dans un build de diagnostic.
 pub fn announced_suffix() -> String {
-    if !BUFFER_OK.load(Ordering::Relaxed) {
-        return "-t0".into();
-    }
-    match CONFIGURED.load(Ordering::Relaxed) {
-        n if n != 0 && cfg!(feature = "diag") => format!("-m{n}"),
-        _ => String::new(),
-    }
+    regle::suffix(BUFFER_OK.load(Ordering::Relaxed), CONFIGURED.load(Ordering::Relaxed), cfg!(feature = "diag"))
 }
 static HOOKED: AtomicBool = AtomicBool::new(false);
 
@@ -541,27 +532,6 @@ unsafe fn gate_peer(peer: u64) {
     if g.active {
         apply(&mut g, false, &format!("pair {} hors de la liste des joueurs équipés", peer & 0xffff_ffff));
     }
-}
-
-/// Liste `"id,id"` de SteamID ; vide : taille du jeu. Gros morceaux seulement en partie réseau avec
-/// les correctifs POL actifs, et sans pair hors liste vu récemment.
-pub fn decide(ids: &str, pol: bool, network: bool, hooked: bool, approved: &mut BTreeSet<u64>, strangers: &mut BTreeMap<u64, Instant>, now: Instant) -> Result<(), String> {
-    approved.clear();
-    approved.extend(ids.split(',').filter_map(|s| s.trim().parse::<u64>().ok()));
-    strangers.retain(|id, seen| !approved.contains(id) && now.duration_since(*seen) < STRANGER_MEMORY);
-    if approved.is_empty() {
-        return Err("aucun joueur équipé listé".into());
-    }
-    if !pol || !network {
-        return Err("correctifs POL inactifs ou partie locale".into());
-    }
-    if !hooked {
-        return Err("SteamNetworking005 non détourné".into());
-    }
-    if let Some(id) = strangers.keys().next() {
-        return Err(format!("pair {} hors de la liste vu récemment", id & 0xffff_ffff));
-    }
-    Ok(())
 }
 
 /// `Civ6Proxy_MorceauxReseau(ids)` (partie.lua) : les SteamID des autres joueurs connectés, tous

@@ -35,6 +35,10 @@ pub(crate) unsafe extern "C-unwind" fn fixer_pol(l: *mut c_void) -> c_int {
         let raison = argument_n(l, 2);
         log(&format!("pol : correctifs POL {} ({raison})", if actif { "actifs" } else { "désactivés" }));
     }
+    // Gros morceaux réseau : jamais sans les correctifs POL (macos_debit.rs).
+    if !actif {
+        super::debit::pol_off();
+    }
     0
 }
 

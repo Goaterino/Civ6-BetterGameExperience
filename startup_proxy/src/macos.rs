@@ -61,6 +61,8 @@ mod congres;
 mod congres_texte;
 #[path = "macos_depart.rs"]
 mod depart;
+#[path = "macos_debit.rs"]
+mod debit;
 
 use journal::log;
 
@@ -208,6 +210,9 @@ unsafe fn installer() {
     }
     if let Err(e) = absent::installer(mh, slide) {
         log(&format!("absent : {e}"));
+    }
+    if let Err(e) = debit::installer(mh, slide) {
+        log(&format!("debit steam : {e}"));
     }
     if std::env::var_os("BGE_DIAG_FICHIERS").is_some() {
         lua::diag_fichiers(mh, slide);
