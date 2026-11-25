@@ -30,9 +30,20 @@
 //!
 //! Le flux du jeu a la même vtable que sous Windows : `+0x28` est `write(flux, tampon, longueur)`.
 //!
-//! x86_64 : pas encore relevé (`installer` le dit) ; le bit `ST_POL` reste donc baissé en x86_64.
+//! En x86_64 (Mac Intel, Rosetta), compilation à part, même structure (relevée depuis la même
+//! chaîne, constructeur `0xa60110`) : AutoVariable en `Units+0x2d0` (`0xa60ba4`), vtable
+//! `0x1341e38`, table en `+0x2e0` ; même disposition EASTL et mêmes nœuds. Écriture des éléments
+//! `0xa6dbe0(nœud, seau, nœud de fin, seau de fin, flux, table)` -> (rax flux, rdx table), cinq
+//! appelants (`0xa5c225` sauvegarde de Player::Units, `0xa7465b` écriture +0x28, `0xa7473b` hash
+//! +0x40, `0xa748d0` / `0xa74963` comparaison +0x48) ; lecture `0xa75620(flux, table)` (atteinte
+//! par `jmp` depuis `0xa74510`, entrée +0x10) ; `+= n` `0xa6aae0(unités, quartier, unité, n)`,
+//! appelants `0x4d4812` (création des unités promises) et `0x9a97a3` / `0x9a9e5d` (mise en place),
+//! seule appelante de la recherche-insertion externe `0xa6ac30`. Le saut posé (`jmp [rip+0]`)
+//! prend 14 octets : les trampolines recopient les `push` et le `sub rsp` (17 ou 20 octets).
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
+// Les relevés x86_64 ne servent, en arm64, qu'aux tests qui lisent le jeu installé.
+#![cfg_attr(target_arch = "aarch64", allow(dead_code))]
 
 use super::journal::log;
 use super::unites_promises_regle::{canonicalize, nodes, write_elements_with, Outer, Table};
@@ -71,6 +82,41 @@ const DISPOSITION: &[(usize, u32, &str)] = &[
     (0xa716d8, 0x97ff_e70a, "bl 0xa6b300 : le hash de synchro aussi"),
     (0xa5b134, 0x9400_4073, "bl 0xa6b300 : la sauvegarde de Player::Units aussi"),
     (0xa714cc, 0x1400_03ed, "b 0xa72480 : la lecture de la variable"),
+];
+
+/// x86_64 : les mêmes fonctions et la suite de leur prologue après les `push` (`X86_PUSH`).
+const X86_ELEMENTS: Fonction = Fonction { nom: "écriture des éléments", adresse: 0xa6dbe0, taille: 0x210, empreinte: 0xaef3_cdd4_2cd4_dbb3 };
+const X86_LECTURE: Fonction = Fonction { nom: "lecture", adresse: 0xa75620, taille: 0x400, empreinte: 0x63fd_3cac_f4d3_a438 };
+const X86_AJOUT: Fonction = Fonction { nom: "table[a][b] += n", adresse: 0xa6aae0, taille: 0x150, empreinte: 0x47ae_c2f0_d1a7_8310 };
+/// push rbp ; mov rbp, rsp ; push r15 ; push r14 ; push r13 ; push r12 ; push rbx (13 octets).
+const X86_PUSH: [u8; 13] = [0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53];
+/// `sub rsp, 0x68` (éléments), `sub rsp, 0xa8` (lecture), `sub rsp, 0x38` (`+= n`).
+const X86_SUITE: [&[u8]; 3] = [&[0x48, 0x83, 0xec, 0x68], &[0x48, 0x81, 0xec, 0xa8, 0x00, 0x00, 0x00], &[0x48, 0x83, 0xec, 0x38]];
+/// Octets relus ailleurs : (adresse, octets x86_64, ce qu'ils montrent).
+const X86_DISPOSITION: &[(usize, &[u8], &str)] = &[
+    (0xa60ba4, &[0x4c, 0x8d, 0xb3, 0xd0, 0x02, 0, 0], "lea r14, [rbx+0x2d0] : AutoVariable en Units+0x2d0"),
+    (0xa6ab73, &[0x49, 0x81, 0xc7, 0xe0, 0x02, 0, 0], "add r15, 0x2e0 : table en Units+0x2e0"),
+    (0xa6aafd, &[0x48, 0x8b, 0x8f, 0xd8, 0x02, 0, 0], "mov rcx, [rdi+0x2d8] : suivi FAutoArchive de la variable"),
+    (0xa7461d, &[0x48, 0x8d, 0x4f, 0x10], "lea rcx, [rdi+0x10] : la table est la valeur de la variable"),
+    (0xa74625, &[0x8b, 0x4f, 0x20], "mov ecx, [rdi+0x20] : nombre de seaux"),
+    (0xa74630, &[0x8b, 0x47, 0x24], "mov eax, [rdi+0x24] : nombre d'éléments"),
+    (0xa6dc14, &[0x48, 0x8b, 0x7f, 0x30], "mov rdi, [rdi+0x30] : suivant du nœud externe en +0x30"),
+    (0xa6dc3d, &[0x8b, 0x07], "mov eax, [rdi] : clé externe en +0"),
+    (0xa6dc46, &[0x48, 0x8d, 0x77, 0x08], "lea rsi, [rdi+8] : table interne en +8"),
+    (0xa6dcb5, &[0x41, 0x8b, 0x45, 0x00], "mov eax, [r13] : clé interne en +0"),
+    (0xa6dcbc, &[0x41, 0x8b, 0x45, 0x04], "mov eax, [r13+4] : valeur interne en +4"),
+    (0xa6dce7, &[0x4d, 0x8b, 0x6d, 0x08], "mov r13, [r13+8] : suivant du nœud interne en +8"),
+    (0xa6ddb2, &[0x4c, 0x89, 0xf0, 0x48, 0x8b, 0x55, 0x90], "mov rax, r14 ; mov rdx, [rbp-0x70] : rend (flux, table)"),
+];
+/// `call`/`jmp rel32` relus : (site, cible).
+const X86_APPELS: &[(usize, usize)] = &[
+    (0xa5c225, 0xa6dbe0),
+    (0xa7465b, 0xa6dbe0),
+    (0xa7473b, 0xa6dbe0),
+    (0xa748d0, 0xa6dbe0),
+    (0xa74963, 0xa6dbe0),
+    (0xa7451f, 0xa75620),
+    (0xa6ab81, 0xa6ac30),
 ];
 
 static BASE: AtomicUsize = AtomicUsize::new(0);
@@ -208,8 +254,40 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
 }
 
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_base: usize) -> Result<String, String> {
-    Err("pas encore relevé en x86_64".into())
+pub unsafe fn installer(base: usize) -> Result<String, String> {
+    let fonctions = [
+        (X86_ELEMENTS, &T_ELEMENTS, hook_elements as *const () as usize),
+        (X86_LECTURE, &T_LECTURE, hook_lecture as *const () as usize),
+        (X86_AJOUT, &T_AJOUT, hook_ajout as *const () as usize),
+    ];
+    let octets = |a: usize, n: usize| std::slice::from_raw_parts((base + a) as *const u8, n);
+    for (f, _, _) in &fonctions {
+        if fnv(octets(f.adresse, f.taille)) != f.empreinte {
+            return Err(format!("version inattendue ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    for ((f, _, _), suite) in fonctions.iter().zip(X86_SUITE) {
+        let o = octets(f.adresse, 13 + suite.len());
+        if o[..13] != X86_PUSH || &o[13..] != suite {
+            return Err(format!("prologue inattendu ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    for &(a, attendu, quoi) in X86_DISPOSITION {
+        if octets(a, attendu.len()) != attendu {
+            return Err(format!("version inattendue ({quoi}, en {a:#x}), aucun détour"));
+        }
+    }
+    for &(a, cible) in X86_APPELS {
+        if patch::cible_rel32_x86(a, octets(a, 5)) != Some(cible) {
+            return Err(format!("version inattendue (appel de {cible:#x} en {a:#x}), aucun détour"));
+        }
+    }
+    BASE.store(base, Ordering::Relaxed);
+    let mut methode = "";
+    for ((f, tramp, accroche), suite) in fonctions.into_iter().zip(X86_SUITE) {
+        methode = patch::hook_with_trampoline_publie(base + f.adresse, 13 + suite.len(), accroche, tramp)?;
+    }
+    Ok(format!("table des unités promises tenue triée (écriture, lecture, insertion ; {methode})"))
 }
 
 #[cfg(test)]
@@ -295,5 +373,37 @@ mod tests {
             .filter(|&a| mot(a) & 0xfc00_0000 == 0x9400_0000 && patch::cible_branche(a, mot(a)) == Some(AJOUT.adresse))
             .collect();
         assert_eq!(ajouts, vec![0x4e3bd0, 0x9b3a98, 0x9b3f58]);
+    }
+
+    #[test]
+    fn fonctions_du_jeu_x86_64() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let p = std::path::Path::new(&home)
+            .join("Library/Application Support/Steam/steamapps/common/Sid Meier's Civilization VI/Civ6.app/Contents/MacOS/GameCore_XP2.dll");
+        let Ok(b) = std::fs::read(&p) else { return };
+        let t = super::super::spectateurs::tranche_x86_64(&b).expect("tranche x86_64");
+        for (f, suite) in [X86_ELEMENTS, X86_LECTURE, X86_AJOUT].iter().zip(X86_SUITE) {
+            let e = fnv(&t[f.adresse..f.adresse + f.taille]);
+            assert_eq!(e, f.empreinte, "{} x86_64 : empreinte {e:#x}", f.nom);
+            assert_eq!(t[f.adresse..f.adresse + 13], X86_PUSH, "{} : push", f.nom);
+            assert_eq!(&t[f.adresse + 13..f.adresse + 13 + suite.len()], suite, "{} : suite du prologue", f.nom);
+            assert!(13 + suite.len() >= 14, "{} : prologue plus court que le saut", f.nom);
+        }
+        for &(a, o, quoi) in X86_DISPOSITION {
+            assert_eq!(&t[a..a + o.len()], o, "{quoi}");
+        }
+        let appel = |a: usize| patch::cible_rel32_x86(a, &t[a..a + 5]);
+        for &(a, cible) in X86_APPELS {
+            assert_eq!(appel(a), Some(cible), "appel en {a:#x}");
+        }
+        // Tous les `call`/`jmp rel32` de `__text` vers ces fonctions (heuristique octet par octet).
+        const TEXTE_X86: (usize, usize) = (0x1020, 0x1019ead);
+        let vers = |cible: usize| -> Vec<usize> {
+            (TEXTE_X86.0..TEXTE_X86.1 - 5).filter(|&a| matches!(t[a], 0xe8 | 0xe9) && appel(a) == Some(cible)).collect()
+        };
+        assert_eq!(vers(X86_ELEMENTS.adresse), vec![0xa5c225, 0xa7465b, 0xa7473b, 0xa748d0, 0xa74963]);
+        assert_eq!(vers(X86_AJOUT.adresse), vec![0x4d4812, 0x9a97a3, 0x9a9e5d]);
+        // La recherche-insertion externe n'est appelée que par `+= n` : pas d'autre mutation en ligne.
+        assert_eq!(vers(0xa6ac30), vec![0xa6ab81]);
     }
 }

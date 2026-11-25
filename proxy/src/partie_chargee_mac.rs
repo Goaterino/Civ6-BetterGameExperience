@@ -33,9 +33,31 @@
 //!   `+0x440` (`u32`, `+0x10` dans `0x2bdaf0`), valeur par défaut `+0x448` ; joueur en `+0x98`.
 //!   Tout est Windows + 8.
 //!
-//! x86_64 : pas encore relevé (`installer` le dit).
+//! En x86_64 (Mac Intel, Rosetta), compilation à part, même découpage sauf l'écriture de la
+//! mémoire d'une case, coupée autrement par clang. Relevé depuis les mêmes constantes et appelants :
+//! - passe post-chargement `0x80a9a0` (appelants `0x4251c8` / `0x425498`), étape des améliorations
+//!   `0x749b20` (appelée en `0x80a9cb`) -> `0x744b40(?, case)` (`0xe5b20b82`, setter des joueurs,
+//!   1000, getter du joueur local, puis `0xe5b20b82 + 0xddfcc31` = `0xf391d7b3`), aussi appelée par
+//!   l'amélioration posée (`0x7447ff`) ; setter `0xa89270` (deux appels seulement, `0x744bf6` et
+//!   `0x744c16` ; rend `al`), getter `0xa891a0` ;
+//! - lecture d'un joueur `0x9de0d0(flux, joueur)` (appelée en `0x9e13e3`), qui finit par
+//!   `0x9b5ce0(joueur)` (`0x9e0914`) : `0x9711a0([joueur+0x798], [0x13dc0b0])` ;
+//! - cités libres : connexion `0x55a810`, appelée par la lecture (`0x55a7eb`) et la mise en place
+//!   (`0x55b561`), joueur en `+0xf0`, id en `Player+0xe0` ;
+//! - grand stratège : `0x71e490` (appelée par la lecture du joueur en `0x9dfe67`) -> lecture
+//!   `0x71e4b0(grand stratège, flux)`, qui finit par la mise en place `0x722650` (`0x71eb16`) ;
+//!   l'initialisation `0x722070` la suit (`0x72208e`) de la remise à zéro (`+0x448` en `0x72236c`) ;
+//!   IndexList::assign `0x2a4a40` (nombre `+0x10`) ;
+//! - jeu `[0x13dc0b0]`, événements `[jeu+0x288]` (objet de `0x19e0` octets, `0x424976`), pas 0x18.
+//!   **Nœud d'écouteur de 0x50 octets** (`0x433ed0` crée la sentinelle, `0x55e730` ajoute à la fin) :
+//!   suivant `+0`, précédent `+8`, `std::function` `+0x10`, compte de références **`+0x40`**.
+//!   Joueur par id `0x3ae880(id)`.
+//! Le saut posé (`jmp [rip+0]`) prend 14 octets : chaque trampoline recopie des instructions entières
+//! sans adresse relative (`push`, `sub rsp`, `mov` entre registres ; 15 ou 20 octets).
 
 #![cfg_attr(target_arch = "x86_64", allow(dead_code, unused_imports))]
+// Les relevés x86_64 ne servent, en arm64, qu'aux tests qui lisent le jeu installé.
+#![cfg_attr(target_arch = "aarch64", allow(dead_code))]
 
 use super::journal::log;
 use super::{patch, pol};
@@ -85,12 +107,97 @@ const DISPOSITION: &[(usize, u32, &str)] = &[
 /// Prologue recopié dans les trampolines : quatre instructions de pile, sans adresse relative.
 const PROLOGUE: usize = 16;
 
+/// x86_64 : les mêmes fonctions (voir l'en-tête), dans l'ordre de `DETOURS` et de `VERIFIEES`.
+const X86_DETOURS: [Fonction; 6] = [
+    Fonction { nom: "passe post-chargement", adresse: 0x80a9a0, taille: 0x70, empreinte: 0x3c73_f20f_9eb8_c108 },
+    Fonction { nom: "écriture d'amélioration mémorisée", adresse: 0xa89270, taille: 0x80, empreinte: 0x597c_f9eb_c24e_25af },
+    Fonction { nom: "lecture d'un joueur", adresse: 0x9de0d0, taille: 0x2e50, empreinte: 0x8c59_6ebe_2231_3aea },
+    Fonction { nom: "écouteurs du joueur", adresse: 0x9711a0, taille: 0x2010, empreinte: 0x6545_7328_83e0_cba7 },
+    Fonction { nom: "écouteurs des cités libres", adresse: 0x55a810, taille: 0x640, empreinte: 0x7e52_80fd_70e2_15e5 },
+    Fonction { nom: "lecture du grand stratège", adresse: 0x71e4b0, taille: 0x8d0, empreinte: 0x3c97_199d_f1ca_bfb6 },
+];
+const X86_GET_REMEMBERED: Fonction = Fonction { nom: "lecture d'amélioration mémorisée", adresse: 0xa891a0, taille: 0x80, empreinte: 0x02ef_0125_c179_c023 };
+const X86_PLAYER_BY_ID: Fonction = Fonction { nom: "joueur par id", adresse: 0x3ae880, taille: 0x40, empreinte: 0x38df_57d2_aa82_0224 };
+const X86_VERIFIEES: [Fonction; 10] = [
+    X86_GET_REMEMBERED,
+    X86_PLAYER_BY_ID,
+    Fonction { nom: "mémoire d'une case (setters, puis getter du joueur local)", adresse: 0x744b40, taille: 0x180, empreinte: 0xac02_8784_e764_cda5 },
+    Fonction { nom: "étape des améliorations", adresse: 0x749b20, taille: 0x50, empreinte: 0xc60d_9a86_801b_e874 },
+    Fonction { nom: "connexion du joueur ([joueur+0x798], [0x13dc0b0])", adresse: 0x9b5ce0, taille: 0x20, empreinte: 0x596a_db08_e515_bef1 },
+    Fonction { nom: "anneau d'un événement", adresse: 0x433ed0, taille: 0x150, empreinte: 0xfe97_1658_206f_d4cd },
+    Fonction { nom: "ajout d'un écouteur", adresse: 0x55e730, taille: 0xe0, empreinte: 0x71ae_4c24_9321_39e6 },
+    Fonction { nom: "IndexList::assign", adresse: 0x2a4a40, taille: 0xf0, empreinte: 0x1a06_9bd8_8df9_4c75 },
+    Fonction { nom: "lecture du grand stratège (appelante)", adresse: 0x71e490, taille: 0x20, empreinte: 0x7f11_a756_b8d2_01a3 },
+    Fonction { nom: "mise en place du grand stratège", adresse: 0x722650, taille: 0x660, empreinte: 0x6aba_3162_8eb9_727b },
+];
+/// Prologues recopiés (instructions entières, sans adresse relative, au moins 14 octets).
+const X86_PROLOGUES: [&[u8]; 6] = [
+    // push rbp ; mov rbp, rsp ; push r15 ; push r14 ; push rbx ; push rax ; mov rbx, rdi ; mov rdi, [rdi+0x288]
+    &[0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x53, 0x50, 0x48, 0x89, 0xfb, 0x48, 0x8b, 0xbf, 0x88, 0x02, 0x00, 0x00],
+    // push rbp ; mov rbp, rsp ; push r15 ; push r14 ; push rbx ; push rax ; mov ebx, ecx ; mov r14d, edx
+    &[0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x53, 0x50, 0x89, 0xcb, 0x41, 0x89, 0xd6],
+    // push rbp ; mov rbp, rsp ; push r15..r12 ; push rbx ; sub rsp, imm32
+    &[0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53, 0x48, 0x81, 0xec, 0x28, 0x03, 0x00, 0x00],
+    &[0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53, 0x48, 0x81, 0xec, 0xb8, 0x06, 0x00, 0x00],
+    &[0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53, 0x48, 0x81, 0xec, 0x68, 0x01, 0x00, 0x00],
+    &[0x55, 0x48, 0x89, 0xe5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53, 0x48, 0x81, 0xec, 0x88, 0x01, 0x00, 0x00],
+];
+/// Octets relus ailleurs : (adresse, octets x86_64, ce qu'ils montrent).
+const X86_DISPOSITION: &[(usize, &[u8], &str)] = &[
+    (0x424976, &[0xbf, 0xe0, 0x19, 0x00, 0x00], "mov edi, 0x19e0 : taille de l'objet des événements"),
+    (0x4249a2, &[0x4c, 0x89, 0xa3, 0x88, 0x02, 0x00, 0x00], "mov [rbx+0x288], r12 : événements en jeu+0x288"),
+    (0x80a9ad, &[0x48, 0x8b, 0xbf, 0x88, 0x02, 0x00, 0x00], "mov rdi, [rdi+0x288] : la passe lit les événements du jeu"),
+    (0x9b5cee, &[0x48, 0x8b, 0xbf, 0x98, 0x07, 0x00, 0x00], "mov rdi, [rdi+0x798] : objet de mise en place du joueur"),
+    (0x55b539, &[0x4c, 0x89, 0xb3, 0xf0, 0x00, 0x00, 0x00], "mov [rbx+0xf0], r14 : joueur des cités libres en +0xf0"),
+    (0x55b54c, &[0x8b, 0xb1, 0xe0, 0x00, 0x00, 0x00], "mov esi, [rcx+0xe0] : id du joueur en +0xe0"),
+    (0x55a8c5, &[0x4d, 0x8d, 0xa5, 0xc0, 0x03, 0x00, 0x00], "lea r12, [r13+0x3c0] : un événement (pas 0x18)"),
+    (0x55a8fa, &[0x41, 0xff, 0x85, 0xd0, 0x03, 0x00, 0x00], "inc [r13+0x3d0] : compteur de l'événement en +0x10"),
+    (0x55a909, &[0x49, 0x8b, 0xbd, 0xc8, 0x03, 0x00, 0x00], "mov rdi, [r13+0x3c8] : anneau de l'événement en +8"),
+    (0x433f0f, &[0xbf, 0x50, 0x00, 0x00, 0x00], "mov edi, 0x50 : sentinelle de 0x50 octets"),
+    (0x433f6c, &[0x41, 0xc7, 0x47, 0x40, 0x01, 0x00, 0x00, 0x00], "mov [r15+0x40], 1 : compte de références de la sentinelle"),
+    (0x55e756, &[0xbf, 0x50, 0x00, 0x00, 0x00], "mov edi, 0x50 : nœud de 0x50 octets"),
+    (0x55e7ad, &[0x41, 0xc7, 0x46, 0x40, 0x01, 0x00, 0x00, 0x00], "mov [r14+0x40], 1 : compte 1 d'un écouteur connecté"),
+    (0x55e7b5, &[0x48, 0x8b, 0x43, 0x08, 0x49, 0x89, 0x46, 0x08, 0x49, 0x89, 0x1e], "précédent +8, suivant +0 : ajout en fin d'anneau"),
+    (0x7229fb, &[0x4c, 0x8d, 0xb3, 0x30, 0x04, 0x00, 0x00], "lea r14, [rbx+0x430] : la mise en place écrit les préférences"),
+    (0x722869, &[0x48, 0x8b, 0xbb, 0x98, 0x00, 0x00, 0x00], "mov rdi, [rbx+0x98] : joueur du grand stratège"),
+    (0x72236c, &[0xc7, 0x83, 0x48, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], "mov [rbx+0x448], 0 : remise à zéro de l'initialisation"),
+    (0x2a4ace, &[0x41, 0x8b, 0x47, 0x10], "mov eax, [r15+0x10] : nombre de l'IndexList en +0x10"),
+];
+/// `call`/`jmp rel32` relus : (site, cible).
+const X86_APPELS: &[(usize, usize)] = &[
+    (0x4251c8, 0x80a9a0),
+    (0x425498, 0x80a9a0),
+    (0x80a9cb, 0x749b20),
+    (0x749b4f, 0x744b40),
+    (0x744bf6, 0xa89270),
+    (0x744c16, 0xa89270),
+    (0x744c3e, 0xa891a0),
+    (0x9e13e3, 0x9de0d0),
+    (0x9e0914, 0x9b5ce0),
+    (0x9b5cf6, 0x9711a0),
+    (0x55a7eb, 0x55a810),
+    (0x55b561, 0x55a810),
+    (0x55a904, 0x433ed0),
+    (0x55a917, 0x55e730),
+    (0x9dfe67, 0x71e490),
+    (0x71e49f, 0x71e4b0),
+    (0x71eb16, 0x722650),
+    (0x72208e, 0x722650),
+];
+/// Le jeu en x86_64 : `lea rax, [rip + …]` de `0x9b5ce4` (disp32 en `0x9b5ce7`) et `mov rax,
+/// [rip + …]` de `0x3ae884` (disp32 en `0x3ae887`).
+const X86_GAME: usize = 0x13dc0b0;
+const X86_GAME_DISP: [usize; 2] = [0x9b5ce7, 0x3ae887];
+
 /// Le jeu (`[0x1390218]`, lu par `0x9bec6c`) : `+0x288` son objet d'événements.
-const GAME: usize = 0x1390218;
+const GAME: usize = if cfg!(target_arch = "x86_64") { X86_GAME } else { 0x1390218 };
 const GAME_EVENTS: usize = 0x288;
 const EVENTS_SIZE: usize = 0x19e0;
-const NODE_SIZE: usize = 0x38;
-const NODE_REFS: usize = 0x30;
+/// Nœud d'écouteur : 0x38 octets et compte en +0x30 (arm64), 0x50 et +0x40 (x86_64).
+const NODE_SIZE: usize = if cfg!(target_arch = "x86_64") { 0x50 } else { 0x38 };
+const NODE_REFS: usize = if cfg!(target_arch = "x86_64") { 0x40 } else { 0x30 };
+const PLAYER_BY_ID_AT: usize = if cfg!(target_arch = "x86_64") { X86_PLAYER_BY_ID.adresse } else { PLAYER_BY_ID.adresse };
+const GET_REMEMBERED_AT: usize = if cfg!(target_arch = "x86_64") { X86_GET_REMEMBERED.adresse } else { GET_REMEMBERED.adresse };
 const PLAYER_ID: usize = 0xe0;
 const FC_PLAYER: usize = 0xf0;
 const SHARED_INSTANCE: i32 = 1000;
@@ -178,7 +285,7 @@ unsafe fn player_id(p: usize) -> i32 {
     if !(0..=64).contains(&id) {
         return -1;
     }
-    let par_id: unsafe extern "C" fn(i32) -> usize = std::mem::transmute(gc(PLAYER_BY_ID.adresse));
+    let par_id: unsafe extern "C" fn(i32) -> usize = std::mem::transmute(gc(PLAYER_BY_ID_AT));
     if par_id(id) == p { id } else { -1 }
 }
 
@@ -238,7 +345,7 @@ unsafe extern "C" fn set_remembered_hook(mgr: usize, player: i32, plot: u32, val
     if player == SHARED_INSTANCE {
         return orig(mgr, player, plot, value);
     }
-    let get: unsafe extern "C" fn(usize, i32, u32) -> i32 = std::mem::transmute(gc(GET_REMEMBERED.adresse));
+    let get: unsafe extern "C" fn(usize, i32, u32) -> i32 = std::mem::transmute(gc(GET_REMEMBERED_AT));
     let old = get(mgr, player, plot);
     let r = orig(mgr, player, plot, value);
     if r & 0xff != 0 {
@@ -319,8 +426,8 @@ unsafe extern "C" fn fc_connect_hook(mgr: usize, x1: usize, x2: usize, x3: usize
     move_after_marks(&marks, &before, 1);
 }
 
-/// La règle de Windows (`move_after_marks` de partie_chargee.rs), nœuds de 0x38 octets et compte
-/// de références en `+0x30` : déplace les nœuds ajoutés depuis `before` juste après le repère, si
+/// La règle de Windows (`move_after_marks` de partie_chargee.rs), nœuds de `NODE_SIZE` octets et
+/// compte de références en `NODE_REFS` : déplace les nœuds ajoutés depuis `before` juste après le repère, si
 /// le repère et ce nœud sont encore dans la liste (le repère d'abord) et si chaque nouveau nœud
 /// est simplement connecté (compte 1 : aucune émission en cours ne le tient).
 unsafe fn move_after_marks(marks: &[(usize, usize)], before: &[usize], group: usize) {
@@ -430,6 +537,42 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
             return Err(format!("version inattendue ({quoi}, en {a:#x}), aucun détour"));
         }
     }
+    poser(base, &DETOURS, &[PROLOGUE; 6])
+}
+
+#[cfg(target_arch = "x86_64")]
+pub unsafe fn installer(base: usize) -> Result<String, String> {
+    let octets = |a: usize, n: usize| std::slice::from_raw_parts((base + a) as *const u8, n);
+    for f in X86_DETOURS.iter().chain(X86_VERIFIEES.iter()) {
+        if fnv(octets(f.adresse, f.taille)) != f.empreinte {
+            return Err(format!("version inattendue ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    for (f, p) in X86_DETOURS.iter().zip(X86_PROLOGUES) {
+        if octets(f.adresse, p.len()) != p {
+            return Err(format!("prologue inattendu ({} en {:#x}), aucun détour", f.nom, f.adresse));
+        }
+    }
+    for &(a, attendu, quoi) in X86_DISPOSITION {
+        if octets(a, attendu.len()) != attendu {
+            return Err(format!("version inattendue ({quoi}, en {a:#x}), aucun détour"));
+        }
+    }
+    for &(a, cible) in X86_APPELS {
+        if patch::cible_rel32_x86(a, octets(a, 5)) != Some(cible) {
+            return Err(format!("version inattendue (appel de {cible:#x} en {a:#x}), aucun détour"));
+        }
+    }
+    for d in X86_GAME_DISP {
+        if (d as i64 + 4 + rd::<i32>(base + d) as i64) as usize != X86_GAME {
+            return Err(format!("version inattendue (le jeu n'est pas en {X86_GAME:#x}, en {d:#x}), aucun détour"));
+        }
+    }
+    poser(base, &X86_DETOURS, &X86_PROLOGUES.map(|p| p.len()))
+}
+
+/// Pose les six détours, une fois tout vérifié.
+unsafe fn poser(base: usize, detours: &[Fonction; 6], prologues: &[usize; 6]) -> Result<String, String> {
     BASE.store(base, Ordering::Relaxed);
     *lock(&READ_MARKS) = None;
     lock(&PLAYER_MARKS).clear();
@@ -446,15 +589,10 @@ pub unsafe fn installer(base: usize) -> Result<String, String> {
     // Chaque trampoline est publié avant que son saut ne soit écrit ; tout est posé au démarrage,
     // avant la première partie, donc avant tout appel.
     let mut methode = "";
-    for (i, f) in DETOURS.iter().enumerate() {
-        methode = patch::hook_with_trampoline_publie(base + f.adresse, PROLOGUE, hooks[i], &TRAMPS[i])?;
+    for (i, f) in detours.iter().enumerate() {
+        methode = patch::hook_with_trampoline_publie(base + f.adresse, prologues[i], hooks[i], &TRAMPS[i])?;
     }
     Ok(format!("6 détours posés (améliorations mémorisées, ordre des écouteurs, préférences d'IA ; {methode})"))
-}
-
-#[cfg(target_arch = "x86_64")]
-pub unsafe fn installer(_base: usize) -> Result<String, String> {
-    Err("pas encore relevé en x86_64".into())
 }
 
 #[cfg(test)]
@@ -472,12 +610,13 @@ mod tests {
         }
     }
 
-    /// Liste circulaire de nœuds de 0x38 octets (suivant, précédent, compte en +0x30), comme
-    /// `0x55384` / `0x55504` : le déplacement de Windows avec la disposition macOS.
+    /// Liste circulaire de nœuds de `NODE_SIZE` octets (suivant, précédent, compte en `NODE_REFS`),
+    /// comme `0x55384` / `0x55504` (`0x433ed0` / `0x55e730` en x86_64) : le déplacement de Windows
+    /// avec la disposition macOS.
     #[test]
     fn deplacement_apres_repere() {
         unsafe {
-            let mut mem = vec![[0usize; 7]; 6]; // sentinelle + 5 nœuds
+            let mut mem = vec![[0usize; 10]; 6]; // sentinelle + 5 nœuds (0x50 octets suffisent aux deux)
             let a: Vec<usize> = mem.iter_mut().map(|n| n.as_mut_ptr() as usize).collect();
             let link = |order: &[usize]| {
                 for (i, &n) in order.iter().enumerate() {
@@ -541,5 +680,46 @@ mod tests {
             .filter(|&a| mot(a) & 0xfc00_0000 == 0x9400_0000 && patch::cible_branche(a, mot(a)) == Some(SET_REMEMBERED.adresse))
             .collect();
         assert_eq!(appels, vec![0x737f44, 0x737f64]);
+    }
+
+    #[test]
+    fn fonctions_du_jeu_x86_64() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let p = std::path::Path::new(&home)
+            .join("Library/Application Support/Steam/steamapps/common/Sid Meier's Civilization VI/Civ6.app/Contents/MacOS/GameCore_XP2.dll");
+        let Ok(b) = std::fs::read(&p) else { return };
+        let t = super::super::spectateurs::tranche_x86_64(&b).expect("tranche x86_64");
+        for f in X86_DETOURS.iter().chain(X86_VERIFIEES.iter()) {
+            let e = fnv(&t[f.adresse..f.adresse + f.taille]);
+            assert_eq!(e, f.empreinte, "{} x86_64 : empreinte {e:#x}", f.nom);
+        }
+        for (f, p) in X86_DETOURS.iter().zip(X86_PROLOGUES) {
+            assert_eq!(&t[f.adresse..f.adresse + p.len()], p, "{} : prologue", f.nom);
+            // `jmp [rip+0]` et son adresse : 14 octets (patch_mac.rs, `jump` en x86_64).
+            assert!(p.len() >= 14, "{} : prologue plus court que le saut", f.nom);
+        }
+        for &(a, o, quoi) in X86_DISPOSITION {
+            assert_eq!(&t[a..a + o.len()], o, "{quoi}");
+        }
+        let appel = |a: usize| patch::cible_rel32_x86(a, &t[a..a + 5]);
+        for &(a, cible) in X86_APPELS {
+            assert_eq!(appel(a), Some(cible), "appel en {a:#x}");
+        }
+        for d in X86_GAME_DISP {
+            let v = i32::from_le_bytes(t[d..d + 4].try_into().unwrap());
+            assert_eq!((d as i64 + 4 + v as i64) as usize, X86_GAME, "jeu relu en {d:#x}");
+        }
+        // Le setter n'est appelé que par l'écriture de la mémoire d'une case (deux fois), et chaque
+        // fonction détournée par les seuls appelants relevés.
+        const TEXTE_X86: (usize, usize) = (0x1020, 0x1019ead);
+        let vers = |cible: usize| -> Vec<usize> {
+            (TEXTE_X86.0..TEXTE_X86.1 - 5).filter(|&a| matches!(t[a], 0xe8 | 0xe9) && appel(a) == Some(cible)).collect()
+        };
+        assert_eq!(vers(0xa89270), vec![0x744bf6, 0x744c16]);
+        assert_eq!(vers(0x80a9a0), vec![0x4251c8, 0x425498]);
+        assert_eq!(vers(0x9de0d0), vec![0x9e13e3]);
+        assert_eq!(vers(0x9711a0), vec![0x9b5cf6]);
+        assert_eq!(vers(0x55a810), vec![0x55a7eb, 0x55b561]);
+        assert_eq!(vers(0x71e4b0), vec![0x71e49f]);
     }
 }
