@@ -22,14 +22,13 @@ Au chargement d'une partie, le journal doit avoir une ligne par correctif, sans 
 citoyens, fin de tour, ports, production, empilement, spectateurs, congrès, départs, absents,
 échange d'unités, vision après une guerre, unités promises, partie chargée, départ simultané ;
 puis `pol : correctifs POL actifs`. Côté chargeur : `absent :`, `xml :`, les scripts du
-congrès, de la partie et du départ `compilation réussie`. Aucun rapport de crash
+congrès, de la partie et du départ `compilation réussie`, `debit steam : tampon de réception de
+131072 octets…`, `reload :` sans erreur. Aucun rapport de crash
 (`~/Library/Logs/DiagnosticReports/Civ6_Exe_Child-*.ips`).
 
-- arm64 : tout doit passer.
-- x86_64 : unités promises et partie chargée rendent encore « pas encore relevé en x86_64 »
-  (le POL reste donc coupé en x86_64, ce qui est sans danger) ; tout le reste doit passer.
-  Vérifier en plus les lignes « premier appel » du départ simultané : preuve que les sauts
-  écrits sous Rosetta sont exécutés.
+- arm64 et x86_64 : tout doit passer. En x86_64, vérifier en plus les lignes « premier appel » du
+  départ simultané : preuve que les sauts écrits sous Rosetta sont exécutés.
+- La version annoncée au salon finit par `-macos-partiel`, sans `-t0`.
 
 ## 2. Correctifs, un par un (arm64 d'abord, puis x86_64)
 
@@ -48,6 +47,8 @@ congrès, de la partie et du départ `compilation réussie`. Aucun rapport de cr
 | Absents | après son départ, l'hôte finit son tour | le tour passe et ne se rouvre pas (BGE-4EB5B0) ; `Civ6Proxy_EndTurnFor` | 2H |
 | Unités promises | partie avec IA jusqu'aux premiers quartiers, sauvegarder, recharger | pas de désynchro au rechargement ; journal du correctif | S puis 2H |
 | Partie chargée | sauvegarder, recharger, continuer quelques tours | pas de désynchro après rechargement (améliorations, écouteurs, préférences d'IA) | S puis 2H |
+| Gros morceaux réseau | deux Mac de cette version, partie en réseau | `morceaux de 16384 octets (1 joueur(s) équipé(s))`, retour à 1166 au départ d'un joueur | 2H (deux Mac) |
+| Rechargement de tous | provoquer une désynchro (deux Mac) | l'hôte recharge tout le monde, lignes `reload:` et `rejoin:`, le tour reprend après le chargement de tous | 2H (deux Mac) |
 | Départ simultané | option « No First/Last moves (BGE) » au salon | `depart : armé`, `interface retenue avant le début du tour`, ordres `retenu, tour pas encore lancé` avant le départ, minuteur gelé, `depart : parti (…)` ; signaux `.bgd_` cachés dans le chat | S (seul : départ immédiat), 2H (vrai test) |
 
 ## 3. Compatibilité PC / Mac — PC
@@ -59,10 +60,13 @@ Tant que le Mac annonce `<version>-macos-partiel` :
 
 ## 4. Avant de retirer `-macos-partiel`
 
-À porter d'abord (en cours) : x86_64 des unités promises et de la partie chargée ;
-`debit_steam` (tampon de réception agrandi, morceaux de 16 Ko) ; `reload_all` et `rejoin`.
-Puis, avec un PC de la même version : partie complète PC + Mac avec POL actif, une désynchro
-provoquée (rechargement de tous), un joueur qui part, le départ simultané à deux.
+Tout est porté (2026-11-25). Retirer le suffixe seulement après, avec deux Mac puis avec un PC
+de la même version : partie complète avec POL actif, gros morceaux réseau, une désynchro
+provoquée (rechargement de tous, Mac client puis Mac hôte), un joueur qui part, le départ
+simultané à deux. Points les plus fragiles : la réécriture en ligne de la réception de
+`reload` (`0x100c11038`), l'écriture des vtables de messages (`__DATA_CONST` en arm64), et les
+détours Steam si le client Steam signait ses pointeurs (arm64e). Un hôte Mac recharge tout le
+monde sans le message de chat explicatif (`sync_notes` non porté).
 
 Limite connue : `maths_communes` aligne `exp`/`pow` de l'UCRT entre PC ; le Mac calcule avec sa
 propre bibliothèque. Une partie PC + Mac avec POL actif doit donc être surveillée pour des
