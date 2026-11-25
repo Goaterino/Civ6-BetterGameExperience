@@ -59,6 +59,10 @@ mod citoyens_regle;
 mod echange;
 #[path = "vision_guerre_mac.rs"]
 mod vision_guerre;
+#[path = "drop_slot_mac.rs"]
+mod drop_slot;
+#[path = "absent_reactivation_mac.rs"]
+mod absent_reactivation;
 #[path = "spectateurs_calcul.rs"]
 mod spectateurs_calcul;
 
@@ -179,7 +183,7 @@ unsafe fn poser_correctifs() {
     };
     // Le bit ST_POL n'est levé que si tous les correctifs portés sont posés : sinon la machine
     // annoncerait des règles qu'elle n'applique pas.
-    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 9] = [
+    let correctifs: [(&str, unsafe fn(usize) -> Result<String, String>); 11] = [
         ("citoyens", citoyens::installer),
         ("fin de tour", fin_tour::installer),
         ("ports", ports::installer),
@@ -188,6 +192,9 @@ unsafe fn poser_correctifs() {
         ("spectateurs", spectateurs::installer),
         // Après les spectateurs : leurs détours de vote rendent la faveur d'un second vote.
         ("congrès", congres::installer),
+        ("départs", drop_slot::installer),
+        // Après le congrès : la porte de réactivation est sa fonction ANNULABLE, réécrite ou non.
+        ("absents", absent_reactivation::installer),
         ("échange d'unités", echange::installer),
         ("vision après une guerre", vision_guerre::installer),
     ];

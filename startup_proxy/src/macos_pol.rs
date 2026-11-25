@@ -38,7 +38,8 @@ pub(crate) unsafe extern "C-unwind" fn fixer_pol(l: *mut c_void) -> c_int {
     0
 }
 
-const NATIVES: [(LuaCFn, &str); 2] = [(super::salon::journal, "Civ6Proxy_Journal\0"), (fixer_pol, "Civ6Proxy_FixerPol\0")];
+const NATIVES: [(LuaCFn, &str); 3] =
+    [(super::salon::journal, "Civ6Proxy_Journal\0"), (fixer_pol, "Civ6Proxy_FixerPol\0"), super::absent::NATIVES_CHARGEMENT[0]];
 
 /// LoadScreen.lua suivi de `chargement.lua`, si les natives sont posées.
 pub unsafe fn chargement_lua(l: *mut c_void, src: &[u8]) -> Vec<u8> {

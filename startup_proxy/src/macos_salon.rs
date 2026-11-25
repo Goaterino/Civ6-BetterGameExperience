@@ -130,7 +130,8 @@ const NATIVES_SALON: [(LuaCFn, &str); 5] = [
     (super::pol::fixer_pol, "Civ6Proxy_FixerPol\0"),
     (version_installee, "Civ6Proxy_VersionInstallee\0"),
 ];
-const NATIVES_PARTIE: [(LuaCFn, &str); 2] = [(journal, "Civ6Proxy_Journal\0"), (pol_actifs, "Civ6Proxy_MacPolActifs\0")];
+const NATIVES_PARTIE: [(LuaCFn, &str); 3] =
+    [(journal, "Civ6Proxy_Journal\0"), (pol_actifs, "Civ6Proxy_MacPolActifs\0"), super::absent::NATIVES_PARTIE[0]];
 
 const CALE_SALON: &str = r#"
 -- macOS : natives à une seule chaîne (startup_proxy/src/macos_salon.rs).
@@ -171,7 +172,7 @@ pub unsafe fn partie_lua(l: *mut c_void, src: &[u8]) -> Vec<u8> {
         log("partie : natives non posées, pas de relais du verdict");
         return src.to_vec();
     }
-    avec_cale(src, patch_in_game_lua(src), CALE_PARTIE)
+    avec_cale(src, patch_in_game_lua(src), &format!("{CALE_PARTIE}{}", super::absent::CALE_PARTIE))
 }
 
 #[cfg(test)]
@@ -218,14 +219,14 @@ mod tests {
         let sans = [
             "Civ6Proxy_MediasPings", "Civ6Proxy_GardeMessages", "Civ6Proxy_RelayedPairs", "Civ6Proxy_RelinkStart",
             "Civ6Proxy_RelinkState", "Civ6Proxy_RelayForgetPair", "Civ6Proxy_ExeInconnu", "Civ6Proxy_RemapOublier",
-            "Civ6Proxy_DoubleLoadRefused", "Civ6Proxy_EndTurnFor", "Civ6Proxy_GardeWipes", "Civ6Proxy_LaunchGuarded",
+            "Civ6Proxy_DoubleLoadRefused", "Civ6Proxy_GardeWipes", "Civ6Proxy_LaunchGuarded",
             "Civ6Proxy_MorceauxReseau", "Civ6Proxy_RejoinKeepCheck", "Civ6Proxy_ReloadAllReady", "Civ6Proxy_ReloadAllRecheck",
             "Civ6Proxy_ReloadAllStart", "Civ6Proxy_ReloadAllState", "Civ6Proxy_ResyncVolume", "Civ6Proxy_SyncNotes",
         ];
         for bloc in [LUA_BLOCK, PARTIE_BLOCK] {
             for (i, _) in bloc.match_indices("Civ6Proxy_") {
                 let nom: String = bloc[i..].chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '_').collect();
-                let par_cale = nom == "Civ6Proxy_Version" || nom == "Civ6Proxy_PolActifs";
+                let par_cale = nom == "Civ6Proxy_Version" || nom == "Civ6Proxy_PolActifs" || super::super::absent::CALE_PARTIE.contains(&format!("{nom} = function"));
                 assert!(posees.contains(&nom.as_str()) || par_cale || sans.contains(&nom.as_str()), "{nom} attendue mais ni posée ni rendue");
             }
         }

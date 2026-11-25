@@ -53,6 +53,8 @@ mod salon;
 mod salon_texte;
 #[path = "xml_texte.rs"]
 mod xml_texte;
+#[path = "macos_absent.rs"]
+mod absent;
 #[path = "macos_congres.rs"]
 mod congres;
 #[path = "../../proxy/src/congres_texte.rs"]
@@ -201,6 +203,9 @@ unsafe fn installer() {
     }
     if let Err(e) = xml::installer(mh, slide) {
         log(&format!("xml : accroche impossible : {e}"));
+    }
+    if let Err(e) = absent::installer(mh, slide) {
+        log(&format!("absent : {e}"));
     }
     if std::env::var_os("BGE_DIAG_FICHIERS").is_some() {
         lua::diag_fichiers(mh, slide);

@@ -75,6 +75,9 @@
 
 use crate::patch::{alloc_near, rel32, write_rel32, Site};
 use crate::{log, pol};
+#[path = "absent_reactivation_regle.rs"]
+mod regle;
+use regle::keeps_ended;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
@@ -138,13 +141,6 @@ thread_local! {
 }
 static LOGGED: AtomicU32 = AtomicU32::new(0);
 const MAX_LOGS: u32 = 20;
-
-/// Whether a `PlayerTurnComplete` for `player`, received from `sender` (`None`: not received through
-/// GameCore's receive function), keeps the player's turn ended.
-fn keeps_ended(sender: Option<i32>, player: i32, pol: bool, network: bool) -> bool {
-    let valid = |p: i32| (0..64).contains(&p);
-    pol && network && valid(player) && sender.is_some_and(|s| valid(s) && s != player)
-}
 
 type Receive = unsafe extern "system" fn(i32, usize) -> u64;
 type TurnComplete = unsafe extern "system" fn(*const u8) -> u64;
@@ -288,17 +284,7 @@ pub fn reset() {
 mod tests {
     use super::*;
 
-    #[test]
-    fn only_another_players_message_in_a_pol_network_game() {
-        assert!(keeps_ended(Some(1), 2, true, true), "the host ends an absent player's turn");
-        assert!(!keeps_ended(Some(2), 2, true, true), "the player's own end of turn");
-        assert!(!keeps_ended(None, 2, true, true), "not received through GameCore's receive function");
-        assert!(!keeps_ended(Some(1), 2, false, true), "not every player has BGE");
-        assert!(!keeps_ended(Some(1), 2, true, false), "local game (solo, hotseat) or PlayByCloud");
-        assert!(!keeps_ended(Some(-1), 2, true, true) && !keeps_ended(Some(64), 2, true, true), "no such sender");
-        assert!(!keeps_ended(Some(1), -1, true, true) && !keeps_ended(Some(1), 64, true, true), "no such player");
-    }
-
+    // The rule's test is in absent_reactivation_regle.rs.
     #[test]
     fn signatures_are_well_formed() {
         for (sig, prologue) in [(RECEIVE_SIGNATURE, &RECEIVE_PROLOGUE[..]), (TURN_COMPLETE_SIGNATURE, &TURN_COMPLETE_PROLOGUE[..])] {
