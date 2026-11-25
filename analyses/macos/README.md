@@ -278,8 +278,17 @@ Conclusions, qui remplacent celles tirées de la CI :
      [startup_proxy/src/macos_congres.rs](../../startup_proxy/src/macos_congres.rs), état par
      l'export `BgdCongres`. Posé et compilé dans le jeu (2026-11-18) ; le retour au vote demande un
      second joueur humain (les IA votent aussitôt) et reste à observer.
-   - Restent : citoyens,
-     départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
+   - **Citoyens** ([proxy/src/citoyens_mac.rs](../../proxy/src/citoyens_mac.rs)) : porté (arm64).
+     Retrouvé depuis `SetFavoredYield` (Lua `0x759d18` → `0x2c08ec` → placement `0x2bf290`). Le
+     choix des cases (`18010f050` sous Windows) est en ligne dans la notation des emplacements
+     `0x2bf5e8`, de `0x2bf964` à `0x2bff6c` : candidats de `x26` à `x26 + 0x18 × w23` (même
+     disposition), `K` en `[x21 + 0x68]`, `T` en `[sp + 0x14]`. `ldr w27, [x21, #0x68]` (`0x2bf968`)
+     saute vers un relais qui applique la règle commune
+     ([citoyens_regle.rs](../../proxy/src/citoyens_regle.rs)) et reprend en `0x2bff70` (pose des
+     citoyens, fin du choix dans `x19`), ou rejoue l'instruction. Le choix du jeu, reproduit
+     (`choix_du_jeu`, nœuds de `0x28` octets comparés en `0x2bfd50`), sert au journal des écarts.
+     Posé dans le jeu, tours joués (2026-11-18) ; aucun écart journalisé pendant ce test.
+   - Reste : départ simultané ; puis x86_64. Quand tout est porté, le suffixe `-macos-partiel` disparaît.
 5. Distribution : installation sous macOS, signature ad hoc des dylibs (obligatoire en arm64),
    compilation et tests sur une machine macOS de la CI, journal et réglages hors de `%LOCALAPPDATA%`.
    **Le lanceur est fait** ([updater/README.md](../../updater/README.md#macos)) : il pose les deux
