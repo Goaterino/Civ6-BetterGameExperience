@@ -100,6 +100,11 @@ own. When the game starts, a `BGE -` message in the chat says whether these fixe
 missing the mod. Players without the mod read these messages in English. Players who have it see
 them in their own language.
 
+One of them also works between different versions: when a player disconnects, their seat stays
+human, so the AI doesn't take over their units, and the host ends their turns for them. Every human
+player needs a version that handles disconnections the same way (the changelog says when a version
+changes it). Up to 0.15.0, this needs everyone on the same version, like the other fixes.
+
 **No First/Last moves (BGE)** is ticked by default in the game options; the host can untick it before
 launching. Every player needs BetterGameExperience, at the same version.
 

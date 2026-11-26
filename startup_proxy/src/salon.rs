@@ -3,9 +3,10 @@
 //!
 //! L'accroche `luaL_loadbuffer` d'`options` ajoute `salon.lua` à la fin de `StagingRoom.lua`, ou de
 //! son remplaçant par un mod (MPH en a un, du même nom), après avoir posé dans la table globale du
-//! contexte cinq fonctions natives : `Civ6Proxy_Version()`, `Civ6Proxy_Jeton()`,
-//! `Civ6Proxy_Journal(texte)`, `Civ6Proxy_FixerPol(actif, raison)` et
-//! `Civ6Proxy_VersionInstallee()`.
+//! contexte ses fonctions natives (`NATIVES`) : `Civ6Proxy_Version()`, `Civ6Proxy_Jeton()`,
+//! `Civ6Proxy_Journal(texte)`, `Civ6Proxy_FixerPol(actif, raison)`,
+//! `Civ6Proxy_FixerDeparts(actif, raison)`, `Civ6Proxy_NiveauDeparts()`,
+//! `Civ6Proxy_VersionInstallee()` et d'autres.
 //!
 //! **Le BGE Check.** Après la lecture de `StagingRoom.xml` (ou de celui de MPH), `patch_staging_xml`
 //! ajoute juste après le bouton `BackButton` de la barre du haut un bouton `BGD_CheckButton`, placé
@@ -22,6 +23,12 @@
 //! - en cours de partie, l'hôte relaie le verdict à qui rejoint ou se reconnecte : `partie.lua`,
 //!   ajouté à la fin de `InGame.lua`, y ajoute son jeton sans changer l'état.
 //!
+//! **La protection des départs** (`drop_slot`, `absent_reactivation` du proxy de GameCore, et
+//! `absent_turn`) change aussi la simulation. Elle suit les correctifs POL, et s'applique aussi entre
+//! versions différentes quand tous les humains annoncent le même `NIVEAU_DEPARTS` (version.rs) :
+//! export `BgdDepartsActifs`, tenu par l'interface aux mêmes moments que `BgdPolActifs`, d'après un
+//! second verdict de l'hôte (`salon.lua`).
+//!
 //! Une machine qui n'appliquerait pas ces correctifs ne doit pas s'annoncer : `Civ6Proxy_Version()`
 //! rend alors nil et la raison (proxy de GameCore absent, désactivé, d'une autre version que ce
 //! proxy, ou correctifs non posés).
@@ -33,7 +40,7 @@
 //! chargé, sinon par sa marque `BgdVersion=<version>` dans le fichier (`version_du_fichier`).
 
 use crate::options::{hks, publish_natives, push_str, Natives};
-use crate::version::{MARQUE, VERSION};
+use crate::version::{MARQUE, NIVEAU_DEPARTS, VERSION};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;
 
@@ -60,6 +67,15 @@ static POL: AtomicBool = AtomicBool::new(false);
 
 pub fn pol_actifs() -> bool {
     POL.load(Ordering::Relaxed)
+}
+
+/// Protection des départs active pour la partie en cours : avec les correctifs POL, ou parce que tous
+/// les humains annoncent le même `NIVEAU_DEPARTS` (voir l'en-tête). Désactivée tant que l'interface
+/// n'a rien dit.
+static DEPARTS: AtomicBool = AtomicBool::new(false);
+
+pub fn departs_actifs() -> bool {
+    DEPARTS.load(Ordering::Relaxed)
 }
 
 /// La partie chargée est en réseau, en direct : ni solo, ni hotseat, ni PlayByCloud. Posé par
@@ -416,6 +432,32 @@ unsafe extern "C-unwind" fn lua_fix_pol(l: *mut std::ffi::c_void) -> i32 {
     0
 }
 
+/// `Civ6Proxy_FixerDeparts(actif, raison)`, actif 1 ou 0 : l'état de la protection des départs lu
+/// par le proxy de GameCore. Journalisé quand il change.
+unsafe extern "C-unwind" fn lua_fix_departs(l: *mut std::ffi::c_void) -> i32 {
+    let actif = arg_str(l, 1).is_some_and(|v| v.trim() == "1");
+    if DEPARTS.swap(actif, Ordering::Relaxed) != actif {
+        let raison = arg_str(l, 2).unwrap_or_default();
+        crate::log(&format!("drops: drop protection level {NIVEAU_DEPARTS} {} ({raison})", if actif { "on" } else { "off" }));
+    }
+    0
+}
+
+/// `Civ6Proxy_NiveauDeparts()` → `NIVEAU_DEPARTS`, le niveau de la protection des départs de ce
+/// proxy.
+unsafe extern "C-unwind" fn lua_niveau_departs(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, NIVEAU_DEPARTS as i32);
+    1
+}
+
+/// `Civ6Proxy_DepartsActifs()` → 1 si la protection des départs est active sur cette machine, sinon 0.
+unsafe extern "C-unwind" fn lua_departs_state(l: *mut std::ffi::c_void) -> i32 {
+    let Some(h) = hks() else { return 0 };
+    (h.push_integer)(l, departs_actifs() as i32);
+    1
+}
+
 /// `Civ6Proxy_PartieReseau(actif)`, actif 1 ou 0 : la partie chargée est en réseau, en direct.
 /// Journalisé quand il change.
 unsafe extern "C-unwind" fn lua_partie_reseau(l: *mut std::ffi::c_void) -> i32 {
@@ -483,6 +525,8 @@ pub const NATIVES: Natives = &[
     (lua_token, b"Civ6Proxy_Jeton\0"),
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
+    (lua_fix_departs, b"Civ6Proxy_FixerDeparts\0"),
+    (lua_niveau_departs, b"Civ6Proxy_NiveauDeparts\0"),
     (lua_version_installee, b"Civ6Proxy_VersionInstallee\0"),
     (lua_medias, b"Civ6Proxy_MediasPings\0"),
     (lua_unknown_exe, b"Civ6Proxy_ExeInconnu\0"),
@@ -492,11 +536,15 @@ pub const NATIVES: Natives = &[
 const CHARGEMENT_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_fix_pol, b"Civ6Proxy_FixerPol\0"),
+    (lua_fix_departs, b"Civ6Proxy_FixerDeparts\0"),
+    (lua_niveau_departs, b"Civ6Proxy_NiveauDeparts\0"),
     (lua_partie_reseau, b"Civ6Proxy_PartieReseau\0"),
 ];
 const PARTIE_NATIVES: Natives = &[
     (lua_log, b"Civ6Proxy_Journal\0"),
     (lua_pol_state, b"Civ6Proxy_PolActifs\0"),
+    (lua_departs_state, b"Civ6Proxy_DepartsActifs\0"),
+    (lua_niveau_departs, b"Civ6Proxy_NiveauDeparts\0"),
     (lua_garde, b"Civ6Proxy_GardeMessages\0"),
     (lua_wipes, b"Civ6Proxy_GardeWipes\0"),
     (lua_double_load_refused, b"Civ6Proxy_DoubleLoadRefused\0"),

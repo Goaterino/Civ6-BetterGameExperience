@@ -9,8 +9,12 @@ use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
 static EXPORT: AtomicUsize = AtomicUsize::new(0);
 /// Export `BgdPartieReseau` : 0 pas encore cherché, 1 absent, sinon son adresse.
 static RESEAU: AtomicUsize = AtomicUsize::new(0);
+/// Export `BgdDepartsActifs` : 0 pas encore cherché, 1 absent, sinon son adresse.
+static DEPARTS: AtomicUsize = AtomicUsize::new(0);
 /// Dernier état journalisé : 2 inconnu, puis 0 ou 1.
 static LAST: AtomicU8 = AtomicU8::new(2);
+/// Dernier état de la protection des départs journalisé : 2 inconnu, puis 0 ou 1.
+static LAST_DEPARTS: AtomicU8 = AtomicU8::new(2);
 
 /// Le proxy de démarrage, `winmm.dll` à côté de l'exe : cherché par son chemin complet, car la winmm
 /// de System32 qu'il relaie porte le même nom.
@@ -46,6 +50,41 @@ pub fn actifs() -> bool {
     // passer la ligne de cache d'un cœur à l'autre.
     if LAST.load(Ordering::Relaxed) != on as u8 && LAST.swap(on as u8, Ordering::Relaxed) != on as u8 {
         log(&format!("pol : correctifs POL {}", if on { "actifs" } else { "coupés" }));
+    }
+    on
+}
+
+/// Protection des départs (`drop_slot`, `absent_reactivation`) : avec les correctifs POL, ou quand
+/// tous les humains annoncent le même `NIVEAU_DEPARTS` sans avoir la même version (export
+/// `BgdDepartsActifs` du proxy de démarrage, voir startup_proxy/src/salon.lua). Proxy de démarrage
+/// absent : coupée.
+pub fn departs() -> bool {
+    let pol = actifs();
+    let on = pol || {
+        let mut p = DEPARTS.load(Ordering::Relaxed);
+        if p == 0 {
+            p = unsafe {
+                let m = startup_module();
+                let f = if m.is_null() { std::ptr::null_mut() } else { win::GetProcAddress(m, b"BgdDepartsActifs\0".as_ptr()) };
+                if f.is_null() { 1 } else { f as usize }
+            };
+            DEPARTS.store(p, Ordering::Relaxed);
+        }
+        p != 1 && {
+            let f: extern "system" fn() -> u32 = unsafe { std::mem::transmute(p) };
+            f() != 0
+        }
+    };
+    if LAST_DEPARTS.load(Ordering::Relaxed) != on as u8 && LAST_DEPARTS.swap(on as u8, Ordering::Relaxed) != on as u8 {
+        log(&format!(
+            "drops: drop protection level {} {}",
+            crate::version::NIVEAU_DEPARTS,
+            match (on, pol) {
+                (false, _) => "off",
+                (true, true) => "on (POL)",
+                (true, false) => "on (same drop level, POL off)",
+            }
+        ));
     }
     on
 }

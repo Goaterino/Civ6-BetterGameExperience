@@ -3,6 +3,8 @@
 -- remplaçant du même nom, celui de MPH par exemple) par le proxy de démarrage
 -- (startup_proxy/src/salon.rs). Fonctions natives posées par le proxy :
 --   Civ6Proxy_PolActifs()     -> 1 si les correctifs POL sont actifs sur cette machine, sinon 0
+--   Civ6Proxy_DepartsActifs() -> 1 if the drop protection is on on this machine (salon.lua)
+--   Civ6Proxy_NiveauDeparts() -> this proxy's drop protection level
 --   Civ6Proxy_Journal(texte)  -> écrit dans RolloverProxy.log
 --   Civ6Proxy_GardeMessages() -> reads fixed by the network message guard since the last call
 --                                (see below)
@@ -18,10 +20,14 @@
 -- version et le jeton de l'hôte, l'hôte ajoute son jeton au verdict de la partie, sans changer
 -- l'état des correctifs POL (on ne peut pas les activer ou les couper en pleine partie sans
 -- désynchroniser). Le nouveau venu conclut alors comme tout le monde.
+-- As in the lobby, the token of a player who announces another version is added too: the drop
+-- protection can be on between versions (salon.lua), and a player who comes back must find it on.
+-- Their version still keeps POL off on their machine.
 -- Only the machine that launched the game has a verdict. A machine that becomes host by migration
 -- writes its own: its version, the lobby token of its announcement (the one every player of this
 -- game announces), its own POL state, and the tokens of the players present. Without it, nobody
--- joining after a migration would find its token and all would run with POL off.
+-- joining after a migration would find its token and all would run with POL off. It also writes its
+-- drop protection verdict: its level, the same token, its own drop protection state.
 -- Si les correctifs POL sont actifs et qu'un humain se met prêt sans s'être annoncé (sans le proxy
 -- ou d'une autre version), l'hôte le dit dans le chat : sa partie va se désynchroniser. Les couper pour tous demanderait de
 -- le faire au même point de la simulation sur chaque machine, ce qui n'est pas encore fait.
@@ -50,6 +56,8 @@ local function BGD_PartieRelais()
 	-- when given none (a player without BGE in a new game).
 	local _, jetonAnnonce = string.match(tostring((cfg:GetValue("BGD_VERSION"))), "^([^@#:]*)@([^@#:]*)#");
 	local repris = false;
+	-- Drop protection on this machine (with POL, or the same drop level for every player).
+	local departs = Civ6Proxy_PolActifs() == 1 or (Civ6Proxy_DepartsActifs ~= nil and Civ6Proxy_DepartsActifs() == 1);
 	if version == nil or jeton ~= jetonAnnonce then
 		-- No verdict of this game in our configuration: we did not launch it. Host now, with an
 		-- announcement of this game: we take the verdict over.
@@ -65,6 +73,19 @@ local function BGD_PartieRelais()
 	if (actif == "1") ~= (Civ6Proxy_PolActifs() == 1) then
 		BGD_PartieJournal("verdict " .. verdict .. " différent de l'état local, verdict laissé tel quel");
 		return;
+	end
+	local verdictDeparts = cfg:GetValue("BGD_VERDICT_DEPARTS");
+	if Civ6Proxy_NiveauDeparts ~= nil and (repris or verdictDeparts ~= nil) then
+		local niveau, dJeton, dActif = string.match(tostring(verdictDeparts), "^(%d+)@([^@#:]*):([01])$");
+		if repris or niveau == nil or dJeton ~= jeton then
+			-- Taken over with the verdict: our level and our own state.
+			verdictDeparts = string.format("%d", Civ6Proxy_NiveauDeparts()) .. "@" .. jeton .. ":" .. (departs and "1" or "0");
+			cfg:SetValue("BGD_VERDICT_DEPARTS", verdictDeparts);
+			repris = true;
+		elseif (dActif == "1") ~= departs then
+			BGD_PartieJournal("drop verdict " .. tostring(verdictDeparts) .. " differs from the local state, verdict left as it is");
+			return;
+		end
 	end
 	local jetons = {};
 	for j in string.gmatch(liste, "[^,]+") do jetons[j] = true; end
@@ -101,11 +122,11 @@ local function BGD_PartieRelais()
 				or ((ident == nil or ident == "") and perso ~= nil and (occurrences[perso] or 0) > 1) then
 				v = nil;  -- annonce restée d'un autre joueur
 			end
+			if v ~= nil and jh == jeton and not jetons[perso] then
+				jetons[perso] = true;
+				table.insert(ajoutes, perso);
+			end
 			if v == version and jh == jeton then
-				if not jetons[perso] then
-					jetons[perso] = true;
-					table.insert(ajoutes, perso);
-				end
 				BGD_PARTIE.avertis[id] = nil;
 			elseif actif == "1" and pc:GetReady() and not BGD_PARTIE.avertis[id] then
 				-- Prêt sans annonce : un joueur équipé s'annonce en ouvrant le salon, avant d'être prêt.

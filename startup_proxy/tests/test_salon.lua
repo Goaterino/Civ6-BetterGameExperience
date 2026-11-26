@@ -158,6 +158,12 @@ local function NewLobby(joueurs, options)
 			end
 			env.Civ6Proxy_FixerPol = function(actif) m.pol = (actif == 1); end
 			env.Civ6Proxy_PolActifs = function() return m.pol and 1 or 0; end;
+			-- `niveau`: drop protection level (1 by default); false: a version without it.
+			if j.niveau ~= false then
+				env.Civ6Proxy_NiveauDeparts = function() return j.niveau or 1; end
+				env.Civ6Proxy_FixerDeparts = function(actif) m.departs = (actif == 1); end
+				env.Civ6Proxy_DepartsActifs = function() return m.departs and 1 or 0; end
+			end
 			env.Civ6Proxy_Jeton = function() lobby.tokens = lobby.tokens + 1; return "j" .. lobby.tokens; end
 			env.Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end
 			env.Civ6Proxy_VersionInstallee = function() return j.version or "0.1.0"; end
@@ -1274,6 +1280,194 @@ do
 	check(l.verdict() == avant, "remplaçant : verdict inchangé");
 	check(LastChat(l):find("Sub", 1, true) ~= nil and LastChat(l):find("COLOR_RED", 1, true) ~= nil,
 		"remplaçant averti en rouge : " .. LastChat(l));
+end
+
+-- Drop protection of a machine: the state passed to the proxy (Civ6Proxy_FixerDeparts).
+local function Departs(lobby, id)
+	return lobby.machines[id].departs == true;
+end
+
+local function VerdictDeparts(lobby)
+	return lobby.machines[lobby.host].values[lobby.host].BGD_VERDICT_DEPARTS;
+end
+
+-- Drop protection 1. Other versions, same level: POL off, drop protection on everywhere. Same
+-- version: both on.
+do
+	local l = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", version = "0.3.0" }, { nom = "Zoé", version = "0.2.0" } });
+	l.open();
+	check(l.actif() == "0", "mixed versions: POL verdict 0");
+	check(tostring(VerdictDeparts(l)):match("^1@[^:]+:1$") ~= nil, "mixed versions, same level: drop verdict on (" .. tostring(VerdictDeparts(l)) .. ")");
+	l.countdown();
+	for id = 0, 2 do
+		check(Pol(l, id) == "désactivés", "mixed versions, machine " .. id .. ": POL off");
+		check(Departs(l, id), "mixed versions, machine " .. id .. ": drop protection on");
+	end
+	local s = NewLobby({ { nom = "Hôte" }, { nom = "Bob" } });
+	s.open();
+	s.countdown();
+	check(Pol(s, 0) == "actifs" and Pol(s, 1) == "actifs" and Departs(s, 0) and Departs(s, 1), "same version: POL and drop protection on");
+end
+
+-- Drop protection 2. Off for everyone with a player of a version without it (0.15.0 or older),
+-- without BGE, of another level, or whose BGE cannot announce itself.
+do
+	for _, cas in ipairs({
+		{ quoi = "version without the level", j = { nom = "Bob", version = "0.1.5", niveau = false } },
+		{ quoi = "without BGE", j = { nom = "Bob", proxy = false } },
+		{ quoi = "other level", j = { nom = "Bob", version = "0.3.0", niveau = 2 } },
+		{ quoi = "BGE unavailable", j = { nom = "Bob", indispo = "actif=off" } },
+	}) do
+		local l = NewLobby({ { nom = "Hôte", version = "0.2.0" }, cas.j, { nom = "Zoé", version = "0.4.0" } });
+		l.open();
+		l.countdown();
+		check(tostring(VerdictDeparts(l)):match(":0$") ~= nil, cas.quoi .. ": drop verdict off (" .. tostring(VerdictDeparts(l)) .. ")");
+		for id = 0, 2 do
+			check(not Departs(l, id), cas.quoi .. ", machine " .. id .. ": drop protection off");
+		end
+	end
+	-- A player who arrives later without the level turns the verdict off.
+	local joueurs = { { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", version = "0.3.0" }, { nom = "Léo", version = "0.1.5", niveau = false, absent = true } };
+	local l = NewLobby(joueurs);
+	l.open();
+	check(Departs(l, 0) and Departs(l, 1), "before Léo arrives: on");
+	joueurs[3].absent = false;
+	l.machines[0].events.MultiplayerPlayerConnected.Fire(2);
+	check(not Departs(l, 0) and not Departs(l, 1), "after Léo arrives: off");
+end
+
+-- Drop protection 3. A level that does not count: left on a seat by a saved game, written with
+-- another personal token, or of a player the host does not list.
+do
+	local l = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", proxy = false } },
+		{ valeurs = { [1] = { BGD_VERSION = "0.3.0@ancien#vieux", BGD_DEPARTS = "1#vieux" } } });
+	l.open();
+	check(tostring(VerdictDeparts(l)):match(":0$") ~= nil, "level from a saved game: off");
+
+	local m = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Zoé", version = "0.3.0" } });
+	m.open();
+	local h = m.machines[0];
+	h.values[1].BGD_DEPARTS = "1#autre";
+	h.events.PlayerInfoChanged.Fire(1);
+	check(tostring(VerdictDeparts(m)):match(":0$") ~= nil, "level with another personal token: off");
+
+	local n = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Zoé", version = "0.3.0" } });
+	n.open();
+	local z = n.machines[1];
+	check(Departs(n, 1), "Zoé listed by the host: on");
+	local liste = z.values[0].BGD_VERDICT;
+	local perso = z.values[1].BGD_VERSION:match("#(.*)$");
+	local i, j = liste:find(perso, 1, true);
+	z.values[0].BGD_VERDICT = liste:sub(1, i - 1) .. "autre" .. liste:sub(j + 1);
+	z.events.PlayerInfoChanged.Fire(0);
+	check(not Departs(n, 1), "Zoé missing from the host's list: off");
+end
+
+-- Drop protection 4. In game, protection on and POL off: a player of another version who comes back
+-- gets their token relayed, and turns the protection on again; POL stays off, nobody is warned.
+do
+	local l = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", version = "0.3.0" }, { nom = "Zoé", version = "0.2.0" } });
+	l.open();
+	l.countdown();
+	local lignes = #l.chat;
+	Lancer(l);
+	local bob = l.machines[1];
+	bob.cache = false;
+	bob.luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+	check(Departs(l, 1), "Bob back: drop protection on");
+	check(Pol(l, 1) == "désactivés", "Bob back: POL off");
+	local perso = bob.values[1].BGD_VERSION:match("#(.*)$");
+	check(l.verdict():find(perso, 1, true) ~= nil, "Bob's token relayed by the host");
+	check(#l.chat == lignes, "no warning");
+end
+
+-- Drop protection 5. Host migration in game, protection on and POL off: the new host writes its drop
+-- verdict, and a player who joins afterwards turns the protection on.
+do
+	local l = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", version = "0.3.0" }, { nom = "Zoé", version = "0.2.0" } });
+	l.open();
+	l.countdown();
+	Lancer(l);
+	local bob = l.machines[1];
+	bob.env.Civ6Proxy_PolActifs = function() return bob.pol and 1 or 0; end
+	assert(load(PARTIE, "=partie.lua", "t", bob.env))();
+	l.host = 1;
+	for _, m in pairs(l.machines) do m.events.MultiplayerHostMigrated.Fire(1); end
+	local jh = bob.values[1].BGD_VERSION:match("@(.-)#");
+	check(bob.values[1].BGD_VERDICT_DEPARTS == "1@" .. jh .. ":1", "new host: drop verdict taken over (" .. tostring(bob.values[1].BGD_VERDICT_DEPARTS) .. ")");
+	local z = l.machines[2];
+	z.cache = false;
+	z.luaEvents.JoiningRoom_ShowStagingRoom.Fire();
+	check(Departs(l, 2), "Zoé joining after the migration: on");
+	check(Pol(l, 2) == "désactivés", "Zoé joining after the migration: POL off");
+	-- Protection off at launch: taken over as off.
+	local o = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", version = "0.3.0" }, { nom = "Léo", proxy = false } });
+	o.open();
+	o.countdown();
+	Lancer(o);
+	local b = o.machines[1];
+	b.env.Civ6Proxy_PolActifs = function() return b.pol and 1 or 0; end
+	assert(load(PARTIE, "=partie.lua", "t", b.env))();
+	o.host = 1;
+	b.events.MultiplayerHostMigrated.Fire(1);
+	check(tostring(b.values[1].BGD_VERDICT_DEPARTS):match(":0$") ~= nil and not Departs(o, 1), "protection off at launch: taken over as off");
+end
+
+-- Drop protection 6. The host's last drop verdict reaches a client after its lobby was hidden, or
+-- during the load: turned on, the same as everyone else; never off, and not for another level.
+do
+	local l = NewLobby({ { nom = "Hôte", version = "0.2.0" }, { nom = "Bob", version = "0.3.0" } });
+	l.open();
+	local b = l.machines[1];
+	local final = b.values[0].BGD_VERDICT_DEPARTS;
+	b.values[0].BGD_VERDICT_DEPARTS = final:gsub(":1$", ":0");
+	b.events.PlayerInfoChanged.Fire(0);
+	l.countdown();
+	check(not Departs(l, 1), "drop verdict off at the countdown: off");
+	b.cache = true;
+	b.values[0].BGD_VERDICT_DEPARTS = final;
+	b.events.PlayerInfoChanged.Fire(0);
+	check(Departs(l, 1), "drop verdict arriving while the lobby is hidden: on");
+	b.values[0].BGD_VERDICT_DEPARTS = final:gsub(":1$", ":0");
+	b.events.PlayerInfoChanged.Fire(0);
+	check(Departs(l, 1), "hidden lobby: never turned off");
+	local function Charger(m)
+		local ev = NewEvent();
+		local env = setmetatable({
+			Events = { LoadScreenContentReady = ev, LoadScreenClose = NewEvent() },
+			GameConfiguration = {
+				IsNetworkMultiplayer = function() return true; end,
+				IsHotseat = function() return false; end,
+				IsPlayByCloud = function() return false; end,
+			},
+			Network = { GetLocalPlayerID = function() return m.id; end, GetGameHostPlayerID = function() return l.host; end },
+			PlayerConfigurations = setmetatable({}, { __index = function(_, pid)
+				local v = m.values[pid];
+				return v and { GetValue = function(_, k) return v[k]; end };
+			end }),
+			Civ6Proxy_FixerPol = function(a) m.pol = (a == 1); end,
+			Civ6Proxy_FixerDeparts = function(a) m.departs = (a == 1); end,
+			Civ6Proxy_NiveauDeparts = function() return m.niveau or 1; end,
+			Civ6Proxy_Journal = function(t) m.log = (m.log or "") .. t .. "\n"; end,
+		}, { __index = _G });
+		assert(load(CHARGEMENT, "=chargement.lua", "t", env))();
+		ev.Fire();
+	end
+	b.departs = false;
+	b.values[0].BGD_VERDICT_DEPARTS = final;
+	Charger(b);
+	check(Departs(l, 1) and b.pol ~= true, "at load: drop protection on, POL off");
+	check(b.log:find("load: drop protection on (launch data)", 1, true) ~= nil, "decision at load logged");
+	b.departs, b.niveau = false, 2;
+	Charger(b);
+	check(not Departs(l, 1), "at load, another level: stays off");
+	b.niveau = nil;
+	b.values[0].BGD_VERDICT_DEPARTS = final:gsub(":1$", ":0");
+	Charger(b);
+	check(not Departs(l, 1), "at load, drop verdict off: stays off");
+	l.machines[0].departs = false;
+	Charger(l.machines[0]);
+	check(Departs(l, 0), "host at load: on (its own drop verdict)");
 end
 
 if failures > 0 then

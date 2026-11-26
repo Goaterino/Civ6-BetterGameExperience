@@ -94,6 +94,13 @@ pub extern "system" fn BgdPolActifs() -> u32 {
     salon::pol_actifs() as u32
 }
 
+/// Export lu par le proxy de GameCore avant `drop_slot` et `absent_reactivation` : 1 si la protection
+/// des départs est active pour la partie en cours (voir `salon`).
+#[no_mangle]
+pub extern "system" fn BgdDepartsActifs() -> u32 {
+    salon::departs_actifs() as u32
+}
+
 /// Export lu par le proxy de GameCore : 1 si la partie chargée est une partie en réseau en direct
 /// (ni solo, ni hotseat, ni PlayByCloud), posé à chaque écran de chargement (voir `salon`).
 #[no_mangle]
