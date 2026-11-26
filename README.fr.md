@@ -106,6 +106,12 @@ BetterGameExperience. Le salon le vérifie tout seul. Au lancement de la partie,
 chat dit si ces correctifs sont actifs, et qui n'a pas le mod. Les joueurs sans le mod lisent ces
 messages en anglais. Ceux qui l'ont les voient dans leur langue.
 
+L'un d'eux marche aussi entre versions différentes : quand un joueur se déconnecte, son emplacement
+reste humain, l'IA ne prend donc pas le contrôle de ses unités, et l'hôte termine ses tours à sa place.
+Chaque joueur humain doit avoir une version qui gère les déconnexions de la même façon (le journal
+des modifications dit quand une version change cela). Jusqu'à la 0.15.0, il faut que tous aient la
+même version, comme pour les autres correctifs.
+
 **No First/Last moves (BGE)** est cochée par défaut dans les options de partie ; l'hôte peut la
 décocher avant le lancement. Tous les joueurs doivent avoir BetterGameExperience, à la même version.
 

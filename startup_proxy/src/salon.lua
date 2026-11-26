@@ -9,6 +9,8 @@
 --   Civ6Proxy_Journal(texte)           -> écrit dans RolloverProxy.log
 --   Civ6Proxy_FixerPol(actif, raison)  -> état lu par le proxy de GameCore (1 ou 0) : 0 à chaque
 --                                         ouverture du salon, puis notre conclusion du verdict
+--   Civ6Proxy_FixerDeparts(actif, raison) -> the same for the drop protection (see below)
+--   Civ6Proxy_NiveauDeparts()          -> this proxy's drop protection level (version.rs)
 --   Civ6Proxy_VersionInstallee()       -> version de ce proxy, même s'il est désactivé (BGE Check)
 --   Civ6Proxy_ExeInconnu()             -> 1 if the game version has no address table: the fixes
 --                                         are not installed, said to everyone on arrival
@@ -34,6 +36,13 @@
 -- Ce verdict est le seul qui compte, le même pour toutes les machines : il active les correctifs
 -- POL (« proxy-only lobbies »), ceux qui changent la simulation et désynchroniseraient un joueur
 -- sans le proxy (BGD_PolActifs). Les autres correctifs n'en dépendent pas.
+-- The drop protection (a player who leaves keeps a human slot, the host ends its turns) also changes
+-- the simulation, but it can apply between different versions: each machine writes its level next
+-- to its announcement, BGD_DEPARTS = "<level>#<its personal token>", which only counts with a valid
+-- announcement of that same token. The host keeps BGD_VERDICT_DEPARTS = "<its level>@<its
+-- token>:<1|0>": 1 if every connected human announces its level with its token, whatever their
+-- version. A machine of that level turns the protection on if the host's token list (BGD_VERDICT)
+-- has its token, as for POL (BGD_DepartsActifs). With POL on, it is on.
 -- Au démarrage du compte à rebours de lancement, un message dans le chat, pour tous, commençant
 -- par « BGD - » :
 -- - l'hôte : en rouge les joueurs sans le proxy ou d'une autre version, sinon en vert la
@@ -71,10 +80,13 @@
 local BGD_CLE_VERSION = "BGD_VERSION";
 local BGD_CLE_VERDICT = "BGD_VERDICT";
 local BGD_CLE_MEDIAS = "BGD_MEDIAS";
+local BGD_CLE_DEPARTS = "BGD_DEPARTS";
+local BGD_CLE_VERDICT_DEPARTS = "BGD_VERDICT_DEPARTS";
 
 local BGD = {
 	version = nil,     -- notre version, nil si cette machine n'appliquerait pas les correctifs POL
 	raison = nil,      -- pourquoi, dans ce cas
+	niveau = nil,      -- our drop protection level ("1"...), nil without a version
 	jeton = nil,       -- hôte : son jeton de cette ouverture du salon
 	perso = nil,       -- notre jeton de cette ouverture du salon, avec notre identité
 	persoJeton = nil,  -- sa partie tirée au hasard
@@ -178,6 +190,31 @@ local function BGD_Valeur(id, cle)
 	return cfg and cfg:GetValue(cle);
 end
 
+-- Drop protection level of slot `id`, with its announcement's host token and personal token: nil
+-- without a valid announcement (BGD_AnnonceDe), or a level written with another personal token.
+local function BGD_NiveauDe(id, occurrences)
+	local version, jeton, perso = BGD_AnnonceDe(id, occurrences);
+	if version == nil then return nil; end
+	local niveau, p = string.match(tostring((BGD_Valeur(id, BGD_CLE_DEPARTS))), "^(%d+)#([^@#:,]*)$");
+	if niveau == nil or p ~= perso then return nil; end
+	return niveau, jeton, perso;
+end
+
+-- Drop protection verdict "<level>@<host token>:<1|0>" -> level, host token, on (boolean); nil if
+-- the value is missing or malformed.
+local function BGD_LireVerdictDeparts(valeur)
+	if type(valeur) ~= "string" then return nil; end
+	local niveau, jeton, actif = string.match(valeur, "^(%d+)@([^@#:]*):([01])$");
+	if niveau == nil then return nil; end
+	return niveau, jeton, actif == "1";
+end
+
+local function BGD_FixerDeparts(actif, raison)
+	if Civ6Proxy_FixerDeparts ~= nil then
+		Civ6Proxy_FixerDeparts(actif, raison);
+	end
+end
+
 local function BGD_JetonDeLHote()
 	if Network.IsGameHost() then
 		if BGD.jeton == nil then
@@ -246,6 +283,33 @@ local function BGD_PolActifs()
 	return BGD_HoteNousVoit();
 end
 
+-- Host: does every other connected human announce our drop protection level, with this lobby's
+-- token? Their version does not matter.
+local function BGD_DepartsPourTous()
+	if BGD.niveau == nil then return false; end
+	local occurrences = BGD_Occurrences();
+	for _, id in ipairs(BGD_AutresHumains()) do
+		local niveau, jeton = BGD_NiveauDe(id, occurrences);
+		if niveau ~= BGD.niveau or jeton ~= BGD.jeton then return false; end
+	end
+	return true;
+end
+
+-- Is the drop protection on for this game? With POL; otherwise from the host's drop verdict, if it is
+-- of our level and of this lobby, and the host sees us (BGD_HoteNousVoit).
+local function BGD_DepartsActifs()
+	if BGD_PolActifs() then return true; end
+	if not BGD_Concerne() or BGD.niveau == nil then return false; end
+	local hote = Network.GetGameHostPlayerID();
+	local niveau, jeton, actif = BGD_LireVerdictDeparts(BGD_Valeur(hote, BGD_CLE_VERDICT_DEPARTS));
+	if not actif or niveau ~= BGD.niveau then return false; end
+	if Network.IsGameHost() then
+		return jeton == BGD.jeton;
+	end
+	local _, jetonHote = BGD_LireAnnonce(BGD_Valeur(hote, BGD_CLE_VERSION));
+	return jeton == jetonHote and BGD_HoteNousVoit();
+end
+
 -- Les contrôles suivent le verdict et le roster, sans modifier les valeurs de la partie.
 local function BGD_ActualiserOptions()
 	if not BGD.ouvert or ContextPtr:IsHidden() or SetupParameters == nil
@@ -285,6 +349,12 @@ local function BGD_Publier()
 		cfg:SetValue(BGD_CLE_MEDIAS, medias);
 		change = true;
 	end
+	-- Our drop protection level with our token of this lobby, read by the host whatever our version.
+	local departs = (BGD.niveau ~= nil) and (BGD.niveau .. "#" .. BGD.perso) or "";
+	if cfg:GetValue(BGD_CLE_DEPARTS) ~= departs then
+		cfg:SetValue(BGD_CLE_DEPARTS, departs);
+		change = true;
+	end
 	if Network.IsGameHost() then
 		local sans, autres, jetons = BGD_Bilan();
 		local verdict = BGD.version .. "@" .. jetonHote .. ":"
@@ -293,13 +363,20 @@ local function BGD_Publier()
 			cfg:SetValue(BGD_CLE_VERDICT, verdict);
 			change = true;
 		end
+		local verdictDeparts = (BGD.niveau or "0") .. "@" .. jetonHote .. ":" .. (BGD_DepartsPourTous() and "1" or "0");
+		if cfg:GetValue(BGD_CLE_VERDICT_DEPARTS) ~= verdictDeparts then
+			cfg:SetValue(BGD_CLE_VERDICT_DEPARTS, verdictDeparts);
+			change = true;
+		end
 	end
 	if change then
 		Network.BroadcastPlayerInfo();
-		BGD_Journal("annonce " .. annonce .. (Network.IsGameHost() and (", verdict " .. tostring(cfg:GetValue(BGD_CLE_VERDICT))) or ""));
+		BGD_Journal("annonce " .. annonce .. (Network.IsGameHost() and (", verdict " .. tostring(cfg:GetValue(BGD_CLE_VERDICT))
+			.. ", drop verdict " .. tostring(cfg:GetValue(BGD_CLE_VERDICT_DEPARTS))) or ""));
 	end
 	-- L'état lu par le proxy de GameCore suit le verdict jusqu'au lancement.
 	Civ6Proxy_FixerPol(BGD_PolActifs() and 1 or 0, "verdict de l'hôte");
+	BGD_FixerDeparts(BGD_DepartsActifs() and 1 or 0, "host verdict");
 	BGD_ActualiserOptions();
 end
 
@@ -376,6 +453,7 @@ local function BGD_AvantLancement()
 		BGD_MessageDuLancement();
 	end
 	BGD_Journal("lancement : correctifs POL " .. (BGD_PolActifs() and "actifs" or "désactivés"));
+	BGD_Journal("launch: drop protection " .. (BGD_DepartsActifs() and "on" or "off"));
 end
 
 local function BGD_Protege(f)
@@ -660,10 +738,12 @@ local function BGD_Ouverture(migration)
 	-- Correctifs POL coupés jusqu'au verdict ; disponibilité relue, elle change quand le proxy de
 	-- GameCore se charge (première partie) ou que ses réglages changent.
 	Civ6Proxy_FixerPol(0, "ouverture du salon");
+	BGD_FixerDeparts(0, "lobby opened");
 	BGD.version, BGD.raison = Civ6Proxy_Version();
 	if BGD.version == nil then
 		BGD_Journal("pas d'annonce : " .. tostring(BGD.raison));
 	end
+	BGD.niveau = (BGD.version ~= nil and Civ6Proxy_NiveauDeparts ~= nil) and string.format("%d", Civ6Proxy_NiveauDeparts()) or nil;
 	BGD.jeton = nil;
 	BGD.perso = nil;
 	BGD.persoJeton = nil;
@@ -1133,8 +1213,13 @@ else
 	Events.PlayerInfoChanged.Add(BGD_Protege(function()
 		if not ContextPtr:IsHidden() then
 			BGD_Publier();
-		elseif BGD_PolActifs() then
-			Civ6Proxy_FixerPol(1, "host verdict after the countdown");
+		else
+			if BGD_PolActifs() then
+				Civ6Proxy_FixerPol(1, "host verdict after the countdown");
+			end
+			if BGD_DepartsActifs() then
+				BGD_FixerDeparts(1, "host verdict after the countdown");
+			end
 		end
 	end));
 	-- Redimensionnement de MPH (changement de résolution) : il recalcule la hauteur du tableau

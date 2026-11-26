@@ -1,7 +1,8 @@
 //! Ends the turn of a human player who is not connected.
 //!
-//! With BGE in every player's game, a player who drops keeps a human slot (the GameCore proxy's
-//! `drop_slot`), so the game's AI never plays for it. Nobody is left to end that player's turn, and
+//! With BGE in every player's game, at the same drop protection level (`version::NIVEAU_DEPARTS`),
+//! a player who drops keeps a human slot (the GameCore proxy's `drop_slot`), so the game's AI never
+//! plays for it. Nobody is left to end that player's turn, and
 //! the game turn only ends once no player has an active turn. The host ends it with the game's own
 //! "send turn complete" of the game controller, which sends the synchronized `PlayerTurnComplete`
 //! for any player whose turn is active. `partie.lua` decides when: every connected human has ended

@@ -1,5 +1,8 @@
 //! A player who drops keeps a human slot: the game's AI does not play for it.
-//! POL fix: it changes the simulation, so it only applies when every player has the proxy (`pol`).
+//! It changes the simulation, so it only applies when every machine does it: with the POL fixes
+//! (every player has the proxy at the same version), or when every player announces the same drop
+//! protection level, whatever their version (`pol::departs`, `version::NIVEAU_DEPARTS`). A change
+//! of what this module does needs a new level.
 //!
 //! When a player leaves, the host sends `PlayerConnectionChange`. Its handler (`1800383e0`) sets
 //! the player's SLOT_STATUS to "computer" through `18016b840`, and "is human" is that value: from
@@ -65,8 +68,8 @@ enum Change {
     Skip,
 }
 
-fn decide(pol: bool, connecting: bool, kicked: bool, away: bool) -> Change {
-    match (pol, connecting, kicked, away) {
+fn decide(on: bool, connecting: bool, kicked: bool, away: bool) -> Change {
+    match (on, connecting, kicked, away) {
         (false, ..) | (_, true, ..) | (_, _, true, _) => Change::Game,
         (true, false, false, false) => Change::KeepHuman,
         (true, false, false, true) => Change::Skip,
@@ -95,7 +98,7 @@ unsafe extern "system" fn hook_handler(msg: *const u8) {
     let player = std::ptr::read_unaligned(msg.add(MSG_PLAYER).cast::<u32>());
     let (connecting, kicked) = (*msg.add(MSG_CONNECTING) != 0, *msg.add(MSG_KICKED) != 0);
     let b = bit(player);
-    let change = decide(pol::actifs(), connecting, kicked, AWAY.load(Ordering::Relaxed) & b != 0);
+    let change = decide(pol::departs(), connecting, kicked, AWAY.load(Ordering::Relaxed) & b != 0);
     if connecting || kicked {
         AWAY.fetch_and(!b, Ordering::Relaxed);
     }
@@ -131,7 +134,7 @@ pub unsafe fn on_gamecore_loaded(base: usize) {
         patch::install(base, &HANDLER, hook_handler as *const () as usize).map(|t| T_HANDLER.store(t, Ordering::Relaxed)),
     ];
     match done.iter().find_map(|r| r.as_ref().err()) {
-        None => log("drop: a player who leaves keeps a human slot when every player has BGE (POL)"),
+        None => log("drop: a player who leaves keeps a human slot when every player has BGE with the same drop protection level"),
         Some(e) => log(&format!("drop: a detour could not be installed: {e}")),
     }
 }
@@ -169,7 +172,7 @@ mod tests {
         for away in [false, true] {
             for kicked in [false, true] {
                 for connecting in [false, true] {
-                    assert_eq!(decide(false, connecting, kicked, away), Change::Game, "not every player has BGE");
+                    assert_eq!(decide(false, connecting, kicked, away), Change::Game, "drop protection off");
                 }
             }
         }

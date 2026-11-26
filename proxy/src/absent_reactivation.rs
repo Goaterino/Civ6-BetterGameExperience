@@ -1,6 +1,8 @@
 //! The turn of a player who left, ended by another machine, stays ended: GameCore no longer makes it
-//! active again. POL fix: it changes the simulation, so it only applies when every player has the
-//! proxy (`pol`), and only in a live network game (`pol::partie_reseau`).
+//! active again. It changes the simulation, so it only applies when every machine does it, like
+//! `drop_slot` (`pol::departs`: the POL fixes, or the same drop protection level everywhere; a
+//! change of what this module does needs a new `version::NIVEAU_DEPARTS`), and only in a live
+//! network game (`pol::partie_reseau`).
 //!
 //! **The bug (BGE-4EB5B0).** A player who drops keeps a human slot (`drop_slot`), and the host ends
 //! its turn with the game's own `PlayerTurnComplete` (the startup proxy's `absent_turn`, called by
@@ -141,9 +143,9 @@ const MAX_LOGS: u32 = 20;
 
 /// Whether a `PlayerTurnComplete` for `player`, received from `sender` (`None`: not received through
 /// GameCore's receive function), keeps the player's turn ended.
-fn keeps_ended(sender: Option<i32>, player: i32, pol: bool, network: bool) -> bool {
+fn keeps_ended(sender: Option<i32>, player: i32, on: bool, network: bool) -> bool {
     let valid = |p: i32| (0..64).contains(&p);
-    pol && network && valid(player) && sender.is_some_and(|s| valid(s) && s != player)
+    on && network && valid(player) && sender.is_some_and(|s| valid(s) && s != player)
 }
 
 type Receive = unsafe extern "system" fn(i32, usize) -> u64;
@@ -161,7 +163,7 @@ unsafe extern "system" fn hook_receive(sender: i32, stream: usize) -> u64 {
 unsafe extern "system" fn hook_turn_complete(msg: *const u8) -> u64 {
     let original: TurnComplete = std::mem::transmute(T_TURN_COMPLETE.load(Ordering::Relaxed));
     let player = std::ptr::read_unaligned(msg.add(MSG_PLAYER).cast::<i32>());
-    if !keeps_ended(SENDER.get(), player, pol::actifs(), pol::partie_reseau()) {
+    if !keeps_ended(SENDER.get(), player, pol::departs(), pol::partie_reseau()) {
         return original(msg);
     }
     let previous = REFUSED.replace(Some(player));
@@ -293,7 +295,7 @@ mod tests {
         assert!(keeps_ended(Some(1), 2, true, true), "the host ends an absent player's turn");
         assert!(!keeps_ended(Some(2), 2, true, true), "the player's own end of turn");
         assert!(!keeps_ended(None, 2, true, true), "not received through GameCore's receive function");
-        assert!(!keeps_ended(Some(1), 2, false, true), "not every player has BGE");
+        assert!(!keeps_ended(Some(1), 2, false, true), "drop protection off");
         assert!(!keeps_ended(Some(1), 2, true, false), "local game (solo, hotseat) or PlayByCloud");
         assert!(!keeps_ended(Some(-1), 2, true, true) && !keeps_ended(Some(64), 2, true, true), "no such sender");
         assert!(!keeps_ended(Some(1), -1, true, true) && !keeps_ended(Some(1), 64, true, true), "no such player");
